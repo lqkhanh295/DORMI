@@ -1,0 +1,6 @@
+<Solution>
+  <Project Path="Dormi.API/Dormi.API.csproj" />
+  <Project Path="Dormi.Application/Dormi.Application.csproj" />
+  <Project Path="Dormi.Domain/Dormi.Domain.csproj" />
+  <Project Path="Dormi.Infrastructure/Dormi.Infrastructure.csproj" />
+</Solution>
