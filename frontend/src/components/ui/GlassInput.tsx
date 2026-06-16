@@ -1,12 +1,13 @@
-import React, { forwardRef } from 'react';
+import { forwardRef } from 'react';
 import clsx from 'clsx';
 import { twMerge } from 'tailwind-merge';
+import type { InputHTMLAttributes, ReactNode } from 'react';
 
-export interface GlassInputProps extends React.InputHTMLAttributes<HTMLInputElement> {
+export interface GlassInputProps extends InputHTMLAttributes<HTMLInputElement> {
   label?: string;
   error?: string;
-  leftIcon?: React.ReactNode;
-  rightIcon?: React.ReactNode;
+  leftIcon?: ReactNode;
+  rightIcon?: ReactNode;
 }
 
 export const GlassInput = forwardRef<HTMLInputElement, GlassInputProps>(
@@ -14,7 +15,7 @@ export const GlassInput = forwardRef<HTMLInputElement, GlassInputProps>(
     return (
       <div className="w-full flex flex-col gap-1.5">
         {label && (
-          <label className="text-sm font-medium text-foreground/80 ml-1">
+          <label className="text-sm font-semibold text-foreground ml-1">
             {label}
           </label>
         )}
@@ -28,11 +29,12 @@ export const GlassInput = forwardRef<HTMLInputElement, GlassInputProps>(
             ref={ref}
             className={twMerge(
               clsx(
-                'w-full h-11 bg-white/50 backdrop-blur-md border border-white/40 rounded-xl px-4 text-foreground placeholder:text-foreground/40',
-                'focus:outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary/50 focus:bg-white/70 transition-all duration-200',
+                'w-full h-11 bg-surface border border-line rounded-lg px-4 text-foreground placeholder:text-muted',
+                'focus:outline-none focus:ring-4 focus:ring-primary/10 focus:border-primary transition-all duration-200',
+                'disabled:bg-[#eef0e8] disabled:text-muted',
                 leftIcon && 'pl-10',
                 rightIcon && 'pr-10',
-                error && 'border-red-500/50 focus:ring-red-500/50',
+                error && 'border-red-500 focus:ring-red-500/10',
                 className
               )
             )}

@@ -1,93 +1,111 @@
-import React, { useState, Suspense, lazy } from 'react';
-import { useParams, Link, useNavigate } from 'react-router-dom';
-import { GlassCard } from '../components/ui/GlassCard';
+import { Suspense, lazy, useState } from 'react';
+import { useLocation, useNavigate, useParams } from 'react-router-dom';
+import { BadgeCheck, CalendarPlus, ChevronLeft, Heart, MessageCircle, Phone } from 'lucide-react';
 import { GlassButton } from '../components/ui/GlassButton';
-import { Phone, CheckCircle2, ChevronLeft } from 'lucide-react';
-import { RoomInfo } from '../components/room/RoomInfo';
+import { GlassCard } from '../components/ui/GlassCard';
 import { RoomGallery } from '../components/room/RoomGallery';
+import { RoomInfo } from '../components/room/RoomInfo';
 import { useStore } from '../store/useStore';
 
-// Lazy load the 3D Viewer
 const ThreeDViewer = lazy(() => import('../components/3d/ThreeDViewer'));
 
 export function RoomDetail() {
   const { id } = useParams();
   const navigate = useNavigate();
+  const location = useLocation();
   const [show3D, setShow3D] = useState(false);
-  
   const { toggleSaveRoom, savedRooms } = useStore();
   const isSaved = savedRooms.includes(Number(id));
+  const from = (location.state as { from?: string } | null)?.from;
+  const fallbackPath = location.pathname.startsWith('/customer') ? '/customer/search' : '/';
 
-  // Handle Contextual Chat
+  const handleBack = () => {
+    navigate(from || fallbackPath);
+  };
+
   const handleChat = () => {
-    // In a real app, we'd initiate a conversation or pass context via state
-    navigate('/customer/messages', { 
-      state: { autoMessage: `Chào bạn, tôi đang quan tâm đến căn hộ (ID: ${id}) này...` } 
+    navigate('/customer/messages', {
+      state: { autoMessage: `Chào bạn, tôi đang quan tâm đến căn phòng (ID: ${id}) này. Mình có thể trao đổi thêm không?` },
     });
   };
 
   return (
-    <div className="w-full max-w-6xl mx-auto px-4 py-8 flex flex-col gap-6">
-      {/* Back button */}
+    <div className="section-shell flex flex-col gap-6 py-8">
       <div>
-        <Link to="/search" className="inline-flex items-center gap-2 text-foreground/70 hover:text-primary transition-colors">
-          <ChevronLeft className="w-5 h-5" /> Quay lại
-        </Link>
+        <button
+          type="button"
+          onClick={handleBack}
+          className="inline-flex items-center gap-2 text-sm font-semibold text-muted transition-colors hover:text-primary"
+        >
+          <ChevronLeft className="h-5 w-5" /> Quay lại trang trước
+        </button>
       </div>
 
-      {/* Presentational: Gallery */}
       <RoomGallery id={id} onOpen3D={() => setShow3D(true)} />
 
-      <div className="flex flex-col lg:flex-row gap-6 items-start">
-        {/* Presentational: Room Info */}
-        <div className="flex-1 flex flex-col gap-6 w-full">
+      <div className="flex flex-col gap-6 lg:flex-row lg:items-start">
+        <div className="flex-1">
           <RoomInfo id={id} />
         </div>
 
-        {/* Right Column: CTA & Landlord */}
-        <div className="w-full lg:w-1/3 flex flex-col gap-6 sticky top-24">
-          <GlassCard className="flex flex-col gap-4">
-            <h3 className="font-bold text-lg">Thông tin Chủ trọ</h3>
+        <aside className="flex w-full flex-col gap-4 lg:sticky lg:top-24 lg:w-[360px]">
+          <GlassCard tone="solid" className="flex flex-col gap-5">
+            <div>
+              <p className="text-sm font-semibold text-muted">Giá thuê</p>
+              <p className="text-3xl font-extrabold text-primary">5.000.000đ</p>
+              <p className="text-sm text-muted">/ tháng, còn thương lượng nhẹ</p>
+            </div>
+
+            <GlassButton size="lg" className="w-full" leftIcon={<CalendarPlus className="h-5 w-5" />}>
+              Đặt lịch xem phòng
+            </GlassButton>
+            <div className="grid grid-cols-2 gap-2">
+              <GlassButton variant="secondary" onClick={handleChat} leftIcon={<MessageCircle className="h-4 w-4" />}>
+                Nhắn tin
+              </GlassButton>
+              <GlassButton
+                variant={isSaved ? 'primary' : 'secondary'}
+                onClick={() => toggleSaveRoom(Number(id))}
+                leftIcon={<Heart className="h-4 w-4" />}
+              >
+                {isSaved ? 'Đã lưu' : 'Lưu'}
+              </GlassButton>
+            </div>
+          </GlassCard>
+
+          <GlassCard tone="solid" className="flex flex-col gap-4">
             <div className="flex items-center gap-4">
-              <div className="w-16 h-16 rounded-full bg-slate-200 border-2 border-white/80 overflow-hidden relative">
-                <img src="https://api.dicebear.com/7.x/avataaars/svg?seed=Landlord" alt="landlord" className="w-full h-full object-cover" />
-                <div className="absolute bottom-0 right-0 bg-emerald-500 w-4 h-4 rounded-full border-2 border-white"></div>
+              <div className="relative h-14 w-14 overflow-hidden rounded-full border border-line bg-slate-100">
+                <img src="https://api.dicebear.com/7.x/avataaars/svg?seed=Landlord" alt="Chủ phòng" className="h-full w-full object-cover" />
+                <span className="absolute bottom-0 right-0 h-4 w-4 rounded-full border-2 border-white bg-emerald-500" />
               </div>
               <div>
-                <h4 className="font-bold flex items-center gap-1">Nguyễn Văn Chủ <CheckCircle2 className="w-4 h-4 text-emerald-500" /></h4>
-                <p className="text-sm text-foreground/60">Đã xác minh KYC</p>
+                <h3 className="flex items-center gap-1 font-bold">
+                  Nguyễn Văn Chủ <BadgeCheck className="h-4 w-4 text-emerald-500" />
+                </h3>
+                <p className="text-sm text-muted">Chủ phòng đã xác minh KYC</p>
               </div>
             </div>
 
-            <div className="w-full h-px bg-white/40 my-1"></div>
-            
-            <div className="flex gap-2">
-              <GlassButton variant="primary" className="flex-1 text-sm"><Phone className="w-4 h-4 mr-2" /> 0901.xxx.xxx</GlassButton>
-              <GlassButton variant="secondary" className="flex-1 text-sm" onClick={handleChat}>Nhắn tin</GlassButton>
+            <div className="rounded-lg bg-[#f7f8f3] p-4 text-sm leading-6 text-muted">
+              Phản hồi trung bình trong 15 phút. Có thể xem phòng trực tiếp sau 17:00 các ngày trong tuần.
             </div>
-          </GlassCard>
 
-          <GlassCard className="flex flex-col gap-4 bg-primary/5 border-primary/20">
-            <h3 className="font-bold text-lg">Hành động</h3>
-            <GlassButton variant="primary" size="lg" className="w-full text-lg">Đặt lịch xem phòng</GlassButton>
-            <GlassButton 
-              variant={isSaved ? "primary" : "secondary"} 
-              className="w-full transition-colors"
-              onClick={() => toggleSaveRoom(Number(id))}
-            >
-              {isSaved ? 'Đã lưu phòng' : 'Lưu phòng này'}
+            <GlassButton variant="secondary" className="w-full" leftIcon={<Phone className="h-4 w-4" />}>
+              0901.xxx.xxx
             </GlassButton>
           </GlassCard>
-        </div>
+        </aside>
       </div>
 
-      {/* Lazy Loaded 3D Modal overlay */}
       {show3D && (
-        <Suspense fallback={
-          <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-sm">
-            <div className="text-white text-xl animate-pulse">Đang tải không gian 3D...</div>
-          </div>
-        }>
+        <Suspense
+          fallback={
+            <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-sm">
+              <div className="animate-pulse text-xl text-white">Đang tải không gian 3D...</div>
+            </div>
+          }
+        >
           <ThreeDViewer onClose={() => setShow3D(false)} />
         </Suspense>
       )}

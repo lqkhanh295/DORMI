@@ -1,7 +1,7 @@
-import React from 'react';
-import { GlassCard } from '../../components/ui/GlassCard';
-import { Heart, Calendar, MessageSquare, Clock } from 'lucide-react';
 import { Link } from 'react-router-dom';
+import { Calendar, Clock, Heart, MessageSquare, Search, Sparkles } from 'lucide-react';
+import { GlassButton } from '../../components/ui/GlassButton';
+import { GlassCard } from '../../components/ui/GlassCard';
 
 export function CustomerDashboard() {
   const stats = [
@@ -11,72 +11,75 @@ export function CustomerDashboard() {
   ];
 
   return (
-    <div className="flex flex-col gap-6">
-      <div className="grid md:grid-cols-3 gap-6">
-        {stats.map((stat, i) => (
-          <GlassCard key={i} className="flex items-center p-6 gap-4">
-            <div className="w-14 h-14 rounded-2xl bg-white/50 border border-white/60 flex items-center justify-center shadow-[inset_0_1px_1px_rgba(255,255,255,0.8)]">
+    <div className="mx-auto flex w-full max-w-7xl flex-col gap-6">
+      <GlassCard tone="solid" className="flex flex-col gap-5 bg-contrast text-white md:flex-row md:items-center md:justify-between">
+        <div>
+          <p className="mb-2 text-sm font-bold uppercase tracking-[0.18em] text-emerald-300">Hôm nay</p>
+          <h1 className="text-3xl font-extrabold">Bạn có 2 lịch xem phòng cần xác nhận</h1>
+          <p className="mt-2 text-white/65">Kiểm tra lịch hẹn, nhắn chủ phòng và tiếp tục lọc phòng gần trường.</p>
+        </div>
+        <Link to="/customer/search">
+          <GlassButton className="bg-cyan-100 text-contrast hover:bg-cyan-200 border-cyan-100" leftIcon={<Search className="w-4 h-4" />}>
+            Tìm thêm phòng
+          </GlassButton>
+        </Link>
+      </GlassCard>
+
+      <div className="grid gap-4 md:grid-cols-3">
+        {stats.map((stat) => (
+          <GlassCard key={stat.title} tone="solid" className="flex items-center gap-4">
+            <div className="flex h-14 w-14 items-center justify-center rounded-2xl bg-cyan-100/70">
               {stat.icon}
             </div>
             <div>
-              <p className="text-sm font-medium text-foreground/60 mb-1">{stat.title}</p>
-              <h3 className="text-3xl font-bold text-foreground">{stat.value}</h3>
+              <p className="mb-1 text-sm font-semibold text-muted">{stat.title}</p>
+              <h3 className="text-3xl font-extrabold text-foreground">{stat.value}</h3>
             </div>
           </GlassCard>
         ))}
       </div>
 
-      <div className="grid lg:grid-cols-2 gap-6">
-        <GlassCard className="flex flex-col gap-4">
+      <div className="grid gap-6 lg:grid-cols-2">
+        <GlassCard tone="solid" className="flex flex-col gap-4">
           <div className="flex items-center justify-between">
-            <h3 className="font-bold text-lg">Lịch hẹn sắp tới</h3>
-            <Link to="/customer/appointments" className="text-sm text-primary hover:underline">Xem tất cả</Link>
+            <h3 className="text-lg font-bold">Lịch hẹn sắp tới</h3>
+            <Link to="/customer/appointments" className="text-sm font-semibold text-primary hover:underline">Xem tất cả</Link>
           </div>
-          
-          <div className="flex flex-col gap-3">
-            {[1, 2].map(i => (
-              <div key={i} className="p-4 rounded-xl bg-white/40 border border-white/30 hover:bg-white/60 transition-colors flex items-center justify-between">
-                <div className="flex items-center gap-4">
-                  <div className="w-12 h-12 rounded-full bg-primary/10 flex items-center justify-center text-primary">
-                    <Clock className="w-5 h-5" />
-                  </div>
-                  <div>
-                    <h4 className="font-semibold text-foreground">Xem phòng KTX Sleepbox</h4>
-                    <p className="text-sm text-foreground/60">Hôm nay, 14:00 - Quận Bình Thạnh</p>
-                  </div>
+          {[1, 2].map((item) => (
+            <div key={item} className="flex items-center justify-between gap-4 rounded-xl border border-line bg-cyan-50/70 p-4">
+              <div className="flex items-center gap-4">
+                <div className="flex h-11 w-11 items-center justify-center rounded-full bg-primary/10 text-primary">
+                  <Clock className="w-5 h-5" />
                 </div>
-                <div className="px-3 py-1 rounded-full text-xs font-medium bg-amber-100/80 text-amber-600 border border-amber-200/50">
-                  Sắp diễn ra
+                <div>
+                  <h4 className="font-bold">Xem phòng KTX Sleepbox</h4>
+                  <p className="text-sm text-muted">Hôm nay, 14:00 - Bình Thạnh</p>
                 </div>
               </div>
-            ))}
-          </div>
+              <span className="rounded-full bg-amber-50 px-3 py-1 text-xs font-bold text-amber-700">Sắp diễn ra</span>
+            </div>
+          ))}
         </GlassCard>
 
-        <GlassCard className="flex flex-col gap-4">
+        <GlassCard tone="solid" className="flex flex-col gap-4">
           <div className="flex items-center justify-between">
-            <h3 className="font-bold text-lg">Đề xuất bạn cùng phòng (AI)</h3>
-            <Link to="/customer/matcher" className="text-sm text-primary hover:underline">Tìm thêm</Link>
+            <h3 className="text-lg font-bold">Gợi ý bạn cùng phòng</h3>
+            <Link to="/customer/matcher" className="text-sm font-semibold text-primary hover:underline">Tìm thêm</Link>
           </div>
-          
-          <div className="flex flex-col gap-3">
-            {[1, 2, 3].map(i => (
-              <div key={i} className="p-4 rounded-xl bg-white/40 border border-white/30 hover:bg-white/60 transition-colors flex items-center justify-between">
-                <div className="flex items-center gap-4">
-                  <div className="w-12 h-12 rounded-full bg-slate-200 border border-white">
-                    <img src={`https://api.dicebear.com/7.x/avataaars/svg?seed=User${i}`} alt="avatar" className="w-full h-full rounded-full" />
-                  </div>
-                  <div>
-                    <h4 className="font-semibold text-foreground">Nguyễn Văn A</h4>
-                    <p className="text-sm text-foreground/60">Sinh viên năm 2 - Chung sở thích: Đọc sách, Im lặng</p>
-                  </div>
-                </div>
-                <div className="px-3 py-1 rounded-full text-xs font-bold bg-emerald-100/80 text-emerald-600 border border-emerald-200/50">
-                  95% Match
+          {[1, 2, 3].map((item) => (
+            <div key={item} className="flex items-center justify-between gap-4 rounded-xl border border-line bg-surface p-4">
+              <div className="flex items-center gap-4">
+                <img src={`https://api.dicebear.com/7.x/avataaars/svg?seed=User${item}`} alt="Bạn cùng phòng" className="h-12 w-12 rounded-full bg-slate-100" />
+                <div>
+                  <h4 className="font-bold">Nguyễn Văn A</h4>
+                  <p className="text-sm text-muted">Sinh viên năm 2 - gọn gàng, không hút thuốc</p>
                 </div>
               </div>
-            ))}
-          </div>
+              <span className="inline-flex items-center gap-1 rounded-full bg-emerald-50 px-3 py-1 text-xs font-bold text-emerald-700">
+                <Sparkles className="w-3.5 h-3.5" /> 95%
+              </span>
+            </div>
+          ))}
         </GlassCard>
       </div>
     </div>

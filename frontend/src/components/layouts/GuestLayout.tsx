@@ -1,40 +1,44 @@
-import React from 'react';
 import { Outlet, Link } from 'react-router-dom';
-import { Home } from 'lucide-react';
+import { LogIn, Search } from 'lucide-react';
 import { GlassButton } from '../ui/GlassButton';
 
 export function GuestLayout() {
   return (
-    <div className="min-h-screen flex flex-col relative z-0">
-      <header className="sticky top-0 z-50 w-full backdrop-blur-md bg-white/50 border-b border-white/20">
-        <div className="container mx-auto px-4 h-16 flex items-center justify-between">
-          <Link to="/" className="flex items-center gap-2 text-primary font-bold text-2xl">
-            <Home className="w-6 h-6" />
+    <div className="relative z-0 flex min-h-screen flex-col">
+      <header className="sticky top-0 z-50 w-full border-b border-line/70 bg-background/82 backdrop-blur-xl">
+        <div className="section-shell flex h-16 items-center justify-between">
+          <Link to="/" className="flex items-center gap-2 text-2xl font-extrabold text-foreground">
             <span>DORMI</span>
           </Link>
-          <nav className="hidden md:flex items-center gap-6 text-foreground/80 font-medium">
-            <Link to="/search" className="hover:text-primary transition-colors">Tìm phòng</Link>
-            <Link to="/about" className="hover:text-primary transition-colors">Về chúng tôi</Link>
-            <Link to="/contact" className="hover:text-primary transition-colors">Liên hệ</Link>
+
+          <nav className="hidden items-center gap-6 text-sm font-semibold text-muted md:flex">
+            <Link to="/" className="transition-colors hover:text-foreground">Phòng đang cho thuê</Link>
+            <Link to="/search" className="transition-colors hover:text-foreground">Tìm phòng</Link>
           </nav>
+
           <div className="flex items-center gap-3">
-            <Link to="/login">
-              <GlassButton variant="ghost">Đăng nhập</GlassButton>
+            <Link to="/login" className="hidden sm:block">
+              <GlassButton variant="ghost" leftIcon={<LogIn className="h-4 w-4" />}>
+                Đăng nhập
+              </GlassButton>
             </Link>
-            <Link to="/register">
-              <GlassButton variant="primary">Đăng ký</GlassButton>
+            <Link to="/search">
+              <GlassButton variant="primary" leftIcon={<Search className="h-4 w-4" />}>
+                Tìm phòng
+              </GlassButton>
             </Link>
           </div>
         </div>
       </header>
 
-      <main className="flex-1 flex flex-col">
+      <main className="flex flex-1 flex-col">
         <Outlet />
       </main>
 
-      <footer className="bg-white/30 backdrop-blur-md border-t border-white/20 mt-auto">
-        <div className="container mx-auto px-4 py-8 text-center text-sm text-foreground/60">
-          <p>&copy; {new Date().getFullYear()} DORMI. All rights reserved.</p>
+      <footer className="mt-auto border-t border-line bg-background">
+        <div className="section-shell flex flex-col gap-2 py-8 text-sm md:flex-row md:items-center md:justify-between">
+          <p className="text-muted">&copy; {new Date().getFullYear()} DORMI. Nền tảng tìm phòng cho sinh viên.</p>
+          <p className="text-muted">Chỉ hiển thị phòng đang cho thuê cho người chưa đăng nhập.</p>
         </div>
       </footer>
     </div>

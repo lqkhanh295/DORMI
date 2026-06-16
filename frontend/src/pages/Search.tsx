@@ -1,98 +1,190 @@
-import React from 'react';
 import { Link, useLocation } from 'react-router-dom';
+import { BadgeCheck, Bath, BedDouble, Building2, Cuboid, Filter, Heart, Home, MapPin, Search as SearchIcon, SlidersHorizontal } from 'lucide-react';
+import { GlassButton } from '../components/ui/GlassButton';
 import { GlassCard } from '../components/ui/GlassCard';
 import { GlassInput } from '../components/ui/GlassInput';
-import { GlassButton } from '../components/ui/GlassButton';
-import { Search as SearchIcon, Filter, MapPin, Cuboid, Home } from 'lucide-react';
 
 const MOCK_ROOMS = [
-  { id: 1, title: 'Phòng trọ ban công thoáng mát', price: '2.500.000', location: 'Quận 7, TP.HCM', type: 'Phòng trọ', has3D: true },
-  { id: 2, title: 'Ký túc xá cao cấp Sleepbox', price: '1.800.000', location: 'Bình Thạnh, TP.HCM', type: 'Ký túc xá', has3D: false },
-  { id: 3, title: 'Căn hộ Studio đầy đủ nội thất', price: '5.000.000', location: 'Quận 1, TP.HCM', type: 'Studio', has3D: true },
-  { id: 4, title: 'Phòng khép kín gần ĐH Tôn Đức Thắng', price: '3.000.000', location: 'Quận 7, TP.HCM', type: 'Phòng trọ', has3D: true },
+  {
+    id: 1,
+    title: 'Studio sáng, full nội thất gần phố đi bộ',
+    price: '5.000.000đ',
+    location: '45 Nguyễn Hữu Cảnh, Quận 1',
+    type: 'Studio',
+    has3D: true,
+    verified: true,
+    area: '28m²',
+    beds: '1 giường',
+    image: 'https://images.unsplash.com/photo-1522708323590-d24dbb6b0267?q=80&w=1000&auto=format&fit=crop',
+  },
+  {
+    id: 2,
+    title: 'Sleepbox sạch, yên tĩnh gần HUTECH',
+    price: '1.800.000đ',
+    location: 'D5, Bình Thạnh',
+    type: 'Ký túc xá',
+    has3D: false,
+    verified: true,
+    area: '8m²',
+    beds: '1 chỗ',
+    image: 'https://images.unsplash.com/photo-1554995207-c18c203602cb?q=80&w=1000&auto=format&fit=crop',
+  },
+  {
+    id: 3,
+    title: 'Phòng ban công thoáng, gần Tôn Đức Thắng',
+    price: '2.500.000đ',
+    location: 'Nguyễn Thị Thập, Quận 7',
+    type: 'Phòng trọ',
+    has3D: true,
+    verified: false,
+    area: '22m²',
+    beds: '1 giường',
+    image: 'https://images.unsplash.com/photo-1505693416388-ac5ce068fe85?q=80&w=1000&auto=format&fit=crop',
+  },
+  {
+    id: 4,
+    title: 'Căn hộ mini có máy giặt riêng',
+    price: '3.200.000đ',
+    location: 'Lê Văn Việt, Thủ Đức',
+    type: 'Căn hộ mini',
+    has3D: true,
+    verified: true,
+    area: '24m²',
+    beds: '1 giường',
+    image: 'https://images.unsplash.com/photo-1560448204-603b3fc33ddc?q=80&w=1000&auto=format&fit=crop',
+  },
 ];
+
+const filters = ['Tất cả', 'Phòng trọ', 'Căn hộ mini', 'Ký túc xá', 'Có 3D', 'Đã KYC'];
 
 export function Search() {
   const location = useLocation();
 
   return (
-    <div className="flex-1 flex flex-col h-[calc(100vh-64px)] overflow-hidden">
-      <div className="flex-1 flex flex-col md:flex-row">
-        
-        {/* Left Side: Room List */}
-        <div className="w-full md:w-1/2 lg:w-2/5 h-full overflow-y-auto p-4 flex flex-col gap-4 border-r border-white/20 bg-white/20 backdrop-blur-sm">
-          
-          <GlassCard className="sticky top-0 z-10 !p-4 mb-2 flex flex-col gap-3">
-            <div className="flex gap-2">
-              <div className="flex-1">
-                <GlassInput 
-                  placeholder="Tìm theo khu vực, tên đường..." 
-                  leftIcon={<SearchIcon className="w-4 h-4" />}
-                />
+    <div className="flex-1 flex flex-col h-[calc(100vh-64px)] overflow-hidden bg-background">
+      <div className="flex-1 flex flex-col lg:flex-row">
+        <aside className="w-full lg:w-[460px] xl:w-[520px] h-full overflow-y-auto border-r border-line bg-surface/78 backdrop-blur-xl">
+          <div className="sticky top-0 z-20 border-b border-line bg-cyan-50/92 backdrop-blur-xl p-4">
+            <div className="mb-4 flex items-center justify-between">
+              <div>
+                <p className="eyebrow">Khám phá</p>
+                <h1 className="text-2xl font-extrabold">Tìm phòng phù hợp</h1>
               </div>
+              <GlassButton variant="secondary" className="px-3" aria-label="Bộ lọc">
+                <SlidersHorizontal className="w-5 h-5" />
+              </GlassButton>
+            </div>
+
+            <div className="flex gap-2">
+              <GlassInput
+                placeholder="Khu vực, trường, tên đường..."
+                leftIcon={<SearchIcon className="w-4 h-4" />}
+              />
               <GlassButton variant="secondary" className="px-3">
                 <Filter className="w-5 h-5" />
               </GlassButton>
             </div>
-            
-            <div className="flex gap-2 overflow-x-auto pb-1 scrollbar-hide">
-              <span className="px-3 py-1 rounded-full bg-primary text-white text-sm whitespace-nowrap">Tất cả</span>
-              <span className="px-3 py-1 rounded-full bg-white/50 border border-white/40 text-foreground text-sm whitespace-nowrap cursor-pointer hover:bg-white/70">Phòng trọ</span>
-              <span className="px-3 py-1 rounded-full bg-white/50 border border-white/40 text-foreground text-sm whitespace-nowrap cursor-pointer hover:bg-white/70">Căn hộ mini</span>
-              <span className="px-3 py-1 rounded-full bg-white/50 border border-white/40 text-foreground text-sm whitespace-nowrap cursor-pointer hover:bg-white/70">Ký túc xá</span>
+
+            <div className="mt-3 flex gap-2 overflow-x-auto pb-1">
+              {filters.map((filter, index) => (
+                <button
+                  key={filter}
+                  className={`shrink-0 rounded-full px-3 py-1.5 text-sm font-semibold transition-colors ${
+                    index === 0
+                      ? 'bg-primary text-white'
+                      : 'bg-cyan-100/80 text-muted hover:bg-cyan-200 hover:text-foreground'
+                  }`}
+                >
+                  {filter}
+                </button>
+              ))}
             </div>
-          </GlassCard>
+          </div>
 
-          <div className="flex flex-col gap-4 pb-8">
-            <h2 className="font-bold text-lg px-2">Kết quả tìm kiếm ({MOCK_ROOMS.length})</h2>
-            
-            {MOCK_ROOMS.map(room => (
-              <Link to={location.pathname.startsWith('/customer') ? `/customer/room/${room.id}` : `/room/${room.id}`} key={room.id}>
-                <GlassCard className="!p-0 flex flex-col group cursor-pointer hover:border-primary/50 transition-colors">
-                  <div className="h-48 bg-slate-200 relative overflow-hidden">
-                    {/* Image Placeholder */}
-                    <div className="absolute inset-0 bg-gradient-to-br from-blue-100 to-indigo-100 flex items-center justify-center text-blue-300">
-                      <Home className="w-12 h-12 group-hover:scale-110 transition-transform duration-300" />
-                    </div>
-                    
-                    {room.has3D && (
-                      <div className="absolute top-3 left-3 bg-white/80 backdrop-blur-sm px-2 py-1 rounded-md text-xs font-bold text-primary flex items-center gap-1">
-                        <Cuboid className="w-3 h-3" /> Virtual 3D
+          <div className="p-4">
+            <div className="mb-4 flex items-center justify-between">
+              <p className="font-bold">{MOCK_ROOMS.length} phòng phù hợp</p>
+              <button className="text-sm font-semibold text-primary">Sắp xếp: Phù hợp nhất</button>
+            </div>
+
+            <div className="flex flex-col gap-4 pb-8">
+              {MOCK_ROOMS.map((room) => (
+                <Link
+                  to={location.pathname.startsWith('/customer') ? `/customer/room/${room.id}` : `/room/${room.id}`}
+                  state={{ from: location.pathname }}
+                  key={room.id}
+                >
+                  <GlassCard noPadding tone="solid" className="group hover:border-primary/30">
+                    <div className="grid gap-0 sm:grid-cols-[180px_1fr]">
+                      <div className="relative h-56 sm:h-full min-h-[180px] overflow-hidden bg-slate-100">
+                        <img src={room.image} alt={room.title} className="h-full w-full object-cover transition-transform duration-700 group-hover:scale-105" />
+                        {room.has3D && (
+                          <div className="absolute left-3 top-3 inline-flex items-center gap-1 rounded-full bg-cyan-50/92 px-2.5 py-1 text-xs font-bold text-primary shadow-sm">
+                            <Cuboid className="w-3.5 h-3.5" /> 3D
+                          </div>
+                        )}
                       </div>
-                    )}
-                    <div className="absolute bottom-3 right-3 bg-white/80 backdrop-blur-sm px-2 py-1 rounded-md text-sm font-bold text-foreground shadow-sm">
-                      {room.price}đ / tháng
+
+                      <div className="p-4">
+                        <div className="mb-2 flex items-start justify-between gap-3">
+                          <div>
+                            <p className="text-xs font-bold uppercase tracking-wide text-primary">{room.type}</p>
+                            <h2 className="mt-1 text-lg font-extrabold leading-snug group-hover:text-primary">{room.title}</h2>
+                          </div>
+                          <button className="rounded-full p-2 text-muted hover:bg-rose-50 hover:text-rose-500" aria-label="Lưu phòng">
+                            <Heart className="w-5 h-5" />
+                          </button>
+                        </div>
+
+                        <p className="mb-3 flex items-center gap-1.5 text-sm text-muted">
+                          <MapPin className="w-4 h-4 text-rose-500" /> {room.location}
+                        </p>
+
+                        <div className="mb-4 flex flex-wrap gap-2 text-xs font-semibold text-muted">
+                          <span className="inline-flex items-center gap-1 rounded-lg bg-cyan-100/70 px-2.5 py-1"><Building2 className="w-3.5 h-3.5" /> {room.area}</span>
+                          <span className="inline-flex items-center gap-1 rounded-lg bg-cyan-100/70 px-2.5 py-1"><BedDouble className="w-3.5 h-3.5" /> {room.beds}</span>
+                          <span className="inline-flex items-center gap-1 rounded-lg bg-cyan-100/70 px-2.5 py-1"><Bath className="w-3.5 h-3.5" /> Khép kín</span>
+                          {room.verified && <span className="inline-flex items-center gap-1 rounded-lg bg-emerald-50 px-2.5 py-1 text-emerald-700"><BadgeCheck className="w-3.5 h-3.5" /> Đã KYC</span>}
+                        </div>
+
+                        <div className="flex items-center justify-between gap-3">
+                          <div>
+                            <p className="text-xl font-extrabold text-primary">{room.price}</p>
+                            <p className="text-xs text-muted">/ tháng, chưa gồm điện nước</p>
+                          </div>
+                          <GlassButton size="sm">Xem chi tiết</GlassButton>
+                        </div>
+                      </div>
                     </div>
-                  </div>
-                  <div className="p-4">
-                    <div className="text-xs text-primary font-medium mb-1">{room.type}</div>
-                    <h3 className="font-bold text-lg mb-2 group-hover:text-primary transition-colors">{room.title}</h3>
-                    <div className="flex items-center text-foreground/60 text-sm">
-                      <MapPin className="w-4 h-4 mr-1" /> {room.location}
-                    </div>
-                  </div>
-                </GlassCard>
-              </Link>
-            ))}
+                  </GlassCard>
+                </Link>
+              ))}
+            </div>
+          </div>
+        </aside>
+
+        <section className="hidden lg:flex flex-1 relative items-center justify-center overflow-hidden bg-cyan-100">
+          <div className="absolute inset-0 bg-[url('https://maps.wikimedia.org/osm-intl/13/6491/3820.png')] bg-cover bg-center opacity-70" />
+          <div className="absolute inset-0 bg-gradient-to-br from-cyan-100/20 via-primary/10 to-amber-300/15" />
+
+          <div className="absolute left-6 top-6 z-10 flex items-center gap-3 rounded-2xl bg-surface/92 px-4 py-3 shadow-lg border border-cyan-100">
+            <span className="h-3 w-3 rounded-full bg-emerald-500" />
+            <div>
+              <p className="text-sm font-bold">Bản đồ khu vực</p>
+              <p className="text-xs text-muted">4 phòng quanh trung tâm TP.HCM</p>
+            </div>
           </div>
 
-        </div>
+          <div className="absolute left-[48%] top-[34%] z-10 rounded-full bg-primary px-3 py-2 text-sm font-extrabold text-white shadow-xl">5.0tr</div>
+          <div className="absolute left-[58%] top-[52%] z-10 rounded-full bg-warm px-3 py-2 text-sm font-extrabold text-white shadow-xl">2.5tr</div>
+          <div className="absolute left-[38%] top-[58%] z-10 rounded-full bg-cyan-500 px-3 py-2 text-sm font-extrabold text-white shadow-xl">1.8tr</div>
 
-        {/* Right Side: Map */}
-        <div className="hidden md:flex flex-1 bg-slate-100 relative items-center justify-center">
-          <div className="absolute inset-0 bg-[url('https://maps.wikimedia.org/osm-intl/13/6491/3820.png')] bg-cover bg-center opacity-50"></div>
-          
-          {/* Map Overlay Glassmorphism */}
-          <div className="absolute top-4 left-4 right-4 z-10 flex justify-between pointer-events-none">
-             <GlassCard className="pointer-events-auto !p-3 rounded-full flex items-center gap-2">
-               <span className="w-3 h-3 rounded-full bg-primary animate-pulse"></span>
-               <span className="text-sm font-medium">Bản đồ trực tiếp</span>
-             </GlassCard>
+          <div className="z-10 rounded-2xl bg-surface/90 px-5 py-4 text-center shadow-xl border border-cyan-100">
+            <Home className="mx-auto mb-2 h-8 w-8 text-primary" />
+            <p className="font-bold">Map mock</p>
+            <p className="text-sm text-muted">Sẵn sàng nối API bản đồ thật</p>
           </div>
-          
-          <div className="z-10 text-slate-500 font-medium">Map View (Mock)</div>
-        </div>
-
+        </section>
       </div>
     </div>
   );

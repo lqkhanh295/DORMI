@@ -1,27 +1,50 @@
 @import "tailwindcss";
 
 @theme {
-  --color-primary: #2563eb;
-  --color-primary-hover: #1d4ed8;
-  --color-background: #f0f4f8;
-  --color-foreground: #0f172a;
+  --color-primary: #111827;
+  --color-primary-hover: #000000;
+  --color-background: #f6f7f4;
+  --color-foreground: #151712;
+  --color-muted: #686d62;
+  --color-line: #dedfd8;
+  --color-surface: #ffffff;
+  --color-contrast: #10120f;
+  --color-accent: #6c8f5d;
+  --color-warm: #d8a548;
   
-  --color-glass-bg: rgba(255, 255, 255, 0.7);
-  --color-glass-border: rgba(255, 255, 255, 0.4);
+  --color-glass-bg: rgba(255, 255, 255, 0.82);
+  --color-glass-border: rgba(21, 23, 18, 0.1);
 }
 
 @layer base {
+  :root {
+    font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+    text-rendering: optimizeLegibility;
+    -webkit-font-smoothing: antialiased;
+  }
+
   body {
     background-color: var(--color-background);
     color: var(--color-foreground);
-    background-image: radial-gradient(at 0% 0%, hsla(217,100%,94%,1) 0, transparent 50%), radial-gradient(at 100% 100%, hsla(217,100%,92%,1) 0, transparent 50%);
-    background-attachment: fixed;
+    background-image: linear-gradient(180deg, #fbfcf8 0%, #f5f6f1 52%, #eef0e8 100%);
     min-height: 100vh;
+  }
+
+  a {
+    text-decoration: none;
   }
 }
 
 @layer components {
   .glass-panel {
-    @apply bg-white/70 backdrop-blur-lg border border-white/40 shadow-sm rounded-2xl;
+    @apply bg-surface/85 backdrop-blur-xl border border-line/70 shadow-sm rounded-lg;
+  }
+
+  .section-shell {
+    @apply w-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8;
+  }
+
+  .eyebrow {
+    @apply text-xs font-bold uppercase tracking-[0.18em] text-muted;
   }
 }
