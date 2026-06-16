@@ -7,62 +7,61 @@ export function LandlordLayout() {
 
   const navItems = [
     { icon: <Home className="w-5 h-5" />, label: 'Dashboard', path: '/landlord/dashboard' },
-    { icon: <ClipboardCheck className="w-5 h-5" />, label: 'Xác thực KYC', path: '/landlord/kyc' },
+    { icon: <ClipboardCheck className="w-5 h-5" />, label: 'KYC', path: '/landlord/kyc' },
     { icon: <PlusSquare className="w-5 h-5" />, label: 'Tạo phòng', path: '/landlord/create-room' },
     { icon: <FolderOpen className="w-5 h-5" />, label: 'Phòng của tôi', path: '/landlord/rooms' },
-    { icon: <Calendar className="w-5 h-5" />, label: 'Quản lý lịch hẹn', path: '/landlord/appointments' },
+    { icon: <Calendar className="w-5 h-5" />, label: 'Lịch hẹn', path: '/landlord/appointments' },
     { icon: <MessageSquare className="w-5 h-5" />, label: 'Tin nhắn', path: '/landlord/messages' },
   ];
 
   return (
-    <div className="min-h-screen flex bg-background">
-      <aside className="w-64 fixed h-full z-40 bg-white/60 backdrop-blur-xl border-r border-white/40 shadow-sm flex flex-col">
-        <div className="h-16 flex items-center px-6 border-b border-white/20">
+    <div className="min-h-screen flex flex-col bg-background">
+      {/* Top Navbar */}
+      <header className="fixed top-0 left-0 right-0 h-16 z-40 bg-white/60 backdrop-blur-xl border-b border-white/40 shadow-sm flex items-center justify-between px-6">
+        <div className="flex items-center gap-8">
           <Link to="/" className="flex items-center gap-2 text-primary font-bold text-xl">
             <Home className="w-6 h-6" />
             <span>DORMI Landlord</span>
           </Link>
+          
+          <nav className="hidden md:flex items-center gap-1">
+            {navItems.map((item) => {
+              const isActive = location.pathname.includes(item.path);
+              return (
+                <Link 
+                  key={item.path} 
+                  to={item.path}
+                  className={`flex items-center gap-2 px-3 py-2 rounded-lg transition-all duration-200 ${
+                    isActive 
+                      ? 'bg-primary/10 text-primary font-semibold shadow-[inset_0_1px_1px_rgba(255,255,255,0.5)] border border-white/50' 
+                      : 'text-foreground/70 hover:bg-white/50 hover:text-foreground'
+                  }`}
+                >
+                  {item.icon}
+                  <span className="text-sm">{item.label}</span>
+                </Link>
+              )
+            })}
+          </nav>
         </div>
-        
-        <nav className="flex-1 py-6 px-4 flex flex-col gap-2">
-          {navItems.map((item) => {
-            const isActive = location.pathname.includes(item.path);
-            return (
-              <Link 
-                key={item.path} 
-                to={item.path}
-                className={`flex items-center gap-3 px-4 py-3 rounded-xl transition-all duration-200 ${
-                  isActive 
-                    ? 'bg-primary/10 text-primary font-semibold shadow-[inset_0_1px_1px_rgba(255,255,255,0.5)] border border-white/50' 
-                    : 'text-foreground/70 hover:bg-white/50 hover:text-foreground'
-                }`}
-              >
-                {item.icon}
-                <span>{item.label}</span>
-              </Link>
-            )
-          })}
-        </nav>
 
-        <div className="p-4 border-t border-white/20">
-          <Link to="/" className="flex items-center gap-3 px-4 py-3 rounded-xl text-red-500 hover:bg-red-50/50 transition-all duration-200">
+        <div className="flex items-center gap-4">
+          <Link to="/" className="flex items-center gap-2 px-3 py-2 rounded-lg text-red-500 hover:bg-red-50/50 transition-all duration-200">
             <LogOut className="w-5 h-5" />
-            <span>Đăng xuất</span>
           </Link>
+          <div className="w-8 h-8 rounded-full bg-emerald-100 border border-emerald-300 flex items-center justify-center text-emerald-600 font-bold">
+            L
+          </div>
         </div>
-      </aside>
+      </header>
 
-      <main className="flex-1 ml-64 flex flex-col min-h-screen relative z-0">
-        <header className="h-16 sticky top-0 z-30 bg-white/40 backdrop-blur-md border-b border-white/20 flex items-center px-8 justify-between">
-          <h2 className="text-xl font-bold text-foreground">
+      {/* Main Content */}
+      <main className="flex-1 pt-16 flex flex-col min-h-screen relative z-0">
+        <div className="h-14 sticky top-16 z-30 bg-white/40 backdrop-blur-md border-b border-white/20 flex items-center px-8">
+          <h2 className="text-lg font-bold text-foreground">
             {navItems.find(i => location.pathname.includes(i.path))?.label || 'Dashboard'}
           </h2>
-          <div className="flex items-center gap-4">
-            <div className="w-10 h-10 rounded-full bg-emerald-100 border border-emerald-300 flex items-center justify-center text-emerald-600 font-bold">
-              L
-            </div>
-          </div>
-        </header>
+        </div>
         
         <div className="p-8 flex-1 overflow-auto">
           <Outlet />
