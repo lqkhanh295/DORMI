@@ -14,6 +14,8 @@ public static class DependencyInjection
         services.AddDbContext<DormiDbContext>(options =>
             options.UseNpgsql(connectionString, x => x.UseNetTopologySuite()));
 
+        services.AddScoped<Dormi.Application.Interfaces.IImageService, Dormi.Infrastructure.Services.CloudinaryService>();
+
         return services;
     }
 }
