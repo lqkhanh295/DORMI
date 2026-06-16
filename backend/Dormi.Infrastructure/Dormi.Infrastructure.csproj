@@ -2,9 +2,11 @@
 
   <ItemGroup>
     <ProjectReference Include="..\Dormi.Domain\Dormi.Domain.csproj" />
+    <ProjectReference Include="..\Dormi.Application\Dormi.Application.csproj" />
   </ItemGroup>
 
   <ItemGroup>
+    <PackageReference Include="CloudinaryDotNet" Version="1.29.2" />
     <PackageReference Include="Npgsql.EntityFrameworkCore.PostgreSQL" Version="10.0.2" />
     <PackageReference Include="Npgsql.EntityFrameworkCore.PostgreSQL.NetTopologySuite" Version="10.0.2" />
   </ItemGroup>
