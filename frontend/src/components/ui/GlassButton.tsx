@@ -1,6 +1,6 @@
 import clsx from 'clsx';
 import { twMerge } from 'tailwind-merge';
-import { Loader2 } from 'lucide-react';
+import { SpinnerGap } from '@phosphor-icons/react';
 import type { ButtonHTMLAttributes, ReactNode } from 'react';
 
 export interface GlassButtonProps extends ButtonHTMLAttributes<HTMLButtonElement> {
@@ -50,7 +50,7 @@ export function GlassButton({
       disabled={disabled || isLoading}
       {...props}
     >
-      {isLoading && <Loader2 className="h-4 w-4 animate-spin" />}
+      {isLoading && <SpinnerGap className="h-4 w-4 animate-spin" />}
       {!isLoading && leftIcon}
       {children}
       {!isLoading && rightIcon}

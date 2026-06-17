@@ -1,4 +1,4 @@
-import { Cuboid, Image } from 'lucide-react';
+import { Cube, ImageSquare } from '@phosphor-icons/react';
 import { GlassButton } from '../ui/GlassButton';
 import { GlassCard } from '../ui/GlassCard';
 
@@ -20,7 +20,7 @@ export function RoomGallery({ id, onOpen3D }: RoomGalleryProps) {
       <div className="grid gap-2 p-2 md:grid-cols-[1.6fr_0.9fr]">
         <button
           type="button"
-          className="group relative min-h-[360px] overflow-hidden rounded-xl bg-slate-100 text-left"
+          className="group relative min-h-[360px] overflow-hidden rounded-lg bg-slate-100 text-left"
           onClick={onOpen3D}
         >
           <img src={images[0]} alt={`Phòng ${id}`} className="h-full w-full object-cover transition-transform duration-700 group-hover:scale-105" />
@@ -28,12 +28,12 @@ export function RoomGallery({ id, onOpen3D }: RoomGalleryProps) {
           <div className="absolute bottom-5 left-5 right-5 flex flex-col gap-4 md:flex-row md:items-end md:justify-between">
             <div className="text-white">
               <div className="mb-3 inline-flex items-center gap-2 rounded-full bg-white/18 px-3 py-1 text-xs font-bold backdrop-blur-md">
-                <Cuboid className="w-4 h-4" /> Có trải nghiệm 3D
+                <Cube className="h-4 w-4" /> Có trải nghiệm 3D
               </div>
               <h2 className="text-2xl font-extrabold">Xem trước không gian phòng</h2>
               <p className="mt-1 text-sm text-white/78">Chạm để mở trình xem 3D mô phỏng.</p>
             </div>
-            <GlassButton className="bg-white text-slate-950 hover:bg-slate-100 border-white" leftIcon={<Cuboid className="w-4 h-4" />}>
+            <GlassButton className="border-white bg-white text-slate-950 hover:bg-slate-100" leftIcon={<Cube className="h-4 w-4" />}>
               Mở 3D
             </GlassButton>
           </div>
@@ -41,14 +41,14 @@ export function RoomGallery({ id, onOpen3D }: RoomGalleryProps) {
 
         <div className="grid grid-cols-3 gap-2 md:grid-cols-2">
           {images.slice(1).map((image, index) => (
-            <button key={image} type="button" className="relative min-h-[116px] overflow-hidden rounded-xl bg-slate-100">
+            <button key={image} type="button" className="relative min-h-[116px] overflow-hidden rounded-lg bg-slate-100">
               <img src={image} className="h-full w-full object-cover transition-transform duration-500 hover:scale-105" alt={`Ảnh phòng ${index + 2}`} />
             </button>
           ))}
-          <button type="button" className="relative min-h-[116px] overflow-hidden rounded-xl bg-slate-950 text-white">
+          <button type="button" className="relative min-h-[116px] overflow-hidden rounded-lg bg-slate-950 text-white">
             <img src={images[0]} className="absolute inset-0 h-full w-full object-cover opacity-35" alt="" />
             <span className="relative z-10 flex h-full flex-col items-center justify-center gap-2 text-sm font-bold">
-              <Image className="w-5 h-5" /> Xem tất cả ảnh
+              <ImageSquare className="h-5 w-5" /> Xem tất cả ảnh
             </span>
           </button>
         </div>

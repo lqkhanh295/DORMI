@@ -1,4 +1,13 @@
-import { ArrowRight, BadgeCheck, BedDouble, Building2, Cuboid, MapPin, Search, SlidersHorizontal } from 'lucide-react';
+import {
+  ArrowRight,
+  SealCheck as BadgeCheck,
+  Bed as BedDouble,
+  Buildings as Building2,
+  Cube as Cuboid,
+  MapPin,
+  MagnifyingGlass as Search,
+  SlidersHorizontal,
+} from '@phosphor-icons/react';
 import { Link } from 'react-router-dom';
 import { GlassButton } from '../components/ui/GlassButton';
 import { GlassCard } from '../components/ui/GlassCard';

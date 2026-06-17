@@ -1,4 +1,4 @@
-import { AlertTriangle, Check, FileCheck, Shield, Users, X } from 'lucide-react';
+import { Warning as AlertTriangle, Check, ClipboardText as FileCheck, ShieldCheck as Shield, Users, X } from '@phosphor-icons/react';
 import { GlassButton } from '../../components/ui/GlassButton';
 import { GlassCard } from '../../components/ui/GlassCard';
 

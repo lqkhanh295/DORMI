@@ -1,15 +1,15 @@
 import { Outlet, Link, useLocation } from 'react-router-dom';
-import { AlertTriangle, FileCheck, LayoutDashboard, LogOut, Shield, Users } from 'lucide-react';
+import { ClipboardText, Gauge, ShieldCheck, SignOut, Users, Warning } from '@phosphor-icons/react';
 
 export function AdminLayout() {
   const location = useLocation();
 
   const navItems = [
-    { icon: <LayoutDashboard className="h-5 w-5" />, label: 'Tổng quan', path: '/admin/dashboard' },
-    { icon: <Shield className="h-5 w-5" />, label: 'Duyệt phòng', path: '/admin/rooms' },
+    { icon: <Gauge className="h-5 w-5" />, label: 'Tổng quan', path: '/admin/dashboard' },
+    { icon: <ShieldCheck className="h-5 w-5" />, label: 'Duyệt phòng', path: '/admin/rooms' },
     { icon: <Users className="h-5 w-5" />, label: 'Người dùng', path: '/admin/users' },
-    { icon: <AlertTriangle className="h-5 w-5" />, label: 'Báo cáo', path: '/admin/reports' },
-    { icon: <FileCheck className="h-5 w-5" />, label: 'Duyệt KYC', path: '/admin/kyc' },
+    { icon: <Warning className="h-5 w-5" />, label: 'Báo cáo', path: '/admin/reports' },
+    { icon: <ClipboardText className="h-5 w-5" />, label: 'Duyệt KYC', path: '/admin/kyc' },
   ];
 
   const currentTitle = navItems.find((item) => location.pathname.includes(item.path))?.label || 'Quản trị';
@@ -18,7 +18,7 @@ export function AdminLayout() {
     <div className="min-h-screen bg-background">
       <aside className="fixed inset-y-0 left-0 z-40 hidden w-72 border-r border-line bg-surface/92 px-4 py-5 backdrop-blur-xl lg:flex lg:flex-col">
         <Link to="/" className="mb-8 flex items-center gap-2 px-2 text-2xl font-extrabold text-foreground">
-          <Shield className="h-6 w-6" />
+          <ShieldCheck className="h-6 w-6" />
           <span>DORMI</span>
         </Link>
 
@@ -49,7 +49,7 @@ export function AdminLayout() {
 
         <div className="mt-5 border-t border-line pt-4">
           <Link to="/" className="flex items-center gap-3 rounded-lg px-3 py-3 text-sm font-semibold text-red-500 hover:bg-red-50">
-            <LogOut className="h-5 w-5" />
+            <SignOut className="h-5 w-5" />
             Đăng xuất
           </Link>
         </div>
@@ -62,7 +62,7 @@ export function AdminLayout() {
             <h1 className="text-xl font-extrabold text-foreground">{currentTitle}</h1>
           </div>
           <Link to="/" className="rounded-lg border border-line p-2 text-red-500 lg:hidden" aria-label="Đăng xuất">
-            <LogOut className="h-5 w-5" />
+            <SignOut className="h-5 w-5" />
           </Link>
         </div>
       </header>

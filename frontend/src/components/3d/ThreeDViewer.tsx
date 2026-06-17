@@ -1,5 +1,5 @@
 import { useEffect } from 'react';
-import { X, Cuboid } from 'lucide-react';
+import { Cube, X } from '@phosphor-icons/react';
 
 interface ThreeDViewerProps {
   onClose: () => void;
@@ -7,7 +7,6 @@ interface ThreeDViewerProps {
 
 // Default export is required for React.lazy()
 export default function ThreeDViewer({ onClose }: ThreeDViewerProps) {
-  // Prevent background scrolling when 3D modal is open
   useEffect(() => {
     document.body.style.overflow = 'hidden';
     return () => {
@@ -16,19 +15,20 @@ export default function ThreeDViewer({ onClose }: ThreeDViewerProps) {
   }, []);
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-sm animate-in fade-in duration-300">
-      <button 
+    <div className="fixed inset-0 z-50 flex animate-in items-center justify-center bg-black/80 backdrop-blur-sm duration-300 fade-in">
+      <button
+        type="button"
         onClick={onClose}
-        className="absolute top-6 right-6 p-2 bg-white/10 hover:bg-white/20 rounded-full text-white transition-colors"
+        className="absolute right-6 top-6 rounded-full bg-white/10 p-2 text-white transition-colors hover:bg-white/20"
       >
-        <X className="w-8 h-8" />
+        <X className="h-8 w-8" />
       </button>
 
-      <div className="w-11/12 h-[80vh] bg-gradient-to-br from-slate-900 to-black rounded-2xl border border-white/20 shadow-2xl flex flex-col items-center justify-center animate-in zoom-in-95 duration-500">
-        <Cuboid className="w-24 h-24 text-primary animate-bounce mb-6" />
-        <h2 className="text-3xl font-bold text-white mb-2">Không gian ảo 3D</h2>
-        <p className="text-white/60 text-lg">Đang tải mô hình Three.js (Mock)...</p>
-        <p className="text-white/40 text-sm mt-4">Kéo thả chuột để xoay góc nhìn</p>
+      <div className="flex h-[80vh] w-11/12 animate-in flex-col items-center justify-center rounded-lg border border-white/20 bg-gradient-to-br from-slate-900 to-black shadow-2xl duration-500 zoom-in-95">
+        <Cube className="mb-6 h-24 w-24 animate-bounce text-primary" />
+        <h2 className="mb-2 text-3xl font-bold text-white">Không gian ảo 3D</h2>
+        <p className="text-lg text-white/60">Đang tải mô hình Three.js (Mock)...</p>
+        <p className="mt-4 text-sm text-white/40">Kéo thả chuột để xoay góc nhìn</p>
       </div>
     </div>
   );

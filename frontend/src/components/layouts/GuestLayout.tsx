@@ -1,5 +1,5 @@
 import { Outlet, Link } from 'react-router-dom';
-import { LogIn, Search } from 'lucide-react';
+import { MagnifyingGlass, SignIn } from '@phosphor-icons/react';
 import { GlassButton } from '../ui/GlassButton';
 
 export function GuestLayout() {
@@ -18,12 +18,12 @@ export function GuestLayout() {
 
           <div className="flex items-center gap-3">
             <Link to="/login" className="hidden sm:block">
-              <GlassButton variant="ghost" leftIcon={<LogIn className="h-4 w-4" />}>
+              <GlassButton variant="ghost" leftIcon={<SignIn className="h-4 w-4" />}>
                 Đăng nhập
               </GlassButton>
             </Link>
             <Link to="/search">
-              <GlassButton variant="primary" leftIcon={<Search className="h-4 w-4" />}>
+              <GlassButton variant="primary" leftIcon={<MagnifyingGlass className="h-4 w-4" />}>
                 Tìm phòng
               </GlassButton>
             </Link>

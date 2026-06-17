@@ -1,16 +1,16 @@
 import { Outlet, Link, useLocation } from 'react-router-dom';
-import { Calendar, Compass, Heart, Home, LogOut, MessageSquare, Search, User } from 'lucide-react';
+import { CalendarBlank, ChatText, Compass, Heart, House, MagnifyingGlass, SignOut, User } from '@phosphor-icons/react';
 
 export function CustomerLayout() {
   const location = useLocation();
 
   const navItems = [
-    { icon: <Home className="h-5 w-5" />, label: 'Tổng quan', path: '/customer/dashboard' },
-    { icon: <Search className="h-5 w-5" />, label: 'Tìm phòng', path: '/customer/search' },
+    { icon: <House className="h-5 w-5" />, label: 'Tổng quan', path: '/customer/dashboard' },
+    { icon: <MagnifyingGlass className="h-5 w-5" />, label: 'Tìm phòng', path: '/customer/search' },
     { icon: <Compass className="h-5 w-5" />, label: 'AI ghép phòng', path: '/customer/matcher' },
     { icon: <Heart className="h-5 w-5" />, label: 'Phòng đã lưu', path: '/customer/saved' },
-    { icon: <Calendar className="h-5 w-5" />, label: 'Lịch hẹn', path: '/customer/appointments' },
-    { icon: <MessageSquare className="h-5 w-5" />, label: 'Tin nhắn', path: '/customer/messages' },
+    { icon: <CalendarBlank className="h-5 w-5" />, label: 'Lịch hẹn', path: '/customer/appointments' },
+    { icon: <ChatText className="h-5 w-5" />, label: 'Tin nhắn', path: '/customer/messages' },
   ];
 
   const currentTitle = navItems.find((item) => location.pathname.includes(item.path))?.label || 'Hồ sơ';
@@ -19,7 +19,7 @@ export function CustomerLayout() {
     <div className="min-h-screen bg-background">
       <aside className="fixed inset-y-0 left-0 z-40 hidden w-72 border-r border-line bg-surface/92 px-4 py-5 backdrop-blur-xl lg:flex lg:flex-col">
         <Link to="/" className="mb-8 flex items-center gap-2 px-2 text-2xl font-extrabold text-foreground">
-          <Home className="h-6 w-6" />
+          <House className="h-6 w-6" />
           <span>DORMI</span>
         </Link>
 
@@ -54,7 +54,7 @@ export function CustomerLayout() {
             Hồ sơ cá nhân
           </Link>
           <Link to="/" className="flex items-center gap-3 rounded-lg px-3 py-3 text-sm font-semibold text-red-500 hover:bg-red-50">
-            <LogOut className="h-5 w-5" />
+            <SignOut className="h-5 w-5" />
             Đăng xuất
           </Link>
         </div>
@@ -67,7 +67,7 @@ export function CustomerLayout() {
             <h1 className="text-xl font-extrabold text-foreground">{currentTitle}</h1>
           </div>
           <Link to="/" className="rounded-lg border border-line p-2 text-red-500 lg:hidden" aria-label="Đăng xuất">
-            <LogOut className="h-5 w-5" />
+            <SignOut className="h-5 w-5" />
           </Link>
         </div>
       </header>

@@ -1,4 +1,4 @@
-import { Calendar, Eye, Home, MessageSquare, Plus, ShieldCheck } from 'lucide-react';
+import { CalendarBlank as Calendar, Eye, House as Home, ChatText as MessageSquare, Plus, ShieldCheck } from '@phosphor-icons/react';
 import { GlassButton } from '../../components/ui/GlassButton';
 import { GlassCard } from '../../components/ui/GlassCard';
 import { GlassInput } from '../../components/ui/GlassInput';

@@ -1,6 +1,6 @@
 import { Suspense, lazy, useState } from 'react';
 import { useLocation, useNavigate, useParams } from 'react-router-dom';
-import { BadgeCheck, CalendarPlus, ChevronLeft, Heart, MessageCircle, Phone } from 'lucide-react';
+import { SealCheck as BadgeCheck, CalendarPlus, CaretLeft as ChevronLeft, ChatCircleText as MessageCircle, Heart, Phone } from '@phosphor-icons/react';
 import { GlassButton } from '../components/ui/GlassButton';
 import { GlassCard } from '../components/ui/GlassCard';
 import { RoomGallery } from '../components/room/RoomGallery';

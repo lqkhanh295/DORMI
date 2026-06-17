@@ -1,16 +1,16 @@
 import { Outlet, Link, useLocation } from 'react-router-dom';
-import { Calendar, ClipboardCheck, FolderOpen, Home, LogOut, MessageSquare, PlusSquare } from 'lucide-react';
+import { CalendarBlank, ChatText, ClipboardText, FolderOpen, House, PlusSquare, SignOut } from '@phosphor-icons/react';
 
 export function LandlordLayout() {
   const location = useLocation();
 
   const navItems = [
-    { icon: <Home className="h-5 w-5" />, label: 'Tổng quan', path: '/landlord/dashboard' },
-    { icon: <ClipboardCheck className="h-5 w-5" />, label: 'Xác minh KYC', path: '/landlord/kyc' },
+    { icon: <House className="h-5 w-5" />, label: 'Tổng quan', path: '/landlord/dashboard' },
+    { icon: <ClipboardText className="h-5 w-5" />, label: 'Xác minh KYC', path: '/landlord/kyc' },
     { icon: <PlusSquare className="h-5 w-5" />, label: 'Tạo phòng', path: '/landlord/create-room' },
     { icon: <FolderOpen className="h-5 w-5" />, label: 'Phòng của tôi', path: '/landlord/rooms' },
-    { icon: <Calendar className="h-5 w-5" />, label: 'Lịch hẹn', path: '/landlord/appointments' },
-    { icon: <MessageSquare className="h-5 w-5" />, label: 'Tin nhắn', path: '/landlord/messages' },
+    { icon: <CalendarBlank className="h-5 w-5" />, label: 'Lịch hẹn', path: '/landlord/appointments' },
+    { icon: <ChatText className="h-5 w-5" />, label: 'Tin nhắn', path: '/landlord/messages' },
   ];
 
   const currentTitle = navItems.find((item) => location.pathname.includes(item.path))?.label || 'Tổng quan';
@@ -19,7 +19,7 @@ export function LandlordLayout() {
     <div className="min-h-screen bg-background">
       <aside className="fixed inset-y-0 left-0 z-40 hidden w-72 border-r border-line bg-surface/92 px-4 py-5 backdrop-blur-xl lg:flex lg:flex-col">
         <Link to="/" className="mb-8 flex items-center gap-2 px-2 text-2xl font-extrabold text-foreground">
-          <Home className="h-6 w-6" />
+          <House className="h-6 w-6" />
           <span>DORMI</span>
         </Link>
 
@@ -50,7 +50,7 @@ export function LandlordLayout() {
 
         <div className="mt-5 border-t border-line pt-4">
           <Link to="/" className="flex items-center gap-3 rounded-lg px-3 py-3 text-sm font-semibold text-red-500 hover:bg-red-50">
-            <LogOut className="h-5 w-5" />
+            <SignOut className="h-5 w-5" />
             Đăng xuất
           </Link>
         </div>
@@ -63,7 +63,7 @@ export function LandlordLayout() {
             <h1 className="text-xl font-extrabold text-foreground">{currentTitle}</h1>
           </div>
           <Link to="/" className="rounded-lg border border-line p-2 text-red-500 lg:hidden" aria-label="Đăng xuất">
-            <LogOut className="h-5 w-5" />
+            <SignOut className="h-5 w-5" />
           </Link>
         </div>
       </header>

@@ -1,6 +1,6 @@
 import type { FormEvent } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { Lock, Mail } from 'lucide-react';
+import { EnvelopeSimple as Mail, Lock } from '@phosphor-icons/react';
 import { GlassButton } from '../components/ui/GlassButton';
 import { GlassCard } from '../components/ui/GlassCard';
 import { GlassInput } from '../components/ui/GlassInput';

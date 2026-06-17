@@ -1,5 +1,17 @@
 import { Link, useLocation } from 'react-router-dom';
-import { BadgeCheck, Bath, BedDouble, Building2, Cuboid, Filter, Heart, Home, MapPin, Search as SearchIcon, SlidersHorizontal } from 'lucide-react';
+import {
+  SealCheck as BadgeCheck,
+  Bathtub as Bath,
+  Bed as BedDouble,
+  Buildings as Building2,
+  Cube as Cuboid,
+  Funnel as Filter,
+  Heart,
+  House as Home,
+  MapPin,
+  MagnifyingGlass as SearchIcon,
+  SlidersHorizontal,
+} from '@phosphor-icons/react';
 import { GlassButton } from '../components/ui/GlassButton';
 import { GlassCard } from '../components/ui/GlassCard';
 import { GlassInput } from '../components/ui/GlassInput';

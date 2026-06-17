@@ -1,5 +1,5 @@
 import { Link } from 'react-router-dom';
-import { Calendar, Clock, Heart, MessageSquare, Search, Sparkles } from 'lucide-react';
+import { CalendarBlank as Calendar, Clock, Heart, ChatText as MessageSquare, MagnifyingGlass as Search, Sparkle as Sparkles } from '@phosphor-icons/react';
 import { GlassButton } from '../../components/ui/GlassButton';
 import { GlassCard } from '../../components/ui/GlassCard';
 

@@ -1,4 +1,4 @@
-import { Clock, MapPin, Phone } from 'lucide-react';
+import { Clock, MapPin, Phone } from '@phosphor-icons/react';
 import { GlassButton } from '../../components/ui/GlassButton';
 import { GlassCard } from '../../components/ui/GlassCard';
 

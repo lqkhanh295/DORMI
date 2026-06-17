@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { useLocation } from 'react-router-dom';
-import { Image as ImageIcon, MoreVertical, Send } from 'lucide-react';
+import { ImageSquare as ImageIcon, DotsThreeVertical as MoreVertical, PaperPlaneTilt as Send } from '@phosphor-icons/react';
 import { GlassButton } from '../../components/ui/GlassButton';
 import { GlassCard } from '../../components/ui/GlassCard';
 
