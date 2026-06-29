@@ -1,94 +1,136 @@
-import { Warning as AlertTriangle, Check, ClipboardText as FileCheck, ShieldCheck as Shield, Users, X } from '@phosphor-icons/react';
-import { GlassButton } from '../../components/ui/GlassButton';
-import { GlassCard } from '../../components/ui/GlassCard';
+import { Outlet } from 'react-router-dom';
+import { GlobalNav } from '../../components/ui/GlobalNav';
+import { LocalNav } from '../../components/ui/LocalNav';
+import { BentoCard } from '../../components/ui/BentoCard';
+import { AppleButton } from '../../components/ui/AppleButton';
+import { Users, ShieldCheck, Warning, FileText, CheckCircle, XCircle } from '@phosphor-icons/react';
 
-const reviewItems = [
-  { title: 'Studio Nguyễn Hữu Cảnh', owner: 'Nguyễn Văn Chủ', status: 'Chờ duyệt', risk: 'Thấp' },
-  { title: 'Phòng ban công Quận 7', owner: 'Lê Minh Hoa', status: 'Cần kiểm tra ảnh', risk: 'Trung bình' },
-];
-
-export function AdminDashboard() {
-  const stats = [
-    { title: 'Người dùng', value: '1,204', icon: <Users className="w-6 h-6 text-primary" /> },
-    { title: 'Phòng chờ duyệt', value: '15', icon: <Shield className="w-6 h-6 text-amber-600" /> },
-    { title: 'Báo cáo mở', value: '2', icon: <AlertTriangle className="w-6 h-6 text-red-500" /> },
+export function AdminLayout() {
+  const items = [
+    { label: 'Tổng quan', path: '/admin/dashboard' },
+    { label: 'Duyệt phòng', path: '/admin/rooms' },
+    { label: 'Duyệt KYC', path: '/admin/kyc' },
+    { label: 'Người dùng', path: '/admin/users' },
+    { label: 'Báo cáo', path: '/admin/reports' },
   ];
 
   return (
-    <div className="mx-auto flex w-full max-w-7xl flex-col gap-6">
-      <div className="grid gap-4 md:grid-cols-3">
-        {stats.map((stat) => (
-          <GlassCard key={stat.title} tone="solid" className="flex items-center gap-4">
-            <div className="flex h-14 w-14 items-center justify-center rounded-2xl bg-slate-50">{stat.icon}</div>
-            <div>
-              <p className="text-sm font-semibold text-muted">{stat.title}</p>
-              <p className="text-3xl font-extrabold">{stat.value}</p>
-            </div>
-          </GlassCard>
-        ))}
+    <div className="bg-[#f5f5f7] min-h-screen pb-24">
+      <GlobalNav />
+      <LocalNav title="Quản trị viên" items={items} />
+      <main className="apple-container pt-8">
+        <Outlet />
+      </main>
+    </div>
+  );
+}
+
+export function AdminDashboard() {
+  return (
+    <div>
+      <div className="mb-12">
+        <h1 className="typography-headline text-[#1d1d1f] mb-4">Hệ thống.</h1>
+        <p className="typography-subhead text-[#6e6e73]">Tất cả hoạt động trong tầm kiểm soát.</p>
       </div>
 
-      <AdminRooms />
+      <div className="grid gap-6 md:grid-cols-3 mb-12">
+        <BentoCard className="bg-white p-8">
+          <div className="flex h-12 w-12 items-center justify-center rounded-full bg-[#0071E3]/10 mb-4">
+             <Users className="w-6 h-6 text-[#0071E3]" weight="fill" />
+          </div>
+          <p className="text-[15px] font-medium text-[#6e6e73]">Tổng Người dùng</p>
+          <p className="text-[40px] font-bold text-[#1d1d1f]">1,204</p>
+        </BentoCard>
+        <BentoCard className="bg-white p-8">
+          <div className="flex h-12 w-12 items-center justify-center rounded-full bg-[#ff9500]/10 mb-4">
+             <ShieldCheck className="w-6 h-6 text-[#ff9500]" weight="fill" />
+          </div>
+          <p className="text-[15px] font-medium text-[#6e6e73]">Phòng chờ duyệt</p>
+          <p className="text-[40px] font-bold text-[#1d1d1f]">15</p>
+        </BentoCard>
+        <BentoCard className="bg-white p-8">
+          <div className="flex h-12 w-12 items-center justify-center rounded-full bg-[#ff3b30]/10 mb-4">
+             <Warning className="w-6 h-6 text-[#ff3b30]" weight="fill" />
+          </div>
+          <p className="text-[15px] font-medium text-[#6e6e73]">Báo cáo mở</p>
+          <p className="text-[40px] font-bold text-[#1d1d1f]">2</p>
+        </BentoCard>
+      </div>
     </div>
   );
 }
 
 export function AdminRooms() {
+  const reviewItems = [
+    { title: 'Studio Nguyễn Hữu Cảnh', owner: 'Nguyễn Văn Chủ', status: 'Chờ duyệt', risk: 'Thấp' },
+    { title: 'Phòng ban công Quận 7', owner: 'Lê Minh Hoa', status: 'Cần kiểm tra', risk: 'Trung bình' },
+  ];
+
   return (
-    <GlassCard tone="solid">
-      <div className="mb-4 flex items-center justify-between">
-        <div>
-          <p className="eyebrow mb-2">Kiểm duyệt</p>
-          <h2 className="text-xl font-extrabold">Bài đăng phòng chờ duyệt</h2>
-        </div>
-        <GlassButton variant="secondary" size="sm">Lọc ưu tiên</GlassButton>
+    <div>
+      <div className="flex items-center justify-between mb-8">
+        <h1 className="text-[34px] font-bold text-[#1d1d1f]">Kiểm duyệt phòng.</h1>
+        <AppleButton variant="secondary" size="sm">Lọc mức độ ưu tiên</AppleButton>
       </div>
-      <div className="overflow-hidden rounded-xl border border-line">
-        {reviewItems.map((item) => (
-          <div key={item.title} className="grid gap-3 border-b border-line p-4 last:border-b-0 md:grid-cols-[1fr_auto_auto_auto] md:items-center">
-            <div>
-              <p className="font-bold">{item.title}</p>
-              <p className="text-sm text-muted">Chủ phòng: {item.owner}</p>
+      
+      <div className="flex flex-col gap-4">
+        {reviewItems.map((item, idx) => (
+          <BentoCard key={idx} noPadding className="bg-white p-6 flex flex-col md:flex-row md:items-center justify-between gap-4">
+            <div className="flex-1">
+              <p className="text-[17px] font-semibold text-[#1d1d1f]">{item.title}</p>
+              <p className="text-[14px] text-[#6e6e73] mt-1">Người đăng: <span className="font-medium text-[#1d1d1f]">{item.owner}</span></p>
             </div>
-            <span className="rounded-full bg-amber-50 px-3 py-1 text-xs font-bold text-amber-700">{item.status}</span>
-            <span className="text-sm font-semibold text-muted">Rủi ro: {item.risk}</span>
-            <div className="flex gap-2">
-              <GlassButton size="sm" leftIcon={<Check className="w-4 h-4" />}>Duyệt</GlassButton>
-              <GlassButton variant="secondary" size="sm" leftIcon={<X className="w-4 h-4" />}>Từ chối</GlassButton>
+            <div className="flex items-center gap-6">
+              <span className="px-3 py-1 rounded-full text-[12px] font-semibold bg-[#ff9500]/10 text-[#ff9500]">{item.status}</span>
+              <span className="text-[14px] text-[#6e6e73]">Rủi ro: <span className="font-medium">{item.risk}</span></span>
+              <div className="flex items-center gap-2">
+                 <button className="w-10 h-10 rounded-full border border-[#d2d2d7] flex items-center justify-center text-[#ff3b30] hover:bg-[#ff3b30] hover:border-[#ff3b30] hover:text-white transition-colors">
+                    <XCircle className="w-6 h-6" weight="fill" />
+                 </button>
+                 <button className="w-10 h-10 rounded-full border border-[#d2d2d7] flex items-center justify-center text-[#34c759] hover:bg-[#34c759] hover:border-[#34c759] hover:text-white transition-colors">
+                    <CheckCircle className="w-6 h-6" weight="fill" />
+                 </button>
+              </div>
             </div>
-          </div>
+          </BentoCard>
         ))}
       </div>
-    </GlassCard>
-  );
-}
-
-export function AdminUsers() {
-  return (
-    <GlassCard tone="solid">
-      <h2 className="mb-4 text-xl font-extrabold">Quản lý người dùng</h2>
-      <p className="text-muted">Danh sách khách thuê và chủ phòng sẽ hiển thị theo trạng thái xác minh, hoạt động và báo cáo.</p>
-    </GlassCard>
-  );
-}
-
-export function AdminReports() {
-  return (
-    <GlassCard tone="solid">
-      <h2 className="mb-4 text-xl font-extrabold">Báo cáo gian lận</h2>
-      <p className="text-muted">Theo dõi báo cáo từ người dùng về tin giả, chủ phòng lừa đảo hoặc nội dung không phù hợp.</p>
-    </GlassCard>
+    </div>
   );
 }
 
 export function AdminKYC() {
   return (
-    <GlassCard tone="solid">
-      <div className="mb-4 flex items-center gap-3">
-        <FileCheck className="h-6 w-6 text-primary" />
-        <h2 className="text-xl font-extrabold">Duyệt KYC</h2>
+    <div>
+      <div className="flex items-center gap-4 mb-8">
+        <div className="w-12 h-12 rounded-full bg-[#0071e3]/10 flex items-center justify-center text-[#0071e3]">
+           <FileText className="w-6 h-6" weight="fill" />
+        </div>
+        <h1 className="text-[34px] font-bold text-[#1d1d1f]">Duyệt hồ sơ KYC.</h1>
       </div>
-      <p className="text-muted">Kiểm tra giấy tờ tùy thân của chủ phòng trước khi cho phép đăng bài công khai.</p>
-    </GlassCard>
+      <p className="text-[17px] text-[#6e6e73]">Kiểm tra giấy tờ tùy thân của chủ phòng trước khi cho phép đăng bài công khai.</p>
+    </div>
+  );
+}
+
+export function AdminUsers() {
+  return (
+    <div>
+      <h1 className="text-[34px] font-bold text-[#1d1d1f] mb-8">Quản lý người dùng.</h1>
+      <BentoCard className="bg-white">
+        <p className="text-[17px] text-[#6e6e73]">Danh sách khách thuê và chủ phòng hiển thị theo trạng thái xác minh, hoạt động và báo cáo.</p>
+      </BentoCard>
+    </div>
+  );
+}
+
+export function AdminReports() {
+  return (
+    <div>
+      <h1 className="text-[34px] font-bold text-[#1d1d1f] mb-8">Báo cáo vi phạm.</h1>
+      <BentoCard className="bg-white">
+        <p className="text-[17px] text-[#6e6e73]">Theo dõi báo cáo từ người dùng về tin giả, chủ phòng lừa đảo hoặc nội dung không phù hợp.</p>
+      </BentoCard>
+    </div>
   );
 }

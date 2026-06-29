@@ -1,0 +1,57 @@
+import { Outlet, Link, useNavigate, useLocation } from 'react-router-dom';
+import { useStore } from '../store/useStore';
+
+export default function LandlordLayout() {
+  const { currentUser, logout } = useStore();
+  const navigate = useNavigate();
+  const location = useLocation();
+
+  const handleLogout = () => {
+    logout();
+    navigate('/');
+  };
+
+  return (
+    <div className="min-h-screen bg-neutral-50 flex">
+      {/* Sidebar */}
+      <aside className="w-64 bg-gray-900 text-white hidden md:block">
+        <div className="p-6">
+          <Link to="/" className="text-xl font-bold tracking-tight text-white">DORMI <span className="text-blue-400 text-xs ml-1">LANDLORD</span></Link>
+        </div>
+        <nav className="px-4 py-4 space-y-1">
+          {[
+            { name: 'Overview', path: '/landlord' },
+            { name: 'My Properties', path: '/landlord/rooms' },
+            { name: 'Analytics', path: '/landlord/analytics' },
+            { name: 'Messages', path: '/landlord/chat' }
+          ].map(item => {
+            const isActive = location.pathname === item.path;
+            return (
+              <Link 
+                key={item.name}
+                to={item.path} 
+                className={`block px-3 py-2 rounded-md text-sm font-medium transition-micro ${isActive ? 'text-white bg-gray-800' : 'text-gray-300 hover:text-white hover:bg-gray-800'}`}
+              >
+                {item.name}
+              </Link>
+            )
+          })}
+        </nav>
+      </aside>
+
+      {/* Main Content */}
+      <div className="flex-1 flex flex-col">
+        <header className="h-16 bg-white border-b border-gray-200 flex items-center justify-end px-6 gap-4">
+          <span className="text-sm font-medium">{currentUser?.name}</span>
+          <div className="w-8 h-8 rounded-full bg-green-100 flex items-center justify-center text-green-700 font-bold overflow-hidden">
+            {currentUser?.avatar ? <img src={currentUser.avatar} alt="avatar" className="w-full h-full object-cover" /> : 'L'}
+          </div>
+          <button onClick={handleLogout} className="text-xs text-red-600 hover:underline">Logout</button>
+        </header>
+        <main className="flex-1 p-8">
+          <Outlet />
+        </main>
+      </div>
+    </div>
+  );
+}
