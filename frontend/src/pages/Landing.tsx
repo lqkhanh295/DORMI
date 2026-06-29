@@ -1,222 +1,129 @@
-import {
-  ArrowRight,
-  SealCheck as BadgeCheck,
-  Bed as BedDouble,
-  Buildings as Building2,
-  Cube as Cuboid,
-  MapPin,
-  MagnifyingGlass as Search,
-  SlidersHorizontal,
-} from '@phosphor-icons/react';
+import { GlobalNav } from '../components/ui/GlobalNav';
+import { SectionHero } from '../components/ui/SectionHero';
+import { AppleButton } from '../components/ui/AppleButton';
+import { BentoCard } from '../components/ui/BentoCard';
 import { Link } from 'react-router-dom';
-import { GlassButton } from '../components/ui/GlassButton';
-import { GlassCard } from '../components/ui/GlassCard';
-import { GlassInput } from '../components/ui/GlassInput';
-
-const rentalRooms = [
-  {
-    id: 1,
-    title: 'Studio sáng, full nội thất gần phố đi bộ',
-    location: 'Quận 1, TP.HCM',
-    price: '5.000.000đ',
-    area: '28m²',
-    type: 'Studio',
-    badge: 'Có 3D',
-    verified: true,
-    image: 'https://images.unsplash.com/photo-1522708323590-d24dbb6b0267?q=80&w=1200&auto=format&fit=crop',
-  },
-  {
-    id: 2,
-    title: 'Sleepbox sạch, yên tĩnh gần HUTECH',
-    location: 'Bình Thạnh, TP.HCM',
-    price: '1.800.000đ',
-    area: '8m²',
-    type: 'Ký túc xá',
-    badge: 'Đã KYC',
-    verified: true,
-    image: 'https://images.unsplash.com/photo-1554995207-c18c203602cb?q=80&w=900&auto=format&fit=crop',
-  },
-  {
-    id: 3,
-    title: 'Phòng ban công thoáng gần Tôn Đức Thắng',
-    location: 'Quận 7, TP.HCM',
-    price: '2.500.000đ',
-    area: '22m²',
-    type: 'Phòng trọ',
-    badge: 'Gần trường',
-    verified: false,
-    image: 'https://images.unsplash.com/photo-1505693416388-ac5ce068fe85?q=80&w=900&auto=format&fit=crop',
-  },
-  {
-    id: 4,
-    title: 'Căn hộ mini có máy giặt riêng',
-    location: 'Thủ Đức, TP.HCM',
-    price: '3.200.000đ',
-    area: '24m²',
-    type: 'Căn hộ mini',
-    badge: 'Còn phòng',
-    verified: true,
-    image: 'https://images.unsplash.com/photo-1560448204-603b3fc33ddc?q=80&w=1000&auto=format&fit=crop',
-  },
-  {
-    id: 5,
-    title: 'Phòng mới xây, cửa sổ lớn',
-    location: 'Gò Vấp, TP.HCM',
-    price: '2.200.000đ',
-    area: '18m²',
-    type: 'Phòng trọ',
-    badge: 'Mới đăng',
-    verified: true,
-    image: 'https://images.unsplash.com/photo-1505693416388-ac5ce068fe85?q=80&w=1000&auto=format&fit=crop',
-  },
-  {
-    id: 6,
-    title: 'Studio yên tĩnh gần tuyến xe buýt',
-    location: 'Quận 10, TP.HCM',
-    price: '4.100.000đ',
-    area: '26m²',
-    type: 'Studio',
-    badge: 'Có lịch xem',
-    verified: false,
-    image: 'https://images.unsplash.com/photo-1560448075-bb485b067938?q=80&w=1000&auto=format&fit=crop',
-  },
-];
-
-const filters = ['Tất cả', 'Phòng trọ', 'Studio', 'Căn hộ mini', 'Ký túc xá', 'Có 3D', 'Đã KYC'];
+import { PlayCircle } from '@phosphor-icons/react';
 
 export function Landing() {
   return (
-    <div className="flex-1 bg-background">
-      <section className="section-shell py-12 md:py-16">
-        <div className="grid gap-8 lg:grid-cols-[0.85fr_1.15fr] lg:items-end">
-          <div>
-            <p className="eyebrow">Phòng đang cho thuê</p>
-            <h1 className="mt-4 max-w-3xl text-5xl font-extrabold leading-[1.02] tracking-normal text-foreground md:text-7xl">
-              Tìm phòng trọ phù hợp gần khu vực của bạn
-            </h1>
-            <p className="mt-6 max-w-2xl text-lg leading-8 text-muted">
-              Người chưa đăng nhập chỉ xem được thông tin phòng đang cho thuê: hình ảnh, giá, vị trí, diện tích và trạng thái xác minh.
-            </p>
-          </div>
-
-          <GlassCard tone="solid" className="bg-surface">
-            <div className="mb-4 flex items-center justify-between gap-3">
-              <div>
-                <p className="text-sm font-semibold text-muted">Tìm nhanh</p>
-                <h2 className="text-2xl font-extrabold">Lọc phòng đang mở</h2>
-              </div>
-              <div className="rounded-lg border border-line p-2 text-muted">
-                <SlidersHorizontal className="h-5 w-5" />
-              </div>
-            </div>
-
-            <div className="grid gap-3 md:grid-cols-[1fr_auto]">
-              <GlassInput placeholder="Nhập quận, trường đại học, tên đường..." leftIcon={<Search className="h-5 w-5" />} />
-              <Link to="/search">
-                <GlassButton size="lg" className="w-full" rightIcon={<ArrowRight className="h-4 w-4" />}>
-                  Tìm phòng
-                </GlassButton>
-              </Link>
-            </div>
-
-            <div className="mt-4 flex gap-2 overflow-x-auto pb-1">
-              {filters.map((filter, index) => (
-                <button
-                  key={filter}
-                  className={`shrink-0 rounded-lg px-3 py-2 text-sm font-semibold transition-colors ${
-                    index === 0
-                      ? 'bg-primary text-white'
-                      : 'border border-line bg-[#f7f8f3] text-muted hover:text-foreground'
-                  }`}
-                >
-                  {filter}
-                </button>
-              ))}
-            </div>
-          </GlassCard>
-        </div>
-      </section>
-
-      <section className="border-y border-line bg-surface">
-        <div className="section-shell grid gap-4 py-6 text-sm text-muted md:grid-cols-3">
-          <div><strong className="text-foreground">1.200+</strong> phòng đang cho thuê</div>
-          <div><strong className="text-foreground">86%</strong> bài đăng có chủ nhà xác minh</div>
-          <div><strong className="text-foreground">120+</strong> phòng có xem trước 3D</div>
-        </div>
-      </section>
-
-      <section className="section-shell py-12">
-        <div className="mb-7 flex flex-col gap-3 md:flex-row md:items-end md:justify-between">
-          <div>
-            <p className="eyebrow">Danh sách phòng</p>
-            <h2 className="mt-2 text-3xl font-extrabold tracking-normal md:text-4xl">Các phòng đang còn trống</h2>
-          </div>
-          <Link to="/search" className="inline-flex items-center gap-2 font-bold text-foreground">
-            Xem tất cả <ArrowRight className="h-4 w-4" />
-          </Link>
-        </div>
-
-        <div className="grid gap-5 md:grid-cols-2 xl:grid-cols-3">
-          {rentalRooms.map((room) => (
-            <Link to={`/room/${room.id}`} state={{ from: '/' }} key={room.id}>
-              <GlassCard noPadding tone="solid" className="group h-full">
-                <div className="relative aspect-[4/3] overflow-hidden bg-[#eef0e8]">
-                  <img src={room.image} alt={room.title} className="h-full w-full object-cover transition-transform duration-700 group-hover:scale-105" />
-                  <div className="absolute left-3 top-3 rounded-lg bg-white/90 px-3 py-1.5 text-xs font-extrabold text-foreground shadow-sm">
-                    {room.badge}
-                  </div>
-                </div>
-
-                <div className="p-5">
-                  <div className="mb-3 flex items-start justify-between gap-3">
-                    <div>
-                      <p className="text-xs font-bold uppercase tracking-[0.14em] text-muted">{room.type}</p>
-                      <h3 className="mt-1 text-lg font-extrabold leading-snug text-foreground group-hover:text-accent">{room.title}</h3>
-                    </div>
-                    {room.verified && (
-                      <span className="rounded-lg bg-[#eef1e7] p-2 text-accent" aria-label="Đã xác minh">
-                        <BadgeCheck className="h-4 w-4" />
-                      </span>
-                    )}
-                  </div>
-
-                  <p className="mb-4 flex items-center gap-2 text-sm text-muted">
-                    <MapPin className="h-4 w-4" />
-                    {room.location}
-                  </p>
-
-                  <div className="mb-5 flex flex-wrap gap-2 text-xs font-semibold text-muted">
-                    <span className="inline-flex items-center gap-1 rounded-md bg-[#f3f4ee] px-2.5 py-1.5">
-                      <Building2 className="h-3.5 w-3.5" />
-                      {room.area}
-                    </span>
-                    <span className="inline-flex items-center gap-1 rounded-md bg-[#f3f4ee] px-2.5 py-1.5">
-                      <BedDouble className="h-3.5 w-3.5" />
-                      Khép kín
-                    </span>
-                    {room.badge === 'Có 3D' && (
-                      <span className="inline-flex items-center gap-1 rounded-md bg-[#f3f4ee] px-2.5 py-1.5">
-                        <Cuboid className="h-3.5 w-3.5" />
-                        Xem 3D
-                      </span>
-                    )}
-                  </div>
-
-                  <div className="flex items-center justify-between gap-3 border-t border-line pt-4">
-                    <div>
-                      <p className="text-xl font-extrabold text-foreground">{room.price}</p>
-                      <p className="text-xs text-muted">/ tháng</p>
-                    </div>
-                    <span className="inline-flex items-center gap-1 text-sm font-bold text-foreground">
-                      Chi tiết <ArrowRight className="h-4 w-4" />
-                    </span>
-                  </div>
-                </div>
-              </GlassCard>
+    <div className="bg-[#1d1d1f] min-h-screen">
+      <GlobalNav />
+      
+      <main className="pt-[44px]">
+        {/* Dark Hero Section (like iPhone Pro page) */}
+        <section className="relative flex flex-col items-center justify-center pt-24 pb-32 text-center text-[#f5f5f7]">
+          <SectionHero 
+            dark
+            eyebrow="Dormi Pro"
+            title={
+              <>
+                Tìm phòng trọ.<br/>
+                Chuẩn mới.
+              </>
+            }
+            subtitle="Trải nghiệm nền tảng tìm phòng cao cấp với hình ảnh 3D chân thực, xác thực chính chủ và ghép phòng thông minh."
+          >
+            <Link to="/search">
+              <AppleButton size="lg" className="px-8 text-[17px]">Tìm phòng ngay</AppleButton>
             </Link>
-          ))}
+            <button className="flex items-center gap-2 text-[17px] text-[#2997ff] hover:underline font-medium px-4">
+              Xem video giới thiệu <PlayCircle className="w-5 h-5" />
+            </button>
+          </SectionHero>
+
+          <div className="mt-20 w-full max-w-[1200px] px-6">
+            <div className="aspect-video w-full rounded-[24px] overflow-hidden bg-black shadow-2xl relative">
+              <img 
+                src="https://images.unsplash.com/photo-1522708323590-d24dbb6b0267?q=80&w=2000&auto=format&fit=crop" 
+                alt="Dormi Platform" 
+                className="w-full h-full object-cover opacity-80"
+              />
+              <div className="absolute inset-0 bg-gradient-to-t from-black/80 to-transparent flex items-end justify-center pb-12">
+                <p className="text-[28px] font-semibold">Tất cả trong một ứng dụng duy nhất.</p>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        {/* White Grid Section (like iPad/Mac grid) */}
+        <section className="bg-white py-24">
+          <div className="apple-container">
+            <div className="text-center mb-16">
+              <h2 className="text-[48px] font-bold text-[#1d1d1f] leading-tight tracking-tight">
+                Không gian nào dành cho bạn?
+              </h2>
+            </div>
+
+            <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-4 mb-6">
+              {/* Feature 1 */}
+              <BentoCard hoverEffect noPadding className="h-[400px] bg-[#f5f5f7] flex flex-col items-center text-center">
+                <div className="pt-10 px-6">
+                  <h3 className="text-[28px] font-semibold text-[#1d1d1f]">Studio</h3>
+                  <p className="text-[17px] text-[#6e6e73] mt-2">Đầy đủ tiện nghi,<br/>sẵn sàng dọn vào.</p>
+                </div>
+                <div className="mt-auto h-1/2 w-full">
+                   <img src="https://images.unsplash.com/photo-1505693416388-ac5ce068fe85?q=80&w=800&auto=format&fit=crop" className="w-full h-full object-cover" alt="Studio" />
+                </div>
+              </BentoCard>
+
+              {/* Feature 2 */}
+              <BentoCard hoverEffect noPadding className="h-[400px] bg-[#f5f5f7] flex flex-col items-center text-center">
+                <div className="pt-10 px-6">
+                  <h3 className="text-[28px] font-semibold text-[#1d1d1f]">Ký túc xá</h3>
+                  <p className="text-[17px] text-[#6e6e73] mt-2">Tiết kiệm chi phí,<br/>không gian chung.</p>
+                </div>
+                <div className="mt-auto h-1/2 w-full">
+                   <img src="https://images.unsplash.com/photo-1554995207-c18c203602cb?q=80&w=800&auto=format&fit=crop" className="w-full h-full object-cover" alt="KTX" />
+                </div>
+              </BentoCard>
+
+              {/* Feature 3 (Span 2) */}
+              <BentoCard hoverEffect noPadding className="h-[400px] md:col-span-2 bg-[#1d1d1f] flex flex-col text-left relative overflow-hidden">
+                <div className="absolute inset-0">
+                  <img src="https://images.unsplash.com/photo-1560448204-603b3fc33ddc?q=80&w=1200&auto=format&fit=crop" className="w-full h-full object-cover opacity-60" alt="Room" />
+                </div>
+                <div className="relative z-10 p-12 h-full flex flex-col justify-end">
+                  <p className="text-[14px] font-semibold uppercase tracking-widest text-white/70 mb-2">Tính năng mới</p>
+                  <h3 className="text-[40px] font-bold text-white leading-tight mb-4">Xem không gian 3D. <br/>Ngay trên trình duyệt.</h3>
+                  <AppleButton variant="outline" className="w-fit text-white border-white hover:bg-white hover:text-black">Khám phá ngay</AppleButton>
+                </div>
+              </BentoCard>
+            </div>
+            
+            <div className="grid gap-6 md:grid-cols-2">
+              <BentoCard hoverEffect className="h-[300px] flex flex-col justify-center items-center text-center">
+                <h3 className="text-[32px] font-semibold text-[#1d1d1f] mb-4">Tìm bạn cùng phòng thông minh.</h3>
+                <p className="text-[17px] text-[#6e6e73] mb-6 max-w-[300px]">Thuật toán AI tự động ghép nối bạn với những người có chung sở thích.</p>
+                <Link to="/customer/matcher" className="text-[#0071e3] text-[17px] hover:underline flex items-center gap-1">
+                  Trải nghiệm AI Matcher &gt;
+                </Link>
+              </BentoCard>
+              
+              <BentoCard hoverEffect className="h-[300px] flex flex-col justify-center items-center text-center">
+                <h3 className="text-[32px] font-semibold text-[#1d1d1f] mb-4">Bảo vệ quyền lợi của bạn.</h3>
+                <p className="text-[17px] text-[#6e6e73] mb-6 max-w-[300px]">100% chủ nhà trên Dormi đều phải trải qua quá trình xác thực KYC.</p>
+                <Link to="/search" className="text-[#0071e3] text-[17px] hover:underline flex items-center gap-1">
+                  Tìm hiểu thêm về Bảo mật &gt;
+                </Link>
+              </BentoCard>
+            </div>
+          </div>
+        </section>
+      </main>
+
+      <footer className="bg-[#f5f5f7] py-12 border-t border-[#d2d2d7]">
+        <div className="apple-container text-[12px] text-[#6e6e73]">
+          <p className="mb-4">Dormi không thu phí trung gian. Để xem thông tin liên hệ của chủ nhà, bạn cần đăng nhập.</p>
+          <div className="border-t border-[#d2d2d7] pt-4 flex flex-col md:flex-row justify-between">
+            <p>Bản quyền © 2026 Dormi Inc. Bảo lưu mọi quyền.</p>
+            <div className="flex gap-4 mt-2 md:mt-0">
+              <Link to="#" className="hover:text-[#1d1d1f]">Chính sách quyền riêng tư</Link>
+              <Link to="#" className="border-l border-[#d2d2d7] pl-4 hover:text-[#1d1d1f]">Điều khoản sử dụng</Link>
+            </div>
+          </div>
         </div>
-      </section>
+      </footer>
     </div>
   );
 }
