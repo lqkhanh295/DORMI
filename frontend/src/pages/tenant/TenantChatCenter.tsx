@@ -1,6 +1,36 @@
+import { useState, useRef, useEffect } from 'react';
+import { useStore } from '../../store/useStore';
 import { Button } from '../../components/ui/Button';
 
 export default function TenantChatCenter() {
+  const { currentUser, messages, sendMessage } = useStore();
+  const [inputText, setInputText] = useState('');
+  const messagesEndRef = useRef<HTMLDivElement>(null);
+
+  // We hardcode the conversation with landlord (u2) for MVP
+  const LANDLORD_ID = 'u2';
+  const chatMessages = messages.filter(m => 
+    (m.senderId === currentUser?.id && m.receiverId === LANDLORD_ID) ||
+    (m.senderId === LANDLORD_ID && m.receiverId === currentUser?.id)
+  );
+
+  useEffect(() => {
+    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+  }, [chatMessages]);
+
+  const handleSend = () => {
+    if (!inputText.trim()) return;
+    sendMessage(LANDLORD_ID, inputText);
+    setInputText('');
+  };
+
+  const handleKeyDown = (e: React.KeyboardEvent) => {
+    if (e.key === 'Enter' && !e.shiftKey) {
+      e.preventDefault();
+      handleSend();
+    }
+  };
+
   return (
     <div className="flex h-[calc(100vh-10rem)] bg-white rounded-2xl shadow-card overflow-hidden border border-gray-100">
       {/* Sidebar: Conversation List */}
@@ -13,22 +43,19 @@ export default function TenantChatCenter() {
           />
         </div>
         <div className="flex-1 overflow-y-auto">
-          {[1,2,3].map(i => (
-            <div key={i} className={`p-4 border-b border-gray-100 cursor-pointer transition-micro flex gap-3 ${i===1 ? 'bg-blue-50/50' : 'hover:bg-gray-100'}`}>
-              <div className="w-10 h-10 rounded-full bg-blue-100 flex-shrink-0 flex items-center justify-center text-blue-700 font-bold">
-                {i === 1 ? 'L' : 'R'}
-              </div>
-              <div className="flex-1 overflow-hidden">
-                <div className="flex justify-between items-baseline mb-1">
-                  <h4 className="font-semibold text-gray-900 truncate">{i === 1 ? 'Le Van B (Landlord)' : 'Alex (Roommate Match)'}</h4>
-                  <span className="text-xs text-gray-500">10:42 AM</span>
-                </div>
-                <p className={`text-sm truncate ${i===1 ? 'font-medium text-gray-900' : 'text-gray-500'}`}>
-                  {i === 1 ? 'Yes, the room is still available.' : 'Sounds good! See you then.'}
-                </p>
-              </div>
+          <div className="p-4 border-b border-gray-100 cursor-pointer transition-micro flex gap-3 bg-blue-50/50">
+            <div className="w-10 h-10 rounded-full bg-blue-100 flex-shrink-0 flex items-center justify-center text-blue-700 font-bold">
+              L
             </div>
-          ))}
+            <div className="flex-1 overflow-hidden">
+              <div className="flex justify-between items-baseline mb-1">
+                <h4 className="font-semibold text-gray-900 truncate">Le Van B (Landlord)</h4>
+              </div>
+              <p className="text-sm truncate font-medium text-gray-900">
+                {chatMessages.length > 0 ? chatMessages[chatMessages.length - 1].text : 'Start a conversation'}
+              </p>
+            </div>
+          </div>
         </div>
       </div>
 
@@ -49,25 +76,28 @@ export default function TenantChatCenter() {
         {/* Messages */}
         <div className="flex-1 p-6 overflow-y-auto bg-white flex flex-col gap-4">
           <div className="text-center">
-            <span className="text-xs text-gray-400 bg-gray-50 px-2 py-1 rounded-full">Today, 9:00 AM</span>
+            <span className="text-xs text-gray-400 bg-gray-50 px-2 py-1 rounded-full">Today</span>
           </div>
           
-          <div className="flex justify-end">
-            <div className="bg-blue-600 text-white p-3 rounded-2xl rounded-tr-sm max-w-[70%] shadow-sm">
-              <p className="text-sm">Hi, I'm interested in the Studio in District 3. Is it still available for viewing tomorrow?</p>
-              <span className="text-[10px] text-blue-200 block text-right mt-1">9:05 AM</span>
-            </div>
-          </div>
-          
-          <div className="flex justify-start">
-            <div className="flex gap-2 max-w-[70%]">
-              <div className="w-8 h-8 rounded-full bg-blue-100 flex-shrink-0 mt-auto flex items-center justify-center text-blue-700 font-bold text-xs">L</div>
-              <div className="bg-gray-100 text-gray-900 p-3 rounded-2xl rounded-bl-sm shadow-sm">
-                <p className="text-sm">Hello! Yes, the room is still available. I can show you around tomorrow at 2 PM. Does that work for you?</p>
-                <span className="text-[10px] text-gray-400 block mt-1">10:42 AM</span>
+          {chatMessages.map(msg => {
+            const isMe = msg.senderId === currentUser?.id;
+            return (
+              <div key={msg.id} className={`flex ${isMe ? 'justify-end' : 'justify-start'}`}>
+                <div className={`flex gap-2 max-w-[70%] ${isMe ? 'flex-row-reverse' : 'flex-row'}`}>
+                  {!isMe && (
+                    <div className="w-8 h-8 rounded-full bg-blue-100 flex-shrink-0 mt-auto flex items-center justify-center text-blue-700 font-bold text-xs">L</div>
+                  )}
+                  <div className={`${isMe ? 'bg-blue-600 text-white rounded-2xl rounded-tr-sm' : 'bg-gray-100 text-gray-900 rounded-2xl rounded-bl-sm'} p-3 shadow-sm`}>
+                    <p className="text-sm whitespace-pre-wrap">{msg.text}</p>
+                    <span className={`text-[10px] block mt-1 ${isMe ? 'text-blue-200 text-right' : 'text-gray-400'}`}>
+                      {new Date(msg.timestamp).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})}
+                    </span>
+                  </div>
+                </div>
               </div>
-            </div>
-          </div>
+            );
+          })}
+          <div ref={messagesEndRef} />
         </div>
 
         {/* Input Area */}
@@ -80,8 +110,11 @@ export default function TenantChatCenter() {
               placeholder="Type your message..." 
               className="flex-1 max-h-32 bg-transparent resize-none outline-none py-2 text-sm text-gray-900"
               rows={1}
+              value={inputText}
+              onChange={e => setInputText(e.target.value)}
+              onKeyDown={handleKeyDown}
             ></textarea>
-            <Button size="sm" className="mb-0.5 rounded-lg px-4">Send</Button>
+            <Button size="sm" className="mb-0.5 rounded-lg px-4" onClick={handleSend}>Send</Button>
           </div>
         </div>
       </div>
