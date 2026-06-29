@@ -1,7 +1,9 @@
 import { Card } from '../../components/ui/Card';
 import { Button } from '../../components/ui/Button';
+import { useNavigate } from 'react-router-dom';
 
 export default function LandlordDashboard() {
+  const navigate = useNavigate();
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between">
@@ -9,7 +11,7 @@ export default function LandlordDashboard() {
           <h1 className="text-2xl font-bold text-gray-900">Landlord Overview</h1>
           <p className="text-gray-500">Manage your properties and analyze leads.</p>
         </div>
-        <Button>+ Add New Listing</Button>
+        <Button onClick={() => navigate('/landlord/rooms')}>+ Add New Listing</Button>
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6">

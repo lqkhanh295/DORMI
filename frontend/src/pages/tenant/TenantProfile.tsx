@@ -1,9 +1,22 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Card } from '../../components/ui/Card';
 import { Button } from '../../components/ui/Button';
 import { Input } from '../../components/ui/Input';
+import { useStore } from '../../store/useStore';
 
 export default function TenantProfile() {
+  const { currentUser, updateUser } = useStore();
+  const [firstName, setFirstName] = useState('');
+  const [lastName, setLastName] = useState('');
+
+  useEffect(() => {
+    if (currentUser?.name) {
+      const parts = currentUser.name.split(' ');
+      setFirstName(parts[0]);
+      setLastName(parts.slice(1).join(' '));
+    }
+  }, [currentUser]);
+
   const [tags, setTags] = useState([
     { name: 'Quiet', active: true },
     { name: 'Non-smoker', active: true },
@@ -26,6 +39,11 @@ export default function TenantProfile() {
     setTags(newTags);
   };
 
+  const handleSave = () => {
+    updateUser({ name: `${firstName} ${lastName}`.trim() });
+    alert('Profile saved successfully!');
+  };
+
   return (
     <div className="max-w-4xl mx-auto space-y-6">
       <div className="flex items-center justify-between">
@@ -33,19 +51,19 @@ export default function TenantProfile() {
           <h1 className="text-2xl font-bold text-gray-900">My Profile</h1>
           <p className="text-gray-500">Update your personal information and lifestyle tags.</p>
         </div>
-        <Button onClick={() => alert('Profile saved successfully!')}>Save Changes</Button>
+        <Button onClick={handleSave}>Save Changes</Button>
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
         <Card className="p-6 md:col-span-1 flex flex-col items-center text-center space-y-4">
           <div className="w-32 h-32 bg-gray-200 rounded-full overflow-hidden relative group cursor-pointer border-4 border-white shadow-sm">
-            <img src="https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?auto=format&fit=crop&w=200&q=80" alt="Profile" className="w-full h-full object-cover" />
+            <img src={currentUser?.avatar || "https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?auto=format&fit=crop&w=200&q=80"} alt="Profile" className="w-full h-full object-cover" />
             <div className="absolute inset-0 bg-black/40 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-micro">
               <span className="text-white text-sm font-medium">Edit Photo</span>
             </div>
           </div>
           <div>
-            <h3 className="text-lg font-bold text-gray-900">Alex Nguyen</h3>
+            <h3 className="text-lg font-bold text-gray-900">{currentUser?.name || 'Alex Nguyen'}</h3>
             <p className="text-sm text-gray-500">Tenant Student</p>
           </div>
           <div className="w-full pt-4 border-t border-gray-100">
@@ -60,9 +78,9 @@ export default function TenantProfile() {
           <div>
             <h3 className="text-lg font-semibold text-gray-900 mb-4">Basic Information</h3>
             <div className="grid grid-cols-2 gap-4">
-              <Input label="First Name" defaultValue="Alex" />
-              <Input label="Last Name" defaultValue="Nguyen" />
-              <Input label="Email" type="email" defaultValue="alex.nguyen@example.com" />
+              <Input label="First Name" value={firstName} onChange={e => setFirstName(e.target.value)} />
+              <Input label="Last Name" value={lastName} onChange={e => setLastName(e.target.value)} />
+              <Input label="Email" type="email" defaultValue={currentUser?.email || "alex.nguyen@example.com"} />
               <Input label="Phone Number" defaultValue="0901234567" />
             </div>
           </div>

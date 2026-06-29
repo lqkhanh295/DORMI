@@ -1,3 +1,4 @@
+import { useState } from 'react';
 import { Card } from '../../components/ui/Card';
 import { Button } from '../../components/ui/Button';
 import { Input } from '../../components/ui/Input';
@@ -7,6 +8,13 @@ import { useNavigate } from 'react-router-dom';
 export default function SearchResults() {
   const listings = useStore(state => state.listings);
   const navigate = useNavigate();
+  const [searchQuery, setSearchQuery] = useState('');
+  
+  const filteredListings = listings.filter(room => 
+    room.title.toLowerCase().includes(searchQuery.toLowerCase()) || 
+    room.address.toLowerCase().includes(searchQuery.toLowerCase()) ||
+    room.type.toLowerCase().includes(searchQuery.toLowerCase())
+  );
 
   return (
     <div className="flex h-[calc(100vh-64px)] overflow-hidden">
@@ -14,7 +22,12 @@ export default function SearchResults() {
       <div className="w-full lg:w-1/2 flex flex-col bg-neutral-50 border-r border-gray-200">
         <div className="p-4 bg-white border-b border-gray-200 space-y-4 shadow-sm z-10">
           <div className="flex gap-2">
-            <Input placeholder="Search location, university..." className="flex-1" />
+            <Input 
+              placeholder="Search location, university, type..." 
+              className="flex-1"
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+            />
             <Button>Search</Button>
           </div>
           <div className="flex gap-2 overflow-x-auto pb-2 scrollbar-hide">
@@ -26,8 +39,11 @@ export default function SearchResults() {
         </div>
         
         <div className="flex-1 overflow-y-auto p-4 space-y-4">
-          <p className="text-sm font-medium text-gray-500 mb-2">{listings.length} rooms found</p>
-          {listings.map(room => (
+          <p className="text-sm font-medium text-gray-500 mb-2">{filteredListings.length} rooms found</p>
+          {filteredListings.length === 0 && (
+            <p className="text-gray-500 text-center py-8">No rooms match your search.</p>
+          )}
+          {filteredListings.map(room => (
             <Card key={room.id} onClick={() => navigate('/room/' + room.id)} className="flex flex-col sm:flex-row group cursor-pointer hover:shadow-float transition-micro">
               <div className="w-full sm:w-48 h-48 bg-gray-200 relative">
                 <img 

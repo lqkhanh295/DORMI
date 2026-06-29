@@ -42,6 +42,7 @@ interface AppState {
   addListing: (listing: Omit<Listing, 'id' | 'landlordId'>) => void;
   updateListing: (id: string, updates: Partial<Listing>) => void;
   sendMessage: (receiverId: string, text: string) => void;
+  updateUser: (updates: Partial<User>) => void;
 }
 
 const mockListings: Listing[] = [
@@ -143,7 +144,10 @@ export const useStore = create<AppState>()(
           timestamp: new Date().toISOString()
         };
         return { messages: [...state.messages, newMessage] };
-      })
+      }),
+      updateUser: (updates) => set((state) => ({
+        currentUser: state.currentUser ? { ...state.currentUser, ...updates } : null
+      }))
     }),
     {
       name: 'dormi-storage'
