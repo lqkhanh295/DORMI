@@ -33,16 +33,30 @@ export interface Message {
   timestamp: string;
 }
 
+export interface RoommateProfile {
+  id: number;
+  name: string;
+  age: number;
+  major: string;
+  image: string;
+  matchScore: number;
+  budget: string;
+  bio: string;
+  tags: string[];
+}
+
 interface AppState {
   currentUser: User | null;
   listings: Listing[];
   messages: Message[];
+  likedRoommates: RoommateProfile[];
   login: (role: Role, email: string) => void;
   logout: () => void;
   addListing: (listing: Omit<Listing, 'id' | 'landlordId'>) => void;
   updateListing: (id: string, updates: Partial<Listing>) => void;
   sendMessage: (receiverId: string, text: string) => void;
   updateUser: (updates: Partial<User>) => void;
+  addLikedRoommate: (profile: RoommateProfile) => void;
 }
 
 const mockListings: Listing[] = [
@@ -111,6 +125,7 @@ export const useStore = create<AppState>()(
       currentUser: null,
       listings: mockListings,
       messages: mockMessages,
+      likedRoommates: [],
       login: (role, email) => set({
         currentUser: {
           id: role === 'Landlord' ? 'u2' : (role === 'Admin' ? 'u3' : 'u1'),
@@ -147,6 +162,11 @@ export const useStore = create<AppState>()(
       }),
       updateUser: (updates) => set((state) => ({
         currentUser: state.currentUser ? { ...state.currentUser, ...updates } : null
+      })),
+      addLikedRoommate: (profile) => set((state) => ({
+        likedRoommates: state.likedRoommates.find(r => r.id === profile.id) 
+          ? state.likedRoommates 
+          : [...state.likedRoommates, profile]
       }))
     }),
     {

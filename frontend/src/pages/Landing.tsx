@@ -46,6 +46,46 @@ export function Landing() {
           </div>
         </section>
 
+        {/* Featured Listings Section */}
+        <section className="bg-[#f5f5f7] py-24">
+          <div className="apple-container">
+            <div className="flex justify-between items-end mb-12">
+              <div>
+                <h2 className="text-[40px] font-bold text-[#1d1d1f] leading-tight tracking-tight">Phòng nổi bật</h2>
+                <p className="text-[17px] text-[#6e6e73] mt-2">Được xác thực 100% chính chủ. Đánh giá tốt nhất.</p>
+              </div>
+              <Link to="/search" className="text-[#0071e3] hover:underline font-medium flex items-center gap-1">
+                Xem tất cả &gt;
+              </Link>
+            </div>
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+              {[
+                { id: '1', type: 'Studio', title: 'Studio Quận 1 - Full nội thất', price: '5,500,000', img: 'https://images.unsplash.com/photo-1522708323590-d24dbb6b0267?auto=format&fit=crop&w=400&q=80' },
+                { id: '2', type: 'Ký túc xá', title: 'KTX Cao Cấp - Bách Khoa', price: '1,500,000', img: 'https://images.unsplash.com/photo-1555854877-bab0e564b8d5?auto=format&fit=crop&w=400&q=80' },
+                { id: '3', type: 'Căn hộ', title: 'Căn hộ dịch vụ Landmark 81', price: '15,000,000', img: 'https://images.unsplash.com/photo-1560448204-e02f11c3d0e2?auto=format&fit=crop&w=400&q=80' },
+                { id: '4', type: 'Phòng riêng', title: 'Phòng ban công lớn Quận 7', price: '4,200,000', img: 'https://images.unsplash.com/photo-1502672260266-1c1de2d96674?auto=format&fit=crop&w=400&q=80' }
+              ].map((room) => (
+                <div key={room.id} className="bg-white rounded-2xl overflow-hidden shadow-sm hover:shadow-lg transition-all duration-300 group cursor-pointer border border-gray-100 flex flex-col">
+                  <div className="relative h-48 overflow-hidden">
+                    <img src={room.img} alt={room.title} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" />
+                    <div className="absolute top-3 left-3 bg-white/90 backdrop-blur px-2 py-1 rounded text-xs font-bold text-gray-900 shadow-sm">{room.type}</div>
+                    <div className="absolute top-3 right-3 bg-green-500 text-white px-2 py-1 rounded text-xs font-bold shadow-sm flex items-center gap-1">
+                      <svg className="w-3 h-3" fill="currentColor" viewBox="0 0 20 20"><path fillRule="evenodd" d="M6.267 3.455a3.066 3.066 0 001.745-.723 3.066 3.066 0 013.976 0 3.066 3.066 0 001.745.723 3.066 3.066 0 012.812 2.812c.051.643.304 1.254.723 1.745a3.066 3.066 0 010 3.976 3.066 3.066 0 00-.723 1.745 3.066 3.066 0 01-2.812 2.812 3.066 3.066 0 00-1.745.723 3.066 3.066 0 01-3.976 0 3.066 3.066 0 00-1.745-.723 3.066 3.066 0 01-2.812-2.812 3.066 3.066 0 00-.723-1.745 3.066 3.066 0 010-3.976 3.066 3.066 0 00.723-1.745 3.066 3.066 0 012.812-2.812zm7.44 5.252a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd"></path></svg>
+                      Đã xác thực
+                    </div>
+                  </div>
+                  <div className="p-4 flex flex-col flex-1">
+                    <h3 className="font-bold text-[#1d1d1f] mb-1 line-clamp-1">{room.title}</h3>
+                    <div className="mt-auto pt-2">
+                      <p className="text-blue-600 font-bold text-lg">{room.price}₫<span className="text-sm text-gray-500 font-normal">/tháng</span></p>
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        </section>
+
         {/* White Grid Section (like iPad/Mac grid) */}
         <section className="bg-white py-24">
           <div className="apple-container">
