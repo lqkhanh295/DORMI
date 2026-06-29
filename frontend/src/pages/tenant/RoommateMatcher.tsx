@@ -60,7 +60,7 @@ export default function RoommateMatcher() {
     }, 300);
   };
 
-  const navigateToChat = (id: number) => {
+  const navigateToChat = () => {
     // In a real app we'd pass user ID or create a conversation first
     navigate('/tenant/chat');
   };
@@ -105,7 +105,7 @@ export default function RoommateMatcher() {
                       <h4 className="font-bold text-gray-900">{r.name}, {r.age}</h4>
                       <p className="text-xs text-gray-500">{r.matchScore}% Match</p>
                     </div>
-                    <button onClick={() => navigateToChat(r.id)} className="px-3 py-1.5 bg-blue-50 text-blue-600 text-xs font-bold rounded-lg hover:bg-blue-100">
+                    <button onClick={() => navigateToChat()} className="px-3 py-1.5 bg-blue-50 text-blue-600 text-xs font-bold rounded-lg hover:bg-blue-100">
                       Nhắn tin
                     </button>
                   </div>
@@ -148,7 +148,7 @@ export default function RoommateMatcher() {
                     <h4 className="font-bold text-gray-900">{r.name}, {r.age}</h4>
                     <p className="text-xs text-gray-500">{r.matchScore}% Match</p>
                   </div>
-                  <button onClick={() => navigateToChat(r.id)} className="px-3 py-1.5 bg-blue-50 text-blue-600 text-xs font-bold rounded-lg hover:bg-blue-100">
+                  <button onClick={() => navigateToChat()} className="px-3 py-1.5 bg-blue-50 text-blue-600 text-xs font-bold rounded-lg hover:bg-blue-100">
                     Nhắn tin
                   </button>
                 </div>
