@@ -1,4 +1,5 @@
 import { create } from 'zustand';
+import { persist } from 'zustand/middleware';
 
 export type Role = 'Guest' | 'Tenant' | 'Landlord' | 'Admin';
 
@@ -88,30 +89,37 @@ const mockListings: Listing[] = [
   }
 ];
 
-export const useStore = create<AppState>((set) => ({
-  currentUser: null,
-  listings: mockListings,
-  login: (role, email) => set({
-    currentUser: {
-      id: role === 'Landlord' ? 'u2' : (role === 'Admin' ? 'u3' : 'u1'),
-      name: role === 'Landlord' ? 'Le Van B' : (role === 'Admin' ? 'System Admin' : 'Alex Nguyen'),
-      email,
-      role,
-      avatar: 'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?auto=format&fit=crop&w=200&q=80'
+export const useStore = create<AppState>()(
+  persist(
+    (set) => ({
+      currentUser: null,
+      listings: mockListings,
+      login: (role, email) => set({
+        currentUser: {
+          id: role === 'Landlord' ? 'u2' : (role === 'Admin' ? 'u3' : 'u1'),
+          name: role === 'Landlord' ? 'Le Van B' : (role === 'Admin' ? 'System Admin' : 'Alex Nguyen'),
+          email,
+          role,
+          avatar: 'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?auto=format&fit=crop&w=200&q=80'
+        }
+      }),
+      logout: () => set({ currentUser: null }),
+      addListing: (listing) => set((state) => ({
+        listings: [
+          ...state.listings, 
+          { 
+            ...listing, 
+            id: Math.random().toString(36).substr(2, 9),
+            landlordId: state.currentUser?.id || 'u2'
+          }
+        ]
+      })),
+      updateListing: (id, updates) => set((state) => ({
+        listings: state.listings.map(l => l.id === id ? { ...l, ...updates } : l)
+      }))
+    }),
+    {
+      name: 'dormi-storage'
     }
-  }),
-  logout: () => set({ currentUser: null }),
-  addListing: (listing) => set((state) => ({
-    listings: [
-      ...state.listings, 
-      { 
-        ...listing, 
-        id: Math.random().toString(36).substr(2, 9),
-        landlordId: state.currentUser?.id || 'u2'
-      }
-    ]
-  })),
-  updateListing: (id, updates) => set((state) => ({
-    listings: state.listings.map(l => l.id === id ? { ...l, ...updates } : l)
-  }))
-}));
+  )
+);
