@@ -1,4 +1,4 @@
-import { Outlet, useNavigate } from 'react-router-dom';
+import { Outlet } from 'react-router-dom';
 import { GlobalNav } from '../components/ui/GlobalNav';
 
 export default function MainLayout() {

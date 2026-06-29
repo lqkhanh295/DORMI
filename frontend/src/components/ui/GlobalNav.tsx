@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { MagnifyingGlass, User, List, Bell, Plus, Users, CaretDown } from '@phosphor-icons/react';
+import { MagnifyingGlass, List, Bell, Plus, Users, CaretDown } from '@phosphor-icons/react';
 
 export function GlobalNav() {
   const [showSearchModal, setShowSearchModal] = useState(false);
