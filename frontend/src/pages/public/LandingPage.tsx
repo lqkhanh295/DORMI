@@ -1,5 +1,5 @@
 import { Link } from 'react-router-dom';
-import { PlayCircle, ShieldCheck, MapPin, Star, Prohibit, Headphones } from '@phosphor-icons/react';
+import { PlayCircle, ShieldCheck, Star, Prohibit, Headphones } from '@phosphor-icons/react';
 
 export default function LandingPage() {
   return (
