@@ -62,7 +62,9 @@ export default function TenantLayout() {
           </div>
         </header>
         <main className="flex-1 p-4 md:p-6 w-full">
-          <Outlet />
+          <div key={location.pathname} className="page-transition">
+            <Outlet />
+          </div>
         </main>
       </div>
 

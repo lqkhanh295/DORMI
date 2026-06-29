@@ -3,11 +3,16 @@ import { useNavigate } from 'react-router-dom';
 import { Card } from '../../components/ui/Card';
 import { Button } from '../../components/ui/Button';
 import { useStore } from '../../store/useStore';
+import { Toaster, toast } from 'sonner';
+import { ArrowLeft } from '@phosphor-icons/react';
 
 export default function RoomDetail() {
   const navigate = useNavigate();
   const { currentUser } = useStore();
   const [showGallery, setShowGallery] = useState(false);
+  const [showBookingModal, setShowBookingModal] = useState(false);
+  const [bookingDate, setBookingDate] = useState('');
+  const [bookingTime, setBookingTime] = useState('');
 
   const MOCK_PHOTOS = [
     "https://images.unsplash.com/photo-1522708323590-d24dbb6b0267?auto=format&fit=crop&w=1200&q=80",
@@ -26,8 +31,32 @@ export default function RoomDetail() {
     }
   };
 
+  const handleSchedule = () => {
+    if (!currentUser) {
+      navigate('/auth');
+      return;
+    }
+    setShowBookingModal(true);
+  };
+
+  const confirmBooking = () => {
+    if (!bookingDate || !bookingTime) {
+      toast.error('Vui lòng chọn đầy đủ ngày và giờ xem phòng!');
+      return;
+    }
+    
+    toast.success('Gửi yêu cầu thành công!', {
+      description: `Chủ nhà sẽ liên hệ lại với bạn để xác nhận lịch xem phòng lúc ${bookingTime} ngày ${bookingDate}.`
+    });
+    
+    setShowBookingModal(false);
+    setBookingDate('');
+    setBookingTime('');
+  };
+
   return (
     <div className="max-w-7xl mx-auto px-4 py-8 space-y-8 relative">
+      <Toaster position="top-center" richColors />
       {/* Image Gallery Header */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4 h-64 md:h-96">
         <div className="md:col-span-2 h-full bg-gray-200 rounded-2xl overflow-hidden relative group cursor-pointer" onClick={() => setShowGallery(true)}>
@@ -82,7 +111,10 @@ export default function RoomDetail() {
         </div>
 
         {/* Sidebar */}
-        <div>
+        <div className="flex flex-col">
+          <Button variant="outline" className="mb-4 self-start flex items-center gap-2" onClick={() => navigate(-1)}>
+            <ArrowLeft weight="bold" className="w-5 h-5" /> Quay lại
+          </Button>
           <Card className="p-6 md:sticky md:top-24">
             <div className="mb-6">
               <p className="text-3xl font-bold text-blue-600">5.500.000₫ <span className="text-base text-gray-500 font-normal">/ month</span></p>
@@ -90,7 +122,7 @@ export default function RoomDetail() {
             </div>
             
             <div className="hidden md:flex flex-col space-y-4 mb-6">
-              <Button fullWidth size="lg">Schedule Viewing</Button>
+              <Button fullWidth size="lg" onClick={handleSchedule}>Schedule Viewing</Button>
               <Button fullWidth variant="outline" size="lg" onClick={handleChat}>Chat with Landlord</Button>
             </div>
 
@@ -135,9 +167,48 @@ export default function RoomDetail() {
       )}
       {/* Mobile Fixed Bottom Bar */}
       <div className="md:hidden fixed bottom-0 left-0 w-full bg-white border-t border-gray-200 p-4 z-40 flex gap-2">
-        <Button className="flex-1" size="lg">Schedule</Button>
+        <Button className="flex-1" size="lg" onClick={handleSchedule}>Schedule</Button>
         <Button className="flex-1" variant="outline" size="lg" onClick={handleChat}>Chat</Button>
       </div>
+
+      {/* Booking Date/Time Modal */}
+      {showBookingModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm p-4">
+          <div className="bg-white rounded-xl w-full max-w-md shadow-lg overflow-hidden animate-in fade-in zoom-in-95">
+            <div className="p-4 border-b border-neutral-100 flex justify-between items-center">
+              <h3 className="font-bold text-lg text-neutral-900">Chọn lịch xem phòng</h3>
+              <button onClick={() => setShowBookingModal(false)} className="text-neutral-400 hover:text-neutral-700 font-bold px-2">
+                ✕
+              </button>
+            </div>
+            <div className="p-6 space-y-4">
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Ngày xem phòng</label>
+                <input 
+                  type="date" 
+                  min={new Date().toISOString().split('T')[0]}
+                  className="w-full border border-gray-300 rounded-lg px-3 py-2 outline-none focus:border-blue-500"
+                  value={bookingDate}
+                  onChange={e => setBookingDate(e.target.value)}
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Giờ (dự kiến)</label>
+                <input 
+                  type="time" 
+                  className="w-full border border-gray-300 rounded-lg px-3 py-2 outline-none focus:border-blue-500"
+                  value={bookingTime}
+                  onChange={e => setBookingTime(e.target.value)}
+                />
+              </div>
+              <p className="text-sm text-gray-500 text-center mt-4">
+                Chủ nhà sẽ nhận được yêu cầu và liên hệ lại với bạn để chốt lịch.
+              </p>
+              <Button fullWidth size="lg" className="mt-4" onClick={confirmBooking}>Gửi yêu cầu đặt lịch</Button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

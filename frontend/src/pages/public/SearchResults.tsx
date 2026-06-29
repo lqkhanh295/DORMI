@@ -4,6 +4,7 @@ import { Button } from '../../components/ui/Button';
 import { Input } from '../../components/ui/Input';
 import { useStore } from '../../store/useStore';
 import { useNavigate } from 'react-router-dom';
+import { ArrowLeft } from '@phosphor-icons/react';
 
 export default function SearchResults() {
   const listings = useStore(state => state.listings);
@@ -14,14 +15,17 @@ export default function SearchResults() {
     room.title.toLowerCase().includes(searchQuery.toLowerCase()) || 
     room.address.toLowerCase().includes(searchQuery.toLowerCase()) ||
     room.type.toLowerCase().includes(searchQuery.toLowerCase())
-  );
+  ).sort((a, b) => b.trustScore - a.trustScore);
 
   return (
     <div className="flex h-[calc(100vh-64px)] overflow-hidden">
       {/* Left Panel: Search & List */}
       <div className="w-full lg:w-1/2 flex flex-col bg-neutral-50 border-r border-gray-200">
         <div className="p-4 bg-white border-b border-gray-200 space-y-4 shadow-sm z-10">
-          <div className="flex gap-2">
+          <div className="flex items-center gap-2">
+            <Button variant="outline" className="px-3 py-2 flex-shrink-0" onClick={() => navigate(-1)} aria-label="Go back">
+              <ArrowLeft className="w-5 h-5 text-gray-700" />
+            </Button>
             <Input 
               placeholder="Search location, university, type..." 
               className="flex-1"

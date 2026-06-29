@@ -2,24 +2,27 @@
 @import "tailwindcss";
 
 @theme {
-  --color-background: #f4f4f4;
-  --color-foreground: #2c2c2c;
+  --color-background: #f5f5f7;
+  --color-foreground: #1d1d1f;
 
-  /* Pastel Blue */
-  --color-primary-50: #f4f9ff;
-  --color-primary-100: #e6f0fa;
-  --color-primary-200: #c9dff5;
-  --color-primary-500: #7eb0e3;
-  --color-primary-600: #5fa8d3; /* Pastel Blue dịu mắt */
-  --color-primary-700: #4a8cba;
-  --color-primary-900: #2d5a7d;
+  /* Primary Blue (Apple-like) */
+  --color-primary-50: #e6f1fc;
+  --color-primary-100: #cce3f9;
+  --color-primary-200: #99c7f3;
+  --color-primary-300: #66abed;
+  --color-primary-400: #338fe7;
+  --color-primary-500: #0071e3;
+  --color-primary-600: #0066cc;
+  --color-primary-700: #004d99;
+  --color-primary-900: #003366;
 
-  --color-neutral-50: #fbfcfd; /* Hơi ngả xanh dương một tí xíu cho đồng bộ */
+  /* Neutral Slate */
+  --color-neutral-50: #fbfcfd;
   --color-neutral-100: #f1f5f9;
   --color-neutral-200: #e2e8f0;
   --color-neutral-300: #cbd5e1;
   --color-neutral-400: #94a3b8;
-  --color-neutral-500: #64748b;
+  --color-neutral-500: #86868b; /* Adjusted to Apple gray */
   --color-neutral-600: #475569;
   --color-neutral-700: #334155;
   --color-neutral-800: #1e293b;
@@ -28,7 +31,7 @@
   --font-sans: 'Roboto', 'Inter', system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Helvetica, Arial, sans-serif;
   
   --shadow-subtle: 0 1px 2px 0 rgba(0, 0, 0, 0.03);
-  --shadow-card: 0 4px 20px -2px rgba(15, 23, 42, 0.05); /* Bóng siêu mềm */
+  --shadow-card: 0 4px 20px -2px rgba(15, 23, 42, 0.05);
   --shadow-float: 0 10px 25px -5px rgba(15, 23, 42, 0.08), 0 8px 10px -6px rgba(15, 23, 42, 0.03);
 }
 
@@ -57,6 +60,20 @@
     color: var(--color-neutral-500);
     line-height: 1.5;
   }
+
+  /* Smooth scrolling */
+  html {
+    scroll-behavior: smooth;
+  }
+
+  /* Button and Link click effect */
+  button, a {
+    transition: transform 0.15s cubic-bezier(0.4, 0, 0.2, 1), opacity 0.15s ease-in-out;
+  }
+  
+  button:active, a:active {
+    transform: scale(0.97);
+  }
 }
 
 @layer utilities {
@@ -71,5 +88,37 @@
     transition-property: all;
     transition-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
     transition-duration: 200ms;
+  }
+
+  @keyframes fadeInUp {
+    from { opacity: 0; transform: translateY(20px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+
+  .animate-fade-in-up {
+    animation: fadeInUp 0.7s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+    opacity: 0;
+  }
+  
+  .delay-100 { animation-delay: 100ms; }
+  .delay-150 { animation-delay: 150ms; }
+  .delay-200 { animation-delay: 200ms; }
+  .delay-300 { animation-delay: 300ms; }
+  .delay-400 { animation-delay: 400ms; }
+
+  /* Page Transition Animation */
+  .page-transition {
+    animation: fadeScaleIn 0.3s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+  }
+
+  @keyframes fadeScaleIn {
+    from { 
+      opacity: 0; 
+      transform: scale(0.98) translateY(10px); 
+    }
+    to { 
+      opacity: 1; 
+      transform: scale(1) translateY(0); 
+    }
   }
 }

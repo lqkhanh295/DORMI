@@ -21,14 +21,14 @@ export function AppleButton({
   fullWidth,
   ...props
 }: AppleButtonProps) {
-  const baseStyles = 'inline-flex items-center justify-center gap-2 rounded-full font-medium transition-all duration-300 focus:outline-none focus-visible:ring-4 focus-visible:ring-[#0071E3]/30 disabled:opacity-50 disabled:cursor-not-allowed';
+  const baseStyles = 'inline-flex items-center justify-center gap-2 rounded-full font-medium transition-all duration-300 focus:outline-none focus-visible:ring-4 focus-visible:ring-primary/30 disabled:opacity-50 disabled:cursor-not-allowed';
   
   const variants = {
-    primary: 'bg-[#0071E3] hover:bg-[#0077ED] text-white',
-    secondary: 'bg-[#F5F5F7] hover:bg-[#E8E8ED] text-[#1D1D1F]',
-    ghost: 'bg-transparent hover:bg-black/5 text-[#0071E3]',
-    outline: 'bg-transparent border border-[#1D1D1F] hover:bg-[#1D1D1F] hover:text-white text-[#1D1D1F]',
-    dark: 'bg-[#1D1D1F] hover:bg-[#333336] text-white',
+    primary: 'bg-primary hover:bg-primary-600 text-white',
+    secondary: 'bg-background hover:bg-neutral-200 text-foreground',
+    ghost: 'bg-transparent hover:bg-black/5 text-primary',
+    outline: 'bg-transparent border border-foreground hover:bg-foreground hover:text-white text-foreground',
+    dark: 'bg-foreground hover:bg-neutral-800 text-white',
   };
 
   const sizes = {

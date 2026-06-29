@@ -1,11 +1,12 @@
 import { useState } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
-import { MagnifyingGlass, List, Bell, Plus, Users, CaretDown } from '@phosphor-icons/react';
+import { Link, useNavigate, useLocation } from 'react-router-dom';
+import { MagnifyingGlass, List, Bell, Plus, Users, CaretDown, ArrowLeft } from '@phosphor-icons/react';
 
 export function GlobalNav() {
   const [showSearchModal, setShowSearchModal] = useState(false);
   const [quickSearch, setQuickSearch] = useState({ district: '', price: '', area: '' });
   const navigate = useNavigate();
+  const location = useLocation();
 
   const handleQuickSearch = (e: React.FormEvent) => {
     e.preventDefault();
@@ -20,6 +21,11 @@ export function GlobalNav() {
           
           {/* Logo & Mobile Menu */}
           <div className="flex items-center gap-4">
+            {location.pathname !== '/' && (
+              <button onClick={() => navigate(-1)} className="text-white/60 hover:text-white transition-colors" title="Quay lại">
+                <ArrowLeft className="w-5 h-5" weight="bold" />
+              </button>
+            )}
             <button className="text-white/80 hover:text-white sm:hidden">
               <List className="h-6 w-6" />
             </button>
@@ -36,22 +42,18 @@ export function GlobalNav() {
             >
               <MagnifyingGlass className="h-4 w-4 mr-2 group-hover:text-white transition-colors" />
               <span className="flex-1 text-left">Tìm quận, giá, diện tích...</span>
-              <div className="flex items-center gap-1 text-[10px] bg-white/10 px-2 py-0.5 rounded text-white/40">
-                <span className="font-sans">⌘</span>
-                <span>K</span>
-              </div>
             </button>
           </div>
 
           {/* Action Buttons & Profile */}
           <div className="flex items-center gap-4 sm:gap-6">
             <div className="hidden lg:flex items-center gap-3 text-sm font-medium">
-              <Link to="/customer/matcher" className="flex items-center gap-1.5 text-white/80 hover:text-white transition-colors">
+              <Link to="/tenant/match" className="flex items-center gap-1.5 text-white/80 hover:text-white transition-colors">
                 <Users className="w-4 h-4" />
                 Tìm bạn ở ghép
               </Link>
               <div className="w-[1px] h-4 bg-white/20 mx-1"></div>
-              <Link to="/landlord/dashboard" className="flex items-center gap-1.5 bg-white text-black px-4 py-1.5 rounded-full hover:bg-gray-100 transition-colors shadow-[0_0_15px_rgba(255,255,255,0.2)]">
+              <Link to="/landlord" className="flex items-center gap-1.5 bg-white text-black px-4 py-1.5 rounded-full hover:bg-gray-100 transition-colors shadow-[0_0_15px_rgba(255,255,255,0.2)]">
                 <Plus className="w-4 h-4" />
                 Đăng tin ngay
               </Link>
@@ -64,7 +66,7 @@ export function GlobalNav() {
                 <span className="absolute -top-1 -right-1 w-2.5 h-2.5 bg-red-500 border-2 border-[#1d1d1f] rounded-full"></span>
               </button>
               
-              <Link to="/tenant/profile" className="flex items-center gap-2 group cursor-pointer">
+              <Link to="/tenant" title="Đến trang Quản lý Người thuê (Tenant)" className="flex items-center gap-2 group cursor-pointer">
                 <div className="w-8 h-8 rounded-full overflow-hidden border border-white/20 group-hover:border-white/50 transition-colors">
                   <img src="https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?auto=format&fit=crop&w=100&q=80" alt="Avatar" className="w-full h-full object-cover" />
                 </div>

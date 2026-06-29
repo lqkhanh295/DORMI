@@ -1,10 +1,12 @@
 import { useState, useRef, useEffect } from 'react';
+import { useLocation } from 'react-router-dom';
 import { useStore } from '../../store/useStore';
 import { Button } from '../../components/ui/Button';
 import { Hand, Paperclip } from 'lucide-react';
 
 export default function TenantChatCenter() {
   const { currentUser, messages, sendMessage, likedRoommates } = useStore();
+  const location = useLocation();
   const [inputText, setInputText] = useState('');
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
@@ -20,7 +22,8 @@ export default function TenantChatCenter() {
     }))
   ];
 
-  const [selectedContactId, setSelectedContactId] = useState(contacts[0]?.id);
+  const initialContactId = location.state?.targetUserId || contacts[0]?.id;
+  const [selectedContactId, setSelectedContactId] = useState(initialContactId);
   const selectedContact = contacts.find(c => c.id === selectedContactId) || contacts[0];
 
   const chatMessages = messages.filter(m => 

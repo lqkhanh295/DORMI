@@ -1,4 +1,4 @@
-import { Routes, Route } from 'react-router-dom';
+import { Routes, Route, Navigate } from 'react-router-dom';
 import ProtectedRoute from './ProtectedRoute';
 
 // Layouts
@@ -13,6 +13,7 @@ import SearchResults from '../pages/public/SearchResults';
 import RoomDetail from '../pages/public/RoomDetail';
 import AuthPage from '../pages/public/AuthPage';
 import ForgotPassword from '../pages/public/ForgotPassword';
+import NotFound from '../pages/public/NotFound';
 
 // Tenant Pages
 import TenantDashboard from '../pages/tenant/TenantDashboard';
@@ -49,6 +50,9 @@ export default function AppRoutes() {
         <Route path="/room/:id" element={<RoomDetail />} />
         <Route path="/auth" element={<AuthPage />} />
         <Route path="/auth/reset" element={<ForgotPassword />} />
+        
+        {/* Legacy Redirects */}
+        <Route path="/customer/matcher" element={<Navigate to="/tenant/match" replace />} />
       </Route>
 
       {/* TENANT ROUTES */}
@@ -86,6 +90,11 @@ export default function AppRoutes() {
           <Route path="verify" element={<VerificationModeration />} />
           <Route path="content" element={<ContentModeration />} />
         </Route>
+      </Route>
+
+      {/* 404 NOT FOUND */}
+      <Route element={<MainLayout />}>
+        <Route path="*" element={<NotFound />} />
       </Route>
     </Routes>
   );

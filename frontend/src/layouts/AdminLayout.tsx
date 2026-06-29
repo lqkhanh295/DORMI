@@ -48,7 +48,9 @@ export default function AdminLayout() {
           <button onClick={handleLogout} className="text-xs text-red-600 hover:underline">Logout</button>
         </header>
         <main className="p-6">
-          <Outlet />
+          <div key={location.pathname} className="page-transition">
+            <Outlet />
+          </div>
         </main>
       </div>
     </div>

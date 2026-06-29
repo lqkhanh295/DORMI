@@ -61,8 +61,8 @@ export default function RoommateMatcher() {
     }, 300);
   };
 
-  const navigateToChat = () => {
-    navigate('/tenant/chat');
+  const navigateToChat = (targetId: number) => {
+    navigate('/tenant/chat', { state: { targetUserId: `r${targetId}` } });
   };
 
   const profile = MOCK_ROOMMATES[currentIndex];
@@ -88,7 +88,7 @@ export default function RoommateMatcher() {
               </p>
             </div>
             <button 
-              onClick={() => navigateToChat()} 
+              onClick={() => navigateToChat(r.id)} 
               className="w-8 h-8 flex items-center justify-center bg-primary-50 text-primary-600 rounded-full hover:bg-primary-100 transition-colors flex-shrink-0"
               title="Nhắn tin"
             >

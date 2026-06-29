@@ -56,7 +56,9 @@ export default function LandlordLayout() {
           </div>
         </header>
         <main className="flex-1 p-4 md:p-8">
-          <Outlet />
+          <div key={location.pathname} className="page-transition">
+            <Outlet />
+          </div>
         </main>
       </div>
 
