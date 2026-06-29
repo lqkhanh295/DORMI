@@ -59,7 +59,7 @@ export default function RoomManagement() {
       <div className="grid grid-cols-1 gap-6">
         {myRooms.map(room => (
           <Card key={room.id} className="flex flex-col md:flex-row p-4 gap-6 items-center">
-            <div className="w-full md:w-48 h-32 bg-gray-200 rounded-lg overflow-hidden shrink-0">
+            <div className="w-full h-48 md:w-48 md:h-32 bg-gray-200 rounded-lg overflow-hidden shrink-0">
               <img src={room.image} className="w-full h-full object-cover" alt="Room" />
             </div>
             <div className="flex-1 space-y-2">

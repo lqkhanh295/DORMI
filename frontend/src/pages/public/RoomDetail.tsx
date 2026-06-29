@@ -29,7 +29,7 @@ export default function RoomDetail() {
   return (
     <div className="max-w-7xl mx-auto px-4 py-8 space-y-8 relative">
       {/* Image Gallery Header */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-4 h-96">
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-4 h-64 md:h-96">
         <div className="md:col-span-2 h-full bg-gray-200 rounded-2xl overflow-hidden relative group cursor-pointer" onClick={() => setShowGallery(true)}>
           <img src={MOCK_PHOTOS[0]} alt="Room Main" className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105" />
           <div className="absolute inset-0 bg-black/20 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-micro">
@@ -83,18 +83,18 @@ export default function RoomDetail() {
 
         {/* Sidebar */}
         <div>
-          <Card className="p-6 sticky top-24">
+          <Card className="p-6 md:sticky md:top-24">
             <div className="mb-6">
               <p className="text-3xl font-bold text-blue-600">5.500.000₫ <span className="text-base text-gray-500 font-normal">/ month</span></p>
               <p className="text-sm text-gray-500 mt-2">Deposit: 5.500.000₫</p>
             </div>
             
-            <div className="space-y-4 mb-6">
+            <div className="hidden md:flex flex-col space-y-4 mb-6">
               <Button fullWidth size="lg">Schedule Viewing</Button>
               <Button fullWidth variant="outline" size="lg" onClick={handleChat}>Chat with Landlord</Button>
             </div>
 
-            <div className="pt-6 border-t border-gray-100">
+            <div className="pt-6 md:border-t border-gray-100">
               <div className="flex items-center gap-4">
                 <div className="w-12 h-12 bg-gray-200 rounded-full flex items-center justify-center font-bold text-gray-600">L</div>
                 <div>
@@ -133,6 +133,11 @@ export default function RoomDetail() {
           </div>
         </div>
       )}
+      {/* Mobile Fixed Bottom Bar */}
+      <div className="md:hidden fixed bottom-0 left-0 w-full bg-white border-t border-gray-200 p-4 z-40 flex gap-2">
+        <Button className="flex-1" size="lg">Schedule</Button>
+        <Button className="flex-1" variant="outline" size="lg" onClick={handleChat}>Chat</Button>
+      </div>
     </div>
   );
 }

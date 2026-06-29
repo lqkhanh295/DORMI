@@ -34,7 +34,7 @@ export default function TenantChatCenter() {
   return (
     <div className="flex h-[calc(100vh-10rem)] bg-white rounded-2xl shadow-card overflow-hidden border border-gray-100">
       {/* Sidebar: Conversation List */}
-      <div className="w-1/3 border-r border-gray-200 flex flex-col bg-gray-50">
+      <div className="hidden md:flex w-1/3 border-r border-gray-200 flex-col bg-gray-50">
         <div className="p-4 border-b border-gray-200 bg-white">
           <input 
             type="text" 

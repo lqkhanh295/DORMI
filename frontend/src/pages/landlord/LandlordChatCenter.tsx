@@ -34,7 +34,7 @@ export default function LandlordChatCenter() {
   return (
     <div className="flex h-[calc(100vh-10rem)] bg-white rounded-2xl shadow-card overflow-hidden border border-gray-100">
       {/* Sidebar: Conversation List */}
-      <div className="w-1/3 border-r border-gray-200 flex flex-col bg-gray-50">
+      <div className="hidden md:flex w-1/3 border-r border-gray-200 flex-col bg-gray-50">
         <div className="p-4 border-b border-gray-200 bg-white">
           <input 
             type="text" 
@@ -70,7 +70,7 @@ export default function LandlordChatCenter() {
               <p className="text-xs text-green-600 font-medium flex items-center gap-1">● Online (Looking for Studio)</p>
             </div>
           </div>
-          <div className="flex gap-2">
+          <div className="hidden md:flex gap-2">
             <Button variant="outline" size="sm">Schedule Viewing</Button>
             <Button variant="primary" size="sm">Create Contract</Button>
           </div>
