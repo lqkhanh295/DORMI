@@ -45,17 +45,17 @@ export default function TenantProfile() {
   };
 
   return (
-    <div className="max-w-4xl mx-auto space-y-6">
-      <div className="flex items-center justify-between">
+    <div className="w-full space-y-4">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
-          <h1 className="text-2xl font-bold text-gray-900">My Profile</h1>
-          <p className="text-gray-500">Update your personal information and lifestyle tags.</p>
+          <h1 className="text-2xl font-bold text-neutral-900">Hồ sơ cá nhân</h1>
+          <p className="text-neutral-500 text-sm">Cập nhật thông tin và phong cách sống.</p>
         </div>
-        <Button onClick={handleSave}>Save Changes</Button>
+        <Button onClick={handleSave}>Lưu thay đổi</Button>
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-        <Card className="p-6 md:col-span-1 flex flex-col items-center text-center space-y-4">
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+        <Card className="p-4 md:p-5 md:col-span-1 flex flex-col items-center text-center space-y-4">
           <div className="w-32 h-32 bg-gray-200 rounded-full overflow-hidden relative group cursor-pointer border-4 border-white shadow-sm">
             <img src={currentUser?.avatar || "https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?auto=format&fit=crop&w=200&q=80"} alt="Profile" className="w-full h-full object-cover" />
             <div className="absolute inset-0 bg-black/40 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-micro">
@@ -63,20 +63,20 @@ export default function TenantProfile() {
             </div>
           </div>
           <div>
-            <h3 className="text-lg font-bold text-gray-900">{currentUser?.name || 'Alex Nguyen'}</h3>
-            <p className="text-sm text-gray-500">Tenant Student</p>
+            <h3 className="text-lg font-bold text-neutral-900">{currentUser?.name || 'Alex Nguyen'}</h3>
+            <p className="text-sm text-neutral-500">Người thuê trọ</p>
           </div>
-          <div className="w-full pt-4 border-t border-gray-100">
-            <p className="text-xs text-gray-400 uppercase tracking-wider mb-2">Profile Completeness</p>
-            <div className="w-full h-2 bg-gray-100 rounded-full overflow-hidden">
-              <div className="bg-green-500 h-full rounded-full" style={{width: '85%'}}></div>
+          <div className="w-full pt-4 border-t border-neutral-100">
+            <p className="text-xs text-neutral-400 uppercase tracking-wider mb-2">Độ hoàn thiện hồ sơ</p>
+            <div className="w-full h-2 bg-neutral-100 rounded-full overflow-hidden">
+              <div className="bg-primary-500 h-full rounded-full" style={{width: '85%'}}></div>
             </div>
           </div>
         </Card>
 
-        <Card className="p-6 md:col-span-2 space-y-6">
+        <Card className="p-4 md:p-5 md:col-span-2 space-y-5">
           <div>
-            <h3 className="text-lg font-semibold text-gray-900 mb-4">Basic Information</h3>
+            <h3 className="text-lg font-semibold text-neutral-900 mb-3">Thông tin cơ bản</h3>
             <div className="grid grid-cols-2 gap-4">
               <Input label="First Name" value={firstName} onChange={e => setFirstName(e.target.value)} />
               <Input label="Last Name" value={lastName} onChange={e => setLastName(e.target.value)} />
@@ -85,18 +85,18 @@ export default function TenantProfile() {
             </div>
           </div>
 
-          <div className="pt-6 border-t border-gray-100">
-            <h3 className="text-lg font-semibold text-gray-900 mb-2">Lifestyle Tags (AI Matcher)</h3>
-            <p className="text-sm text-gray-500 mb-4">Select tags that best describe your lifestyle to help AI match you with the perfect roommates.</p>
+          <div className="pt-5 border-t border-neutral-100">
+            <h3 className="text-lg font-semibold text-neutral-900 mb-1.5">Phong cách sống (AI Matcher)</h3>
+            <p className="text-sm text-neutral-500 mb-3">Chọn các thẻ mô tả đúng nhất lối sống của bạn để AI ghép đôi bạn cùng phòng.</p>
             <div className="flex flex-wrap gap-2">
               {tags.map((tag, index) => (
                 <span 
                   key={index}
                   onClick={() => toggleTag(index)}
-                  className={`px-3 py-1.5 rounded-full text-sm font-medium cursor-pointer transition-micro ${
+                  className={`px-3 py-1.5 rounded-md text-sm font-medium cursor-pointer transition-colors ${
                     tag.active 
-                      ? 'bg-blue-100 text-blue-700 border border-blue-200' 
-                      : 'bg-gray-100 text-gray-600 border border-transparent hover:bg-gray-200'
+                      ? 'bg-primary-50 text-primary-700 border border-primary-100' 
+                      : 'bg-neutral-100 text-neutral-600 border border-transparent hover:bg-neutral-200'
                   }`}
                 >
                   {tag.name}
@@ -104,9 +104,9 @@ export default function TenantProfile() {
               ))}
               <span 
                 onClick={handleAddTag}
-                className="px-3 py-1.5 bg-white border border-dashed border-gray-300 text-gray-500 rounded-full text-sm font-medium cursor-pointer hover:bg-gray-50 hover:text-gray-900 transition-micro"
+                className="px-3 py-1.5 bg-white border border-dashed border-neutral-300 text-neutral-500 rounded-md text-sm font-medium cursor-pointer hover:bg-neutral-50 hover:text-neutral-900 transition-colors"
               >
-                + Add Tag
+                + Thêm thẻ mới
               </span>
             </div>
           </div>
