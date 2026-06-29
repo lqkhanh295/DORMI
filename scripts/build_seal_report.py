@@ -367,9 +367,13 @@ def add_figure(doc: Document, images: dict[str, Path], name: str, caption: str, 
     if not path:
         add_para(doc, f"[Diagram placeholder: {name}]")
         return
+    with Image.open(path) as im:
+        w_px, h_px = im.size
+    max_height = 7.0
+    usable_width = min(width, max_height * (w_px / h_px))
     p = doc.add_paragraph()
     p.alignment = WD_ALIGN_PARAGRAPH.CENTER
-    p.add_run().add_picture(str(path), width=Inches(width))
+    p.add_run().add_picture(str(path), width=Inches(usable_width))
     cap = doc.add_paragraph(caption)
     cap.alignment = WD_ALIGN_PARAGRAPH.CENTER
     cap.runs[0].italic = True

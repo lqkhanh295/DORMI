@@ -1,5 +1,6 @@
 import { Outlet, Link, useNavigate, useLocation } from 'react-router-dom';
 import { useStore } from '../store/useStore';
+import { Button } from '../components/ui/Button';
 
 export default function TenantLayout() {
   const { currentUser, logout } = useStore();
@@ -19,21 +20,24 @@ export default function TenantLayout() {
   ];
 
   return (
-    <div className="min-h-screen bg-neutral-50 flex pb-16 md:pb-0">
+    <div className="min-h-screen bg-neutral-50 text-neutral-900 flex pb-16 md:pb-0 font-sans">
       {/* Sidebar (Desktop) */}
-      <aside className="w-64 bg-white border-r border-gray-200 hidden md:block">
-        <div className="p-6">
-          <Link to="/" className="text-xl font-bold tracking-tight text-gray-900">DORMI.</Link>
+      <aside className="w-64 bg-white border-r border-neutral-200 hidden md:flex flex-col">
+        <div className="h-16 flex items-center px-6 border-b border-neutral-100">
+          <Link to="/" className="text-2xl font-bold tracking-tight text-primary-600">DORMI</Link>
         </div>
-        <nav className="px-4 py-4 space-y-1">
+        <nav className="flex-1 px-4 py-6 space-y-1 overflow-y-auto">
           {navItems.map(item => {
             const isActive = location.pathname === item.path;
             return (
               <Link 
                 key={item.name}
                 to={item.path} 
-                className={`block px-3 py-2 rounded-md text-sm font-medium transition-micro ${isActive ? 'text-blue-700 bg-blue-50' : 'text-gray-600 hover:text-gray-900 hover:bg-gray-50'}`}
+                className={`flex items-center gap-3 px-3 py-2.5 rounded text-sm font-medium transition-colors ${isActive ? 'text-primary-600 bg-primary-50' : 'text-neutral-600 hover:text-primary-600 hover:bg-neutral-50'}`}
               >
+                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={isActive ? 2 : 1.5} d={item.icon} />
+                </svg>
                 {item.name}
               </Link>
             )
@@ -43,32 +47,34 @@ export default function TenantLayout() {
 
       {/* Main Content */}
       <div className="flex-1 flex flex-col min-h-screen">
-        <header className="h-16 bg-white border-b border-gray-200 flex items-center justify-between md:justify-end px-4 md:px-6 gap-4 sticky top-0 z-40">
+        <header className="h-16 bg-white border-b border-neutral-200 flex items-center justify-between md:justify-end px-4 md:px-6 gap-4 sticky top-0 z-40 shadow-sm">
           <div className="md:hidden">
-            <Link to="/" className="text-xl font-bold tracking-tight text-gray-900">DORMI.</Link>
+            <Link to="/" className="text-xl font-bold tracking-tight text-primary-600">DORMI</Link>
           </div>
           <div className="flex items-center gap-4">
-            <span className="text-sm font-medium hidden md:block">{currentUser?.name}</span>
-            <div className="w-8 h-8 rounded-full bg-blue-100 flex items-center justify-center text-blue-700 font-bold overflow-hidden">
+            <Button onClick={() => alert('Tính năng Đăng tin đang được cập nhật!')} variant="outline" size="sm" className="hidden md:flex border-primary-600 text-primary-600 hover:bg-primary-50">Đăng tin</Button>
+            <div className="h-6 w-px bg-neutral-200 hidden md:block"></div>
+            <span className="text-sm font-medium hidden md:block text-neutral-700">{currentUser?.name}</span>
+            <div className="w-8 h-8 rounded-full bg-neutral-100 flex items-center justify-center text-neutral-600 font-bold overflow-hidden border border-neutral-200 cursor-pointer">
               {currentUser?.avatar ? <img src={currentUser.avatar} alt="avatar" className="w-full h-full object-cover" /> : 'T'}
             </div>
-            <button onClick={handleLogout} className="text-xs text-red-600 hover:underline">Logout</button>
+            <button onClick={handleLogout} className="text-xs text-neutral-500 hover:text-primary-600 hover:underline font-medium">Đăng xuất</button>
           </div>
         </header>
-        <main className="flex-1 p-4 md:p-8">
+        <main className="flex-1 p-4 md:p-6 w-full">
           <Outlet />
         </main>
       </div>
 
       {/* Bottom Navigation (Mobile) */}
-      <nav className="md:hidden fixed bottom-0 w-full bg-white border-t border-gray-200 z-50 flex justify-around items-center h-16 safe-area-pb">
+      <nav className="md:hidden fixed bottom-0 w-full bg-white border-t border-neutral-200 z-50 flex justify-around items-center h-16 safe-area-pb shadow-[0_-2px_10px_rgba(0,0,0,0.05)]">
         {navItems.map(item => {
           const isActive = location.pathname === item.path;
           return (
             <Link 
               key={item.name}
               to={item.path}
-              className={`flex flex-col items-center justify-center w-full h-full space-y-1 ${isActive ? 'text-blue-600' : 'text-gray-500 hover:text-gray-900'}`}
+              className={`flex flex-col items-center justify-center w-full h-full space-y-1 ${isActive ? 'text-primary-600' : 'text-neutral-500 hover:text-primary-600'}`}
             >
               <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={isActive ? 2 : 1.5} d={item.icon} />
