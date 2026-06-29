@@ -4,12 +4,20 @@ import { Card } from '../../components/ui/Card';
 import { Button } from '../../components/ui/Button';
 
 export default function RoomManagement() {
-  const { currentUser, listings, updateListing } = useStore();
+  const { currentUser, listings, updateListing, addListing } = useStore();
   const myRooms = listings.filter(room => room.landlordId === currentUser?.id);
   
   const [editingRoom, setEditingRoom] = useState<Listing | null>(null);
+  const [isAdding, setIsAdding] = useState(false);
+  
+  const [newRoom, setNewRoom] = useState({
+    title: '',
+    price: 0,
+    address: '',
+    type: 'Studio'
+  });
 
-  const handleSave = (e: React.FormEvent) => {
+  const handleSaveEdit = (e: React.FormEvent) => {
     e.preventDefault();
     if (editingRoom) {
       updateListing(editingRoom.id, {
@@ -21,6 +29,23 @@ export default function RoomManagement() {
     }
   };
 
+  const handleAddNew = (e: React.FormEvent) => {
+    e.preventDefault();
+    addListing({
+      title: newRoom.title,
+      price: newRoom.price,
+      address: newRoom.address,
+      type: newRoom.type,
+      image: 'https://images.unsplash.com/photo-1522708323590-d24dbb6b0267?auto=format&fit=crop&w=400&q=80',
+      trustScore: 100,
+      status: 'Available',
+      views: 0,
+      leads: 0
+    });
+    setIsAdding(false);
+    setNewRoom({ title: '', price: 0, address: '', type: 'Studio' });
+  };
+
   return (
     <div className="space-y-6 relative">
       <div className="flex items-center justify-between">
@@ -28,7 +53,7 @@ export default function RoomManagement() {
           <h1 className="text-2xl font-bold text-gray-900">My Properties</h1>
           <p className="text-gray-500">Manage your listings, pricing, and availability.</p>
         </div>
-        <Button>+ Add New Property</Button>
+        <Button onClick={() => setIsAdding(true)}>+ Add New Property</Button>
       </div>
 
       <div className="grid grid-cols-1 gap-6">
@@ -64,11 +89,12 @@ export default function RoomManagement() {
         )}
       </div>
 
+      {/* Edit Property Modal */}
       {editingRoom && (
         <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4 backdrop-blur-sm">
           <Card className="w-full max-w-md p-6 animate-fade-in">
             <h2 className="text-xl font-bold mb-4">Edit Property</h2>
-            <form onSubmit={handleSave} className="space-y-4">
+            <form onSubmit={handleSaveEdit} className="space-y-4">
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">Title</label>
                 <input 
@@ -101,6 +127,68 @@ export default function RoomManagement() {
               <div className="flex justify-end gap-2 mt-6">
                 <Button variant="secondary" onClick={() => setEditingRoom(null)}>Cancel</Button>
                 <Button type="submit">Save Changes</Button>
+              </div>
+            </form>
+          </Card>
+        </div>
+      )}
+
+      {/* Add Property Modal */}
+      {isAdding && (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4 backdrop-blur-sm">
+          <Card className="w-full max-w-md p-6 animate-fade-in">
+            <h2 className="text-xl font-bold mb-4">Add New Property</h2>
+            <form onSubmit={handleAddNew} className="space-y-4">
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Title</label>
+                <input 
+                  type="text" 
+                  required
+                  value={newRoom.title}
+                  onChange={e => setNewRoom({...newRoom, title: e.target.value})}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500"
+                  placeholder="e.g. Modern Studio District 1"
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Address</label>
+                <input 
+                  type="text" 
+                  required
+                  value={newRoom.address}
+                  onChange={e => setNewRoom({...newRoom, address: e.target.value})}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500"
+                  placeholder="e.g. 123 Nguyen Trai, D1"
+                />
+              </div>
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">Price (VND)</label>
+                  <input 
+                    type="number" 
+                    required
+                    value={newRoom.price || ''}
+                    onChange={e => setNewRoom({...newRoom, price: Number(e.target.value)})}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500"
+                    placeholder="5000000"
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">Type</label>
+                  <select 
+                    value={newRoom.type}
+                    onChange={e => setNewRoom({...newRoom, type: e.target.value})}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500"
+                  >
+                    <option value="Studio">Studio</option>
+                    <option value="1 Bedroom">1 Bedroom</option>
+                    <option value="Shared Room">Shared Room</option>
+                  </select>
+                </div>
+              </div>
+              <div className="flex justify-end gap-2 mt-6">
+                <Button type="button" variant="secondary" onClick={() => setIsAdding(false)}>Cancel</Button>
+                <Button type="submit">Create Listing</Button>
               </div>
             </form>
           </Card>
