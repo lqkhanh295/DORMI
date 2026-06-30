@@ -43,7 +43,7 @@ export default function SearchResults() {
               return (
                 <Button 
                   key={district} 
-                  variant={isActive ? "default" : "outline"} 
+                  variant={isActive ? "primary" : "outline"} 
                   size="sm" 
                   className={`whitespace-nowrap ${isActive ? 'bg-primary-600 text-white hover:bg-primary-700' : 'text-gray-600 bg-white hover:bg-gray-50 hover:text-primary-600'}`}
                   onClick={() => setSearchQuery(district)}
