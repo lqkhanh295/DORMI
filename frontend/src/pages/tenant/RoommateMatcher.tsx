@@ -101,7 +101,7 @@ export default function RoommateMatcher() {
   );
 
   return (
-    <div className="flex flex-col lg:flex-row gap-6 max-w-6xl mx-auto h-[calc(100vh-8rem)]">
+    <div className="flex flex-col lg:flex-row gap-4 lg:gap-6 max-w-6xl mx-auto h-[calc(100vh-9rem)] lg:h-[calc(100vh-8rem)] overflow-hidden">
       
       {/* Sidebar: Liked Roommates (Desktop Only) */}
       <div className="hidden lg:flex w-1/3 flex-col bg-white rounded-xl shadow-sm border border-neutral-200 overflow-hidden">
@@ -133,11 +133,11 @@ export default function RoommateMatcher() {
         </div>
 
         {/* Desktop Header */}
-        <div className="hidden lg:block text-center mb-6">
-          <h2 className="text-2xl font-bold text-neutral-900 mb-1 flex items-center justify-center gap-2">
-            <Sparkles className="text-primary-500" /> AI Roommate Matcher
+        <div className="hidden lg:block text-center mb-3">
+          <h2 className="text-2xl font-bold text-neutral-900 mb-1 flex items-center justify-center">
+            AI Roommate Matcher
           </h2>
-          <p className="text-neutral-500 text-sm">Hệ thống AI sẽ gợi ý những người có chung lối sống và ngân sách với bạn.</p>
+          <p className="text-neutral-500 text-sm hidden lg:block">Hệ thống AI sẽ gợi ý những người có chung lối sống và ngân sách với bạn.</p>
         </div>
 
         {currentIndex >= MOCK_ROOMMATES.length ? (
@@ -157,8 +157,8 @@ export default function RoommateMatcher() {
             </button>
           </div>
         ) : (
-          <div className="flex-1 flex flex-col items-center justify-center w-full max-w-sm mx-auto">
-            <div className="relative w-full aspect-[3/4]">
+          <div className="flex-1 flex flex-col items-center justify-center w-full mx-auto min-h-0">
+            <div className="relative h-[55vh] min-h-[350px] max-h-[500px] aspect-[3/4] shrink-0">
               {/* Next Card Background */}
               {nextProfile && (
                 <Card className="absolute inset-0 bg-white shadow-sm border border-neutral-200 rounded-2xl scale-95 translate-y-3 opacity-60 z-0">
@@ -210,7 +210,7 @@ export default function RoommateMatcher() {
             </div>
             
             {/* Action Buttons */}
-            <div className="flex justify-center gap-6 mt-6">
+            <div className="flex justify-center gap-6 mt-4 shrink-0 pb-4">
               <button 
                 onClick={() => handleAction('left')}
                 disabled={!!animating}
