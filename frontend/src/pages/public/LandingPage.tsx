@@ -27,15 +27,11 @@ export default function LandingPage() {
             Trải nghiệm tìm kiếm phòng trọ và người ở ghép hoàn hảo với sức mạnh của trí tuệ nhân tạo.
           </p>
 
-          <div className="flex flex-col sm:flex-row gap-4 items-center">
-            <Link to="/tenant" className="group/btn relative inline-flex items-center justify-center px-8 py-4 font-bold text-white transition-all duration-300 bg-blue-600 rounded-full hover:bg-blue-500 overflow-hidden shadow-lg shadow-blue-500/30 hover:shadow-xl hover:shadow-blue-500/40 hover:-translate-y-0.5">
+          <div className="flex flex-col sm:flex-row gap-4 items-center justify-center">
+            <Link to="/search" className="group/btn relative inline-flex items-center justify-center px-8 py-4 font-bold text-white transition-all duration-300 bg-blue-600 rounded-full hover:bg-blue-500 overflow-hidden shadow-lg shadow-blue-500/30 hover:shadow-xl hover:shadow-blue-500/40 hover:-translate-y-0.5">
               <span className="relative flex items-center gap-2 z-10 text-lg">
                 Trải nghiệm ngay <PlayCircle className="w-5 h-5" weight="fill" />
               </span>
-            </Link>
-
-            <Link to="/search" className="inline-flex items-center justify-center px-8 py-4 font-bold text-gray-700 transition-all duration-300 bg-white border border-gray-200 rounded-full hover:bg-gray-50 shadow-sm hover:shadow-md text-lg hover:-translate-y-0.5">
-              Khám phá phòng trọ
             </Link>
           </div>
         </div>
@@ -61,6 +57,55 @@ export default function LandingPage() {
               <div className="w-1/3 h-24 bg-gray-50 rounded-2xl border border-gray-100"></div>
               <div className="w-1/3 h-24 bg-gray-50 rounded-2xl border border-gray-100"></div>
             </div>
+          </div>
+        </div>
+      </section>
+
+      {/* ALGORITHMIC SECTION - DÀNH RIÊNG CHO BẠN (MOVED UP) */}
+      <section className="bg-white py-32 border-t border-gray-100 w-full relative z-30">
+        <div className="max-w-[1200px] mx-auto px-4 sm:px-6">
+          <div className="flex justify-between items-end mb-12">
+            <div>
+              <h2 className="text-[36px] md:text-[42px] font-black text-gray-900 leading-tight tracking-tight flex flex-wrap items-center gap-4">
+                Phòng trọ nổi bật
+                <span className="bg-blue-50 text-blue-600 text-xs font-bold px-4 py-2 rounded-full uppercase tracking-widest border border-blue-100">Gợi ý thông minh</span>
+              </h2>
+              <p className="text-gray-500 mt-4 text-xl">Dựa trên tiêu chuẩn cao và ảnh đã được kiểm duyệt.</p>
+            </div>
+            <Link to="/search" className="hidden sm:flex text-gray-600 hover:text-gray-900 font-bold items-center gap-2 bg-gray-50 px-6 py-3 rounded-full transition-colors border border-gray-200 hover:bg-gray-100">
+              Khám phá thêm
+            </Link>
+          </div>
+
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8">
+            {[
+              { id: '1', title: 'Phòng ban công thoáng Quận 10', price: '4,500,000', img: 'https://images.unsplash.com/photo-1522708323590-d24dbb6b0267?auto=format&fit=crop&w=400&q=80', score: 98 },
+              { id: '2', title: 'Studio ngập nắng Tân Bình', price: '5,200,000', img: 'https://images.unsplash.com/photo-1502672260266-1c1de2d96674?auto=format&fit=crop&w=400&q=80', score: 95 },
+              { id: '3', title: 'KTX cao cấp Quận 7 (Nam)', price: '1,800,000', img: 'https://images.unsplash.com/photo-1555854877-bab0e564b8d5?auto=format&fit=crop&w=400&q=80', score: 99 },
+              { id: '4', title: 'Căn hộ mini an ninh Phú Nhuận', price: '6,000,000', img: 'https://images.unsplash.com/photo-1560448204-e02f11c3d0e2?auto=format&fit=crop&w=400&q=80', score: 94 }
+            ].map((room) => (
+              <Link to={`/room/${room.id}`} key={room.id} className="block group relative bg-white rounded-[24px] overflow-hidden border border-gray-100 transition-all duration-500 hover:shadow-[0_20px_40px_rgba(0,0,0,0.06)] hover:-translate-y-2">
+                <div className="relative h-56 overflow-hidden bg-gray-100">
+                  <img src={room.img} alt={room.title} className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105" />
+                  <div className="absolute top-4 left-4 flex gap-2">
+                    <span className="bg-white/90 backdrop-blur text-gray-900 border border-gray-200 px-3 py-1.5 rounded-xl text-[11px] font-bold shadow-sm flex items-center gap-1">
+                      <ShieldCheck weight="fill" className="w-3 h-3 text-green-500" /> Verified
+                    </span>
+                  </div>
+                  {/* Dark overlay on hover */}
+                  <div className="absolute inset-0 bg-black/10 opacity-0 group-hover:opacity-100 transition-opacity duration-500"></div>
+                </div>
+                <div className="p-5">
+                  <div className="flex items-center justify-between mb-2">
+                    <h3 className="font-bold text-gray-900 line-clamp-1 text-[17px]">{room.title}</h3>
+                  </div>
+                  <div className="flex items-center gap-1 text-sm font-semibold text-orange-500 mb-4">
+                    <Star weight="fill" className="w-4 h-4" /> {room.score} Điểm tin cậy
+                  </div>
+                  <p className="text-blue-600 font-black text-xl tracking-tight">{room.price}₫<span className="text-sm text-gray-400 font-medium tracking-normal ml-1">/tháng</span></p>
+                </div>
+              </Link>
+            ))}
           </div>
         </div>
       </section>
@@ -114,55 +159,6 @@ export default function LandingPage() {
             <Link to="/tenant/match" className="absolute inset-0 z-20"></Link>
           </div>
 
-        </div>
-      </section>
-
-      {/* ALGORITHMIC SECTION - DÀNH RIÊNG CHO BẠN */}
-      <section className="bg-white py-32 border-t border-gray-100 w-full">
-        <div className="max-w-[1200px] mx-auto px-4 sm:px-6">
-          <div className="flex justify-between items-end mb-12">
-            <div>
-              <h2 className="text-[36px] md:text-[42px] font-black text-gray-900 leading-tight tracking-tight flex flex-wrap items-center gap-4">
-                Phòng trọ nổi bật
-                <span className="bg-blue-50 text-blue-600 text-xs font-bold px-4 py-2 rounded-full uppercase tracking-widest border border-blue-100">Gợi ý thông minh</span>
-              </h2>
-              <p className="text-gray-500 mt-4 text-xl">Dựa trên tiêu chuẩn cao và ảnh đã được kiểm duyệt.</p>
-            </div>
-            <Link to="/search" className="hidden sm:flex text-gray-600 hover:text-gray-900 font-bold items-center gap-2 bg-gray-50 px-6 py-3 rounded-full transition-colors border border-gray-200 hover:bg-gray-100">
-              Khám phá thêm
-            </Link>
-          </div>
-
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8">
-            {[
-              { id: '1', title: 'Phòng ban công thoáng Quận 10', price: '4,500,000', img: 'https://images.unsplash.com/photo-1522708323590-d24dbb6b0267?auto=format&fit=crop&w=400&q=80', score: 98 },
-              { id: '2', title: 'Studio ngập nắng Tân Bình', price: '5,200,000', img: 'https://images.unsplash.com/photo-1502672260266-1c1de2d96674?auto=format&fit=crop&w=400&q=80', score: 95 },
-              { id: '3', title: 'KTX cao cấp Quận 7 (Nam)', price: '1,800,000', img: 'https://images.unsplash.com/photo-1555854877-bab0e564b8d5?auto=format&fit=crop&w=400&q=80', score: 99 },
-              { id: '4', title: 'Căn hộ mini an ninh Phú Nhuận', price: '6,000,000', img: 'https://images.unsplash.com/photo-1560448204-e02f11c3d0e2?auto=format&fit=crop&w=400&q=80', score: 94 }
-            ].map((room) => (
-              <Link to={`/room/${room.id}`} key={room.id} className="block group relative bg-white rounded-[24px] overflow-hidden border border-gray-100 transition-all duration-500 hover:shadow-[0_20px_40px_rgba(0,0,0,0.06)] hover:-translate-y-2">
-                <div className="relative h-56 overflow-hidden bg-gray-100">
-                  <img src={room.img} alt={room.title} className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105" />
-                  <div className="absolute top-4 left-4 flex gap-2">
-                    <span className="bg-white/90 backdrop-blur text-gray-900 border border-gray-200 px-3 py-1.5 rounded-xl text-[11px] font-bold shadow-sm flex items-center gap-1">
-                      <ShieldCheck weight="fill" className="w-3 h-3 text-green-500" /> Verified
-                    </span>
-                  </div>
-                  {/* Dark overlay on hover */}
-                  <div className="absolute inset-0 bg-black/10 opacity-0 group-hover:opacity-100 transition-opacity duration-500"></div>
-                </div>
-                <div className="p-5">
-                  <div className="flex items-center justify-between mb-2">
-                    <h3 className="font-bold text-gray-900 line-clamp-1 text-[17px]">{room.title}</h3>
-                  </div>
-                  <div className="flex items-center gap-1 text-sm font-semibold text-orange-500 mb-4">
-                    <Star weight="fill" className="w-4 h-4" /> {room.score} Điểm tin cậy
-                  </div>
-                  <p className="text-blue-600 font-black text-xl tracking-tight">{room.price}₫<span className="text-sm text-gray-400 font-medium tracking-normal ml-1">/tháng</span></p>
-                </div>
-              </Link>
-            ))}
-          </div>
         </div>
       </section>
     </div>
