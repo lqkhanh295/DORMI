@@ -63,7 +63,7 @@ export default function RoomDetail() {
           <img src={MOCK_PHOTOS[0]} alt="Room Main" className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105" />
           <div className="absolute inset-0 bg-black/20 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-micro">
             <Button className="bg-white/90 text-gray-900 hover:bg-white backdrop-blur" onClick={(e) => { e.stopPropagation(); setShowGallery(true); }}>
-              View All Photos
+              Xem tất cả ảnh
             </Button>
           </div>
         </div>
@@ -74,7 +74,7 @@ export default function RoomDetail() {
           <div className="flex-1 bg-gray-200 rounded-2xl overflow-hidden relative group cursor-pointer" onClick={() => setShowGallery(true)}>
             <img src={MOCK_PHOTOS[2]} alt="Room 3" className="w-full h-full object-cover transition-transform group-hover:scale-105" />
             <div className="absolute inset-0 bg-black/50 flex items-center justify-center transition-micro hover:bg-black/40">
-              <span className="text-white font-bold text-lg">+12 Photos</span>
+              <span className="text-white font-bold text-lg">+12 Ảnh</span>
             </div>
           </div>
         </div>
@@ -85,27 +85,27 @@ export default function RoomDetail() {
         <div className="lg:col-span-2 space-y-6 md:space-y-8">
           <div>
             <div className="flex flex-col sm:flex-row sm:justify-between sm:items-start gap-3">
-              <h1 className="text-2xl md:text-3xl font-bold text-gray-900 mb-1 md:mb-2">Premium Modern Studio - District 3</h1>
+              <h1 className="text-2xl md:text-3xl font-bold text-gray-900 mb-1 md:mb-2">Studio Hiện Đại - Quận 3</h1>
               <div className="flex self-start sm:self-auto">
                 <span className="bg-green-100 text-green-800 text-xs font-bold px-3 py-1.5 rounded-full flex items-center gap-1">
-                  ✓ Verified Landlord
+                  ✓ Chủ nhà đã xác thực
                 </span>
               </div>
             </div>
-            <p className="text-gray-500 text-base md:text-lg mt-2 sm:mt-0">123 Nguyen Dinh Chieu, Vo Thi Sau Ward, District 3, HCMC</p>
+            <p className="text-gray-500 text-base md:text-lg mt-2 sm:mt-0">123 Nguyễn Đình Chiểu, Phường Võ Thị Sáu, Quận 3, TP.HCM</p>
           </div>
 
           <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 py-6 border-y border-gray-200">
-            <div><p className="text-gray-500 text-xs md:text-sm">Room Type</p><p className="font-semibold text-gray-900 text-sm md:text-base">Studio</p></div>
-            <div><p className="text-gray-500 text-xs md:text-sm">Capacity</p><p className="font-semibold text-gray-900 text-sm md:text-base">2 People</p></div>
-            <div><p className="text-gray-500 text-xs md:text-sm">Area</p><p className="font-semibold text-gray-900 text-sm md:text-base">35 m²</p></div>
-            <div><p className="text-gray-500 text-xs md:text-sm">Bathroom</p><p className="font-semibold text-gray-900 text-sm md:text-base">Private</p></div>
+            <div><p className="text-gray-500 text-xs md:text-sm">Loại phòng</p><p className="font-semibold text-gray-900 text-sm md:text-base">Studio</p></div>
+            <div><p className="text-gray-500 text-xs md:text-sm">Sức chứa</p><p className="font-semibold text-gray-900 text-sm md:text-base">2 Người</p></div>
+            <div><p className="text-gray-500 text-xs md:text-sm">Diện tích</p><p className="font-semibold text-gray-900 text-sm md:text-base">35 m²</p></div>
+            <div><p className="text-gray-500 text-xs md:text-sm">Phòng tắm</p><p className="font-semibold text-gray-900 text-sm md:text-base">Riêng biệt</p></div>
           </div>
 
           <div>
-            <h2 className="text-lg md:text-xl font-bold text-gray-900 mb-3 md:mb-4">Description</h2>
+            <h2 className="text-lg md:text-xl font-bold text-gray-900 mb-3 md:mb-4">Mô tả chi tiết</h2>
             <p className="text-gray-600 text-sm md:text-base leading-relaxed">
-              Fully furnished modern studio located in the heart of District 3. Very close to universities, convenience stores, and coffee shops. The building has a 24/7 security guard, fingerprint access, and a free rooftop washing machine.
+              Studio hiện đại với đầy đủ nội thất tọa lạc tại trung tâm Quận 3. Rất gần các trường đại học, cửa hàng tiện lợi và quán cà phê. Tòa nhà có bảo vệ 24/7, ra vào bằng vân tay, và máy giặt miễn phí trên sân thượng.
             </p>
           </div>
         </div>
@@ -117,13 +117,13 @@ export default function RoomDetail() {
           </Button>
           <Card className="p-5 md:p-6 md:sticky md:top-24">
             <div className="mb-6">
-              <p className="text-2xl md:text-3xl font-bold text-blue-600">5.500.000₫ <span className="text-sm md:text-base text-gray-500 font-normal">/ month</span></p>
-              <p className="text-xs md:text-sm text-gray-500 mt-2">Deposit: 5.500.000₫</p>
+              <p className="text-2xl md:text-3xl font-bold text-blue-600">5.500.000₫ <span className="text-sm md:text-base text-gray-500 font-normal">/ tháng</span></p>
+              <p className="text-xs md:text-sm text-gray-500 mt-2">Cọc: 5.500.000₫</p>
             </div>
             
             <div className="hidden md:flex flex-col space-y-4 mb-6">
-              <Button fullWidth size="lg" onClick={handleSchedule}>Schedule Viewing</Button>
-              <Button fullWidth variant="outline" size="lg" onClick={handleChat}>Chat with Landlord</Button>
+              <Button fullWidth size="lg" onClick={handleSchedule}>Đặt lịch xem phòng</Button>
+              <Button fullWidth variant="outline" size="lg" onClick={handleChat}>Chat với Chủ nhà</Button>
             </div>
 
             <div className="pt-5 md:pt-6 border-t border-gray-100">
@@ -137,7 +137,7 @@ export default function RoomDetail() {
                 </div>
               </div>
               <div className="mt-4 bg-gray-50 p-3 rounded-lg flex items-center justify-between">
-                <span className="text-xs md:text-sm text-gray-600">Trust Score</span>
+                <span className="text-xs md:text-sm text-gray-600">Điểm tin cậy (Trust Score)</span>
                 <span className="font-bold text-green-600 text-sm md:text-base">98/100</span>
               </div>
             </div>
@@ -150,9 +150,9 @@ export default function RoomDetail() {
         <div className="fixed inset-0 bg-black z-50 overflow-y-auto">
           <div className="p-4 md:p-6 min-h-screen flex flex-col">
             <div className="flex justify-between items-center mb-6 md:mb-8 sticky top-0 bg-black/90 pb-4 z-10">
-              <h2 className="text-white text-xl md:text-2xl font-bold">Property Photos</h2>
+              <h2 className="text-white text-xl md:text-2xl font-bold">Hình ảnh phòng</h2>
               <Button variant="outline" className="text-white border-white hover:bg-white/20 text-sm md:text-base" onClick={() => setShowGallery(false)}>
-                ✕ Close
+                ✕ Đóng
               </Button>
             </div>
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 max-w-7xl mx-auto w-full">

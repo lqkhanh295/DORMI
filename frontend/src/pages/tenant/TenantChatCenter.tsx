@@ -122,7 +122,7 @@ export default function TenantChatCenter() {
                     </span>
                   </h3>
                   <p className="text-xs text-green-600 font-medium flex items-center gap-1">
-                    <span className="w-2 h-2 rounded-full bg-green-500 block"></span> {selectedContact.online ? 'Online' : 'Offline'}
+                    <span className="w-2 h-2 rounded-full bg-green-500 block"></span> {selectedContact.online ? 'Trực tuyến' : 'Ngoại tuyến'}
                   </p>
                 </div>
               </div>
