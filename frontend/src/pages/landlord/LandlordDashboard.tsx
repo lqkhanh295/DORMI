@@ -1,9 +1,5 @@
 import { Card } from '../../components/ui/Card';
-import { Button } from '../../components/ui/Button';
-import { useNavigate } from 'react-router-dom';
-
 export default function LandlordDashboard() {
-  const navigate = useNavigate();
   return (
     <div className="space-y-6 pb-6">
       {/* Header */}
