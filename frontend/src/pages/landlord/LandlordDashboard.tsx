@@ -12,9 +12,9 @@ export default function LandlordDashboard() {
           <h1 className="text-2xl font-bold text-neutral-800">Tổng quan Chủ trọ</h1>
           <p className="text-sm text-neutral-500 mt-1">Quản lý tài sản và phân tích hiệu quả cho thuê.</p>
         </div>
-        <Button onClick={() => navigate('/landlord/rooms')} className="shadow-sm hover:shadow transition-all whitespace-nowrap font-semibold">
+        {/* <Button onClick={() => navigate('/landlord/rooms')} className="hidden shadow-sm hover:shadow transition-all whitespace-nowrap font-semibold">
           + Đăng tin mới
-        </Button>
+        </Button> */}
       </div>
 
       {/* Stats Cards */}
