@@ -173,6 +173,19 @@ export default function TenantChatCenter() {
               <div ref={messagesEndRef} />
             </div>
 
+            {/* Quick Actions */}
+            <div className="px-4 py-2 flex gap-2 overflow-x-auto no-scrollbar border-t border-gray-100 bg-white">
+              {['Phòng này hiện còn avai không?', 'Giá căn này có thể hỗ trợ giảm không?', 'Có full nt không?'].map((msg, i) => (
+                <button 
+                  key={i}
+                  onClick={() => sendMessage(selectedContact.id, msg)}
+                  className="whitespace-nowrap px-3 py-1.5 bg-primary-50 text-primary-700 text-xs font-medium rounded-full hover:bg-primary-100 transition-colors border border-primary-100"
+                >
+                  {msg}
+                </button>
+              ))}
+            </div>
+
             {/* Input Area */}
             <div className="p-4 border-t border-gray-200 bg-white">
               <div className="flex items-end gap-2 bg-neutral-50 rounded-xl border border-neutral-200 p-2 focus-within:ring-2 focus-within:ring-primary-500 focus-within:border-transparent transition-micro">
