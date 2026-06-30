@@ -4,12 +4,13 @@ import { Button } from '../../components/ui/Button';
 import { Input } from '../../components/ui/Input';
 import { useStore } from '../../store/useStore';
 import { useNavigate } from 'react-router-dom';
-import { ArrowLeft, SlidersHorizontal } from '@phosphor-icons/react';
+import { ArrowLeft, SlidersHorizontal, MapTrifold } from '@phosphor-icons/react';
 
 export default function SearchResults() {
   const listings = useStore(state => state.listings);
   const navigate = useNavigate();
   const [searchQuery, setSearchQuery] = useState('');
+  const [showMap, setShowMap] = useState(true);
   
   const filteredListings = listings.filter(room => 
     room.title.toLowerCase().includes(searchQuery.toLowerCase()) || 
@@ -20,7 +21,7 @@ export default function SearchResults() {
   return (
     <div className="flex h-[calc(100vh-64px)] overflow-hidden">
       {/* Left Panel: Search & List */}
-      <div className="w-full lg:w-1/2 flex flex-col bg-neutral-50 border-r border-gray-200">
+      <div className={`flex flex-col bg-neutral-50 border-r border-gray-200 transition-all duration-300 ${showMap ? 'w-full lg:w-1/2' : 'w-full'}`}>
         <div className="p-4 bg-white border-b border-gray-200 space-y-4 shadow-sm z-10">
           <div className="flex items-center gap-2">
             <Button variant="outline" className="px-3 py-2 flex-shrink-0" onClick={() => navigate(-1)} aria-label="Quay lại">
@@ -35,6 +36,14 @@ export default function SearchResults() {
             <Button>Tìm kiếm</Button>
             <Button variant="outline" className="px-3 py-2 flex-shrink-0 bg-gray-50 hover:bg-gray-100 border-gray-200" aria-label="Bộ lọc">
               <SlidersHorizontal className="w-5 h-5 text-gray-700" />
+            </Button>
+            <Button 
+              variant="outline" 
+              className={`px-3 py-2 flex-shrink-0 border-gray-200 hidden lg:flex items-center gap-2 transition-colors ${showMap ? 'bg-blue-50 border-blue-200 hover:bg-blue-100' : 'bg-gray-50 hover:bg-gray-100'}`} 
+              onClick={() => setShowMap(!showMap)}
+            >
+              {showMap ? <MapTrifold weight="fill" className="w-5 h-5 text-blue-600" /> : <MapTrifold className="w-5 h-5 text-gray-700" />}
+              <span className={`text-sm font-medium ${showMap ? 'text-blue-700' : 'text-gray-700'}`}>{showMap ? 'Ẩn bản đồ' : 'Hiện bản đồ'}</span>
             </Button>
           </div>
           <div className="flex gap-2 overflow-x-auto pb-2 scrollbar-hide">
@@ -55,13 +64,15 @@ export default function SearchResults() {
           </div>
         </div>
         
-        <div className="flex-1 overflow-y-auto p-4 space-y-4">
-          <p className="text-sm font-medium text-gray-500 mb-2">Tìm thấy {filteredListings.length} phòng</p>
-          {filteredListings.length === 0 && (
-            <p className="text-gray-500 text-center py-8">Không có phòng nào khớp với tìm kiếm của bạn.</p>
-          )}
+        <div className={`flex-1 overflow-y-auto p-4 ${!showMap ? 'max-w-7xl mx-auto w-full grid grid-cols-1 xl:grid-cols-2 gap-4 content-start' : 'flex flex-col gap-4'}`}>
+          <div className={`${!showMap ? 'xl:col-span-2' : ''}`}>
+            <p className="text-sm font-medium text-gray-500 mb-2">Tìm thấy {filteredListings.length} phòng</p>
+            {filteredListings.length === 0 && (
+              <p className="text-gray-500 text-center py-8">Không có phòng nào khớp với tìm kiếm của bạn.</p>
+            )}
+          </div>
           {filteredListings.map(room => (
-            <Card key={room.id} onClick={() => navigate('/room/' + room.id)} className="flex flex-col sm:flex-row group cursor-pointer hover:shadow-float transition-micro">
+            <Card key={room.id} onClick={() => navigate('/room/' + room.id)} className="flex flex-col sm:flex-row group cursor-pointer hover:shadow-float transition-micro h-full">
               <div className="w-full sm:w-48 h-48 bg-gray-200 relative">
                 <img 
                   src={room.image} 
@@ -92,19 +103,21 @@ export default function SearchResults() {
         </div>
       </div>  
         {/* Map View */}
-        <div className="hidden md:block flex-1 bg-gray-100 relative">
-          <div className="absolute inset-0">
-            <iframe 
-              src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d250826.96265738801!2d106.4950553754972!3d10.814234032128713!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x317529292e8d3dd1%3A0xf15f5aad773c112b!2zVGjDoG5oIHBo4buRIEjhu5MgQ2jDrSBNaW5oLCBWaeG7h3QgTmFt!5e0!3m2!1svi!2s!4v1709194215160!5m2!1svi!2s" 
-              width="100%" 
-              height="100%" 
-              style={{ border: 0 }} 
-              allowFullScreen={true} 
-              loading="lazy" 
-              referrerPolicy="no-referrer-when-downgrade"
-            ></iframe>
+        {showMap && (
+          <div className="hidden lg:block flex-1 bg-gray-100 relative transition-all duration-300">
+            <div className="absolute inset-0">
+              <iframe 
+                src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d250826.96265738801!2d106.4950553754972!3d10.814234032128713!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x317529292e8d3dd1%3A0xf15f5aad773c112b!2zVGjDoG5oIHBo4buRIEjhu5MgQ2jDrSBNaW5oLCBWaeG7h3QgTmFt!5e0!3m2!1svi!2s!4v1709194215160!5m2!1svi!2s" 
+                width="100%" 
+                height="100%" 
+                style={{ border: 0 }} 
+                allowFullScreen={true} 
+                loading="lazy" 
+                referrerPolicy="no-referrer-when-downgrade"
+              ></iframe>
+            </div>
           </div>
-        </div>
+        )}
     </div>
   );
 }

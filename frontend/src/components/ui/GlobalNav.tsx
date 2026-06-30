@@ -1,12 +1,15 @@
 import { useState } from 'react';
 import { Link, useNavigate, useLocation } from 'react-router-dom';
-import { MagnifyingGlass, List, Bell, Plus, Users, CaretDown, ArrowLeft } from '@phosphor-icons/react';
+import { MagnifyingGlass, List, Bell, Plus, Users, CaretDown, ArrowLeft, SignIn, SignOut, SlidersHorizontal } from '@phosphor-icons/react';
+import { useStore } from '../../store/useStore';
 
 export function GlobalNav() {
   const [showSearchModal, setShowSearchModal] = useState(false);
   const [quickSearch, setQuickSearch] = useState({ district: '', price: '', area: '' });
   const navigate = useNavigate();
   const location = useLocation();
+  const currentUser = useStore(state => state.currentUser);
+  const logout = useStore(state => state.logout);
 
   const handleQuickSearch = (e: React.FormEvent) => {
     e.preventDefault();
@@ -52,26 +55,60 @@ export function GlobalNav() {
                 <Users className="w-4 h-4" />
                 Tìm bạn ở ghép
               </Link>
-              <div className="w-[1px] h-4 bg-white/20 mx-1"></div>
-              <Link to="/landlord" className="flex items-center gap-1.5 bg-white text-black px-4 py-1.5 rounded-full hover:bg-gray-100 transition-colors shadow-[0_0_15px_rgba(255,255,255,0.2)]">
-                <Plus className="w-4 h-4" />
-                Đăng tin ngay
-              </Link>
+              {currentUser?.role !== 'Tenant' && (
+                <>
+                  <div className="w-[1px] h-4 bg-white/20 mx-1"></div>
+                  <Link to="/landlord" className="flex items-center gap-1.5 bg-white text-black px-4 py-1.5 rounded-full hover:bg-gray-100 transition-colors shadow-[0_0_15px_rgba(255,255,255,0.2)]">
+                    <Plus className="w-4 h-4" />
+                    Đăng tin ngay
+                  </Link>
+                </>
+              )}
             </div>
 
             {/* Notification & Avatar */}
             <div className="flex items-center gap-4 border-l border-white/10 pl-4 sm:pl-6">
-              <button className="relative text-white/80 hover:text-white transition-colors">
-                <Bell className="w-5 h-5" />
-                <span className="absolute -top-1 -right-1 w-2.5 h-2.5 bg-red-500 border-2 border-[#1d1d1f] rounded-full"></span>
-              </button>
-              
-              <Link to="/tenant" title="Đến trang Quản lý Người thuê (Tenant)" className="flex items-center gap-2 group cursor-pointer">
-                <div className="w-8 h-8 rounded-full overflow-hidden border border-white/20 group-hover:border-white/50 transition-colors">
-                  <img src="https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?auto=format&fit=crop&w=100&q=80" alt="Avatar" className="w-full h-full object-cover" />
-                </div>
-                <CaretDown className="w-3 h-3 text-white/50 group-hover:text-white transition-colors hidden sm:block" />
-              </Link>
+              {!currentUser ? (
+                <Link to="/auth" className="flex items-center gap-2 text-sm font-medium text-white hover:text-white/80 transition-colors bg-white/10 hover:bg-white/20 px-4 py-2 rounded-full">
+                  <SignIn className="w-4 h-4" />
+                  Đăng nhập
+                </Link>
+              ) : (
+                <>
+                  <button className="relative text-white/80 hover:text-white transition-colors">
+                    <Bell className="w-5 h-5" />
+                    <span className="absolute -top-1 -right-1 w-2.5 h-2.5 bg-red-500 border-2 border-[#1d1d1f] rounded-full"></span>
+                  </button>
+                  
+                  <div className="relative group">
+                    <Link to={currentUser.role === 'Landlord' ? '/landlord' : currentUser.role === 'Admin' ? '/admin' : '/tenant'} title={`Đến trang Quản lý (${currentUser.role})`} className="flex items-center gap-2 cursor-pointer">
+                      <div className="w-8 h-8 rounded-full overflow-hidden border border-white/20 group-hover:border-white/50 transition-colors">
+                        <img src={currentUser.avatar || "https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?auto=format&fit=crop&w=100&q=80"} alt="Avatar" className="w-full h-full object-cover" />
+                      </div>
+                      <CaretDown className="w-3 h-3 text-white/50 group-hover:text-white transition-colors hidden sm:block" />
+                    </Link>
+                    
+                    {/* Dropdown Menu on hover */}
+                    <div className="absolute right-0 top-full pt-2 opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200">
+                      <div className="bg-white rounded-xl shadow-xl border border-gray-100 p-2 min-w-[160px] flex flex-col">
+                        <div className="px-3 py-2 border-b border-gray-50 mb-1">
+                          <p className="text-sm font-bold text-gray-900 truncate">{currentUser.name}</p>
+                          <p className="text-xs text-gray-500 truncate">
+                            {currentUser.role === 'Tenant' ? 'Người thuê' : currentUser.role === 'Landlord' ? 'Chủ nhà' : 'Quản trị viên'}
+                          </p>
+                        </div>
+                        <button 
+                          onClick={() => logout()}
+                          className="flex items-center gap-2 text-sm font-medium text-red-600 hover:bg-red-50 px-3 py-2 rounded-lg transition-colors text-left"
+                        >
+                          <SignOut className="w-4 h-4" />
+                          Đăng xuất
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+                </>
+              )}
             </div>
           </div>
         </div>
@@ -95,56 +132,35 @@ export function GlobalNav() {
             </div>
             
             <form onSubmit={handleQuickSearch} className="p-6 bg-gray-50/50">
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
-                <div>
-                  <label className="block text-xs font-bold text-gray-500 uppercase mb-2">Khu vực</label>
-                  <select 
-                    className="w-full bg-white border border-gray-200 rounded-lg px-3 py-2 text-sm outline-none focus:border-blue-500"
-                    value={quickSearch.district}
-                    onChange={e => setQuickSearch({...quickSearch, district: e.target.value})}
-                  >
-                    <option value="">Tất cả các quận</option>
-                    <option value="D1">Quận 1</option>
-                    <option value="D3">Quận 3</option>
-                    <option value="D7">Quận 7</option>
-                    <option value="BinhThanh">Bình Thạnh</option>
-                  </select>
-                </div>
-                <div>
-                  <label className="block text-xs font-bold text-gray-500 uppercase mb-2">Mức giá</label>
-                  <select 
-                    className="w-full bg-white border border-gray-200 rounded-lg px-3 py-2 text-sm outline-none focus:border-blue-500"
-                    value={quickSearch.price}
-                    onChange={e => setQuickSearch({...quickSearch, price: e.target.value})}
-                  >
-                    <option value="">Mọi mức giá</option>
-                    <option value="under3">Dưới 3 triệu</option>
-                    <option value="3to5">3 - 5 triệu</option>
-                    <option value="over5">Trên 5 triệu</option>
-                  </select>
-                </div>
-                <div>
-                  <label className="block text-xs font-bold text-gray-500 uppercase mb-2">Loại phòng</label>
-                  <select 
-                    className="w-full bg-white border border-gray-200 rounded-lg px-3 py-2 text-sm outline-none focus:border-blue-500"
-                    value={quickSearch.area}
-                    onChange={e => setQuickSearch({...quickSearch, area: e.target.value})}
-                  >
-                    <option value="">Tất cả</option>
-                    <option value="studio">Studio</option>
-                    <option value="ktx">Ký túc xá</option>
-                    <option value="apartment">Căn hộ</option>
-                  </select>
+              <div className="mb-6">
+                <label className="block text-xs font-bold text-gray-500 uppercase mb-3">Khu vực phổ biến</label>
+                <div className="flex flex-wrap gap-2">
+                  {['Quận 1', 'Quận 3', 'Quận 7', 'Bình Thạnh', 'Gò Vấp', 'Làng Đại Học'].map(district => (
+                    <button 
+                      key={district}
+                      type="button"
+                      onClick={() => setQuickSearch({...quickSearch, district})}
+                      className={`px-4 py-2 text-sm font-medium rounded-full border transition-colors ${quickSearch.district === district ? 'bg-blue-600 text-white border-blue-600' : 'bg-white text-gray-700 border-gray-200 hover:border-blue-500'}`}
+                    >
+                      {district}
+                    </button>
+                  ))}
                 </div>
               </div>
               
-              <div className="flex justify-end gap-3">
-                <button type="button" onClick={() => setShowSearchModal(false)} className="px-4 py-2 text-sm font-medium text-gray-600 hover:text-gray-900">
-                  Huỷ
+              <div className="flex justify-between items-center">
+                <button type="button" className="text-sm text-blue-600 font-medium hover:underline flex items-center gap-1">
+                  <SlidersHorizontal className="w-4 h-4" />
+                  Bộ lọc nâng cao
                 </button>
-                <button type="submit" className="px-6 py-2 bg-blue-600 hover:bg-blue-700 text-white text-sm font-medium rounded-lg shadow-sm transition-colors">
-                  Tìm kiếm ngay
-                </button>
+                <div className="flex gap-3">
+                  <button type="button" onClick={() => setShowSearchModal(false)} className="px-4 py-2 text-sm font-medium text-gray-600 hover:text-gray-900">
+                    Huỷ
+                  </button>
+                  <button type="submit" className="px-6 py-2 bg-blue-600 hover:bg-blue-700 text-white text-sm font-medium rounded-lg shadow-sm transition-colors">
+                    Tìm kiếm ngay
+                  </button>
+                </div>
               </div>
             </form>
           </div>

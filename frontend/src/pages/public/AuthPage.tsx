@@ -24,8 +24,8 @@ export default function AuthPage() {
     <div className="min-h-[calc(100vh-64px)] flex items-center justify-center bg-neutral-50 px-4 py-12">
       <Card className="w-full max-w-md p-8">
         <div className="text-center mb-8">
-          <h2 className="text-3xl font-bold text-gray-900">Welcome back</h2>
-          <p className="text-gray-500 mt-2">Please select your role to continue.</p>
+          <h2 className="text-3xl font-bold text-gray-900">Chào mừng trở lại</h2>
+          <p className="text-gray-500 mt-2">Vui lòng chọn vai trò để tiếp tục.</p>
         </div>
 
         <div className="flex p-1 bg-gray-100 rounded-lg mb-8">
@@ -33,33 +33,33 @@ export default function AuthPage() {
             className={`flex-1 py-2 text-sm font-medium rounded-md transition-micro ${role === 'Tenant' ? 'bg-white shadow text-blue-600' : 'text-gray-500'}`}
             onClick={() => setRole('Tenant')}
           >
-            Tenant
+            Người thuê
           </button>
           <button 
             className={`flex-1 py-2 text-sm font-medium rounded-md transition-micro ${role === 'Landlord' ? 'bg-white shadow text-blue-600' : 'text-gray-500'}`}
             onClick={() => setRole('Landlord')}
           >
-            Landlord
+            Chủ nhà
           </button>
           <button 
             className={`flex-1 py-2 text-sm font-medium rounded-md transition-micro ${role === 'Admin' ? 'bg-white shadow text-red-600' : 'text-gray-500'}`}
             onClick={() => setRole('Admin')}
           >
-            Admin
+            Quản trị viên
           </button>
         </div>
 
         <form onSubmit={handleLogin} className="space-y-6">
           <Input 
-            label="Email address" 
+            label="Địa chỉ Email" 
             type="email" 
             placeholder="you@example.com" 
             value={email}
             onChange={(e) => setEmail(e.target.value)}
             required 
           />
-          <Input label="Password" type="password" placeholder="••••••••" required />
-          <Button type="submit" fullWidth>Sign in as {role}</Button>
+          <Input label="Mật khẩu" type="password" placeholder="••••••••" required />
+          <Button type="submit" fullWidth>Đăng nhập với vai trò {role === 'Tenant' ? 'Người thuê' : role === 'Landlord' ? 'Chủ nhà' : 'Quản trị'}</Button>
         </form>
       </Card>
     </div>

@@ -1,5 +1,6 @@
 import { Outlet, useLocation } from 'react-router-dom';
 import { GlobalNav } from '../components/ui/GlobalNav';
+import { GlobalFooter } from '../components/ui/GlobalFooter';
 
 export default function MainLayout() {
   const location = useLocation();
@@ -13,11 +14,7 @@ export default function MainLayout() {
         </div>
       </main>
 
-      <footer className="bg-white border-t border-gray-200 py-12">
-        <div className="max-w-7xl mx-auto px-4 text-center">
-          <p className="text-sm text-gray-500">© 2026 Dormi Platform. All rights reserved.</p>
-        </div>
-      </footer>
+      <GlobalFooter />
     </div>
   );
 }
