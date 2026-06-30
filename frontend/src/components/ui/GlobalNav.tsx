@@ -81,7 +81,7 @@ export function GlobalNav() {
                   </button>
                   
                   <div className="relative group">
-                    <Link to={currentUser.role === 'Landlord' ? '/landlord' : currentUser.role === 'Admin' ? '/admin' : '/tenant'} title={`Đến trang Quản lý (${currentUser.role})`} className="flex items-center gap-2 cursor-pointer">
+                    <Link to={currentUser.role === 'Landlord' ? '/landlord' : currentUser.role === 'Admin' ? '/admin' : '/tenant'} title={`Đến trang Quản lý (${currentUser.role === 'Tenant' ? 'Người thuê' : currentUser.role === 'Landlord' ? 'Chủ nhà' : 'Quản trị viên'})`} className="flex items-center gap-2 cursor-pointer">
                       <div className="w-8 h-8 rounded-full overflow-hidden border border-white/20 group-hover:border-white/50 transition-colors">
                         <img src={currentUser.avatar || "https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?auto=format&fit=crop&w=100&q=80"} alt="Avatar" className="w-full h-full object-cover" />
                       </div>

@@ -30,14 +30,14 @@ export default function AdminDashboard() {
           <h1 className="text-2xl font-bold text-neutral-800">Tổng quan Hệ thống</h1>
           <p className="text-sm text-neutral-500 mt-1">Số liệu tổng quan và hàng đợi kiểm duyệt nền tảng.</p>
         </div>
-        <Button variant="outline" className="shadow-sm hover:shadow transition-all whitespace-nowrap">
+        {/* <Button variant="outline" className="shadow-sm hover:shadow transition-all whitespace-nowrap">
           <svg className="w-4 h-4 mr-2 inline-block" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"></path></svg>
           Xuất báo cáo
-        </Button>
+        </Button> */}
       </div>
 
       {/* Stats Cards */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
         <Card className="p-5 border border-neutral-200 hover:shadow-md transition-all duration-300 rounded-xl relative overflow-hidden group">
           <div className="absolute -right-4 -top-4 w-20 h-20 bg-primary-50 rounded-full group-hover:scale-110 transition-transform"></div>
           <h3 className="text-xs font-bold text-neutral-500 uppercase tracking-wider mb-2 relative z-10">Tổng người dùng</h3>
@@ -55,11 +55,11 @@ export default function AdminDashboard() {
         <Card className="p-5 bg-rose-50/50 border border-rose-100 hover:shadow-md transition-all duration-300 rounded-xl relative overflow-hidden group">
           <div className="absolute -right-4 -top-4 w-20 h-20 bg-rose-100/50 rounded-full group-hover:scale-110 transition-transform"></div>
           <h3 className="text-xs font-bold text-rose-600 uppercase tracking-wider mb-2 relative z-10">Chờ xác thực</h3>
-          <p className="text-3xl font-black text-rose-700 relative z-10 mt-1">{84 - (3 - verifications.length)}</p>
+          <p className="text-3xl font-black text-rose-700 relative z-10 mt-1">{verifications.length}</p>
           <span className="text-xs text-rose-600 font-medium mt-2 block relative z-10">Cần xử lý ngay</span>
         </Card>
         
-        <Card className="p-5 bg-amber-50/50 border border-amber-100 hover:shadow-md transition-all duration-300 rounded-xl relative overflow-hidden group">
+        <Card className="hidden p-5 bg-amber-50/50 border border-amber-100 hover:shadow-md transition-all duration-300 rounded-xl relative overflow-hidden group">
           <div className="absolute -right-4 -top-4 w-20 h-20 bg-amber-100/50 rounded-full group-hover:scale-110 transition-transform"></div>
           <h3 className="text-xs font-bold text-amber-700 uppercase tracking-wider mb-2 relative z-10">Báo cáo vi phạm</h3>
           <p className="text-3xl font-black text-amber-800 relative z-10 mt-1">{10 + reports.length}</p>
@@ -68,7 +68,7 @@ export default function AdminDashboard() {
       </div>
 
       {/* Lists */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mt-2">
+      <div className="grid grid-cols-1 gap-6 mt-2">
         <Card className="p-5 md:p-6 border border-neutral-200 rounded-xl shadow-sm hover:shadow-md transition-all duration-300">
           <div className="flex justify-between items-center mb-5 border-b border-neutral-100 pb-3">
             <h3 className="text-lg font-bold text-neutral-800">Hàng đợi xác thực</h3>
@@ -94,7 +94,8 @@ export default function AdminDashboard() {
           </div>
         </Card>
 
-        <Card className="p-5 md:p-6 border border-neutral-200 rounded-xl shadow-sm hover:shadow-md transition-all duration-300">
+        {/* Tạm ẩn Card "Tin bị AI gắn cờ" theo yêu cầu */}
+        <Card className="hidden p-5 md:p-6 border border-neutral-200 rounded-xl shadow-sm hover:shadow-md transition-all duration-300">
           <div className="flex justify-between items-center mb-5 border-b border-neutral-100 pb-3">
             <h3 className="text-lg font-bold text-neutral-800">Tin bị AI gắn cờ</h3>
             <button className="text-sm font-medium text-primary-600 hover:text-primary-700 hover:underline transition-colors">Xem tất cả</button>

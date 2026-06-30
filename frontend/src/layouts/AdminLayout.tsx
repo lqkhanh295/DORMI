@@ -20,9 +20,9 @@ export default function AdminLayout() {
         </div>
         <nav className="px-4 py-4 space-y-1">
           {[
-            { name: 'Dashboard', path: '/admin' },
-            { name: 'Verifications', path: '/admin/verify' },
-            { name: 'Moderation', path: '/admin/content' }
+            { name: 'Tổng quan', path: '/admin' },
+            { name: 'Xác thực', path: '/admin/verify' },
+            { name: 'Kiểm duyệt', path: '/admin/content' }
           ].map(item => {
             const isActive = location.pathname === item.path;
             return (
@@ -45,7 +45,7 @@ export default function AdminLayout() {
           <div className="w-8 h-8 rounded-full bg-red-100 flex items-center justify-center text-red-700 font-bold overflow-hidden">
             A
           </div>
-          <button onClick={handleLogout} className="text-xs text-red-600 hover:underline">Logout</button>
+          <button onClick={handleLogout} className="text-xs text-red-600 hover:underline">Đăng xuất</button>
         </header>
         <main className="p-6">
           <div key={location.pathname} className="page-transition">

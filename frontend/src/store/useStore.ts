@@ -129,7 +129,7 @@ export const useStore = create<AppState>()(
       login: (role, email) => set({
         currentUser: {
           id: role === 'Landlord' ? 'u2' : (role === 'Admin' ? 'u3' : 'u1'),
-          name: role === 'Landlord' ? 'Le Van B' : (role === 'Admin' ? 'System Admin' : 'Alex Nguyen'),
+          name: role === 'Landlord' ? 'Lê Văn B' : (role === 'Admin' ? 'Quản trị viên' : 'Nguyễn Văn A'),
           email,
           role,
           avatar: 'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?auto=format&fit=crop&w=200&q=80'
