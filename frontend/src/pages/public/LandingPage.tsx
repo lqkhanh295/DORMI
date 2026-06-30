@@ -13,7 +13,7 @@ export default function LandingPage() {
         {/* Main Hero Content */}
         <div className="relative z-10 w-full max-w-[1200px] px-4 sm:px-6 mx-auto flex flex-col items-center text-center mt-8">
           <div className="inline-flex items-center gap-2 px-5 py-2 rounded-full bg-white/60 border border-gray-200 backdrop-blur-md mb-8 shadow-sm">
-            <span className="text-sm font-semibold text-gray-600 tracking-wide">Quoka Đẹp Trai😚</span>
+            <span className="text-sm font-semibold text-gray-600 tracking-wide">Quoka Đẹp Trai</span>
           </div>
 
           <h1 className="text-6xl md:text-8xl font-black text-gray-900 mb-6 tracking-tighter leading-tight pb-2">
