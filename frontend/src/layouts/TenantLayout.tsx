@@ -1,7 +1,5 @@
 import { Outlet, Link, useNavigate, useLocation } from 'react-router-dom';
 import { useStore } from '../store/useStore';
-import { Button } from '../components/ui/Button';
-
 export default function TenantLayout() {
   const { currentUser, logout } = useStore();
   const navigate = useNavigate();
