@@ -73,9 +73,9 @@ export function Search() {
         items={filterItems} 
       />
       
-      <main className="apple-container pt-8 pb-24">
+      <main className="apple-container px-4 sm:px-6 pt-6 md:pt-8 pb-24">
         {/* Search Bar */}
-        <div className="mb-10 w-full">
+        <div className="mb-8 md:mb-10 w-full">
           <div className="relative flex w-full max-w-[600px] items-center mx-auto">
             <label htmlFor="searchInput" className="sr-only">Tìm kiếm</label>
             <MagnifyingGlass className="absolute left-4 h-5 w-5 text-neutral-500" />
@@ -84,8 +84,8 @@ export function Search() {
               type="text" 
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              placeholder="Tìm theo quận, trường học hoặc tên đường..."
-              className="h-[56px] w-full rounded-full bg-white pl-12 pr-24 text-[17px] shadow-sm outline-none transition-all focus:ring-4 focus:ring-primary/20"
+              placeholder="Tìm quận, trường học, đường..."
+              className="h-[50px] md:h-[56px] w-full rounded-full bg-white pl-11 md:pl-12 pr-20 md:pr-24 text-[15px] md:text-[17px] shadow-sm outline-none transition-all focus:ring-4 focus:ring-primary/20"
             />
             {searchQuery && (
               <button 
@@ -93,10 +93,10 @@ export function Search() {
                 aria-label="Xóa tìm kiếm"
                 className="absolute right-12 text-neutral-500 hover:text-foreground p-1 transition-colors"
               >
-                <X className="h-5 w-5" weight="bold" />
+                <X className="h-4 w-4 md:h-5 md:w-5" weight="bold" />
               </button>
             )}
-            <button aria-label="Bộ lọc tìm kiếm" className="absolute right-4 text-neutral-500 hover:text-foreground transition-colors">
+            <button aria-label="Bộ lọc tìm kiếm" className="absolute right-3 md:right-4 text-neutral-500 hover:text-foreground transition-colors p-1">
               <SlidersHorizontal className="h-5 w-5" />
             </button>
           </div>
@@ -104,11 +104,11 @@ export function Search() {
 
         {/* Loading State / Skeleton UI */}
         {isLoading ? (
-          <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
+          <div className="grid gap-4 md:gap-6 grid-cols-1 sm:grid-cols-2 lg:grid-cols-3">
             {[1, 2, 3].map((i) => (
-              <BentoCard key={i} noPadding className="bg-white flex flex-col h-[420px] animate-pulse">
-                <div className="relative h-[220px] w-full bg-neutral-200"></div>
-                <div className="flex flex-1 flex-col justify-between p-6">
+              <BentoCard key={i} noPadding className="bg-white flex flex-col h-[380px] md:h-[420px] animate-pulse">
+                <div className="relative h-[200px] md:h-[220px] w-full bg-neutral-200"></div>
+                <div className="flex flex-1 flex-col justify-between p-5 md:p-6">
                   <div>
                     <div className="h-3 w-16 bg-neutral-200 rounded-full mb-3"></div>
                     <div className="h-6 w-full bg-neutral-200 rounded-lg mb-2"></div>
@@ -124,46 +124,46 @@ export function Search() {
           </div>
         ) : results.length === 0 ? (
           /* Empty State */
-          <div className="flex flex-col items-center justify-center py-20 text-center">
-            <div className="h-20 w-20 rounded-full bg-neutral-100 flex items-center justify-center text-neutral-400 mb-4">
-              <MagnifyingGlassMinus className="w-10 h-10" />
+          <div className="flex flex-col items-center justify-center py-16 md:py-20 text-center px-4">
+            <div className="h-16 w-16 md:h-20 md:w-20 rounded-full bg-neutral-100 flex items-center justify-center text-neutral-400 mb-4">
+              <MagnifyingGlassMinus className="w-8 h-8 md:w-10 md:h-10" />
             </div>
-            <h3 className="text-xl font-bold text-foreground mb-2">Không tìm thấy phòng trọ nào</h3>
-            <p className="text-neutral-500 max-w-md">Rất tiếc, không có kết quả nào phù hợp với tìm kiếm của bạn. Vui lòng thử lại bằng từ khóa khác.</p>
+            <h3 className="text-lg md:text-xl font-bold text-foreground mb-2">Không tìm thấy phòng trọ nào</h3>
+            <p className="text-sm md:text-base text-neutral-500 max-w-md">Rất tiếc, không có kết quả nào phù hợp với tìm kiếm của bạn. Vui lòng thử lại bằng từ khóa khác.</p>
             <AppleButton className="mt-6" onClick={() => setSearchQuery('')}>Xóa tìm kiếm</AppleButton>
           </div>
         ) : (
           /* Results Grid */
           <>
-            <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
+            <div className="grid gap-4 md:gap-6 grid-cols-1 sm:grid-cols-2 lg:grid-cols-3">
               {results.map((room) => (
-                <BentoCard key={room.id} noPadding hoverEffect className="bg-white flex flex-col h-[420px]">
-                  <div className="relative h-[220px] w-full shrink-0 overflow-hidden bg-neutral-100">
+                <BentoCard key={room.id} noPadding hoverEffect className="bg-white flex flex-col h-[380px] md:h-[420px]">
+                  <div className="relative h-[200px] md:h-[220px] w-full shrink-0 overflow-hidden bg-neutral-100">
                     <img 
                       src={room.image} 
                       alt={room.title} 
                       className="h-full w-full object-cover"
                     />
-                    <div className="absolute left-4 top-4 rounded-full bg-[rgba(255,255,255,0.9)] px-3 py-1 text-[12px] font-bold text-foreground shadow-sm backdrop-blur-md">
+                    <div className="absolute left-3 top-3 md:left-4 md:top-4 rounded-full bg-[rgba(255,255,255,0.9)] px-2 md:px-3 py-1 text-[11px] md:text-[12px] font-bold text-foreground shadow-sm backdrop-blur-md">
                       {room.badge}
                     </div>
                   </div>
                   
-                  <div className="flex flex-1 flex-col justify-between p-6">
+                  <div className="flex flex-1 flex-col justify-between p-5 md:p-6">
                     <div>
                       <div className="flex items-center justify-between mb-1">
-                        <p className="text-[12px] font-bold uppercase tracking-widest text-neutral-500">{room.type}</p>
-                        <p className="text-[10px] text-neutral-400 font-medium italic">(Update lần cuối: 26.06.2026)</p>
+                        <p className="text-[11px] md:text-[12px] font-bold uppercase tracking-widest text-neutral-500">{room.type}</p>
+                        <p className="text-[9px] md:text-[10px] text-neutral-400 font-medium italic">(Update: 26.06.2026)</p>
                       </div>
-                      <h3 className="text-[21px] font-semibold text-foreground leading-tight mb-2 line-clamp-2">{room.title}</h3>
-                      <p className="flex items-center gap-1.5 text-[14px] text-neutral-500">
-                        <MapPin className="h-4 w-4" />
+                      <h3 className="text-[18px] md:text-[21px] font-semibold text-foreground leading-tight mb-2 line-clamp-2">{room.title}</h3>
+                      <p className="flex items-center gap-1 md:gap-1.5 text-[13px] md:text-[14px] text-neutral-500">
+                        <MapPin className="h-3.5 w-3.5 md:h-4 md:w-4" />
                         {room.location}
                       </p>
                     </div>
                     
-                    <div className="flex items-center justify-between pt-4 mt-4 border-t border-neutral-200">
-                      <p className="text-[24px] font-bold text-foreground tracking-tight">{room.price}</p>
+                    <div className="flex items-center justify-between pt-3 md:pt-4 mt-3 md:mt-4 border-t border-neutral-200">
+                      <p className="text-[20px] md:text-[24px] font-bold text-foreground tracking-tight">{room.price}</p>
                       <AppleButton variant="secondary" size="sm">Chi tiết</AppleButton>
                     </div>
                   </div>
@@ -172,8 +172,8 @@ export function Search() {
             </div>
             
             {/* Pagination / Load More */}
-            <div className="mt-12 flex justify-center">
-              <AppleButton variant="outline" size="lg">Tải thêm kết quả</AppleButton>
+            <div className="mt-8 md:mt-12 flex justify-center">
+              <AppleButton variant="outline" size="lg" className="w-full sm:w-auto">Tải thêm kết quả</AppleButton>
             </div>
           </>
         )}

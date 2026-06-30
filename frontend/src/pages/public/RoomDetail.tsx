@@ -55,7 +55,7 @@ export default function RoomDetail() {
   };
 
   return (
-    <div className="max-w-7xl mx-auto px-4 py-8 space-y-8 relative">
+    <div className="max-w-7xl mx-auto px-4 pt-4 pb-28 md:py-8 space-y-6 md:space-y-8 relative">
       <Toaster position="top-center" richColors />
       {/* Image Gallery Header */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4 h-64 md:h-96">
@@ -80,31 +80,31 @@ export default function RoomDetail() {
         </div>
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-12">
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 md:gap-12">
         {/* Main Content */}
-        <div className="lg:col-span-2 space-y-8">
+        <div className="lg:col-span-2 space-y-6 md:space-y-8">
           <div>
-            <div className="flex justify-between items-start">
-              <h1 className="text-3xl font-bold text-gray-900 mb-2">Premium Modern Studio - District 3</h1>
-              <div className="flex flex-col items-end">
-                <span className="bg-green-100 text-green-800 text-xs font-bold px-3 py-1 rounded-full flex items-center gap-1">
+            <div className="flex flex-col sm:flex-row sm:justify-between sm:items-start gap-3">
+              <h1 className="text-2xl md:text-3xl font-bold text-gray-900 mb-1 md:mb-2">Premium Modern Studio - District 3</h1>
+              <div className="flex self-start sm:self-auto">
+                <span className="bg-green-100 text-green-800 text-xs font-bold px-3 py-1.5 rounded-full flex items-center gap-1">
                   ✓ Verified Landlord
                 </span>
               </div>
             </div>
-            <p className="text-gray-500 text-lg">123 Nguyen Dinh Chieu, Vo Thi Sau Ward, District 3, HCMC</p>
+            <p className="text-gray-500 text-base md:text-lg mt-2 sm:mt-0">123 Nguyen Dinh Chieu, Vo Thi Sau Ward, District 3, HCMC</p>
           </div>
 
-          <div className="flex gap-6 py-6 border-y border-gray-200">
-            <div><p className="text-gray-500 text-sm">Room Type</p><p className="font-semibold text-gray-900">Studio</p></div>
-            <div><p className="text-gray-500 text-sm">Capacity</p><p className="font-semibold text-gray-900">2 People</p></div>
-            <div><p className="text-gray-500 text-sm">Area</p><p className="font-semibold text-gray-900">35 m²</p></div>
-            <div><p className="text-gray-500 text-sm">Bathroom</p><p className="font-semibold text-gray-900">Private</p></div>
+          <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 py-6 border-y border-gray-200">
+            <div><p className="text-gray-500 text-xs md:text-sm">Room Type</p><p className="font-semibold text-gray-900 text-sm md:text-base">Studio</p></div>
+            <div><p className="text-gray-500 text-xs md:text-sm">Capacity</p><p className="font-semibold text-gray-900 text-sm md:text-base">2 People</p></div>
+            <div><p className="text-gray-500 text-xs md:text-sm">Area</p><p className="font-semibold text-gray-900 text-sm md:text-base">35 m²</p></div>
+            <div><p className="text-gray-500 text-xs md:text-sm">Bathroom</p><p className="font-semibold text-gray-900 text-sm md:text-base">Private</p></div>
           </div>
 
           <div>
-            <h2 className="text-xl font-bold text-gray-900 mb-4">Description</h2>
-            <p className="text-gray-600 leading-relaxed">
+            <h2 className="text-lg md:text-xl font-bold text-gray-900 mb-3 md:mb-4">Description</h2>
+            <p className="text-gray-600 text-sm md:text-base leading-relaxed">
               Fully furnished modern studio located in the heart of District 3. Very close to universities, convenience stores, and coffee shops. The building has a 24/7 security guard, fingerprint access, and a free rooftop washing machine.
             </p>
           </div>
@@ -113,12 +113,12 @@ export default function RoomDetail() {
         {/* Sidebar */}
         <div className="flex flex-col">
           <Button variant="outline" className="mb-4 self-start flex items-center gap-2" onClick={() => navigate(-1)}>
-            <ArrowLeft weight="bold" className="w-5 h-5" /> Quay lại
+            <ArrowLeft weight="bold" className="w-4 h-4 md:w-5 md:h-5" /> Quay lại
           </Button>
-          <Card className="p-6 md:sticky md:top-24">
+          <Card className="p-5 md:p-6 md:sticky md:top-24">
             <div className="mb-6">
-              <p className="text-3xl font-bold text-blue-600">5.500.000₫ <span className="text-base text-gray-500 font-normal">/ month</span></p>
-              <p className="text-sm text-gray-500 mt-2">Deposit: 5.500.000₫</p>
+              <p className="text-2xl md:text-3xl font-bold text-blue-600">5.500.000₫ <span className="text-sm md:text-base text-gray-500 font-normal">/ month</span></p>
+              <p className="text-xs md:text-sm text-gray-500 mt-2">Deposit: 5.500.000₫</p>
             </div>
             
             <div className="hidden md:flex flex-col space-y-4 mb-6">
@@ -126,19 +126,19 @@ export default function RoomDetail() {
               <Button fullWidth variant="outline" size="lg" onClick={handleChat}>Chat with Landlord</Button>
             </div>
 
-            <div className="pt-6 md:border-t border-gray-100">
+            <div className="pt-5 md:pt-6 border-t border-gray-100">
               <div className="flex items-center gap-4">
-                <div className="w-12 h-12 bg-gray-200 rounded-full flex items-center justify-center font-bold text-gray-600">L</div>
+                <div className="w-10 h-10 md:w-12 md:h-12 bg-gray-200 rounded-full flex items-center justify-center font-bold text-gray-600">L</div>
                 <div>
-                  <p className="font-bold text-gray-900">Le Van B</p>
+                  <p className="font-bold text-gray-900 text-sm md:text-base">Le Van B</p>
                   <div className="flex items-center gap-2">
-                    <span className="text-yellow-500 text-sm">★ 4.9 (12 reviews)</span>
+                    <span className="text-yellow-500 text-xs md:text-sm">★ 4.9 (12 reviews)</span>
                   </div>
                 </div>
               </div>
               <div className="mt-4 bg-gray-50 p-3 rounded-lg flex items-center justify-between">
-                <span className="text-sm text-gray-600">Trust Score</span>
-                <span className="font-bold text-green-600">98/100</span>
+                <span className="text-xs md:text-sm text-gray-600">Trust Score</span>
+                <span className="font-bold text-green-600 text-sm md:text-base">98/100</span>
               </div>
             </div>
           </Card>
@@ -148,10 +148,10 @@ export default function RoomDetail() {
       {/* Photo Gallery Modal */}
       {showGallery && (
         <div className="fixed inset-0 bg-black z-50 overflow-y-auto">
-          <div className="p-6 min-h-screen flex flex-col">
-            <div className="flex justify-between items-center mb-8 sticky top-0 bg-black/90 pb-4 z-10">
-              <h2 className="text-white text-2xl font-bold">Property Photos</h2>
-              <Button variant="outline" className="text-white border-white hover:bg-white/20" onClick={() => setShowGallery(false)}>
+          <div className="p-4 md:p-6 min-h-screen flex flex-col">
+            <div className="flex justify-between items-center mb-6 md:mb-8 sticky top-0 bg-black/90 pb-4 z-10">
+              <h2 className="text-white text-xl md:text-2xl font-bold">Property Photos</h2>
+              <Button variant="outline" className="text-white border-white hover:bg-white/20 text-sm md:text-base" onClick={() => setShowGallery(false)}>
                 ✕ Close
               </Button>
             </div>
@@ -166,9 +166,9 @@ export default function RoomDetail() {
         </div>
       )}
       {/* Mobile Fixed Bottom Bar */}
-      <div className="md:hidden fixed bottom-0 left-0 w-full bg-white border-t border-gray-200 p-4 z-40 flex gap-2">
-        <Button className="flex-1" size="lg" onClick={handleSchedule}>Schedule</Button>
-        <Button className="flex-1" variant="outline" size="lg" onClick={handleChat}>Chat</Button>
+      <div className="md:hidden fixed bottom-0 left-0 w-full bg-white border-t border-gray-200 p-3 sm:p-4 z-40 flex gap-2 sm:gap-3 shadow-[0_-10px_20px_rgba(0,0,0,0.05)]">
+        <Button className="flex-1 text-sm py-2.5" size="lg" onClick={handleSchedule}>Xem phòng</Button>
+        <Button className="flex-1 text-sm py-2.5" variant="outline" size="lg" onClick={handleChat}>Nhắn tin</Button>
       </div>
 
       {/* Booking Date/Time Modal */}
@@ -176,32 +176,32 @@ export default function RoomDetail() {
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm p-4">
           <div className="bg-white rounded-xl w-full max-w-md shadow-lg overflow-hidden animate-in fade-in zoom-in-95">
             <div className="p-4 border-b border-neutral-100 flex justify-between items-center">
-              <h3 className="font-bold text-lg text-neutral-900">Chọn lịch xem phòng</h3>
+              <h3 className="font-bold text-base md:text-lg text-neutral-900">Chọn lịch xem phòng</h3>
               <button onClick={() => setShowBookingModal(false)} className="text-neutral-400 hover:text-neutral-700 font-bold px-2">
                 ✕
               </button>
             </div>
-            <div className="p-6 space-y-4">
+            <div className="p-5 md:p-6 space-y-4">
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Ngày xem phòng</label>
+                <label className="block text-xs md:text-sm font-medium text-gray-700 mb-1">Ngày xem phòng</label>
                 <input 
                   type="date" 
                   min={new Date().toISOString().split('T')[0]}
-                  className="w-full border border-gray-300 rounded-lg px-3 py-2 outline-none focus:border-blue-500"
+                  className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm outline-none focus:border-blue-500"
                   value={bookingDate}
                   onChange={e => setBookingDate(e.target.value)}
                 />
               </div>
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Giờ (dự kiến)</label>
+                <label className="block text-xs md:text-sm font-medium text-gray-700 mb-1">Giờ (dự kiến)</label>
                 <input 
                   type="time" 
-                  className="w-full border border-gray-300 rounded-lg px-3 py-2 outline-none focus:border-blue-500"
+                  className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm outline-none focus:border-blue-500"
                   value={bookingTime}
                   onChange={e => setBookingTime(e.target.value)}
                 />
               </div>
-              <p className="text-sm text-gray-500 text-center mt-4">
+              <p className="text-xs md:text-sm text-gray-500 text-center mt-4">
                 Chủ nhà sẽ nhận được yêu cầu và liên hệ lại với bạn để chốt lịch.
               </p>
               <Button fullWidth size="lg" className="mt-4" onClick={confirmBooking}>Gửi yêu cầu đặt lịch</Button>
