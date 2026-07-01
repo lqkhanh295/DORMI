@@ -12,9 +12,7 @@ export default function LandingPage() {
 
         {/* Main Hero Content */}
         <div className="relative z-10 w-full max-w-[1200px] px-4 sm:px-6 mx-auto flex flex-col items-center text-center mt-4 md:mt-8">
-          <div className="inline-flex items-center gap-2 px-4 py-1.5 md:px-5 md:py-2 rounded-full bg-white/60 border border-gray-200 backdrop-blur-md mb-6 md:mb-8 shadow-sm">
-            <span className="text-xs md:text-sm font-semibold text-gray-600 tracking-wide">Tìm trọ thông minh</span>
-          </div>
+
 
           <h1 className="text-5xl sm:text-6xl md:text-8xl font-black text-gray-900 mb-4 md:mb-6 tracking-tighter leading-tight pb-2">
             Tìm trọ thông minh, <br />
