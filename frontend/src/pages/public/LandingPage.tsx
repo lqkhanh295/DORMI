@@ -13,7 +13,7 @@ export default function LandingPage() {
         {/* Main Hero Content */}
         <div className="relative z-10 w-full max-w-[1200px] px-4 sm:px-6 mx-auto flex flex-col items-center text-center mt-4 md:mt-8">
           <div className="inline-flex items-center gap-2 px-4 py-1.5 md:px-5 md:py-2 rounded-full bg-white/60 border border-gray-200 backdrop-blur-md mb-6 md:mb-8 shadow-sm">
-            <span className="text-xs md:text-sm font-semibold text-gray-600 tracking-wide">Quoka Đẹp Trai😚</span>
+            <span className="text-xs md:text-sm font-semibold text-gray-600 tracking-wide">Tìm trọ thông minh</span>
           </div>
 
           <h1 className="text-5xl sm:text-6xl md:text-8xl font-black text-gray-900 mb-4 md:mb-6 tracking-tighter leading-tight pb-2">
@@ -24,7 +24,7 @@ export default function LandingPage() {
           </h1>
 
           <p className="text-lg md:text-2xl text-gray-500 mb-8 md:mb-12 max-w-2xl font-normal leading-relaxed">
-            Trải nghiệm tìm kiếm phòng trọ và người ở ghép hoàn hảo với sức mạnh của trí tuệ nhân tạo.
+            Trải nghiệm tìm kiếm phòng trọ và người ở ghép hoàn hảo.
           </p>
 
           <div className="flex flex-col sm:flex-row gap-4 items-center justify-center w-full sm:w-auto">
