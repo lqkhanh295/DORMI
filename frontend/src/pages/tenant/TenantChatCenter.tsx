@@ -10,11 +10,10 @@ export default function TenantChatCenter() {
   const [inputText, setInputText] = useState('');
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
-  // Khởi tạo danh sách liên hệ (contacts) bao gồm Landlord (hardcode) và Roommates đã thích
   const contacts = [
     { id: 'u2', name: 'Le Van B', role: 'Landlord', online: true, avatar: '' },
     ...likedRoommates.map(r => ({
-      id: `r${r.id}`, // prefix 'r' để tránh trùng lặp id nếu có
+      id: `r${r.id}`,
       name: r.name,
       role: 'Roommate',
       online: false,
@@ -48,21 +47,21 @@ export default function TenantChatCenter() {
     }
   };
 
+  // ponytail: TenantChatCenter using Functional Clay (Level 2 Soft Clay container, Inset Clay input, Deep Navy sent messages)
   return (
-    <div className="flex h-[calc(100vh-8rem)] bg-white rounded-md shadow-card overflow-hidden border border-border-subtle">
+    <div className="flex h-[calc(100vh-8rem)] bg-white rounded-[18px] shadow-clay-soft overflow-hidden border border-[#E2E8F0]">
       {/* Sidebar: Conversation List */}
-      <div className="hidden md:flex w-1/3 border-r border-border-subtle flex-col bg-surface">
-        <div className="p-4 border-b border-border-subtle bg-white">
+      <div className="hidden md:flex w-1/3 border-r border-[#E2E8F0] flex-col bg-[#F5F7FA]">
+        <div className="p-4 border-b border-[#E2E8F0] bg-white">
           <input 
             type="text" 
             placeholder="Tìm kiếm tin nhắn..." 
-            className="w-full bg-surface-alt rounded-md px-4 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary-500"
+            className="w-full bg-[#F5F7FA] shadow-clay-inset border border-[#E2E8F0] rounded-[12px] px-4 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-[#00153D]"
           />
         </div>
         <div className="flex-1 overflow-y-auto">
           {contacts.map(contact => {
             const isSelected = contact.id === selectedContactId;
-            // Lấy tin nhắn cuối cùng với contact này
             const contactMessages = messages.filter(m => 
               (m.senderId === currentUser?.id && m.receiverId === contact.id) ||
               (m.senderId === contact.id && m.receiverId === currentUser?.id)
@@ -73,24 +72,24 @@ export default function TenantChatCenter() {
               <div 
                 key={contact.id} 
                 onClick={() => setSelectedContactId(contact.id)}
-                className={`p-4 border-b border-border-subtle cursor-pointer transition-micro flex gap-3 ${isSelected ? 'bg-primary-soft/80 border-l-4 border-l-primary-500' : 'hover:bg-surface'}`}
+                className={`p-4 border-b border-[#E2E8F0] cursor-pointer transition-all flex gap-3 ${isSelected ? 'bg-white font-semibold border-l-4 border-l-[#00153D] shadow-sm' : 'hover:bg-white/50'}`}
               >
                 {contact.avatar ? (
-                  <img src={contact.avatar} alt={contact.name} className="w-11 h-11 rounded-pill object-cover shadow-sm" />
+                  <img src={contact.avatar} alt={contact.name} className="w-11 h-11 rounded-full object-cover border border-[#E2E8F0]" />
                 ) : (
-                  <div className={`w-11 h-11 rounded-pill flex-shrink-0 flex items-center justify-center font-bold shadow-sm ${contact.role === 'Landlord' ? 'bg-orange-100 text-orange-700' : 'bg-primary-100 text-primary-700'}`}>
+                  <div className="w-11 h-11 rounded-full bg-[#00153D] text-white flex-shrink-0 flex items-center justify-center font-bold">
                     {contact.name.charAt(0)}
                   </div>
                 )}
                 
                 <div className="flex-1 overflow-hidden">
                   <div className="flex justify-between items-baseline mb-1">
-                    <h4 className="font-bold text-text-primary truncate">{contact.name}</h4>
-                    <span className={`text-[10px] font-bold px-2 py-0.5 rounded-pill ${contact.role === 'Landlord' ? 'bg-orange-100 text-orange-700' : 'bg-pink-100 text-pink-700'}`}>
+                    <h4 className="font-bold text-[#0F172A] truncate">{contact.name}</h4>
+                    <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-[#F5F7FA] text-[#64748B] border border-[#E2E8F0]">
                       {contact.role === 'Landlord' ? 'Chủ nhà' : 'Bạn ở ghép'}
                     </span>
                   </div>
-                  <p className={`text-sm truncate ${isSelected ? 'font-medium text-primary-800' : 'text-text-secondary'}`}>
+                  <p className={`text-sm truncate ${isSelected ? 'font-semibold text-[#00153D]' : 'text-[#64748B]'}`}>
                     {lastMessage}
                   </p>
                 </div>
@@ -101,45 +100,44 @@ export default function TenantChatCenter() {
       </div>
 
       {/* Main Chat Area */}
-      <div className="flex-1 flex flex-col">
-        {/* Chat Header */}
+      <div className="flex-1 flex flex-col bg-white">
         {selectedContact ? (
           <>
-            <div className="h-16 border-b border-border-subtle px-6 flex items-center justify-between">
+            <div className="h-16 border-b border-[#E2E8F0] px-6 flex items-center justify-between">
               <div className="flex items-center gap-3">
                 {selectedContact.avatar ? (
-                  <img src={selectedContact.avatar} alt={selectedContact.name} className="w-10 h-10 rounded-pill object-cover shadow-sm" />
+                  <img src={selectedContact.avatar} alt={selectedContact.name} className="w-10 h-10 rounded-full object-cover border border-[#E2E8F0]" />
                 ) : (
-                  <div className={`w-10 h-10 rounded-pill flex items-center justify-center font-bold shadow-sm ${selectedContact.role === 'Landlord' ? 'bg-orange-100 text-orange-700' : 'bg-primary-100 text-primary-700'}`}>
+                  <div className="w-10 h-10 rounded-full bg-[#00153D] text-white flex items-center justify-center font-bold">
                     {selectedContact.name.charAt(0)}
                   </div>
                 )}
                 <div>
-                  <h3 className="font-bold text-text-primary flex items-center gap-2">
+                  <h3 className="font-bold text-[#0F172A] flex items-center gap-2">
                     {selectedContact.name}
-                    <span className={`text-[10px] font-bold px-2 py-0.5 rounded-pill ${selectedContact.role === 'Landlord' ? 'bg-orange-100 text-orange-700' : 'bg-pink-100 text-pink-700'}`}>
+                    <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-[#F5F7FA] text-[#64748B]">
                       {selectedContact.role === 'Landlord' ? 'Chủ nhà' : 'Bạn ở ghép'}
                     </span>
                   </h3>
-                  <p className="text-xs text-green-600 font-medium flex items-center gap-1">
-                    <span className="w-2 h-2 rounded-pill bg-green-500 block"></span> {selectedContact.online ? 'Trực tuyến' : 'Ngoại tuyến'}
+                  <p className="text-xs text-[#16803C] font-semibold flex items-center gap-1">
+                    <span className="w-2 h-2 rounded-full bg-[#16803C] block"></span> {selectedContact.online ? 'Trực tuyến' : 'Ngoại tuyến'}
                   </p>
                 </div>
               </div>
               {selectedContact.role === 'Landlord' && (
-                <Button variant="outline" size="sm">Xem phòng trọ</Button>
+                <Button variant="secondary" size="sm">Xem phòng trọ</Button>
               )}
             </div>
 
             {/* Messages */}
-            <div className="flex-1 p-4 overflow-y-auto bg-surface/50 flex flex-col gap-3">
+            <div className="flex-1 p-4 overflow-y-auto bg-[#F5F7FA] flex flex-col gap-3">
               <div className="text-center">
-                <span className="text-[11px] text-text-muted bg-surface-alt px-2.5 py-0.5 rounded-pill font-medium">Hôm nay</span>
+                <span className="text-caption text-[#64748B] bg-white border border-[#E2E8F0] px-3 py-1 rounded-full font-medium">Hôm nay</span>
               </div>
               
               {chatMessages.length === 0 && (
-                <div className="flex-1 flex flex-col items-center justify-center text-text-muted">
-                  <div className="w-16 h-16 bg-primary-soft rounded-pill flex items-center justify-center text-primary-500 mb-4">
+                <div className="flex-1 flex flex-col items-center justify-center text-[#64748B]">
+                  <div className="w-16 h-16 bg-white shadow-clay-soft rounded-full flex items-center justify-center text-[#00153D] mb-4">
                     <Hand size={32} />
                   </div>
                   <p>Hãy gửi lời chào đến {selectedContact.name}!</p>
@@ -153,16 +151,16 @@ export default function TenantChatCenter() {
                     <div className={`flex gap-2 max-w-[70%] ${isMe ? 'flex-row-reverse' : 'flex-row'}`}>
                       {!isMe && (
                         selectedContact.avatar ? (
-                          <img src={selectedContact.avatar} alt="avatar" className="w-8 h-8 rounded-pill object-cover mt-auto" />
+                          <img src={selectedContact.avatar} alt="avatar" className="w-8 h-8 rounded-full object-cover mt-auto" />
                         ) : (
-                          <div className={`w-8 h-8 rounded-pill flex-shrink-0 mt-auto flex items-center justify-center font-bold text-xs ${selectedContact.role === 'Landlord' ? 'bg-orange-100 text-orange-700' : 'bg-primary-100 text-primary-700'}`}>
+                          <div className="w-8 h-8 rounded-full bg-[#00153D] text-white flex-shrink-0 mt-auto flex items-center justify-center font-bold text-xs">
                             {selectedContact.name.charAt(0)}
                           </div>
                         )
                       )}
-                      <div className={`${isMe ? 'bg-primary text-white rounded-md rounded-tr-sm' : 'bg-white border border-border-subtle text-text-primary rounded-md rounded-bl-sm'} p-2.5 shadow-sm`}>
-                        <p className="text-[13px] whitespace-pre-wrap">{msg.text}</p>
-                        <span className={`text-[10px] block mt-1 ${isMe ? 'text-primary-200 text-right' : 'text-text-muted'}`}>
+                      <div className={`${isMe ? 'btn-clay-primary rounded-[14px] rounded-tr-xs' : 'bg-white shadow-clay-soft text-[#0F172A] rounded-[14px] rounded-bl-xs'} p-3`}>
+                        <p className="text-body whitespace-pre-wrap">{msg.text}</p>
+                        <span className={`text-[10px] block mt-1 ${isMe ? 'text-white/80 text-right' : 'text-[#64748B]'}`}>
                           {new Date(msg.timestamp).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})}
                         </span>
                       </div>
@@ -174,12 +172,12 @@ export default function TenantChatCenter() {
             </div>
 
             {/* Quick Actions */}
-            <div className="px-4 py-2 flex gap-2 overflow-x-auto no-scrollbar border-t border-border-subtle bg-white">
-              {['Phòng này hiện còn avai không?', 'Giá căn này có thể hỗ trợ giảm không?', 'Có full nt không?'].map((msg, i) => (
+            <div className="px-4 py-2 flex gap-2 overflow-x-auto no-scrollbar border-t border-[#E2E8F0] bg-white">
+              {['Phòng này hiện còn avai không?', 'Giá căn này có thể hỗ trợ giảm không?', 'Có full nội thất không?'].map((msg, i) => (
                 <button 
                   key={i}
                   onClick={() => sendMessage(selectedContact.id, msg)}
-                  className="whitespace-nowrap px-3 py-1.5 bg-primary-soft text-primary-700 text-xs font-medium rounded-pill hover:bg-primary-100 transition-colors border border-primary-100"
+                  className="whitespace-nowrap px-3 py-1.5 bg-[#F5F7FA] text-[#00153D] text-xs font-semibold rounded-full hover:bg-[#EEF2F6] transition-colors border border-[#E2E8F0]"
                 >
                   {msg}
                 </button>
@@ -187,25 +185,25 @@ export default function TenantChatCenter() {
             </div>
 
             {/* Input Area */}
-            <div className="p-4 border-t border-border-subtle bg-white">
-              <div className="flex items-end gap-2 bg-surface rounded-md border border-border-subtle p-2 focus-within:ring-2 focus-within:ring-primary-500 focus-within:border-transparent transition-micro">
-                <button className="p-2 text-text-muted hover:text-primary rounded-pill transition-colors flex-shrink-0">
+            <div className="p-4 border-t border-[#E2E8F0] bg-white">
+              <div className="flex items-end gap-2 bg-[#F5F7FA] shadow-clay-inset rounded-[12px] border border-[#E2E8F0] p-2 focus-within:bg-white focus-within:ring-1 focus-within:ring-[#00153D] transition-all">
+                <button className="p-2 text-[#64748B] hover:text-[#0F172A] rounded-full transition-colors flex-shrink-0">
                   <Paperclip size={20} />
                 </button>
                 <textarea 
                   placeholder="Nhập tin nhắn..." 
-                  className="flex-1 max-h-32 bg-transparent resize-none outline-none py-2 text-sm text-text-primary"
+                  className="flex-1 max-h-32 bg-transparent resize-none outline-none py-2 text-body text-[#0F172A]"
                   rows={1}
                   value={inputText}
                   onChange={e => setInputText(e.target.value)}
                   onKeyDown={handleKeyDown}
                 ></textarea>
-                <Button size="sm" className="mb-0.5 rounded-md px-4" onClick={handleSend}>Gửi</Button>
+                <Button size="sm" className="mb-0.5 px-4" onClick={handleSend}>Gửi</Button>
               </div>
             </div>
           </>
         ) : (
-          <div className="flex-1 flex items-center justify-center text-text-muted">
+          <div className="flex-1 flex items-center justify-center text-[#64748B]">
             Chọn một cuộc hội thoại để bắt đầu
           </div>
         )}

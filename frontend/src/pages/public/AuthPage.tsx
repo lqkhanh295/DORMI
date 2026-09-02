@@ -20,29 +20,33 @@ export default function AuthPage() {
     else navigate('/');
   };
 
+  // ponytail: AuthPage using Functional Clay (Level 1 Primary Clay card & Deep Navy toggles)
   return (
-    <div className="min-h-[calc(100vh-64px)] flex items-center justify-center bg-surface px-4 py-12">
-      <Card className="w-full max-w-md p-8">
+    <div className="min-h-[calc(100vh-56px)] flex items-center justify-center bg-[#F5F7FA] px-4 py-12">
+      <Card className="w-full max-w-md p-8 bg-white rounded-[18px] shadow-clay-primary border-none">
         <div className="text-center mb-8">
-          <h2 className="text-3xl font-bold text-text-primary">Chào mừng trở lại</h2>
-          <p className="text-text-secondary mt-2">Vui lòng chọn vai trò để tiếp tục.</p>
+          <h2 className="text-h2 font-bold text-[#0F172A]">Chào mừng trở lại</h2>
+          <p className="text-body text-[#64748B] mt-2">Vui lòng chọn vai trò để tiếp tục.</p>
         </div>
 
-        <div className="flex p-1 bg-surface-alt rounded-md mb-8">
+        <div className="flex p-1 bg-[#F5F7FA] shadow-clay-inset rounded-[12px] mb-8">
           <button 
-            className={`flex-1 py-2 text-sm font-medium rounded-md transition-micro ${role === 'Tenant' ? 'bg-white shadow text-primary' : 'text-text-secondary'}`}
+            type="button"
+            className={`flex-1 py-2.5 text-caption font-semibold rounded-[10px] transition-all min-h-[44px] ${role === 'Tenant' ? 'btn-clay-primary' : 'text-[#64748B] hover:text-[#0F172A]'}`}
             onClick={() => setRole('Tenant')}
           >
             Người thuê
           </button>
           <button 
-            className={`flex-1 py-2 text-sm font-medium rounded-md transition-micro ${role === 'Landlord' ? 'bg-white shadow text-primary' : 'text-text-secondary'}`}
+            type="button"
+            className={`flex-1 py-2.5 text-caption font-semibold rounded-[10px] transition-all min-h-[44px] ${role === 'Landlord' ? 'btn-clay-primary' : 'text-[#64748B] hover:text-[#0F172A]'}`}
             onClick={() => setRole('Landlord')}
           >
             Chủ nhà
           </button>
           <button 
-            className={`flex-1 py-2 text-sm font-medium rounded-md transition-micro ${role === 'Admin' ? 'bg-white shadow text-red-600' : 'text-text-secondary'}`}
+            type="button"
+            className={`flex-1 py-2.5 text-caption font-semibold rounded-[10px] transition-all min-h-[44px] ${role === 'Admin' ? 'btn-clay-primary' : 'text-[#64748B] hover:text-[#0F172A]'}`}
             onClick={() => setRole('Admin')}
           >
             Quản trị viên
@@ -59,7 +63,7 @@ export default function AuthPage() {
             required 
           />
           <Input label="Mật khẩu" type="password" placeholder="••••••••" required />
-          <Button type="submit" fullWidth>Đăng nhập với vai trò {role === 'Tenant' ? 'Người thuê' : role === 'Landlord' ? 'Chủ nhà' : 'Quản trị'}</Button>
+          <Button type="submit" fullWidth className="min-h-[44px]">Đăng nhập với vai trò {role === 'Tenant' ? 'Người thuê' : role === 'Landlord' ? 'Chủ nhà' : 'Quản trị'}</Button>
         </form>
       </Card>
     </div>

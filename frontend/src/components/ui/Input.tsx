@@ -7,17 +7,17 @@ interface InputProps extends React.InputHTMLAttributes<HTMLInputElement> {
 
 export const Input = React.forwardRef<HTMLInputElement, InputProps>(
   ({ label, error, className = '', disabled, ...props }, ref) => {
-    // ponytail: Form fields stay flat per guidelines (Level 0), border 1px solid #D1D5DB, 16px radius, clear WCAG focus ring
+    // ponytail: Inset Clay input field with soft canvas background and inset shadow depth
     return (
       <div className="w-full flex flex-col gap-1.5">
-        {label && <label className="text-xs font-semibold text-[#4B5563] uppercase tracking-wider">{label}</label>}
+        {label && <label className="text-caption font-semibold text-[#64748B]">{label}</label>}
         <input
           ref={ref}
           disabled={disabled}
-          className={`w-full rounded-[16px] border ${error ? 'border-2 border-[#991B1B]' : 'border border-[#D1D5DB]'} bg-white px-4 py-2.5 text-base text-[#1F2937] placeholder-[#9CA3AF] hover:border-[#6366F1] focus:border-[#6366F1] focus:outline-none focus:ring-2 focus:ring-[#6366F1] disabled:bg-[#F3F4F6] disabled:text-[#6B7280] transition-all duration-200 min-h-[44px] ${className}`}
+          className={`w-full rounded-[12px] ${error ? 'border-2 border-[#C62828] bg-white' : 'shadow-clay-inset bg-[#F5F7FA] border border-[#E2E8F0]'} px-4 py-2.5 text-body text-[#0F172A] placeholder-[#94A3B8] focus:bg-white focus:border-[#00153D] focus:outline-none focus:ring-1 focus:ring-[#00153D] disabled:bg-[#EEF2F6] disabled:text-[#94A3B8] transition-all duration-150 min-h-[44px] ${className}`}
           {...props}
         />
-        {error && <p className="text-xs text-[#991B1B] font-semibold flex items-center gap-1"><span>⚠️</span> {error}</p>}
+        {error && <p className="text-caption text-[#C62828] font-medium">{error}</p>}
       </div>
     );
   }
