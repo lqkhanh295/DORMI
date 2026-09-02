@@ -1,8 +1,8 @@
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap');
 @import "tailwindcss";
 
 @theme {
-  --font-sans: 'Inter', system-ui, -apple-system, sans-serif;
+  --font-sans: 'Plus Jakarta Sans', system-ui, -apple-system, sans-serif;
 
   /* DORMI Functional Clay Color System */
   --color-primary: #00153D;
@@ -70,6 +70,7 @@
 
   p {
     margin: 0;
+    font-weight: 400;
   }
 
   button, input, select, textarea {
@@ -154,7 +155,7 @@
 
   .text-h3 {
     font-size: 20px;
-    font-weight: 600;
+    font-weight: 700;
     line-height: 1.3;
   }
 
