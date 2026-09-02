@@ -1,6 +1,7 @@
 import { Link } from 'react-router-dom';
 
 export function GlobalFooter() {
+  // ponytail: Clean flat footer with real routes and Gold accent dot
   return (
     <footer className="bg-white border-t border-[#E2E8F0] py-16">
       <div className="container-dormi">
@@ -13,19 +14,19 @@ export function GlobalFooter() {
               Tìm phòng dễ hơn. Ở cùng phù hợp hơn.
             </p>
           </div>
-          <div className="flex flex-wrap gap-8 text-body font-medium text-[#64748B]">
-            <Link to="/search" className="hover:text-[#0F172A] transition-colors">Tìm phòng</Link>
-            <Link to="/tenant/match" className="hover:text-[#0F172A] transition-colors">Ở ghép</Link>
-            <Link to="/landlord" className="hover:text-[#0F172A] transition-colors">Đăng tin</Link>
-            <Link to="#" className="hover:text-[#0F172A] transition-colors">Trợ giúp</Link>
+          <div className="flex flex-wrap gap-8 text-body font-semibold text-[#64748B]">
+            <Link to="/search" className="hover:text-[#00153D] transition-colors">Tìm phòng</Link>
+            <Link to="/tenant/match" className="hover:text-[#00153D] transition-colors">Ở ghép</Link>
+            <Link to="/landlord" className="hover:text-[#00153D] transition-colors">Đăng tin</Link>
+            <Link to="/tenant/settings" className="hover:text-[#00153D] transition-colors">Trợ giúp</Link>
           </div>
         </div>
         
-        <div className="flex flex-col md:flex-row justify-between items-center gap-4 text-caption text-[#94A3B8] font-medium">
-          <p>© 2026 DORMI. Tất cả quyền được bảo lưu.</p>
+        <div className="flex flex-col md:flex-row justify-between items-center gap-4 text-caption text-[#64748B] font-medium">
+          <p>© 2026 DORMI. Nền tảng kết nối phòng trọ & người ở ghép.</p>
           <div className="flex gap-6">
-            <Link to="#" className="hover:text-[#0F172A] transition-colors">Điều khoản</Link>
-            <Link to="#" className="hover:text-[#0F172A] transition-colors">Chính sách riêng tư</Link>
+            <Link to="/tenant/settings" className="hover:text-[#0F172A] transition-colors">Điều khoản dịch vụ</Link>
+            <Link to="/tenant/settings" className="hover:text-[#0F172A] transition-colors">Chính sách bảo mật</Link>
           </div>
         </div>
       </div>

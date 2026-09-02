@@ -7,29 +7,51 @@ export function RoommateMatcherPreview() {
   const [smoking, setSmoking] = useState('Không');
   const [pets, setPets] = useState('Không');
 
+  // Dynamic compatibility scoring algorithm: Sleep (40%) + Smoking (30%) + Pet (30%)
+  const calculateScore = () => {
+    let score = 0;
+    
+    // Sleep scoring (40%)
+    if (sleepTime === '22h - 00h') score += 40;
+    else if (sleepTime === '< 22h') score += 30;
+    else score += 20;
+
+    // Smoking scoring (30%)
+    if (smoking === 'Không') score += 30;
+    else score += 10;
+
+    // Pet scoring (30%)
+    if (pets === 'Không') score += 30;
+    else score += 15;
+
+    return Math.min(100, Math.max(50, score));
+  };
+
+  const matchScore = calculateScore();
+
+  // ponytail: Flattened Roommate Matcher with live compatibility scoring logic
   return (
-    <section className="py-16 md:py-24 bg-white">
+    <section className="py-16 md:py-24 bg-white border-t border-[#E2E8F0]">
       <div className="container-dormi">
-        <div className="max-w-xl space-y-3 mb-12">
+        <div className="max-w-xl space-y-2 mb-12">
           <h2 className="text-h2 text-[#0F172A]">
             Tìm người ở cùng phù hợp
           </h2>
           <p className="text-body text-[#64748B]">
-            Không chỉ tìm một căn phòng. Tìm người có cách sống phù hợp với bạn.
+            Không chỉ tìm một căn phòng. Tìm người có thói quen sống tương thích với bạn.
           </p>
         </div>
 
-        {/* 5 / 7 Layout */}
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
           
-          {/* Left Column (5 cols): Filter form in Level 2 Soft Clay */}
+          {/* Left Column (5 cols): Filter form */}
           <div className="lg:col-span-5 bg-[#F5F7FA] shadow-clay-soft p-6 rounded-[18px] space-y-6">
             
             {/* Sleep Time */}
             <div className="space-y-2">
               <label className="text-caption font-semibold text-[#0F172A] block">Bạn thường ngủ lúc nào?</label>
               <div className="grid grid-cols-3 gap-2">
-                {['< 22h', '22 - 00h', '> 00h'].map(opt => (
+                {['< 22h', '22h - 00h', '> 00h'].map(opt => (
                   <button
                     key={opt}
                     type="button"
@@ -85,15 +107,15 @@ export function RoommateMatcherPreview() {
             </Link>
           </div>
 
-          {/* Right Column (7 cols): Match Result Card in Level 1 Primary Clay */}
+          {/* Right Column (7 cols): Result Card in Level 1 Primary Clay */}
           <div className="lg:col-span-7">
             <div className="bg-white rounded-[18px] shadow-clay-primary p-8 space-y-6">
               
               <div className="flex items-center justify-between border-b border-[#E2E8F0] pb-4">
                 <span className="bg-[#F0FDF4] text-[#16803C] border border-[#DCFCE7] text-body font-bold px-3 py-1 rounded-full">
-                  87% phù hợp
+                  {matchScore}% phù hợp
                 </span>
-                <span className="text-caption text-[#64748B] font-medium">Tương thích thói quen</span>
+                <span className="text-caption text-[#64748B] font-medium">Ví dụ kết quả tương thích</span>
               </div>
 
               <div className="flex items-center gap-4">
@@ -112,16 +134,16 @@ export function RoommateMatcherPreview() {
 
               <div className="grid grid-cols-3 gap-4 bg-[#F5F7FA] shadow-clay-inset p-4 rounded-[12px] text-caption">
                 <div>
-                  <span className="text-[#64748B] block">Giờ ngủ</span>
-                  <span className="font-semibold text-[#0F172A]">{sleepTime}</span>
+                  <span className="text-[#64748B] block font-semibold">Giờ ngủ</span>
+                  <span className="font-bold text-[#0F172A]">{sleepTime}</span>
                 </div>
                 <div>
-                  <span className="text-[#64748B] block">Hút thuốc</span>
-                  <span className="font-semibold text-[#0F172A]">{smoking}</span>
+                  <span className="text-[#64748B] block font-semibold">Hút thuốc</span>
+                  <span className="font-bold text-[#0F172A]">{smoking}</span>
                 </div>
                 <div>
-                  <span className="text-[#64748B] block">Thú cưng</span>
-                  <span className="font-semibold text-[#0F172A]">{pets}</span>
+                  <span className="text-[#64748B] block font-semibold">Thú cưng</span>
+                  <span className="font-bold text-[#0F172A]">{pets}</span>
                 </div>
               </div>
 
