@@ -35,22 +35,22 @@ export function AdminDashboard() {
 
       <div className="grid gap-6 md:grid-cols-3 mb-12">
         <BentoCard className="bg-white p-8">
-          <div className="flex h-12 w-12 items-center justify-center rounded-full bg-[#0071E3]/10 mb-4">
-             <Users className="w-6 h-6 text-[#0071E3]" weight="fill" />
+          <div className="flex h-12 w-12 items-center justify-center rounded-pill bg-[#0071E3]/10 mb-4">
+             <Users className="w-6 h-6 text-[#0071E3]"  />
           </div>
           <p className="text-[15px] font-medium text-[#6e6e73]">Tổng Người dùng</p>
           <p className="text-[40px] font-bold text-[#1d1d1f]">1,204</p>
         </BentoCard>
         <BentoCard className="bg-white p-8">
-          <div className="flex h-12 w-12 items-center justify-center rounded-full bg-[#ff9500]/10 mb-4">
-             <ShieldCheck className="w-6 h-6 text-[#ff9500]" weight="fill" />
+          <div className="flex h-12 w-12 items-center justify-center rounded-pill bg-[#ff9500]/10 mb-4">
+             <ShieldCheck className="w-6 h-6 text-[#ff9500]"  />
           </div>
           <p className="text-[15px] font-medium text-[#6e6e73]">Phòng chờ duyệt</p>
           <p className="text-[40px] font-bold text-[#1d1d1f]">15</p>
         </BentoCard>
         <BentoCard className="bg-white p-8">
-          <div className="flex h-12 w-12 items-center justify-center rounded-full bg-[#ff3b30]/10 mb-4">
-             <Warning className="w-6 h-6 text-[#ff3b30]" weight="fill" />
+          <div className="flex h-12 w-12 items-center justify-center rounded-pill bg-[#ff3b30]/10 mb-4">
+             <Warning className="w-6 h-6 text-[#ff3b30]"  />
           </div>
           <p className="text-[15px] font-medium text-[#6e6e73]">Báo cáo mở</p>
           <p className="text-[40px] font-bold text-[#1d1d1f]">2</p>
@@ -81,14 +81,14 @@ export function AdminRooms() {
               <p className="text-[14px] text-[#6e6e73] mt-1">Người đăng: <span className="font-medium text-[#1d1d1f]">{item.owner}</span></p>
             </div>
             <div className="flex items-center gap-6">
-              <span className="px-3 py-1 rounded-full text-[12px] font-semibold bg-[#ff9500]/10 text-[#ff9500]">{item.status}</span>
+              <span className="px-3 py-1 rounded-pill text-[12px] font-semibold bg-[#ff9500]/10 text-[#ff9500]">{item.status}</span>
               <span className="text-[14px] text-[#6e6e73]">Rủi ro: <span className="font-medium">{item.risk}</span></span>
               <div className="flex items-center gap-2">
-                 <button className="w-10 h-10 rounded-full border border-[#d2d2d7] flex items-center justify-center text-[#ff3b30] hover:bg-[#ff3b30] hover:border-[#ff3b30] hover:text-white transition-colors">
-                    <XCircle className="w-6 h-6" weight="fill" />
+                 <button className="w-10 h-10 rounded-pill border border-[#d2d2d7] flex items-center justify-center text-[#ff3b30] hover:bg-[#ff3b30] hover:border-[#ff3b30] hover:text-white transition-colors">
+                    <XCircle className="w-6 h-6"  />
                  </button>
-                 <button className="w-10 h-10 rounded-full border border-[#d2d2d7] flex items-center justify-center text-[#34c759] hover:bg-[#34c759] hover:border-[#34c759] hover:text-white transition-colors">
-                    <CheckCircle className="w-6 h-6" weight="fill" />
+                 <button className="w-10 h-10 rounded-pill border border-[#d2d2d7] flex items-center justify-center text-[#34c759] hover:bg-[#34c759] hover:border-[#34c759] hover:text-white transition-colors">
+                    <CheckCircle className="w-6 h-6"  />
                  </button>
               </div>
             </div>
@@ -103,8 +103,8 @@ export function AdminKYC() {
   return (
     <div>
       <div className="flex items-center gap-4 mb-8">
-        <div className="w-12 h-12 rounded-full bg-[#0071e3]/10 flex items-center justify-center text-[#0071e3]">
-           <FileText className="w-6 h-6" weight="fill" />
+        <div className="w-12 h-12 rounded-pill bg-[#0071e3]/10 flex items-center justify-center text-[#0071e3]">
+           <FileText className="w-6 h-6"  />
         </div>
         <h1 className="text-[34px] font-bold text-[#1d1d1f]">Duyệt hồ sơ KYC.</h1>
       </div>

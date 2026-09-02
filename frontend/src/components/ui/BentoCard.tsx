@@ -22,10 +22,10 @@ export function BentoCard({
     <div
       className={twMerge(
         clsx(
-          'relative overflow-hidden rounded-[24px] bg-background transition-all duration-[400ms]',
-          blur && 'bg-background/70 backdrop-blur-[20px] saturate-[180%]',
-          hoverEffect && 'hover:scale-[1.02] hover:shadow-[0_20px_40px_rgba(0,0,0,0.08)] cursor-pointer',
-          !noPadding && 'p-8 md:p-12',
+          'relative overflow-hidden rounded-[32px] bg-white shadow-[0_20px_40px_-15px_rgba(99,102,241,0.15),inset_0_-8px_0_0_rgba(0,0,0,0.04),inset_0_2px_4px_rgba(255,255,255,0.8)] transition-all duration-300',
+          blur && 'bg-white/80 backdrop-blur-[20px]',
+          hoverEffect && 'hover:-translate-y-0.5 hover:shadow-[0_25px_50px_-12px_rgba(99,102,241,0.2),inset_0_-8px_0_0_rgba(0,0,0,0.04),inset_0_2px_4px_rgba(255,255,255,0.9)] cursor-pointer',
+          !noPadding && 'p-6 md:p-8',
           className
         )
       )}

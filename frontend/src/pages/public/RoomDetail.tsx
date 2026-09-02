@@ -4,7 +4,7 @@ import { Card } from '../../components/ui/Card';
 import { Button } from '../../components/ui/Button';
 import { useStore } from '../../store/useStore';
 import { Toaster, toast } from 'sonner';
-import { ArrowLeft } from '@phosphor-icons/react';
+import { ArrowLeft, ShieldCheck, Star } from '@phosphor-icons/react';
 
 export default function RoomDetail() {
   const navigate = useNavigate();
@@ -25,9 +25,9 @@ export default function RoomDetail() {
 
   const handleChat = () => {
     if (!currentUser) {
-      navigate('/auth'); // Redirect to login if not authenticated
+      navigate('/auth');
     } else {
-      navigate('/tenant/chat'); // Go to chat
+      navigate('/tenant/chat');
     }
   };
 
@@ -55,153 +55,174 @@ export default function RoomDetail() {
   };
 
   return (
-    <div className="max-w-7xl mx-auto px-4 pt-4 pb-28 md:py-8 space-y-6 md:space-y-8 relative">
+    <div className="max-w-[1400px] mx-auto px-4 pt-6 pb-28 md:py-10 space-y-8 relative bg-canvas">
       <Toaster position="top-center" richColors />
-      {/* Image Gallery Header */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-4 h-64 md:h-96">
-        <div className="md:col-span-2 h-full bg-gray-200 rounded-2xl overflow-hidden relative group cursor-pointer" onClick={() => setShowGallery(true)}>
-          <img src={MOCK_PHOTOS[0]} alt="Room Main" className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105" />
-          <div className="absolute inset-0 bg-black/20 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-micro">
-            <Button className="bg-white/90 text-gray-900 hover:bg-white backdrop-blur" onClick={(e) => { e.stopPropagation(); setShowGallery(true); }}>
+      
+      {/* Editorial Navigation */}
+      <div className="flex justify-between items-center">
+        <Button variant="outline" className="flex items-center gap-2 touch-target" onClick={() => navigate(-1)}>
+          <ArrowLeft weight="bold" className="w-5 h-5" /> Quay lại
+        </Button>
+      </div>
+
+      {/* Image Gallery Header (Asymmetric Layout) */}
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-6 h-[40vh] md:h-[60vh]">
+        <div className="md:col-span-2 h-full bg-surface-alt rounded-bento overflow-hidden relative group cursor-pointer" onClick={() => setShowGallery(true)}>
+          <img src={MOCK_PHOTOS[0]} alt="Room Main" className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-[1.02]" />
+          <div className="absolute inset-0 bg-text-primary/10 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
+            <Button variant="secondary" className="bg-canvas text-text-primary border-none shadow-sm" onClick={(e) => { e.stopPropagation(); setShowGallery(true); }}>
               Xem tất cả ảnh
             </Button>
           </div>
         </div>
-        <div className="hidden md:flex flex-col gap-4 h-full">
-          <div className="flex-1 bg-gray-200 rounded-2xl overflow-hidden cursor-pointer" onClick={() => setShowGallery(true)}>
-            <img src={MOCK_PHOTOS[1]} alt="Room 2" className="w-full h-full object-cover transition-transform hover:scale-105" />
+        <div className="hidden md:flex flex-col gap-6 h-full">
+          <div className="flex-1 bg-surface-alt rounded-bento overflow-hidden cursor-pointer" onClick={() => setShowGallery(true)}>
+            <img src={MOCK_PHOTOS[1]} alt="Room 2" className="w-full h-full object-cover transition-transform hover:scale-[1.03] duration-500" />
           </div>
-          <div className="flex-1 bg-gray-200 rounded-2xl overflow-hidden relative group cursor-pointer" onClick={() => setShowGallery(true)}>
-            <img src={MOCK_PHOTOS[2]} alt="Room 3" className="w-full h-full object-cover transition-transform group-hover:scale-105" />
-            <div className="absolute inset-0 bg-black/50 flex items-center justify-center transition-micro hover:bg-black/40">
-              <span className="text-white font-bold text-lg">+12 Ảnh</span>
+          <div className="flex-1 bg-surface-alt rounded-bento overflow-hidden relative group cursor-pointer" onClick={() => setShowGallery(true)}>
+            <img src={MOCK_PHOTOS[2]} alt="Room 3" className="w-full h-full object-cover transition-transform group-hover:scale-[1.03] duration-500" />
+            <div className="absolute inset-0 bg-text-primary/50 flex items-center justify-center transition-colors group-hover:bg-text-primary/45">
+              <span className="text-canvas font-bold text-h2">+12 Ảnh</span>
             </div>
           </div>
         </div>
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 md:gap-12">
-        {/* Main Content */}
-        <div className="lg:col-span-2 space-y-6 md:space-y-8">
+      {/* Asymmetric Content Columns */}
+      <div className="grid grid-cols-1 lg:grid-cols-12 gap-10 md:gap-16">
+        
+        {/* Left Column: Room Details */}
+        <div className="lg:col-span-8 space-y-10">
           <div>
-            <div className="flex flex-col sm:flex-row sm:justify-between sm:items-start gap-3">
-              <h1 className="text-2xl md:text-3xl font-bold text-gray-900 mb-1 md:mb-2">Studio Hiện Đại - Quận 3</h1>
-              <div className="flex self-start sm:self-auto">
-                <span className="bg-green-100 text-green-800 text-xs font-bold px-3 py-1.5 rounded-full flex items-center gap-1">
-                  ✓ Chủ nhà đã xác thực
-                </span>
-              </div>
+            <div className="flex flex-col sm:flex-row sm:justify-between sm:items-start gap-4 mb-4">
+              <h1 className="text-[32px] md:text-[40px] font-bold text-text-primary leading-[1.1] tracking-tight">Studio Hiện Đại - Quận 3</h1>
+              <span className="bg-success-soft text-success border border-success-soft text-caption font-bold px-3 py-1.5 rounded-pill flex items-center gap-1.5 self-start">
+                <ShieldCheck  className="w-4 h-4" /> Chủ nhà đã xác thực
+              </span>
             </div>
-            <p className="text-gray-500 text-base md:text-lg mt-2 sm:mt-0">123 Nguyễn Đình Chiểu, Phường Võ Thị Sáu, Quận 3, TP.HCM</p>
+            <p className="text-body-lg text-text-secondary">123 Nguyễn Đình Chiểu, Phường Võ Thị Sáu, Quận 3, TP.HCM</p>
           </div>
 
-          <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 py-6 border-y border-gray-200">
-            <div><p className="text-gray-500 text-xs md:text-sm">Loại phòng</p><p className="font-semibold text-gray-900 text-sm md:text-base">Studio</p></div>
-            <div><p className="text-gray-500 text-xs md:text-sm">Sức chứa</p><p className="font-semibold text-gray-900 text-sm md:text-base">2 Người</p></div>
-            <div><p className="text-gray-500 text-xs md:text-sm">Diện tích</p><p className="font-semibold text-gray-900 text-sm md:text-base">35 m²</p></div>
-            <div><p className="text-gray-500 text-xs md:text-sm">Phòng tắm</p><p className="font-semibold text-gray-900 text-sm md:text-base">Riêng biệt</p></div>
+          {/* Specifications Grid */}
+          <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 py-8 border-y border-border-subtle">
+            <div className="bg-surface p-4 rounded-md border border-border-subtle">
+              <p className="text-text-muted text-caption uppercase tracking-wider mb-1">Loại phòng</p>
+              <p className="font-bold text-text-primary text-body">Studio</p>
+            </div>
+            <div className="bg-surface p-4 rounded-md border border-border-subtle">
+              <p className="text-text-muted text-caption uppercase tracking-wider mb-1">Sức chứa</p>
+              <p className="font-bold text-text-primary text-body">2 Người</p>
+            </div>
+            <div className="bg-surface p-4 rounded-md border border-border-subtle">
+              <p className="text-text-muted text-caption uppercase tracking-wider mb-1">Diện tích</p>
+              <p className="font-bold text-text-primary text-body">35 m²</p>
+            </div>
+            <div className="bg-surface p-4 rounded-md border border-border-subtle">
+              <p className="text-text-muted text-caption uppercase tracking-wider mb-1">Phòng tắm</p>
+              <p className="font-bold text-text-primary text-body">Riêng biệt</p>
+            </div>
           </div>
 
-          <div>
-            <h2 className="text-lg md:text-xl font-bold text-gray-900 mb-3 md:mb-4">Mô tả chi tiết</h2>
-            <p className="text-gray-600 text-sm md:text-base leading-relaxed">
-              Studio hiện đại với đầy đủ nội thất tọa lạc tại trung tâm Quận 3. Rất gần các trường đại học, cửa hàng tiện lợi và quán cà phê. Tòa nhà có bảo vệ 24/7, ra vào bằng vân tay, và máy giặt miễn phí trên sân thượng.
+          <div className="space-y-4">
+            <h2 className="text-h2 font-bold text-text-primary tracking-tight">Mô tả chi tiết</h2>
+            <p className="text-text-secondary text-body leading-relaxed max-w-[70ch]">
+              Studio hiện đại với đầy đủ nội thất tọa lạc tại trung tâm Quận 3. Rất gần các trường đại học, cửa hàng tiện lợi và quán cà phê. Tòa nhà có bảo vệ 24/7, ra vào bằng vân tay, và máy giặt miễn phí trên sân ước.
             </p>
           </div>
         </div>
 
-        {/* Sidebar */}
-        <div className="flex flex-col">
-          <Button variant="outline" className="mb-4 self-start flex items-center gap-2" onClick={() => navigate(-1)}>
-            <ArrowLeft weight="bold" className="w-4 h-4 md:w-5 md:h-5" /> Quay lại
-          </Button>
-          <Card className="p-5 md:p-6 md:sticky md:top-24">
+        {/* Right Column: Booking Sidebar */}
+        <div className="lg:col-span-4 flex flex-col">
+          <Card className="p-6 border border-border-subtle bg-surface lg:sticky lg:top-24 rounded-bento">
             <div className="mb-6">
-              <p className="text-2xl md:text-3xl font-bold text-blue-600">5.500.000₫ <span className="text-sm md:text-base text-gray-500 font-normal">/ tháng</span></p>
-              <p className="text-xs md:text-sm text-gray-500 mt-2">Cọc: 5.500.000₫</p>
+              <p className="text-[32px] font-bold text-primary leading-none mb-2">5.500.000₫ <span className="text-caption text-text-secondary font-normal">/ tháng</span></p>
+              <p className="text-caption text-text-muted">Cọc bảo đảm: 5.500.000₫</p>
             </div>
             
-            <div className="hidden md:flex flex-col space-y-4 mb-6">
-              <Button fullWidth size="lg" onClick={handleSchedule}>Đặt lịch xem phòng</Button>
-              <Button fullWidth variant="outline" size="lg" onClick={handleChat}>Chat với Chủ nhà</Button>
+            <div className="hidden md:flex flex-col gap-3 mb-6">
+              <Button variant="primary" fullWidth size="lg" onClick={handleSchedule}>Đặt lịch xem phòng</Button>
+              <Button variant="secondary" fullWidth size="lg" onClick={handleChat}>Chat với Chủ nhà</Button>
             </div>
 
-            <div className="pt-5 md:pt-6 border-t border-gray-100">
+            <div className="pt-6 border-t border-border-subtle space-y-4">
               <div className="flex items-center gap-4">
-                <div className="w-10 h-10 md:w-12 md:h-12 bg-gray-200 rounded-full flex items-center justify-center font-bold text-gray-600">L</div>
+                <div className="w-12 h-12 bg-surface-alt rounded-pill flex items-center justify-center font-bold text-text-primary border border-border-subtle">L</div>
                 <div>
-                  <p className="font-bold text-gray-900 text-sm md:text-base">Le Van B</p>
-                  <div className="flex items-center gap-2">
-                    <span className="text-yellow-500 text-xs md:text-sm">★ 4.9 (12 reviews)</span>
+                  <p className="font-bold text-text-primary text-body">Lê Văn B</p>
+                  <div className="flex items-center gap-1.5">
+                    <Star  className="w-4 h-4 text-warning" />
+                    <span className="text-caption text-text-secondary font-medium">4.9 (12 đánh giá)</span>
                   </div>
                 </div>
               </div>
-              <div className="mt-4 bg-gray-50 p-3 rounded-lg flex items-center justify-between">
-                <span className="text-xs md:text-sm text-gray-600">Điểm tin cậy (Trust Score)</span>
-                <span className="font-bold text-green-600 text-sm md:text-base">98/100</span>
+              <div className="bg-canvas p-4 rounded-md border border-border-subtle flex items-center justify-between shadow-xs">
+                <span className="text-caption text-text-secondary">Điểm tin cậy (Trust Score)</span>
+                <span className="font-bold text-success text-body">98/100</span>
               </div>
             </div>
           </Card>
         </div>
+
       </div>
 
       {/* Photo Gallery Modal */}
       {showGallery && (
-        <div className="fixed inset-0 bg-black z-50 overflow-y-auto">
-          <div className="p-4 md:p-6 min-h-screen flex flex-col">
-            <div className="flex justify-between items-center mb-6 md:mb-8 sticky top-0 bg-black/90 pb-4 z-10">
-              <h2 className="text-white text-xl md:text-2xl font-bold">Hình ảnh phòng</h2>
-              <Button variant="outline" className="text-white border-white hover:bg-white/20 text-sm md:text-base" onClick={() => setShowGallery(false)}>
+        <div className="fixed inset-0 bg-text-primary z-50 overflow-y-auto">
+          <div className="p-6 min-h-screen flex flex-col max-w-[1400px] mx-auto">
+            <div className="flex justify-between items-center mb-8 sticky top-0 bg-text-primary/95 pb-4 z-10">
+              <h2 className="text-canvas text-h2 font-bold tracking-tight">Hình ảnh phòng</h2>
+              <Button variant="outline" className="text-canvas border-canvas hover:bg-canvas/10 text-body" onClick={() => setShowGallery(false)}>
                 ✕ Đóng
               </Button>
             </div>
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 max-w-7xl mx-auto w-full">
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 w-full">
               {MOCK_PHOTOS.map((photo, i) => (
-                <div key={i} className="aspect-[4/3] rounded-lg overflow-hidden bg-gray-800">
-                  <img src={photo} alt={`Property view ${i + 1}`} className="w-full h-full object-cover hover:scale-105 transition-transform duration-500" />
+                <div key={i} className="aspect-[4/3] rounded-bento overflow-hidden bg-text-secondary/20">
+                  <img src={photo} alt={`Property view ${i + 1}`} className="w-full h-full object-cover hover:scale-[1.02] transition-transform duration-500" />
                 </div>
               ))}
             </div>
           </div>
         </div>
       )}
+
       {/* Mobile Fixed Bottom Bar */}
-      <div className="md:hidden fixed bottom-0 left-0 w-full bg-white border-t border-gray-200 p-3 sm:p-4 z-40 flex gap-2 sm:gap-3 shadow-[0_-10px_20px_rgba(0,0,0,0.05)]">
-        <Button className="flex-1 text-sm py-2.5" size="lg" onClick={handleSchedule}>Xem phòng</Button>
-        <Button className="flex-1 text-sm py-2.5" variant="outline" size="lg" onClick={handleChat}>Nhắn tin</Button>
+      <div className="md:hidden fixed bottom-0 left-0 w-full bg-canvas border-t border-border-subtle p-4 z-40 flex gap-3 shadow-lg">
+        <Button className="flex-1" variant="primary" size="md" onClick={handleSchedule}>Xem phòng</Button>
+        <Button className="flex-1" variant="secondary" size="md" onClick={handleChat}>Nhắn tin</Button>
       </div>
 
       {/* Booking Date/Time Modal */}
       {showBookingModal && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm p-4">
-          <div className="bg-white rounded-xl w-full max-w-md shadow-lg overflow-hidden animate-in fade-in zoom-in-95">
-            <div className="p-4 border-b border-neutral-100 flex justify-between items-center">
-              <h3 className="font-bold text-base md:text-lg text-neutral-900">Chọn lịch xem phòng</h3>
-              <button onClick={() => setShowBookingModal(false)} className="text-neutral-400 hover:text-neutral-700 font-bold px-2">
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-text-primary/40 p-4">
+          <div className="bg-canvas border border-border-subtle rounded-bento w-full max-w-md shadow-lg overflow-hidden">
+            <div className="p-4 border-b border-border-subtle flex justify-between items-center">
+              <h3 className="font-bold text-h3 text-text-primary">Chọn lịch xem phòng</h3>
+              <button onClick={() => setShowBookingModal(false)} className="text-text-muted hover:text-text-primary font-bold px-2">
                 ✕
               </button>
             </div>
-            <div className="p-5 md:p-6 space-y-4">
+            <div className="p-6 space-y-4">
               <div>
-                <label className="block text-xs md:text-sm font-medium text-gray-700 mb-1">Ngày xem phòng</label>
+                <label className="block text-caption font-bold text-text-secondary uppercase mb-2">Ngày xem phòng</label>
                 <input 
                   type="date" 
                   min={new Date().toISOString().split('T')[0]}
-                  className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm outline-none focus:border-blue-500"
+                  className="w-full border border-border-subtle bg-surface rounded-md px-3 py-2 text-body text-text-primary outline-none focus:border-primary focus:ring-1 focus:ring-primary min-h-[44px]"
                   value={bookingDate}
                   onChange={e => setBookingDate(e.target.value)}
                 />
               </div>
               <div>
-                <label className="block text-xs md:text-sm font-medium text-gray-700 mb-1">Giờ (dự kiến)</label>
+                <label className="block text-caption font-bold text-text-secondary uppercase mb-2">Giờ (dự kiến)</label>
                 <input 
                   type="time" 
-                  className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm outline-none focus:border-blue-500"
+                  className="w-full border border-border-subtle bg-surface rounded-md px-3 py-2 text-body text-text-primary outline-none focus:border-primary focus:ring-1 focus:ring-primary min-h-[44px]"
                   value={bookingTime}
                   onChange={e => setBookingTime(e.target.value)}
                 />
               </div>
-              <p className="text-xs md:text-sm text-gray-500 text-center mt-4">
+              <p className="text-caption text-text-muted text-center mt-4">
                 Chủ nhà sẽ nhận được yêu cầu và liên hệ lại với bạn để chốt lịch.
               </p>
               <Button fullWidth size="lg" className="mt-4" onClick={confirmBooking}>Gửi yêu cầu đặt lịch</Button>

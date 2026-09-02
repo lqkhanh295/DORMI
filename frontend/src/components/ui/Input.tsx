@@ -6,16 +6,18 @@ interface InputProps extends React.InputHTMLAttributes<HTMLInputElement> {
 }
 
 export const Input = React.forwardRef<HTMLInputElement, InputProps>(
-  ({ label, error, className = '', ...props }, ref) => {
+  ({ label, error, className = '', disabled, ...props }, ref) => {
+    // ponytail: Form fields stay flat per guidelines (Level 0), border 1px solid #D1D5DB, 16px radius, clear WCAG focus ring
     return (
       <div className="w-full flex flex-col gap-1.5">
-        {label && <label className="text-sm font-medium text-gray-700">{label}</label>}
+        {label && <label className="text-xs font-semibold text-[#4B5563] uppercase tracking-wider">{label}</label>}
         <input
           ref={ref}
-          className={`w-full rounded-lg border ${error ? 'border-red-500' : 'border-gray-300'} bg-white px-4 py-2 text-sm text-gray-900 placeholder-gray-400 focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500 transition-micro ${className}`}
+          disabled={disabled}
+          className={`w-full rounded-[16px] border ${error ? 'border-2 border-[#991B1B]' : 'border border-[#D1D5DB]'} bg-white px-4 py-2.5 text-base text-[#1F2937] placeholder-[#9CA3AF] hover:border-[#6366F1] focus:border-[#6366F1] focus:outline-none focus:ring-2 focus:ring-[#6366F1] disabled:bg-[#F3F4F6] disabled:text-[#6B7280] transition-all duration-200 min-h-[44px] ${className}`}
           {...props}
         />
-        {error && <p className="text-xs text-red-500">{error}</p>}
+        {error && <p className="text-xs text-[#991B1B] font-semibold flex items-center gap-1"><span>⚠️</span> {error}</p>}
       </div>
     );
   }

@@ -1,89 +1,90 @@
 import { Card } from '../../components/ui/Card';
+
 export default function LandlordDashboard() {
   return (
-    <div className="space-y-6 pb-6">
+    <div className="space-y-8 pb-12 bg-canvas animate-fade-in">
+      
       {/* Header */}
-      <div className="bg-white p-5 md:p-6 rounded-xl border border-neutral-200 shadow-sm flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
+      <div className="bg-surface p-6 md:p-8 rounded-bento border border-border-subtle flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
         <div>
-          <h1 className="text-2xl font-bold text-neutral-800">Tổng quan Chủ trọ</h1>
-          <p className="text-sm text-neutral-500 mt-1">Quản lý tài sản và phân tích hiệu quả cho thuê.</p>
+          <h1 className="text-[32px] font-bold text-text-primary tracking-tight leading-[1.1]">Tổng quan Chủ trọ</h1>
+          <p className="text-body text-text-secondary mt-1">Quản lý tài sản và phân tích hiệu quả cho thuê.</p>
         </div>
-        {/* <Button onClick={() => navigate('/landlord/rooms')} className="hidden shadow-sm hover:shadow transition-all whitespace-nowrap font-semibold">
-          + Đăng tin mới
-        </Button> */}
       </div>
 
-      {/* Stats Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
-        <Card className="p-5 bg-emerald-50/50 border border-emerald-100 hover:shadow-md transition-all duration-300 rounded-xl relative overflow-hidden group">
-          <div className="absolute -right-4 -top-4 w-24 h-24 bg-emerald-100/50 rounded-full group-hover:scale-110 transition-transform"></div>
-          <h3 className="text-xs font-bold text-emerald-600 uppercase tracking-wider mb-2 relative z-10">Phòng đang cho thuê</h3>
-          <div className="flex items-end gap-2 relative z-10">
-            <p className="text-4xl font-black text-neutral-800">4</p>
-            <span className="text-sm font-medium text-emerald-600 mb-1">phòng</span>
+      {/* Stats Bento Grid (Vibrant Flat Pastel Fills) */}
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+        
+        {/* Card 1 (Mint) */}
+        <Card className="p-6 bg-mint border-none hover:shadow-xs transition-shadow rounded-bento relative overflow-hidden group">
+          <h3 className="text-caption font-bold text-text-primary uppercase tracking-wider mb-3">Phòng đang cho thuê</h3>
+          <div className="flex items-baseline gap-2">
+            <p className="text-[48px] font-bold text-text-primary leading-none">4</p>
+            <span className="text-body font-semibold text-text-secondary">phòng hoạt động</span>
           </div>
         </Card>
         
-        <Card className="p-5 border border-neutral-200 hover:shadow-md transition-all duration-300 rounded-xl">
-          <h3 className="text-xs font-bold text-neutral-500 uppercase tracking-wider mb-2">Lượt quan tâm (30 ngày)</h3>
-          <div className="flex items-end gap-2">
-            <p className="text-4xl font-black text-neutral-800">142</p>
-            <span className="text-sm font-medium text-primary-600 mb-1">+12%</span>
+        {/* Card 2 (Lilac) */}
+        <Card className="p-6 bg-lilac border-none hover:shadow-xs transition-shadow rounded-bento">
+          <h3 className="text-caption font-bold text-text-primary uppercase tracking-wider mb-3">Lượt quan tâm (30 ngày)</h3>
+          <div className="flex items-baseline gap-2">
+            <p className="text-[48px] font-bold text-text-primary leading-none">142</p>
+            <span className="text-caption font-bold text-primary-dark">+12% tháng này</span>
           </div>
         </Card>
         
-        <Card className="p-5 border border-neutral-200 hover:shadow-md transition-all duration-300 rounded-xl relative overflow-hidden group">
-          <div className="absolute -right-4 -bottom-4 w-20 h-20 bg-amber-50 rounded-full group-hover:scale-110 transition-transform"></div>
-          <h3 className="text-xs font-bold text-neutral-500 uppercase tracking-wider mb-2 relative z-10">Điểm uy tín</h3>
-          <div className="flex items-end gap-2 relative z-10">
-            <p className="text-4xl font-black text-amber-500">98</p>
-            <span className="text-sm font-medium text-neutral-400 mb-1">/100</span>
+        {/* Card 3 (Peach) */}
+        <Card className="p-6 bg-peach border-none hover:shadow-xs transition-shadow rounded-bento relative overflow-hidden group">
+          <h3 className="text-caption font-bold text-text-primary uppercase tracking-wider mb-3">Điểm uy tín chủ trọ</h3>
+          <div className="flex items-baseline gap-2">
+            <p className="text-[48px] font-bold text-text-primary leading-none">98</p>
+            <span className="text-caption font-semibold text-text-secondary">/100 tuyệt hảo</span>
           </div>
         </Card>
       </div>
 
-      {/* Conversion Funnel Placeholder */}
-      <Card className="p-5 md:p-6 border border-neutral-200 rounded-xl shadow-sm hover:shadow-md transition-all duration-300">
-        <div className="flex justify-between items-center mb-6 border-b border-neutral-100 pb-4">
+      {/* Conversion Funnel */}
+      <Card className="p-6 md:p-8 border border-border-subtle rounded-bento bg-surface hover:shadow-xs transition-shadow">
+        <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-8 border-b border-border-subtle pb-5">
           <div>
-            <h3 className="text-lg font-bold text-neutral-800">Phễu phân tích khách hàng</h3>
-            <p className="text-xs text-neutral-500 mt-1">Hiệu quả chuyển đổi từ lượt xem đến liên hệ</p>
+            <h3 className="text-h2 font-bold text-text-primary tracking-tight">Phễu phân tích khách hàng</h3>
+            <p className="text-caption text-text-muted mt-1">Hiệu quả chuyển đổi từ lượt xem đến liên hệ</p>
           </div>
-          <select className="px-3 py-1.5 bg-neutral-50 border border-neutral-200 rounded-lg text-sm text-neutral-600 focus:outline-none focus:border-primary-500 transition-colors">
+          <select className="px-4 py-2 bg-canvas border border-border-subtle rounded-md text-body text-text-secondary font-semibold focus:outline-none focus:border-primary transition-colors min-h-[44px]">
             <option>Tất cả phòng</option>
             <option>Phòng trọ Quận 7</option>
             <option>Căn hộ mini Quận 1</option>
           </select>
         </div>
         
-        <div className="space-y-5">
+        <div className="space-y-6">
           <div className="group">
-            <div className="flex justify-between text-sm mb-1.5">
-              <span className="font-medium text-neutral-600 group-hover:text-primary-600 transition-colors">Lượt xem tin</span>
-              <span className="font-bold text-neutral-800">1,240</span>
+            <div className="flex justify-between text-body font-semibold mb-2">
+              <span className="text-text-secondary group-hover:text-primary transition-colors">Lượt xem tin</span>
+              <span className="text-text-primary font-bold">1,240</span>
             </div>
-            <div className="w-full bg-neutral-100 rounded-full h-2.5 overflow-hidden">
-              <div className="bg-primary-200 h-full rounded-full transition-all duration-1000 ease-out" style={{width: '100%'}}></div>
+            <div className="w-full bg-canvas rounded-pill h-3 overflow-hidden border border-border-subtle">
+              <div className="bg-primary-soft h-full rounded-pill transition-all duration-1000 ease-out" style={{width: '100%'}}></div>
             </div>
           </div>
           
           <div className="group">
-            <div className="flex justify-between text-sm mb-1.5">
-              <span className="font-medium text-neutral-600 group-hover:text-primary-600 transition-colors">Đã lưu tin</span>
-              <span className="font-bold text-neutral-800">210</span>
+            <div className="flex justify-between text-body font-semibold mb-2">
+              <span className="text-text-secondary group-hover:text-primary transition-colors">Đã lưu tin</span>
+              <span className="text-text-primary font-bold">210</span>
             </div>
-            <div className="w-full bg-neutral-100 rounded-full h-2.5 overflow-hidden">
-              <div className="bg-primary-400 h-full rounded-full transition-all duration-1000 ease-out" style={{width: '20%'}}></div>
+            <div className="w-full bg-canvas rounded-pill h-3 overflow-hidden border border-border-subtle">
+              <div className="bg-lilac h-full rounded-pill transition-all duration-1000 ease-out" style={{width: '20%'}}></div>
             </div>
           </div>
           
           <div className="group">
-            <div className="flex justify-between text-sm mb-1.5">
-              <span className="font-medium text-neutral-600 group-hover:text-primary-600 transition-colors">Đã liên hệ</span>
-              <span className="font-bold text-neutral-800">42</span>
+            <div className="flex justify-between text-body font-semibold mb-2">
+              <span className="text-text-secondary group-hover:text-primary transition-colors">Đã liên hệ</span>
+              <span className="text-text-primary font-bold">42</span>
             </div>
-            <div className="w-full bg-neutral-100 rounded-full h-2.5 overflow-hidden">
-              <div className="bg-primary-600 h-full rounded-full transition-all duration-1000 ease-out" style={{width: '5%'}}></div>
+            <div className="w-full bg-canvas rounded-pill h-3 overflow-hidden border border-border-subtle">
+              <div className="bg-mint h-full rounded-pill transition-all duration-1000 ease-out" style={{width: '5%'}}></div>
             </div>
           </div>
         </div>

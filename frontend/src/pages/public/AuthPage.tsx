@@ -21,28 +21,28 @@ export default function AuthPage() {
   };
 
   return (
-    <div className="min-h-[calc(100vh-64px)] flex items-center justify-center bg-neutral-50 px-4 py-12">
+    <div className="min-h-[calc(100vh-64px)] flex items-center justify-center bg-surface px-4 py-12">
       <Card className="w-full max-w-md p-8">
         <div className="text-center mb-8">
-          <h2 className="text-3xl font-bold text-gray-900">Chào mừng trở lại</h2>
-          <p className="text-gray-500 mt-2">Vui lòng chọn vai trò để tiếp tục.</p>
+          <h2 className="text-3xl font-bold text-text-primary">Chào mừng trở lại</h2>
+          <p className="text-text-secondary mt-2">Vui lòng chọn vai trò để tiếp tục.</p>
         </div>
 
-        <div className="flex p-1 bg-gray-100 rounded-lg mb-8">
+        <div className="flex p-1 bg-surface-alt rounded-md mb-8">
           <button 
-            className={`flex-1 py-2 text-sm font-medium rounded-md transition-micro ${role === 'Tenant' ? 'bg-white shadow text-blue-600' : 'text-gray-500'}`}
+            className={`flex-1 py-2 text-sm font-medium rounded-md transition-micro ${role === 'Tenant' ? 'bg-white shadow text-primary' : 'text-text-secondary'}`}
             onClick={() => setRole('Tenant')}
           >
             Người thuê
           </button>
           <button 
-            className={`flex-1 py-2 text-sm font-medium rounded-md transition-micro ${role === 'Landlord' ? 'bg-white shadow text-blue-600' : 'text-gray-500'}`}
+            className={`flex-1 py-2 text-sm font-medium rounded-md transition-micro ${role === 'Landlord' ? 'bg-white shadow text-primary' : 'text-text-secondary'}`}
             onClick={() => setRole('Landlord')}
           >
             Chủ nhà
           </button>
           <button 
-            className={`flex-1 py-2 text-sm font-medium rounded-md transition-micro ${role === 'Admin' ? 'bg-white shadow text-red-600' : 'text-gray-500'}`}
+            className={`flex-1 py-2 text-sm font-medium rounded-md transition-micro ${role === 'Admin' ? 'bg-white shadow text-red-600' : 'text-text-secondary'}`}
             onClick={() => setRole('Admin')}
           >
             Quản trị viên
