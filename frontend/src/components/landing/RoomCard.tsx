@@ -1,4 +1,5 @@
 import { Link } from 'react-router-dom';
+import { CheckCircle } from '@phosphor-icons/react';
 
 export interface RoomItem {
   id: string;
@@ -11,37 +12,37 @@ export interface RoomItem {
 }
 
 export function RoomCard({ room }: { room: RoomItem }) {
+  // ponytail: RoomCard with clear price hierarchy, location, area, verified badge, and subtle hover lift
   return (
     <Link 
       to={`/room/${room.id}`}
-      className="bg-white rounded-[18px] shadow-clay-soft p-3 overflow-hidden flex flex-col transition-all duration-150 hover:-translate-y-[2px] group"
+      className="bg-white rounded-[18px] shadow-clay-soft p-3 overflow-hidden flex flex-col transition-all duration-150 hover:-translate-y-[2px] hover:shadow-clay-primary group"
     >
-      <div className="aspect-[4/3] w-full rounded-[14px] overflow-hidden bg-[#EEF2F6]">
+      <div className="aspect-[4/3] w-full rounded-[14px] overflow-hidden bg-[#EEF2F6] relative">
         <img 
           src={room.image} 
           alt={room.title} 
           className="w-full h-full object-cover transition-transform duration-200 group-hover:scale-[1.02]"
         />
+        {room.verified && (
+          <div className="absolute top-3 right-3 bg-white/95 backdrop-blur-xs text-[#16803C] border border-[#DCFCE7] text-caption font-bold px-2.5 py-1 rounded-full flex items-center gap-1 shadow-xs">
+            <CheckCircle className="w-4 h-4" weight="fill" /> Đã xác minh
+          </div>
+        )}
       </div>
 
       <div className="pt-4 px-2 pb-2 flex flex-col gap-2 flex-1 justify-between">
-        <div className="space-y-1">
-          <h3 className="text-body font-semibold text-[#0F172A] line-clamp-1 group-hover:text-[#00153D] transition-colors">
+        <div className="space-y-1.5">
+          <h3 className="text-body font-bold text-[#0F172A] line-clamp-1 group-hover:text-[#00153D] transition-colors leading-snug">
             {room.title}
           </h3>
-          <p className="text-body font-bold text-[#00153D]">
+          <p className="text-h3 font-bold text-[#00153D]">
             {room.price}
           </p>
-          <p className="text-caption text-[#64748B]">
+          <p className="text-caption text-[#64748B] font-medium">
             {room.location} · {room.area}
           </p>
         </div>
-
-        {room.verified && (
-          <div className="pt-2 flex items-center gap-1.5 text-caption font-semibold text-[#16803C]">
-            <span className="w-2 h-2 rounded-full bg-[#16803C]"></span> Đã xác minh
-          </div>
-        )}
       </div>
     </Link>
   );

@@ -14,7 +14,7 @@ const DEMO_ROOMS: RoomItem[] = [
   },
   {
     id: '2',
-    title: 'Room Q7',
+    title: 'Phòng trọ cao cấp Q7',
     price: '3.800.000đ / tháng',
     location: 'Q7',
     area: '22m²',
@@ -23,25 +23,17 @@ const DEMO_ROOMS: RoomItem[] = [
   },
   {
     id: '3',
-    title: 'Studio TB',
+    title: 'Căn hộ mini Tân Bình',
     price: '5.200.000đ / tháng',
-    location: 'TB',
+    location: 'Tân Bình',
     area: '30m²',
     image: 'https://images.unsplash.com/photo-1555854877-bab0e564b8d5?auto=format&fit=crop&w=600&q=80',
-    verified: true
-  },
-  {
-    id: '4',
-    title: 'Căn hộ mini Phú Nhuận',
-    price: '6.000.000đ / tháng',
-    location: 'Phú Nhuận',
-    area: '35m²',
-    image: 'https://images.unsplash.com/photo-1560448204-e02f11c3d0e2?auto=format&fit=crop&w=600&q=80',
     verified: true
   }
 ];
 
 export function FeaturedRooms() {
+  // ponytail: FeaturedRooms using 3 columns on desktop for better breathing room & room card clarity
   return (
     <section className="py-16 md:py-24 bg-white border-t border-[#E2E8F0]">
       <div className="container-dormi">
@@ -64,8 +56,8 @@ export function FeaturedRooms() {
           </Link>
         </div>
 
-        {/* 4-column Grid (Desktop 3/3/3/3, Mobile 1 col) */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+        {/* 3-column Grid Desktop (lg:grid-cols-3), 2 Tablet (sm:grid-cols-2), 1 Mobile (grid-cols-1) */}
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8">
           {DEMO_ROOMS.map(room => (
             <RoomCard key={room.id} room={room} />
           ))}

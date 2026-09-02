@@ -4,14 +4,18 @@ import { MagnifyingGlass, MapPin, Coins } from '@phosphor-icons/react';
 
 export function HeroSearch() {
   const navigate = useNavigate();
-  const [district, setDistrict] = useState('Quận 10');
-  const [price, setPrice] = useState('3-5tr');
+  const [district, setDistrict] = useState('');
+  const [price, setPrice] = useState('');
 
   const handleSearch = (e: React.FormEvent) => {
     e.preventDefault();
-    navigate(`/search?district=${encodeURIComponent(district)}&price=${encodeURIComponent(price)}`);
+    const query = new URLSearchParams();
+    if (district) query.set('district', district);
+    if (price) query.set('price', price);
+    navigate(`/search?${query.toString()}`);
   };
 
+  // ponytail: HeroSearch with default neutral placeholders (Tất cả khu vực / Tất cả mức giá) and large Clay search block
   return (
     <section className="py-16 md:py-24 bg-[#F5F7FA]">
       <div className="container-dormi">
@@ -29,7 +33,7 @@ export function HeroSearch() {
               </p>
             </div>
 
-            {/* Level 1 Primary Clay Search Container */}
+            {/* Large Primary Clay Search Container */}
             <form 
               onSubmit={handleSearch}
               className="bg-white rounded-[18px] shadow-clay-primary p-6 space-y-4"
@@ -43,6 +47,7 @@ export function HeroSearch() {
                   onChange={(e) => setDistrict(e.target.value)}
                   className="w-full bg-[#F5F7FA] shadow-clay-inset border border-[#E2E8F0] rounded-[12px] px-4 py-2.5 text-body text-[#0F172A] focus:outline-none focus:ring-1 focus:ring-[#00153D] min-h-[44px]"
                 >
+                  <option value="">Tất cả khu vực</option>
                   <option value="Quận 10">Quận 10</option>
                   <option value="Quận 7">Quận 7</option>
                   <option value="Quận 3">Quận 3</option>
@@ -61,6 +66,7 @@ export function HeroSearch() {
                   onChange={(e) => setPrice(e.target.value)}
                   className="w-full bg-[#F5F7FA] shadow-clay-inset border border-[#E2E8F0] rounded-[12px] px-4 py-2.5 text-body text-[#0F172A] focus:outline-none focus:ring-1 focus:ring-[#00153D] min-h-[44px]"
                 >
+                  <option value="">Tất cả mức giá</option>
                   <option value="Dưới 3tr">Dưới 3 triệu / tháng</option>
                   <option value="3-5tr">3 - 5 triệu / tháng</option>
                   <option value="5-8tr">5 - 8 triệu / tháng</option>
