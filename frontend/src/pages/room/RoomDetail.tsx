@@ -81,15 +81,15 @@ export function RoomDetail() {
           <div className="relative">
             <BentoCard className="bg-white sticky top-[120px] border border-[#d2d2d7]/50 p-6 flex flex-col gap-6">
               <div className="flex items-start gap-4 pb-6 border-b border-[#d2d2d7]/50">
-                <div className="w-16 h-16 rounded-full bg-[#e8e8ed] overflow-hidden shrink-0">
+                <div className="w-16 h-16 rounded-pill bg-[#e8e8ed] overflow-hidden shrink-0">
                   <img src="https://i.pravatar.cc/150?img=68" alt="Host" className="w-full h-full object-cover" />
                 </div>
                 <div>
                   <h3 className="text-[17px] font-semibold text-[#1d1d1f]">Trần Đại Chủ</h3>
                   <div className="flex items-center gap-1 text-[13px] text-[#6e6e73] mt-1">
-                    <Star weight="fill" className="text-[#ff9500]" /> 4.9 (12 đánh giá)
+                    <Star  className="text-[#ff9500]" /> 4.9 (12 đánh giá)
                   </div>
-                  <span className="inline-block mt-2 rounded-full bg-[#34c759]/10 px-2 py-0.5 text-[11px] font-bold text-[#34c759] uppercase tracking-wider">Đã xác minh KYC</span>
+                  <span className="inline-block mt-2 rounded-pill bg-[#34c759]/10 px-2 py-0.5 text-[11px] font-bold text-[#34c759] uppercase tracking-wider">Đã xác minh KYC</span>
                 </div>
               </div>
               

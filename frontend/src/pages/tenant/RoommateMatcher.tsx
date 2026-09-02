@@ -1,8 +1,9 @@
 import { useState } from 'react';
-import { Card } from '../../components/ui/Card';
+import { Button } from '../../components/ui/Button';
 import { useNavigate } from 'react-router-dom';
 import { useStore } from '../../store/useStore';
 import { Heart, Sparkles, X, MessageCircle } from 'lucide-react';
+import { motion, AnimatePresence } from 'framer-motion';
 
 const MOCK_ROOMMATES = [
   {
@@ -43,7 +44,7 @@ const MOCK_ROOMMATES = [
 export default function RoommateMatcher() {
   const [currentIndex, setCurrentIndex] = useState(0);
   const [animating, setAnimating] = useState<false | 'left' | 'right'>(false);
-  const [showLikedModal, setShowLikedModal] = useState(false); // Only for mobile
+  const [showLikedModal, setShowLikedModal] = useState(false);
   
   const { likedRoommates, addLikedRoommate } = useStore();
   const navigate = useNavigate();
@@ -68,31 +69,30 @@ export default function RoommateMatcher() {
   const profile = MOCK_ROOMMATES[currentIndex];
   const nextProfile = MOCK_ROOMMATES[currentIndex + 1];
 
-  // Component render danh sách đã thích để dùng chung cho Mobile (Modal) và Desktop (Sidebar)
   const LikedList = () => (
-    <div className="flex-1 overflow-y-auto flex flex-col p-4 space-y-3 bg-neutral-50/50">
+    <div className="flex-1 overflow-y-auto flex flex-col p-5 space-y-4 bg-surface">
       {likedRoommates.length === 0 ? (
-        <div className="flex flex-col items-center justify-center h-full text-neutral-400 space-y-2">
-          <Heart size={32} className="opacity-20" />
-          <p className="text-sm">Chưa có ai trong danh sách.</p>
-          <p className="text-xs">Bấm ♥ để thích bạn cùng phòng phù hợp</p>
+        <div className="flex flex-col items-center justify-center h-full text-text-muted space-y-3">
+          <Heart size={32} className="text-text-muted/40" />
+          <p className="text-body font-medium">Chưa có ai trong danh sách</p>
+          <p className="text-caption text-text-muted text-center max-w-[20ch]">Bấm nút thích để chọn bạn cùng phòng phù hợp</p>
         </div>
       ) : (
         likedRoommates.map(r => (
-          <div key={r.id} className="flex items-center gap-3 p-3 bg-white rounded-xl border border-neutral-100 shadow-sm hover:shadow transition-shadow">
-            <img src={r.image} className="w-12 h-12 rounded-full object-cover border border-neutral-100" alt={r.name} />
+          <div key={r.id} className="flex items-center gap-4 p-4 bg-canvas rounded-md border border-border-subtle shadow-xs hover:shadow-sm transition-shadow">
+            <img src={r.image} className="w-12 h-12 rounded-pill object-cover border border-border-subtle" alt={r.name} />
             <div className="flex-1 text-left overflow-hidden">
-              <h4 className="font-bold text-neutral-900 truncate">{r.name}, {r.age}</h4>
-              <p className="text-xs font-medium text-green-600 flex items-center gap-1">
-                <Sparkles size={10} /> {r.matchScore}% Match
+              <h4 className="text-body font-bold text-text-primary truncate">{r.name}, {r.age}</h4>
+              <p className="text-caption font-semibold text-success flex items-center gap-1">
+                <Sparkles size={12} className="fill-success" /> {r.matchScore}% Match
               </p>
             </div>
             <button 
               onClick={() => navigateToChat(r.id)} 
-              className="w-8 h-8 flex items-center justify-center bg-primary-50 text-primary-600 rounded-full hover:bg-primary-100 transition-colors flex-shrink-0"
+              className="w-10 h-10 flex items-center justify-center bg-primary-soft text-primary rounded-pill hover:bg-primary hover:text-white transition-colors flex-shrink-0 touch-target"
               title="Nhắn tin"
             >
-              <MessageCircle size={16} />
+              <MessageCircle size={18} />
             </button>
           </div>
         ))
@@ -101,142 +101,148 @@ export default function RoommateMatcher() {
   );
 
   return (
-    <div className="flex flex-col lg:flex-row gap-4 lg:gap-6 max-w-6xl mx-auto h-[calc(100vh-9rem)] lg:h-[calc(100vh-8rem)] overflow-hidden">
+    <div className="flex flex-col lg:flex-row gap-6 max-w-6xl mx-auto h-[calc(100vh-90px)] lg:h-[calc(100vh-80px)] overflow-hidden bg-canvas p-4 md:p-6">
       
       {/* Sidebar: Liked Roommates (Desktop Only) */}
-      <div className="hidden lg:flex w-1/3 flex-col bg-white rounded-xl shadow-sm border border-neutral-200 overflow-hidden">
-        <div className="p-5 border-b border-neutral-100 bg-white">
-          <h2 className="text-lg font-bold text-neutral-900 flex items-center gap-2">
-            <Heart size={20} className="text-primary-500" fill="currentColor" />
+      <div className="hidden lg:flex w-1/3 flex-col bg-surface rounded-bento border border-border-subtle overflow-hidden">
+        <div className="p-6 border-b border-border-subtle bg-canvas">
+          <h2 className="text-h3 font-bold text-text-primary flex items-center gap-2">
+            <Heart size={20} className="text-primary fill-primary" />
             Đã thích ({likedRoommates.length})
           </h2>
-          <p className="text-sm text-neutral-500 mt-1">Những người bạn đã chọn ghép phòng.</p>
+          <p className="text-caption text-text-secondary mt-1">Những người bạn đã chọn ghép phòng.</p>
         </div>
         <LikedList />
       </div>
 
       {/* Main Area: Matcher */}
-      <div className="flex-1 flex flex-col relative bg-white lg:bg-transparent rounded-xl lg:rounded-none shadow-sm lg:shadow-none border border-neutral-200 lg:border-none p-4 lg:p-0">
+      <div className="flex-1 flex flex-col relative bg-canvas lg:bg-transparent rounded-bento border border-border-subtle lg:border-none p-6 lg:p-0 justify-center">
         
-        {/* Mobile Header (Hidden on Desktop) */}
-        <div className="flex lg:hidden justify-between items-center mb-4">
-          <div className="text-left">
-            <h2 className="text-xl font-bold text-neutral-900">Roommate Matcher</h2>
-          </div>
+        {/* Mobile Header */}
+        <div className="flex lg:hidden justify-between items-center mb-6">
+          <h2 className="text-h2 font-bold text-text-primary">Gợi ý ở ghép</h2>
           <button 
             onClick={() => setShowLikedModal(true)}
-            className="bg-white shadow-sm border border-neutral-200 text-primary-600 px-3 py-1.5 rounded-lg text-sm font-bold flex items-center gap-1.5 hover:bg-neutral-50 transition-colors"
+            className="bg-surface shadow-xs border border-border-subtle text-primary px-4 py-2 rounded-pill text-caption font-bold flex items-center gap-1.5 hover:bg-surface-alt transition-colors touch-target"
           >
-            <Heart size={16} fill="currentColor" className="text-primary-500" />
+            <Heart size={16} className="fill-primary text-primary" />
             {likedRoommates.length}
           </button>
         </div>
 
         {/* Desktop Header */}
-        <div className="hidden lg:block text-center mb-3">
-          <h2 className="text-2xl font-bold text-neutral-900 mb-1 flex items-center justify-center">
+        <div className="hidden lg:block text-center mb-6">
+          <h2 className="text-display font-bold text-text-primary tracking-tight mb-2">
             AI Roommate Matcher
           </h2>
-          <p className="text-neutral-500 text-sm hidden lg:block">Hệ thống AI sẽ gợi ý những người có chung lối sống và ngân sách với bạn.</p>
+          <p className="text-text-secondary text-body max-w-lg mx-auto">Tìm người ở ghép hoàn hảo dựa trên sự tương thích phong cách sống và ngân sách.</p>
         </div>
 
         {currentIndex >= MOCK_ROOMMATES.length ? (
-          <div className="flex-1 flex flex-col items-center justify-center text-center bg-white rounded-xl lg:shadow-sm lg:border lg:border-neutral-200 p-8">
-            <div className="w-20 h-20 bg-primary-50 rounded-full flex items-center justify-center mb-4 text-primary-500">
-              <Heart size={32} fill="currentColor" />
+          <div className="flex-1 flex flex-col items-center justify-center text-center bg-surface rounded-bento border border-border-subtle p-8 max-w-md mx-auto w-full">
+            <div className="w-16 h-16 bg-primary-soft rounded-pill flex items-center justify-center mb-4 text-primary">
+              <Heart size={32} className="fill-primary" />
             </div>
-            <h2 className="text-xl font-bold text-neutral-900 mb-2">Đã xem hết danh sách!</h2>
-            <p className="text-neutral-500 text-sm max-w-xs mx-auto">
-              Bạn đã thích <span className="font-bold text-primary-600">{likedRoommates.length}</span> người. Hệ thống đang tìm kiếm thêm các ứng viên mới.
+            <h2 className="text-h2 font-bold text-text-primary mb-2">Xem xong gợi ý!</h2>
+            <p className="text-text-secondary text-body max-w-xs mx-auto mb-6">
+              Bạn đã chọn thích <span className="font-bold text-primary">{likedRoommates.length}</span> người. Hệ thống đang liên tục quét các thành viên mới.
             </p>
-            <button 
+            <Button 
               onClick={() => setCurrentIndex(0)} 
-              className="mt-6 px-6 py-2.5 bg-neutral-100 text-neutral-700 rounded-lg font-medium hover:bg-neutral-200 transition-colors mx-auto block"
+              variant="secondary"
+              className="px-6"
             >
               Xem lại từ đầu
-            </button>
+            </Button>
           </div>
         ) : (
           <div className="flex-1 flex flex-col items-center justify-center w-full mx-auto min-h-0">
-            <div className="relative h-[55vh] min-h-[350px] max-h-[500px] aspect-[3/4] shrink-0">
-              {/* Next Card Background */}
+            <div className="relative h-[60vh] min-h-[400px] max-h-[520px] aspect-[3/4] shrink-0">
+              
+              {/* Stack Background indicator */}
               {nextProfile && (
-                <Card className="absolute inset-0 bg-white shadow-sm border border-neutral-200 rounded-2xl scale-95 translate-y-3 opacity-60 z-0">
-                  <div className="w-full h-full bg-neutral-50 rounded-2xl" />
-                </Card>
+                <div className="absolute inset-0 bg-surface border border-border-subtle rounded-bento scale-95 translate-y-4 opacity-50 z-0"></div>
               )}
 
-              {/* Current Active Card */}
-              <Card 
-                className={`absolute inset-0 bg-white shadow-card rounded-2xl overflow-hidden flex flex-col z-10 transition-all duration-300 border border-neutral-100 ${animating === 'left' ? '-translate-x-full -rotate-12 opacity-0' : animating === 'right' ? 'translate-x-full rotate-12 opacity-0' : 'translate-x-0 rotate-0 opacity-100'}`}
-              >
-                <div className="h-[55%] bg-neutral-200 w-full relative">
-                  <img 
-                    src={profile.image} 
-                    alt={profile.name} 
-                    className="w-full h-full object-cover"
-                  />
-                  <div className="absolute top-4 right-4 bg-white/95 backdrop-blur px-2.5 py-1 rounded-md text-xs font-bold text-green-600 flex items-center gap-1 shadow-sm">
-                    <Sparkles size={12} className="text-green-500" /> {profile.matchScore}%
-                  </div>
-                  <div className="absolute bottom-0 left-0 w-full bg-gradient-to-t from-black/70 to-transparent p-4 text-white">
-                    <h3 className="text-xl font-bold">{profile.name}, {profile.age}</h3>
-                    <p className="text-xs opacity-90 mt-0.5">{profile.major}</p>
-                  </div>
-                </div>
-                
-                <div className="p-4 flex-1 flex flex-col overflow-y-auto">
-                  <div className="mb-3">
-                    <h4 className="text-[11px] font-bold text-neutral-400 uppercase tracking-wider mb-1.5">Giới thiệu</h4>
-                    <p className="text-sm text-neutral-700 leading-relaxed line-clamp-3">{profile.bio}</p>
-                  </div>
-                  
-                  <div className="mb-3">
-                    <h4 className="text-[11px] font-bold text-neutral-400 uppercase tracking-wider mb-1.5">Ngân sách chia sẻ</h4>
-                    <p className="text-sm font-medium text-primary-700 bg-primary-50 inline-block px-2.5 py-1 rounded-md border border-primary-100/50">{profile.budget}</p>
-                  </div>
-
-                  <div className="mt-auto">
-                    <div className="flex flex-wrap gap-1.5">
-                      {profile.tags.map(tag => (
-                        <span key={tag} className="px-2 py-1 bg-neutral-100 text-[11px] rounded-md text-neutral-600 font-medium border border-neutral-200/60">
-                          {tag}
-                        </span>
-                      ))}
+              {/* Current Card */}
+              <AnimatePresence mode="popLayout">
+                <motion.div
+                  key={profile.id}
+                  className={`absolute inset-0 bg-canvas shadow-xs rounded-bento overflow-hidden flex flex-col z-10 border border-border-subtle transition-all duration-300 ${animating === 'left' ? '-translate-x-full -rotate-12 opacity-0' : animating === 'right' ? 'translate-x-full rotate-12 opacity-0' : 'translate-x-0 rotate-0 opacity-100'}`}
+                >
+                  {/* Photo Block (Un-darkened, clear photo) */}
+                  <div className="h-[50%] bg-surface-alt w-full relative">
+                    <img 
+                      src={profile.image} 
+                      alt={profile.name} 
+                      className="w-full h-full object-cover"
+                    />
+                    <div className="absolute top-4 right-4 bg-canvas/95 border border-border-subtle px-3 py-1.5 rounded-pill text-caption font-bold text-success flex items-center gap-1 shadow-xs">
+                      <Sparkles size={14} className="fill-success text-success" /> {profile.matchScore}% Match
                     </div>
                   </div>
-                </div>
-              </Card>
+                  
+                  {/* Content block below photo (Anti-gradient text overlay slop) */}
+                  <div className="p-6 flex-1 flex flex-col justify-between bg-canvas">
+                    <div>
+                      <div className="flex justify-between items-baseline mb-2">
+                        <h3 className="text-h2 font-bold text-text-primary">{profile.name}, {profile.age}</h3>
+                        <span className="text-caption text-text-muted font-medium">{profile.major}</span>
+                      </div>
+                      <p className="text-body text-text-secondary leading-relaxed line-clamp-3 mb-4">{profile.bio}</p>
+                    </div>
+
+                    <div className="space-y-4">
+                      {/* Budget Badge */}
+                      <div className="flex items-center justify-between">
+                        <span className="text-caption text-text-muted font-bold uppercase tracking-wider">Ngân sách trọ</span>
+                        <span className="text-caption font-bold text-primary bg-primary-soft border border-primary-soft px-3 py-1 rounded-pill">{profile.budget}</span>
+                      </div>
+                      
+                      {/* Tags */}
+                      <div className="flex flex-wrap gap-2 pt-2 border-t border-border-subtle">
+                        {profile.tags.map(tag => (
+                          <span key={tag} className="px-2.5 py-1 bg-surface-alt text-caption rounded-pill text-text-secondary font-semibold border border-border-subtle">
+                            {tag}
+                          </span>
+                        ))}
+                      </div>
+                    </div>
+                  </div>
+                </motion.div>
+              </AnimatePresence>
             </div>
             
-            {/* Action Buttons */}
-            <div className="flex justify-center gap-6 mt-4 shrink-0 pb-4">
+            {/* Control buttons */}
+            <div className="flex justify-center gap-4 mt-6 shrink-0 pb-2">
               <button 
                 onClick={() => handleAction('left')}
                 disabled={!!animating}
-                className="w-14 h-14 rounded-full bg-white shadow-sm hover:shadow-md flex items-center justify-center text-red-500 hover:bg-red-50 hover:text-red-600 transition-all border border-neutral-200 disabled:opacity-50"
+                className="w-14 h-14 rounded-pill bg-error-soft text-error hover:bg-error hover:text-white flex items-center justify-center transition-all border border-error-soft hover:border-error disabled:opacity-50 touch-target shadow-xs"
+                title="Bỏ qua"
               >
                 <X size={24} strokeWidth={2.5} />
               </button>
               <button 
                 onClick={() => handleAction('right')}
                 disabled={!!animating}
-                className="w-14 h-14 rounded-full bg-white shadow-sm hover:shadow-md flex items-center justify-center text-green-500 hover:bg-green-50 hover:text-green-600 transition-all border border-neutral-200 disabled:opacity-50"
+                className="w-14 h-14 rounded-pill bg-success-soft text-success hover:bg-success hover:text-white flex items-center justify-center transition-all border border-success-soft hover:border-success disabled:opacity-50 touch-target shadow-xs"
+                title="Yêu thích"
               >
-                <Heart size={24} strokeWidth={2.5} fill="currentColor" />
+                <Heart size={24} strokeWidth={2.5} className="fill-current" />
               </button>
             </div>
           </div>
         )}
       </div>
 
-      {/* Liked Modal (Mobile Only) */}
+      {/* Liked Modal (Mobile) */}
       {showLikedModal && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm p-4 lg:hidden">
-          <div className="bg-white rounded-xl w-full max-w-md h-[80vh] flex flex-col shadow-lg overflow-hidden">
-            <div className="p-4 border-b border-neutral-100 flex justify-between items-center">
-              <h3 className="font-bold text-lg text-neutral-900">Đã thích ({likedRoommates.length})</h3>
-              <button onClick={() => setShowLikedModal(false)} className="text-neutral-400 hover:text-neutral-700">
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-text-primary/45 p-4 lg:hidden">
+          <div className="bg-canvas border border-border-subtle rounded-bento w-full max-w-md h-[80vh] flex flex-col shadow-lg overflow-hidden">
+            <div className="p-4 border-b border-border-subtle flex justify-between items-center bg-canvas">
+              <h3 className="font-bold text-h3 text-text-primary">Đã thích ({likedRoommates.length})</h3>
+              <button onClick={() => setShowLikedModal(false)} className="text-text-muted hover:text-text-primary touch-target flex items-center justify-center">
                 <X size={24} />
               </button>
             </div>

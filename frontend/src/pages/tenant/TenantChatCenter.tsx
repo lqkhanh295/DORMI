@@ -49,14 +49,14 @@ export default function TenantChatCenter() {
   };
 
   return (
-    <div className="flex h-[calc(100vh-8rem)] bg-white rounded-xl shadow-card overflow-hidden border border-neutral-200">
+    <div className="flex h-[calc(100vh-8rem)] bg-white rounded-md shadow-card overflow-hidden border border-border-subtle">
       {/* Sidebar: Conversation List */}
-      <div className="hidden md:flex w-1/3 border-r border-gray-200 flex-col bg-gray-50">
-        <div className="p-4 border-b border-gray-200 bg-white">
+      <div className="hidden md:flex w-1/3 border-r border-border-subtle flex-col bg-surface">
+        <div className="p-4 border-b border-border-subtle bg-white">
           <input 
             type="text" 
             placeholder="Tìm kiếm tin nhắn..." 
-            className="w-full bg-neutral-100 rounded-lg px-4 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary-500"
+            className="w-full bg-surface-alt rounded-md px-4 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary-500"
           />
         </div>
         <div className="flex-1 overflow-y-auto">
@@ -73,24 +73,24 @@ export default function TenantChatCenter() {
               <div 
                 key={contact.id} 
                 onClick={() => setSelectedContactId(contact.id)}
-                className={`p-4 border-b border-neutral-100 cursor-pointer transition-micro flex gap-3 ${isSelected ? 'bg-primary-50/80 border-l-4 border-l-primary-500' : 'hover:bg-neutral-50'}`}
+                className={`p-4 border-b border-border-subtle cursor-pointer transition-micro flex gap-3 ${isSelected ? 'bg-primary-soft/80 border-l-4 border-l-primary-500' : 'hover:bg-surface'}`}
               >
                 {contact.avatar ? (
-                  <img src={contact.avatar} alt={contact.name} className="w-11 h-11 rounded-full object-cover shadow-sm" />
+                  <img src={contact.avatar} alt={contact.name} className="w-11 h-11 rounded-pill object-cover shadow-sm" />
                 ) : (
-                  <div className={`w-11 h-11 rounded-full flex-shrink-0 flex items-center justify-center font-bold shadow-sm ${contact.role === 'Landlord' ? 'bg-orange-100 text-orange-700' : 'bg-primary-100 text-primary-700'}`}>
+                  <div className={`w-11 h-11 rounded-pill flex-shrink-0 flex items-center justify-center font-bold shadow-sm ${contact.role === 'Landlord' ? 'bg-orange-100 text-orange-700' : 'bg-primary-100 text-primary-700'}`}>
                     {contact.name.charAt(0)}
                   </div>
                 )}
                 
                 <div className="flex-1 overflow-hidden">
                   <div className="flex justify-between items-baseline mb-1">
-                    <h4 className="font-bold text-gray-900 truncate">{contact.name}</h4>
-                    <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full ${contact.role === 'Landlord' ? 'bg-orange-100 text-orange-700' : 'bg-pink-100 text-pink-700'}`}>
+                    <h4 className="font-bold text-text-primary truncate">{contact.name}</h4>
+                    <span className={`text-[10px] font-bold px-2 py-0.5 rounded-pill ${contact.role === 'Landlord' ? 'bg-orange-100 text-orange-700' : 'bg-pink-100 text-pink-700'}`}>
                       {contact.role === 'Landlord' ? 'Chủ nhà' : 'Bạn ở ghép'}
                     </span>
                   </div>
-                  <p className={`text-sm truncate ${isSelected ? 'font-medium text-primary-800' : 'text-neutral-500'}`}>
+                  <p className={`text-sm truncate ${isSelected ? 'font-medium text-primary-800' : 'text-text-secondary'}`}>
                     {lastMessage}
                   </p>
                 </div>
@@ -105,24 +105,24 @@ export default function TenantChatCenter() {
         {/* Chat Header */}
         {selectedContact ? (
           <>
-            <div className="h-16 border-b border-gray-200 px-6 flex items-center justify-between">
+            <div className="h-16 border-b border-border-subtle px-6 flex items-center justify-between">
               <div className="flex items-center gap-3">
                 {selectedContact.avatar ? (
-                  <img src={selectedContact.avatar} alt={selectedContact.name} className="w-10 h-10 rounded-full object-cover shadow-sm" />
+                  <img src={selectedContact.avatar} alt={selectedContact.name} className="w-10 h-10 rounded-pill object-cover shadow-sm" />
                 ) : (
-                  <div className={`w-10 h-10 rounded-full flex items-center justify-center font-bold shadow-sm ${selectedContact.role === 'Landlord' ? 'bg-orange-100 text-orange-700' : 'bg-primary-100 text-primary-700'}`}>
+                  <div className={`w-10 h-10 rounded-pill flex items-center justify-center font-bold shadow-sm ${selectedContact.role === 'Landlord' ? 'bg-orange-100 text-orange-700' : 'bg-primary-100 text-primary-700'}`}>
                     {selectedContact.name.charAt(0)}
                   </div>
                 )}
                 <div>
-                  <h3 className="font-bold text-gray-900 flex items-center gap-2">
+                  <h3 className="font-bold text-text-primary flex items-center gap-2">
                     {selectedContact.name}
-                    <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full ${selectedContact.role === 'Landlord' ? 'bg-orange-100 text-orange-700' : 'bg-pink-100 text-pink-700'}`}>
+                    <span className={`text-[10px] font-bold px-2 py-0.5 rounded-pill ${selectedContact.role === 'Landlord' ? 'bg-orange-100 text-orange-700' : 'bg-pink-100 text-pink-700'}`}>
                       {selectedContact.role === 'Landlord' ? 'Chủ nhà' : 'Bạn ở ghép'}
                     </span>
                   </h3>
                   <p className="text-xs text-green-600 font-medium flex items-center gap-1">
-                    <span className="w-2 h-2 rounded-full bg-green-500 block"></span> {selectedContact.online ? 'Trực tuyến' : 'Ngoại tuyến'}
+                    <span className="w-2 h-2 rounded-pill bg-green-500 block"></span> {selectedContact.online ? 'Trực tuyến' : 'Ngoại tuyến'}
                   </p>
                 </div>
               </div>
@@ -132,14 +132,14 @@ export default function TenantChatCenter() {
             </div>
 
             {/* Messages */}
-            <div className="flex-1 p-4 overflow-y-auto bg-neutral-50/50 flex flex-col gap-3">
+            <div className="flex-1 p-4 overflow-y-auto bg-surface/50 flex flex-col gap-3">
               <div className="text-center">
-                <span className="text-[11px] text-neutral-400 bg-neutral-100 px-2.5 py-0.5 rounded-full font-medium">Hôm nay</span>
+                <span className="text-[11px] text-text-muted bg-surface-alt px-2.5 py-0.5 rounded-pill font-medium">Hôm nay</span>
               </div>
               
               {chatMessages.length === 0 && (
-                <div className="flex-1 flex flex-col items-center justify-center text-neutral-400">
-                  <div className="w-16 h-16 bg-primary-50 rounded-full flex items-center justify-center text-primary-500 mb-4">
+                <div className="flex-1 flex flex-col items-center justify-center text-text-muted">
+                  <div className="w-16 h-16 bg-primary-soft rounded-pill flex items-center justify-center text-primary-500 mb-4">
                     <Hand size={32} />
                   </div>
                   <p>Hãy gửi lời chào đến {selectedContact.name}!</p>
@@ -153,16 +153,16 @@ export default function TenantChatCenter() {
                     <div className={`flex gap-2 max-w-[70%] ${isMe ? 'flex-row-reverse' : 'flex-row'}`}>
                       {!isMe && (
                         selectedContact.avatar ? (
-                          <img src={selectedContact.avatar} alt="avatar" className="w-8 h-8 rounded-full object-cover mt-auto" />
+                          <img src={selectedContact.avatar} alt="avatar" className="w-8 h-8 rounded-pill object-cover mt-auto" />
                         ) : (
-                          <div className={`w-8 h-8 rounded-full flex-shrink-0 mt-auto flex items-center justify-center font-bold text-xs ${selectedContact.role === 'Landlord' ? 'bg-orange-100 text-orange-700' : 'bg-primary-100 text-primary-700'}`}>
+                          <div className={`w-8 h-8 rounded-pill flex-shrink-0 mt-auto flex items-center justify-center font-bold text-xs ${selectedContact.role === 'Landlord' ? 'bg-orange-100 text-orange-700' : 'bg-primary-100 text-primary-700'}`}>
                             {selectedContact.name.charAt(0)}
                           </div>
                         )
                       )}
-                      <div className={`${isMe ? 'bg-primary-600 text-white rounded-xl rounded-tr-sm' : 'bg-white border border-neutral-100 text-neutral-900 rounded-xl rounded-bl-sm'} p-2.5 shadow-sm`}>
+                      <div className={`${isMe ? 'bg-primary text-white rounded-md rounded-tr-sm' : 'bg-white border border-border-subtle text-text-primary rounded-md rounded-bl-sm'} p-2.5 shadow-sm`}>
                         <p className="text-[13px] whitespace-pre-wrap">{msg.text}</p>
-                        <span className={`text-[10px] block mt-1 ${isMe ? 'text-primary-200 text-right' : 'text-neutral-400'}`}>
+                        <span className={`text-[10px] block mt-1 ${isMe ? 'text-primary-200 text-right' : 'text-text-muted'}`}>
                           {new Date(msg.timestamp).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})}
                         </span>
                       </div>
@@ -174,12 +174,12 @@ export default function TenantChatCenter() {
             </div>
 
             {/* Quick Actions */}
-            <div className="px-4 py-2 flex gap-2 overflow-x-auto no-scrollbar border-t border-gray-100 bg-white">
+            <div className="px-4 py-2 flex gap-2 overflow-x-auto no-scrollbar border-t border-border-subtle bg-white">
               {['Phòng này hiện còn avai không?', 'Giá căn này có thể hỗ trợ giảm không?', 'Có full nt không?'].map((msg, i) => (
                 <button 
                   key={i}
                   onClick={() => sendMessage(selectedContact.id, msg)}
-                  className="whitespace-nowrap px-3 py-1.5 bg-primary-50 text-primary-700 text-xs font-medium rounded-full hover:bg-primary-100 transition-colors border border-primary-100"
+                  className="whitespace-nowrap px-3 py-1.5 bg-primary-soft text-primary-700 text-xs font-medium rounded-pill hover:bg-primary-100 transition-colors border border-primary-100"
                 >
                   {msg}
                 </button>
@@ -187,25 +187,25 @@ export default function TenantChatCenter() {
             </div>
 
             {/* Input Area */}
-            <div className="p-4 border-t border-gray-200 bg-white">
-              <div className="flex items-end gap-2 bg-neutral-50 rounded-xl border border-neutral-200 p-2 focus-within:ring-2 focus-within:ring-primary-500 focus-within:border-transparent transition-micro">
-                <button className="p-2 text-neutral-400 hover:text-primary-600 rounded-full transition-colors flex-shrink-0">
+            <div className="p-4 border-t border-border-subtle bg-white">
+              <div className="flex items-end gap-2 bg-surface rounded-md border border-border-subtle p-2 focus-within:ring-2 focus-within:ring-primary-500 focus-within:border-transparent transition-micro">
+                <button className="p-2 text-text-muted hover:text-primary rounded-pill transition-colors flex-shrink-0">
                   <Paperclip size={20} />
                 </button>
                 <textarea 
                   placeholder="Nhập tin nhắn..." 
-                  className="flex-1 max-h-32 bg-transparent resize-none outline-none py-2 text-sm text-gray-900"
+                  className="flex-1 max-h-32 bg-transparent resize-none outline-none py-2 text-sm text-text-primary"
                   rows={1}
                   value={inputText}
                   onChange={e => setInputText(e.target.value)}
                   onKeyDown={handleKeyDown}
                 ></textarea>
-                <Button size="sm" className="mb-0.5 rounded-lg px-4" onClick={handleSend}>Gửi</Button>
+                <Button size="sm" className="mb-0.5 rounded-md px-4" onClick={handleSend}>Gửi</Button>
               </div>
             </div>
           </>
         ) : (
-          <div className="flex-1 flex items-center justify-center text-gray-400">
+          <div className="flex-1 flex items-center justify-center text-text-muted">
             Chọn một cuộc hội thoại để bắt đầu
           </div>
         )}

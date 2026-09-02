@@ -50,8 +50,8 @@ export default function RoomManagement() {
     <div className="space-y-6 relative">
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-2xl font-bold text-gray-900">Phòng của tôi</h1>
-          <p className="text-gray-500">Quản lý các bài đăng, giá cả và tình trạng phòng.</p>
+          <h1 className="text-2xl font-bold text-text-primary">Phòng của tôi</h1>
+          <p className="text-text-secondary">Quản lý các bài đăng, giá cả và tình trạng phòng.</p>
         </div>
         <Button onClick={() => setIsAdding(true)}>+ Thêm phòng mới</Button>
       </div>
@@ -59,31 +59,31 @@ export default function RoomManagement() {
       <div className="grid grid-cols-1 gap-6">
         {myRooms.map(room => (
           <Card key={room.id} className="flex flex-col md:flex-row p-4 gap-6 items-center">
-            <div className="w-full h-48 md:w-48 md:h-32 bg-gray-200 rounded-lg overflow-hidden shrink-0">
+            <div className="w-full h-48 md:w-48 md:h-32 bg-gray-200 rounded-md overflow-hidden shrink-0">
               <img src={room.image} className="w-full h-full object-cover" alt="Room" />
             </div>
             <div className="flex-1 space-y-2">
               <div className="flex items-start justify-between">
-                <h3 className="font-bold text-lg text-gray-900">{room.title}</h3>
-                <span className={`px-2 py-1 text-xs font-bold rounded ${room.status === 'Available' ? 'bg-green-100 text-green-700' : 'bg-gray-100 text-gray-700'}`}>
+                <h3 className="font-bold text-lg text-text-primary">{room.title}</h3>
+                <span className={`px-2 py-1 text-xs font-bold rounded ${room.status === 'Available' ? 'bg-green-100 text-green-700' : 'bg-surface-alt text-text-secondary'}`}>
                   {room.status === 'Available' ? 'Còn trống' : 'Đã thuê'}
                 </span>
               </div>
-              <p className="text-gray-500 text-sm">{room.address}</p>
+              <p className="text-text-secondary text-sm">{room.address}</p>
               <div className="flex gap-4 text-sm">
-                <p><span className="font-medium text-gray-900">Giá:</span> {room.price.toLocaleString('vi-VN')}₫/tháng</p>
-                <p><span className="font-medium text-gray-900">Lượt xem:</span> {room.views}</p>
-                <p><span className="font-medium text-gray-900">Liên hệ:</span> {room.leads}</p>
+                <p><span className="font-medium text-text-primary">Giá:</span> {room.price.toLocaleString('vi-VN')}₫/tháng</p>
+                <p><span className="font-medium text-text-primary">Lượt xem:</span> {room.views}</p>
+                <p><span className="font-medium text-text-primary">Liên hệ:</span> {room.leads}</p>
               </div>
             </div>
             <div className="flex md:flex-col gap-2 shrink-0 w-full md:w-auto mt-4 md:mt-0">
               <Button variant="secondary" size="sm" className="w-full" onClick={() => setEditingRoom(room)}>Sửa</Button>
-              <Button variant="ghost" size="sm" className="w-full text-blue-600">Quảng cáo</Button>
+              <Button variant="ghost" size="sm" className="w-full text-primary">Quảng cáo</Button>
             </div>
           </Card>
         ))}
         {myRooms.length === 0 && (
-          <div className="py-12 text-center text-gray-500 bg-white rounded-xl border border-dashed border-gray-300">
+          <div className="py-12 text-center text-text-secondary bg-white rounded-md border border-dashed border-border-subtle">
             Bạn chưa đăng phòng nào.
           </div>
         )}
@@ -96,29 +96,29 @@ export default function RoomManagement() {
             <h2 className="text-xl font-bold mb-4">Chỉnh sửa phòng</h2>
             <form onSubmit={handleSaveEdit} className="space-y-4">
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Tiêu đề</label>
+                <label className="block text-sm font-medium text-text-secondary mb-1">Tiêu đề</label>
                 <input 
                   type="text" 
                   value={editingRoom.title}
                   onChange={e => setEditingRoom({...editingRoom, title: e.target.value})}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500"
+                  className="w-full px-3 py-2 border border-border-subtle rounded-md focus:ring-blue-500 focus:border-blue-500"
                 />
               </div>
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Giá (VNĐ)</label>
+                <label className="block text-sm font-medium text-text-secondary mb-1">Giá (VNĐ)</label>
                 <input 
                   type="number" 
                   value={editingRoom.price}
                   onChange={e => setEditingRoom({...editingRoom, price: Number(e.target.value)})}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500"
+                  className="w-full px-3 py-2 border border-border-subtle rounded-md focus:ring-blue-500 focus:border-blue-500"
                 />
               </div>
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Trạng thái</label>
+                <label className="block text-sm font-medium text-text-secondary mb-1">Trạng thái</label>
                 <select 
                   value={editingRoom.status}
                   onChange={e => setEditingRoom({...editingRoom, status: e.target.value as 'Available' | 'Rented'})}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500"
+                  className="w-full px-3 py-2 border border-border-subtle rounded-md focus:ring-blue-500 focus:border-blue-500"
                 >
                   <option value="Available">Còn trống</option>
                   <option value="Rented">Đã thuê</option>
@@ -140,45 +140,45 @@ export default function RoomManagement() {
             <h2 className="text-xl font-bold mb-4">Thêm phòng mới</h2>
             <form onSubmit={handleAddNew} className="space-y-4">
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Tiêu đề</label>
+                <label className="block text-sm font-medium text-text-secondary mb-1">Tiêu đề</label>
                 <input 
                   type="text" 
                   required
                   value={newRoom.title}
                   onChange={e => setNewRoom({...newRoom, title: e.target.value})}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500"
+                  className="w-full px-3 py-2 border border-border-subtle rounded-md focus:ring-blue-500 focus:border-blue-500"
                   placeholder="VD: Căn hộ Studio Quận 1"
                 />
               </div>
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Địa chỉ</label>
+                <label className="block text-sm font-medium text-text-secondary mb-1">Địa chỉ</label>
                 <input 
                   type="text" 
                   required
                   value={newRoom.address}
                   onChange={e => setNewRoom({...newRoom, address: e.target.value})}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500"
+                  className="w-full px-3 py-2 border border-border-subtle rounded-md focus:ring-blue-500 focus:border-blue-500"
                   placeholder="VD: 123 Nguyễn Trãi, Q1"
                 />
               </div>
               <div className="grid grid-cols-2 gap-4">
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">Giá (VNĐ)</label>
+                  <label className="block text-sm font-medium text-text-secondary mb-1">Giá (VNĐ)</label>
                   <input 
                     type="number" 
                     required
                     value={newRoom.price || ''}
                     onChange={e => setNewRoom({...newRoom, price: Number(e.target.value)})}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500"
+                    className="w-full px-3 py-2 border border-border-subtle rounded-md focus:ring-blue-500 focus:border-blue-500"
                     placeholder="5000000"
                   />
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">Loại phòng</label>
+                  <label className="block text-sm font-medium text-text-secondary mb-1">Loại phòng</label>
                   <select 
                     value={newRoom.type}
                     onChange={e => setNewRoom({...newRoom, type: e.target.value})}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500"
+                    className="w-full px-3 py-2 border border-border-subtle rounded-md focus:ring-blue-500 focus:border-blue-500"
                   >
                     <option value="Studio">Studio</option>
                     <option value="1 Bedroom">1 Phòng ngủ</option>

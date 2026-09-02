@@ -36,22 +36,22 @@ export function LandlordDashboard() {
 
       <div className="grid gap-6 md:grid-cols-3 mb-6">
         <BentoCard className="bg-white p-8">
-          <div className="flex h-12 w-12 items-center justify-center rounded-full bg-[#0071E3]/10 mb-4">
-             <House className="w-6 h-6 text-[#0071E3]" weight="fill" />
+          <div className="flex h-12 w-12 items-center justify-center rounded-pill bg-[#0071E3]/10 mb-4">
+             <House className="w-6 h-6 text-[#0071E3]"  />
           </div>
           <p className="text-[15px] font-medium text-[#6e6e73]">Tổng số phòng</p>
           <p className="text-[40px] font-bold text-[#1d1d1f]">5</p>
         </BentoCard>
         <BentoCard className="bg-white p-8">
-          <div className="flex h-12 w-12 items-center justify-center rounded-full bg-[#34c759]/10 mb-4">
-             <ChatText className="w-6 h-6 text-[#34c759]" weight="fill" />
+          <div className="flex h-12 w-12 items-center justify-center rounded-pill bg-[#34c759]/10 mb-4">
+             <ChatText className="w-6 h-6 text-[#34c759]"  />
           </div>
           <p className="text-[15px] font-medium text-[#6e6e73]">Lượt xem tuần này</p>
           <p className="text-[40px] font-bold text-[#1d1d1f]">128</p>
         </BentoCard>
         <BentoCard className="bg-white p-8">
-          <div className="flex h-12 w-12 items-center justify-center rounded-full bg-[#ff9500]/10 mb-4">
-             <Calendar className="w-6 h-6 text-[#ff9500]" weight="fill" />
+          <div className="flex h-12 w-12 items-center justify-center rounded-pill bg-[#ff9500]/10 mb-4">
+             <Calendar className="w-6 h-6 text-[#ff9500]"  />
           </div>
           <p className="text-[15px] font-medium text-[#6e6e73]">Lịch hẹn cần duyệt</p>
           <p className="text-[40px] font-bold text-[#1d1d1f]">3</p>
@@ -66,7 +66,7 @@ export function LandlordKYC() {
     <div className="max-w-[600px] mx-auto">
       <h1 className="text-[34px] font-bold text-[#1d1d1f] mb-8">Xác thực danh tính.</h1>
       <BentoCard className="bg-white text-center flex flex-col items-center">
-        <ShieldCheck className="w-16 h-16 text-[#34c759] mb-4" weight="fill" />
+        <ShieldCheck className="w-16 h-16 text-[#34c759] mb-4"  />
         <h2 className="text-[21px] font-bold text-[#1d1d1f] mb-2">Tăng độ uy tín</h2>
         <p className="text-[15px] text-[#6e6e73] mb-8">Tải lên CMND/CCCD để mở khóa tính năng đăng bài không giới hạn.</p>
         
@@ -143,7 +143,7 @@ export function MyRooms() {
                 <p className="text-[15px] text-[#6e6e73] mt-1">{room.price}/tháng</p>
              </div>
              <div className="flex items-center gap-4">
-                <span className={`px-3 py-1 rounded-full text-[12px] font-semibold ${room.status === 'Đang hiển thị' ? 'bg-[#34c759]/10 text-[#34c759]' : 'bg-[#ff9500]/10 text-[#ff9500]'}`}>
+                <span className={`px-3 py-1 rounded-pill text-[12px] font-semibold ${room.status === 'Đang hiển thị' ? 'bg-[#34c759]/10 text-[#34c759]' : 'bg-[#ff9500]/10 text-[#ff9500]'}`}>
                   {room.status}
                 </span>
                 <span className="text-[15px] text-[#6e6e73] min-w-[100px] text-right">{room.views} lượt xem</span>
@@ -180,8 +180,8 @@ export function LandlordAppointments() {
 export function LandlordMessages() {
   return (
     <div className="h-[70vh] flex flex-col items-center justify-center text-center">
-      <div className="w-20 h-20 rounded-full bg-[#e8e8ed] flex items-center justify-center text-[#86868b] mb-6">
-        <ChatText className="w-10 h-10" weight="fill" />
+      <div className="w-20 h-20 rounded-pill bg-[#e8e8ed] flex items-center justify-center text-[#86868b] mb-6">
+        <ChatText className="w-10 h-10"  />
       </div>
       <h1 className="text-[28px] font-bold text-[#1d1d1f] mb-2">Chưa có tin nhắn nào.</h1>
       <p className="text-[17px] text-[#6e6e73]">Danh sách hội thoại sẽ hiển thị ở đây khi có khách liên hệ.</p>
