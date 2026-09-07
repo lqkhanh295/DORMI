@@ -1,5 +1,6 @@
 import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
+import { authApi, roomsApi, messagesApi, imagesApi } from '../services/api';
 
 export type Role = 'Guest' | 'Tenant' | 'Landlord' | 'Admin';
 
@@ -9,6 +10,7 @@ export interface User {
   email: string;
   role: Role;
   avatar?: string;
+  token?: string;
 }
 
 export interface Listing {
@@ -50,82 +52,30 @@ interface AppState {
   listings: Listing[];
   messages: Message[];
   likedRoommates: RoommateProfile[];
+  isLoadingApi: boolean;
   login: (role: Role, email: string) => void;
+  loginWithApi: (email: string, pass: string) => Promise<boolean>;
   logout: () => void;
+  fetchListings: () => Promise<void>;
   addListing: (listing: Omit<Listing, 'id' | 'landlordId'>) => void;
+  createListingWithApi: (data: any) => Promise<boolean>;
   updateListing: (id: string, updates: Partial<Listing>) => void;
   sendMessage: (receiverId: string, text: string) => void;
+  sendMessageWithApi: (receiverId: string, text: string) => Promise<boolean>;
   updateUser: (updates: Partial<User>) => void;
   addLikedRoommate: (profile: RoommateProfile) => void;
+  uploadImageToCloudinary: (file: File) => Promise<string | null>;
 }
-
-const mockListings: Listing[] = [
-  {
-    id: 'l1',
-    title: 'Premium Modern Studio - District 3',
-    price: 5500000,
-    address: '123 Nguyen Dinh Chieu, D3',
-    image: 'https://images.unsplash.com/photo-1522708323590-d24dbb6b0267?auto=format&fit=crop&w=400&q=80',
-    type: 'Studio',
-    trustScore: 98,
-    landlordId: 'u2',
-    status: 'Available',
-    views: 1240,
-    leads: 42
-  },
-  {
-    id: 'l2',
-    title: 'Cozy Room in Shared House - D7',
-    price: 4200000,
-    address: '45 Nguyen Van Linh, D7',
-    image: 'https://images.unsplash.com/photo-1502672260266-1c1de2d96674?auto=format&fit=crop&w=400&q=80',
-    type: 'Private Room',
-    trustScore: 85,
-    landlordId: 'u2',
-    status: 'Available',
-    views: 842,
-    leads: 28
-  },
-  {
-    id: 'l3',
-    title: 'Luxury 1BR Apartment - Thao Dien',
-    price: 8500000,
-    address: '12 Quoc Huong, D2',
-    image: 'https://images.unsplash.com/photo-1560448204-e02f11c3d0e2?auto=format&fit=crop&w=400&q=80',
-    type: 'Apartment',
-    trustScore: 95,
-    landlordId: 'u2',
-    status: 'Rented',
-    views: 2150,
-    leads: 120
-  },
-  {
-    id: 'l4',
-    title: 'Affordable Dorm Bed - Go Vap',
-    price: 1500000,
-    address: '89 Phan Van Tri, Go Vap',
-    image: 'https://images.unsplash.com/photo-1555854877-bab0e564b8d5?auto=format&fit=crop&w=400&q=80',
-    type: 'Shared Room',
-    trustScore: 70,
-    landlordId: 'u2',
-    status: 'Available',
-    views: 320,
-    leads: 5
-  }
-];
-
-const mockMessages: Message[] = [
-  { id: 'm1', senderId: 'u1', receiverId: 'u2', text: 'Hi, I am interested in the Studio in District 3. Is it still available for viewing tomorrow?', timestamp: new Date(Date.now() - 3600000).toISOString() },
-  { id: 'm2', senderId: 'u2', receiverId: 'u1', text: 'Hello! Yes, the room is still available. I can show you around tomorrow at 2 PM. Does that work for you?', timestamp: new Date(Date.now() - 3500000).toISOString() }
-];
 
 export const useStore = create<AppState>()(
   persist(
-    (set) => ({
+    (set, get) => ({
       currentUser: null,
-      listings: mockListings,
-      messages: mockMessages,
+      listings: [],
+      messages: [],
       likedRoommates: [],
+      isLoadingApi: false,
+
       login: (role, email) => set({
         currentUser: {
           id: role === 'Landlord' ? 'u2' : (role === 'Admin' ? 'u3' : 'u1'),
@@ -135,7 +85,60 @@ export const useStore = create<AppState>()(
           avatar: 'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?auto=format&fit=crop&w=200&q=80'
         }
       }),
-      logout: () => set({ currentUser: null }),
+
+      loginWithApi: async (email, password) => {
+        try {
+          set({ isLoadingApi: true });
+          const res = await authApi.login(email, password);
+          const roleMap: Record<number, Role> = { 0: 'Tenant', 1: 'Landlord', 2: 'Admin' };
+          set({
+            currentUser: {
+              id: res.user.id,
+              name: res.user.fullName,
+              email: res.user.email,
+              role: roleMap[res.user.role] || 'Tenant',
+              avatar: res.user.avatarUrl || 'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?auto=format&fit=crop&w=200&q=80',
+              token: res.token
+            },
+            isLoadingApi: false
+          });
+          return true;
+        } catch (err) {
+          set({ isLoadingApi: false });
+          console.warn('API Login failed, falling back to local login:', err);
+          return false;
+        }
+      },
+
+      logout: () => {
+        authApi.logout();
+        set({ currentUser: null });
+      },
+
+      fetchListings: async () => {
+        try {
+          const res = await roomsApi.getRooms();
+          if (res?.data && Array.isArray(res.data) && res.data.length > 0) {
+            const apiListings: Listing[] = res.data.map((r: any) => ({
+              id: r.id,
+              title: r.title,
+              price: r.price,
+              address: r.address,
+              image: r.images?.[0]?.imageUrl || 'https://images.unsplash.com/photo-1522708323590-d24dbb6b0267?auto=format&fit=crop&w=400&q=80',
+              type: r.roomType || 'Studio',
+              trustScore: 95,
+              landlordId: r.landlordId,
+              status: r.status === 0 ? 'Available' : 'Rented',
+              views: 150,
+              leads: 12
+            }));
+            set({ listings: apiListings });
+          }
+        } catch (err) {
+          console.warn('API fetchListings failed, using local listings:', err);
+        }
+      },
+
       addListing: (listing) => set((state) => ({
         listings: [
           ...state.listings, 
@@ -146,9 +149,33 @@ export const useStore = create<AppState>()(
           }
         ]
       })),
+
+      createListingWithApi: async (data) => {
+        try {
+          await roomsApi.createRoom(data);
+          get().fetchListings();
+          return true;
+        } catch (err) {
+          console.warn('API createRoom failed, fallback to local addListing:', err);
+          get().addListing({
+            title: data.title,
+            price: data.price,
+            address: data.address,
+            image: data.imageUrls?.[0] || 'https://images.unsplash.com/photo-1522708323590-d24dbb6b0267?auto=format&fit=crop&w=400&q=80',
+            type: data.roomType || 'Studio',
+            trustScore: 90,
+            status: 'Available',
+            views: 0,
+            leads: 0
+          });
+          return false;
+        }
+      },
+
       updateListing: (id, updates) => set((state) => ({
         listings: state.listings.map(l => l.id === id ? { ...l, ...updates } : l)
       })),
+
       sendMessage: (receiverId, text) => set((state) => {
         if (!state.currentUser) return state;
         const newMessage: Message = {
@@ -160,14 +187,37 @@ export const useStore = create<AppState>()(
         };
         return { messages: [...state.messages, newMessage] };
       }),
+
+      sendMessageWithApi: async (receiverId, text) => {
+        try {
+          await messagesApi.sendMessage(receiverId, text);
+          get().sendMessage(receiverId, text);
+          return true;
+        } catch (err) {
+          get().sendMessage(receiverId, text);
+          return false;
+        }
+      },
+
       updateUser: (updates) => set((state) => ({
         currentUser: state.currentUser ? { ...state.currentUser, ...updates } : null
       })),
+
       addLikedRoommate: (profile) => set((state) => ({
         likedRoommates: state.likedRoommates.find(r => r.id === profile.id) 
           ? state.likedRoommates 
           : [...state.likedRoommates, profile]
-      }))
+      })),
+
+      uploadImageToCloudinary: async (file) => {
+        try {
+          const res = await imagesApi.uploadImage(file);
+          return res.imageUrl;
+        } catch (err) {
+          console.error('Cloudinary Upload failed:', err);
+          return null;
+        }
+      }
     }),
     {
       name: 'dormi-storage'

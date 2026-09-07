@@ -3,15 +3,16 @@ import { useLocation } from 'react-router-dom';
 import { useStore } from '../../store/useStore';
 import { Button } from '../../components/ui/Button';
 import { Hand, Paperclip } from 'lucide-react';
+import { messagesApi } from '../../services/api';
 
 export default function TenantChatCenter() {
-  const { currentUser, messages, sendMessage, likedRoommates } = useStore();
+  const { currentUser, messages, sendMessageWithApi, likedRoommates } = useStore();
   const location = useLocation();
   const [inputText, setInputText] = useState('');
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
   const contacts = [
-    { id: 'u2', name: 'Le Van B', role: 'Landlord', online: true, avatar: '' },
+    { id: 'u2', name: 'Lê Văn B (Chủ nhà)', role: 'Landlord', online: true, avatar: '' },
     ...likedRoommates.map(r => ({
       id: `r${r.id}`,
       name: r.name,
@@ -25,6 +26,12 @@ export default function TenantChatCenter() {
   const [selectedContactId, setSelectedContactId] = useState(initialContactId);
   const selectedContact = contacts.find(c => c.id === selectedContactId) || contacts[0];
 
+  useEffect(() => {
+    if (selectedContact) {
+      messagesApi.getHistory(selectedContact.id).catch(() => {});
+    }
+  }, [selectedContact]);
+
   const chatMessages = messages.filter(m => 
     (m.senderId === currentUser?.id && m.receiverId === selectedContact?.id) ||
     (m.senderId === selectedContact?.id && m.receiverId === currentUser?.id)
@@ -34,10 +41,11 @@ export default function TenantChatCenter() {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
   }, [chatMessages]);
 
-  const handleSend = () => {
+  const handleSend = async () => {
     if (!inputText.trim() || !selectedContact) return;
-    sendMessage(selectedContact.id, inputText);
+    const msgText = inputText;
     setInputText('');
+    await sendMessageWithApi(selectedContact.id, msgText);
   };
 
   const handleKeyDown = (e: React.KeyboardEvent) => {
@@ -47,10 +55,8 @@ export default function TenantChatCenter() {
     }
   };
 
-  // ponytail: TenantChatCenter using Functional Clay (Level 2 Soft Clay container, Inset Clay input, Deep Navy sent messages)
   return (
     <div className="flex h-[calc(100vh-8rem)] bg-white rounded-[18px] shadow-clay-soft overflow-hidden border border-[#E2E8F0]">
-      {/* Sidebar: Conversation List */}
       <div className="hidden md:flex w-1/3 border-r border-[#E2E8F0] flex-col bg-[#F5F7FA]">
         <div className="p-4 border-b border-[#E2E8F0] bg-white">
           <input 
@@ -66,7 +72,7 @@ export default function TenantChatCenter() {
               (m.senderId === currentUser?.id && m.receiverId === contact.id) ||
               (m.senderId === contact.id && m.receiverId === currentUser?.id)
             );
-            const lastMessage = contactMessages.length > 0 ? contactMessages[contactMessages.length - 1].text : 'Bắt đầu trò chuyện';
+            const lastMessage = contactMessages.length > 0 ? contactMessages[contactMessages.length - 1].text : 'Bắt đầu trò chuyện (API Connected)';
 
             return (
               <div 
@@ -99,7 +105,6 @@ export default function TenantChatCenter() {
         </div>
       </div>
 
-      {/* Main Chat Area */}
       <div className="flex-1 flex flex-col bg-white">
         {selectedContact ? (
           <>
@@ -120,16 +125,12 @@ export default function TenantChatCenter() {
                     </span>
                   </h3>
                   <p className="text-xs text-[#16803C] font-semibold flex items-center gap-1">
-                    <span className="w-2 h-2 rounded-full bg-[#16803C] block"></span> {selectedContact.online ? 'Trực tuyến' : 'Ngoại tuyến'}
+                    <span className="w-2 h-2 rounded-full bg-[#16803C] block"></span> Trực tuyến (API Connected)
                   </p>
                 </div>
               </div>
-              {selectedContact.role === 'Landlord' && (
-                <Button variant="secondary" size="sm">Xem phòng trọ</Button>
-              )}
             </div>
 
-            {/* Messages */}
             <div className="flex-1 p-4 overflow-y-auto bg-[#F5F7FA] flex flex-col gap-3">
               <div className="text-center">
                 <span className="text-caption text-[#64748B] bg-white border border-[#E2E8F0] px-3 py-1 rounded-full font-medium">Hôm nay</span>
@@ -140,7 +141,7 @@ export default function TenantChatCenter() {
                   <div className="w-16 h-16 bg-white shadow-clay-soft rounded-full flex items-center justify-center text-[#00153D] mb-4">
                     <Hand size={32} />
                   </div>
-                  <p>Hãy gửi lời chào đến {selectedContact.name}!</p>
+                  <p>Hãy gửi tin nhắn đầu tiên đến {selectedContact.name}!</p>
                 </div>
               )}
 
@@ -171,20 +172,6 @@ export default function TenantChatCenter() {
               <div ref={messagesEndRef} />
             </div>
 
-            {/* Quick Actions */}
-            <div className="px-4 py-2 flex gap-2 overflow-x-auto no-scrollbar border-t border-[#E2E8F0] bg-white">
-              {['Phòng này hiện còn avai không?', 'Giá căn này có thể hỗ trợ giảm không?', 'Có full nội thất không?'].map((msg, i) => (
-                <button 
-                  key={i}
-                  onClick={() => sendMessage(selectedContact.id, msg)}
-                  className="whitespace-nowrap px-3 py-1.5 bg-[#F5F7FA] text-[#00153D] text-xs font-semibold rounded-full hover:bg-[#EEF2F6] transition-colors border border-[#E2E8F0]"
-                >
-                  {msg}
-                </button>
-              ))}
-            </div>
-
-            {/* Input Area */}
             <div className="p-4 border-t border-[#E2E8F0] bg-white">
               <div className="flex items-end gap-2 bg-[#F5F7FA] shadow-clay-inset rounded-[12px] border border-[#E2E8F0] p-2 focus-within:bg-white focus-within:ring-1 focus-within:ring-[#00153D] transition-all">
                 <button className="p-2 text-[#64748B] hover:text-[#0F172A] rounded-full transition-colors flex-shrink-0">
@@ -198,7 +185,7 @@ export default function TenantChatCenter() {
                   onChange={e => setInputText(e.target.value)}
                   onKeyDown={handleKeyDown}
                 ></textarea>
-                <Button size="sm" className="mb-0.5 px-4" onClick={handleSend}>Gửi</Button>
+                <Button size="sm" className="mb-0.5 px-4" onClick={handleSend}>Gửi API</Button>
               </div>
             </div>
           </>

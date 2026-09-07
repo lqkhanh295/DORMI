@@ -23,7 +23,7 @@ namespace Dormi.Infrastructure.Services
             _cloudinary = new Cloudinary(acc);
         }
 
-        public async Task<string> UploadImageAsync(Stream fileStream, string fileName)
+        public async Task<string?> UploadImageAsync(Stream fileStream, string fileName)
         {
             if (fileStream == null || fileStream.Length == 0) return null;
 

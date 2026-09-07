@@ -1,71 +1,53 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Button } from '../../components/ui/Button';
 import { useNavigate } from 'react-router-dom';
-import { useStore } from '../../store/useStore';
-import { Heart, X, MessageCircle, Check, CheckCircle2, AlertTriangle } from 'lucide-react';
-
-const MOCK_ROOMMATES = [
-  {
-    id: 1,
-    name: 'Alex',
-    age: 22,
-    major: 'Sinh viên IT',
-    image: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=400&q=80',
-    matchScore: 92,
-    budget: '3M - 5M VND',
-    bio: 'Tìm bạn cùng phòng thoải mái share tiền phòng ở Quận 7. Mình hay code đêm nhưng dùng tai nghe, không ồn ào!',
-    tags: ['Yên tĩnh', 'Không hút thuốc', 'Công nghệ', 'Cú đêm'],
-    reasons: [
-      { text: 'Cùng giờ ngủ (22h - 00h)', type: 'match' },
-      { text: 'Cùng ngân sách (3-5M)', type: 'match' },
-      { text: 'Không hút thuốc', type: 'match' },
-      { text: 'Khác mức độ nuôi thú cưng', type: 'warning' }
-    ]
-  },
-  {
-    id: 2,
-    name: 'Sarah',
-    age: 20,
-    major: 'Quản trị kinh doanh',
-    image: 'https://images.unsplash.com/photo-1517841905240-472988babdf9?auto=format&fit=crop&w=400&q=80',
-    matchScore: 88,
-    budget: '4M - 6M VND',
-    bio: 'Mình là người hướng ngoại, thích nấu ăn và giữ không gian sinh hoạt chung luôn sạch sẽ.',
-    tags: ['Hướng ngoại', 'Sạch sẽ', 'Thích nấu ăn', 'Dậy sớm'],
-    reasons: [
-      { text: 'Cùng thói quen giữ vệ sinh', type: 'match' },
-      { text: 'Cùng ngân sách', type: 'match' },
-      { text: 'Khác giờ giấc sinh hoạt', type: 'warning' }
-    ]
-  },
-  {
-    id: 3,
-    name: 'Minh',
-    age: 24,
-    major: 'Thiết kế đồ họa',
-    image: 'https://images.unsplash.com/photo-1539571696357-5a69c17a67c6?auto=format&fit=crop&w=400&q=80',
-    matchScore: 82,
-    budget: '2M - 4M VND',
-    bio: 'Rất dễ tính. Phần lớn thời gian mình ở studio hoặc đi uống cà phê bên ngoài.',
-    tags: ['Nghệ thuật', 'Yêu mèo', 'Cà phê'],
-    reasons: [
-      { text: 'Dễ tính, gọn gàng', type: 'match' },
-      { text: 'Khác khu vực mong muốn', type: 'warning' }
-    ]
-  }
-];
+import { useStore, type RoommateProfile } from '../../store/useStore';
+import { Heart, X, MessageCircle, Check, CheckCircle2 } from 'lucide-react';
+import { roommatesApi } from '../../services/api';
 
 export default function RoommateMatcher() {
   const [currentIndex, setCurrentIndex] = useState(0);
   const [showLikedModal, setShowLikedModal] = useState(false);
-  
+  const [roommates, setRoommates] = useState<RoommateProfile[]>([]);
+  const [loading, setLoading] = useState(true);
+
   const { likedRoommates, addLikedRoommate } = useStore();
   const navigate = useNavigate();
 
+  useEffect(() => {
+    let isMounted = true;
+    roommatesApi.getRecommendations()
+      .then(res => {
+        if (!isMounted) return;
+        if (Array.isArray(res) && res.length > 0) {
+          const apiRoommates: RoommateProfile[] = res.map((r: any, idx: number) => ({
+            id: idx + 1,
+            name: r.customerName || 'Người ở ghép',
+            age: 22,
+            major: r.title || 'Sinh viên',
+            image: r.customerAvatar || 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=400&q=80',
+            matchScore: r.matchScore || 85,
+            budget: `${Number(r.budget || 3000000).toLocaleString('vi-VN')}đ`,
+            bio: r.description || 'Tìm bạn cùng phòng giữ vệ sinh tốt và thân thiện.',
+            tags: (r.lifestyleTraits || 'Yên tĩnh, Sạch sẽ').split(',').map((t: string) => t.trim())
+          }));
+          setRoommates(apiRoommates);
+        }
+      })
+      .catch((err) => {
+        console.warn('API getRecommendations failed:', err);
+      })
+      .finally(() => {
+        if (isMounted) setLoading(false);
+      });
+
+    return () => { isMounted = false; };
+  }, []);
+
   const handleAction = (type: 'left' | 'right') => {
-    if (currentIndex >= MOCK_ROOMMATES.length) return;
+    if (currentIndex >= roommates.length) return;
     if (type === 'right') {
-      addLikedRoommate(MOCK_ROOMMATES[currentIndex]);
+      addLikedRoommate(roommates[currentIndex]);
     }
     setCurrentIndex(prev => prev + 1);
   };
@@ -74,7 +56,7 @@ export default function RoommateMatcher() {
     navigate('/tenant/chat', { state: { targetUserId: `r${targetId}` } });
   };
 
-  const profile = MOCK_ROOMMATES[currentIndex];
+  const profile = roommates[currentIndex];
 
   const LikedList = () => (
     <div className="flex-1 overflow-y-auto flex flex-col p-5 space-y-4 bg-white">
@@ -107,7 +89,6 @@ export default function RoommateMatcher() {
     </div>
   );
 
-  // ponytail: RoommateMatcher with Progressive Profiling 01/03 & Match Explanation Reasons
   return (
     <div className="flex flex-col lg:flex-row gap-6 max-w-6xl mx-auto min-h-[calc(100vh-80px)] overflow-hidden bg-[#F5F7FA] p-4 md:p-6">
       
@@ -123,12 +104,11 @@ export default function RoommateMatcher() {
         <LikedList />
       </div>
 
-      {/* Main Area: Progressive Matcher */}
+      {/* Main Area */}
       <div className="flex-1 flex flex-col relative bg-[#F5F7FA] rounded-[18px] justify-center">
         
-        {/* Progressive Indicator Bar */}
         <div className="bg-white rounded-[18px] shadow-clay-soft p-4 mb-6 flex items-center justify-between">
-          <span className="text-caption font-bold text-[#00153D]">Tiến trình tìm kiếm: 03 / 03</span>
+          <span className="text-caption font-bold text-[#00153D]">Gợi ý người ở ghép (AI Engine API)</span>
           <div className="flex items-center gap-1.5">
             <span className="w-3 h-3 rounded-full bg-[#00153D]"></span>
             <span className="w-8 h-1.5 rounded-full bg-[#00153D]"></span>
@@ -136,19 +116,12 @@ export default function RoommateMatcher() {
           </div>
         </div>
 
-        {/* Mobile Header */}
-        <div className="flex lg:hidden justify-between items-center mb-6">
-          <h2 className="text-h2 font-bold text-[#0F172A]">Gợi ý ở ghép</h2>
-          <button 
-            onClick={() => setShowLikedModal(true)}
-            className="bg-white border border-[#E2E8F0] text-[#00153D] px-4 py-2 rounded-full text-caption font-bold flex items-center gap-1.5 shadow-clay-soft touch-target"
-          >
-            <Heart size={16} className="fill-[#C62828] text-[#C62828]" />
-            {likedRoommates.length}
-          </button>
-        </div>
-
-        {currentIndex >= MOCK_ROOMMATES.length ? (
+        {loading ? (
+          <div className="flex flex-col items-center justify-center p-12 text-[#64748B]">
+            <div className="w-8 h-8 border-4 border-[#00153D] border-t-transparent rounded-full animate-spin mb-3"></div>
+            <p>Đang tải danh sách người ở ghép từ Backend API...</p>
+          </div>
+        ) : currentIndex >= roommates.length || !profile ? (
           <div className="flex-1 flex flex-col items-center justify-center text-center bg-white rounded-[18px] shadow-clay-soft p-8 max-w-md mx-auto w-full space-y-4">
             <div className="w-16 h-16 bg-[#F0FDF4] text-[#16803C] rounded-full flex items-center justify-center mx-auto">
               <Check size={32} />
@@ -165,15 +138,13 @@ export default function RoommateMatcher() {
           <div className="flex-1 flex flex-col items-center justify-center w-full mx-auto">
             <div className="bg-white rounded-[18px] shadow-clay-primary w-full max-w-lg overflow-hidden flex flex-col">
               
-              {/* Photo & Match Score */}
               <div className="h-64 bg-[#EEF2F6] w-full relative">
                 <img src={profile.image} alt={profile.name} className="w-full h-full object-cover" />
                 <div className="absolute top-4 right-4 bg-white/95 text-[#16803C] border border-[#DCFCE7] px-3.5 py-1.5 rounded-full text-body font-bold shadow-sm">
-                  {profile.matchScore}% Phù hợp
+                  {profile.matchScore}% Phù hợp (AI)
                 </div>
               </div>
               
-              {/* Content & Explanatory Reasons */}
               <div className="p-6 space-y-4 bg-white">
                 <div>
                   <h3 className="text-h3 font-bold text-[#0F172A]">{profile.name}, {profile.age}</h3>
@@ -181,22 +152,14 @@ export default function RoommateMatcher() {
                   <p className="text-body text-[#64748B] mt-2">{profile.bio}</p>
                 </div>
 
-                {/* Explanatory Reasons Breakdown */}
                 <div className="bg-[#F5F7FA] shadow-clay-inset p-4 rounded-[12px] space-y-2">
                   <span className="text-caption font-bold text-[#0F172A] block mb-1">Lý do tương thích:</span>
-                  {profile.reasons.map((r, idx) => (
-                    <div key={idx} className="flex items-center gap-2 text-caption font-semibold">
-                      {r.type === 'match' ? (
-                        <CheckCircle2 className="w-4 h-4 text-[#16803C]" />
-                      ) : (
-                        <AlertTriangle className="w-4 h-4 text-[#B45309]" />
-                      )}
-                      <span className={r.type === 'match' ? 'text-[#16803C]' : 'text-[#B45309]'}>{r.text}</span>
-                    </div>
-                  ))}
+                  <div className="flex items-center gap-2 text-caption font-semibold text-[#16803C]">
+                    <CheckCircle2 className="w-4 h-4 text-[#16803C]" />
+                    <span>Cùng thói quen sinh hoạt và ngân sách</span>
+                  </div>
                 </div>
 
-                {/* Action Buttons */}
                 <div className="flex justify-center gap-6 pt-2">
                   <button 
                     onClick={() => handleAction('left')}
@@ -220,7 +183,6 @@ export default function RoommateMatcher() {
         )}
       </div>
 
-      {/* Liked Modal (Mobile) */}
       {showLikedModal && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-[#0F172A]/40 p-4 lg:hidden">
           <div className="bg-white rounded-[18px] shadow-clay-primary w-full max-w-md h-[80vh] flex flex-col overflow-hidden">

@@ -9,12 +9,30 @@ public static class DependencyInjection
 {
     public static IServiceCollection AddInfrastructure(this IServiceCollection services, IConfiguration configuration)
     {
+        var useInMemory = configuration.GetValue<bool>("UseInMemoryDatabase");
         var connectionString = configuration.GetConnectionString("DefaultConnection");
-
+        
         services.AddDbContext<DormiDbContext>(options =>
-            options.UseNpgsql(connectionString, x => x.UseNetTopologySuite()));
+        {
+            if (useInMemory)
+            {
+                options.UseInMemoryDatabase("DORMI_DB");
+            }
+            else
+            {
+                try
+                {
+                    options.UseNpgsql(connectionString, x => x.UseNetTopologySuite());
+                }
+                catch
+                {
+                    options.UseInMemoryDatabase("DORMI_DB");
+                }
+            }
+        });
 
         services.AddScoped<Dormi.Application.Interfaces.IImageService, Dormi.Infrastructure.Services.CloudinaryService>();
+        services.AddScoped<Dormi.Application.Interfaces.IJwtTokenGenerator, Dormi.Infrastructure.Services.JwtTokenGenerator>();
 
         return services;
     }

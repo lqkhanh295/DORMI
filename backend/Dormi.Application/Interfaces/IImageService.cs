@@ -5,7 +5,7 @@ namespace Dormi.Application.Interfaces
 {
     public interface IImageService
     {
-        Task<string> UploadImageAsync(Stream fileStream, string fileName);
+        Task<string?> UploadImageAsync(Stream fileStream, string fileName);
         Task<bool> DeleteImageAsync(string publicId);
     }
 }

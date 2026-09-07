@@ -1,7 +1,6 @@
 using System;
 using System.Collections.Generic;
 using Dormi.Domain.Enums;
-using NetTopologySuite.Geometries;
 
 namespace Dormi.Domain.Entities;
 
@@ -10,7 +9,7 @@ public class Room
     public Guid Id { get; set; }
     
     public Guid LandlordId { get; set; }
-    public LandlordProfile Landlord { get; set; } = null!;
+    public User Landlord { get; set; } = null!;
 
     public string Title { get; set; } = string.Empty;
     public string Description { get; set; } = string.Empty;
@@ -19,9 +18,6 @@ public class Room
     public string Utilities { get; set; } = string.Empty;
     public string RoomType { get; set; } = string.Empty;
     public string Address { get; set; } = string.Empty;
-    
-    // PostGIS location
-    public Point? Location { get; set; }
 
     public string? Virtual3DUrl { get; set; }
     public RoomStatus Status { get; set; } = RoomStatus.Available;
