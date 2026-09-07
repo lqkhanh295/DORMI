@@ -4,10 +4,11 @@ import { LocalNav } from '../components/ui/LocalNav';
 import { BentoCard } from '../components/ui/BentoCard';
 import { AppleButton } from '../components/ui/AppleButton';
 import { MapPin, MagnifyingGlass, SlidersHorizontal, X, MagnifyingGlassMinus } from '@phosphor-icons/react';
+import { roomsApi } from '../services/api';
 
-const rentalRooms = [
+const defaultRentalRooms = [
   {
-    id: 1,
+    id: '1',
     title: 'Studio sáng, full nội thất',
     location: 'Quận 1, TP.HCM',
     price: '5.000.000đ',
@@ -16,7 +17,7 @@ const rentalRooms = [
     image: 'https://images.unsplash.com/photo-1522708323590-d24dbb6b0267?q=80&w=1200&auto=format&fit=crop',
   },
   {
-    id: 2,
+    id: '2',
     title: 'Sleepbox sạch, yên tĩnh',
     location: 'Bình Thạnh, TP.HCM',
     price: '1.800.000đ',
@@ -25,7 +26,7 @@ const rentalRooms = [
     image: 'https://images.unsplash.com/photo-1554995207-c18c203602cb?q=80&w=900&auto=format&fit=crop',
   },
   {
-    id: 3,
+    id: '3',
     title: 'Phòng ban công thoáng',
     location: 'Quận 7, TP.HCM',
     price: '2.500.000đ',
@@ -38,24 +39,46 @@ const rentalRooms = [
 export function Search() {
   const [searchQuery, setSearchQuery] = useState('');
   const [isLoading, setIsLoading] = useState(true);
-  const [results, setResults] = useState(rentalRooms);
+  const [results, setResults] = useState(defaultRentalRooms);
 
   useEffect(() => {
+    let isMounted = true;
     setIsLoading(true);
-    const timer = setTimeout(() => {
-      if (searchQuery.trim().toLowerCase() === 'empty') {
-        setResults([]);
-      } else {
+
+    roomsApi.getRooms({ query: searchQuery })
+      .then(res => {
+        if (!isMounted) return;
+        if (res?.data && Array.isArray(res.data) && res.data.length > 0) {
+          const apiRooms = res.data.map((r: any) => ({
+            id: r.id,
+            title: r.title,
+            location: r.address,
+            price: `${Number(r.price).toLocaleString('vi-VN')}đ`,
+            type: r.roomType || 'Studio',
+            badge: r.virtual3DUrl ? 'Có 3D' : 'Đã KYC',
+            image: r.images?.[0]?.imageUrl || 'https://images.unsplash.com/photo-1522708323590-d24dbb6b0267?q=80&w=1200&auto=format&fit=crop'
+          }));
+          setResults(apiRooms);
+        } else if (searchQuery.trim()) {
+          setResults([]);
+        } else {
+          setResults(defaultRentalRooms);
+        }
+      })
+      .catch(() => {
+        if (!isMounted) return;
         setResults(
-          rentalRooms.filter(r => 
+          defaultRentalRooms.filter(r => 
             r.title.toLowerCase().includes(searchQuery.toLowerCase()) || 
             r.location.toLowerCase().includes(searchQuery.toLowerCase())
           )
         );
-      }
-      setIsLoading(false);
-    }, 1500); // Fake delay for skeleton
-    return () => clearTimeout(timer);
+      })
+      .finally(() => {
+        if (isMounted) setIsLoading(false);
+      });
+
+    return () => { isMounted = false; };
   }, [searchQuery]);
 
   const filterItems = [
@@ -153,7 +176,6 @@ export function Search() {
                     <div>
                       <div className="flex items-center justify-between mb-1">
                         <p className="text-[11px] md:text-[12px] font-bold uppercase tracking-widest text-text-secondary">{room.type}</p>
-                        <p className="text-[9px] md:text-[10px] text-text-muted font-medium italic">(Update: 26.06.2026)</p>
                       </div>
                       <h3 className="text-[18px] md:text-[21px] font-semibold text-foreground leading-tight mb-2 line-clamp-2">{room.title}</h3>
                       <p className="flex items-center gap-1 md:gap-1.5 text-[13px] md:text-[14px] text-text-secondary">
@@ -169,11 +191,6 @@ export function Search() {
                   </div>
                 </BentoCard>
               ))}
-            </div>
-            
-            {/* Pagination / Load More */}
-            <div className="mt-8 md:mt-12 flex justify-center">
-              <AppleButton variant="outline" size="lg" className="w-full sm:w-auto">Tải thêm kết quả</AppleButton>
             </div>
           </>
         )}

@@ -10,37 +10,22 @@ public class DormiDbContext : DbContext
     }
 
     public DbSet<User> Users { get; set; } = null!;
-    public DbSet<CustomerProfile> CustomerProfiles { get; set; } = null!;
-    public DbSet<LandlordProfile> LandlordProfiles { get; set; } = null!;
     public DbSet<Room> Rooms { get; set; } = null!;
     public DbSet<RoomImage> RoomImages { get; set; } = null!;
     public DbSet<ViewingAppointment> ViewingAppointments { get; set; } = null!;
     public DbSet<FavoriteRoom> FavoriteRooms { get; set; } = null!;
     public DbSet<Message> Messages { get; set; } = null!;
+    public DbSet<RoommatePost> RoommatePosts { get; set; } = null!;
+    public DbSet<RoomReview> RoomReviews { get; set; } = null!;
+    public DbSet<LandlordSubscription> LandlordSubscriptions { get; set; } = null!;
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
         base.OnModelCreating(modelBuilder);
         
-        // PostGIS extension
-        modelBuilder.HasPostgresExtension("postgis");
-
-        // User - Profiles (One to One)
-        modelBuilder.Entity<CustomerProfile>().HasKey(c => c.UserId);
+        // Landlord (User) - Rooms (One to Many)
         modelBuilder.Entity<User>()
-            .HasOne(u => u.CustomerProfile)
-            .WithOne(c => c.User)
-            .HasForeignKey<CustomerProfile>(c => c.UserId);
-
-        modelBuilder.Entity<LandlordProfile>().HasKey(l => l.UserId);
-        modelBuilder.Entity<User>()
-            .HasOne(u => u.LandlordProfile)
-            .WithOne(l => l.User)
-            .HasForeignKey<LandlordProfile>(l => l.UserId);
-
-        // Landlord - Rooms (One to Many)
-        modelBuilder.Entity<LandlordProfile>()
-            .HasMany(l => l.Rooms)
+            .HasMany(u => u.Rooms)
             .WithOne(r => r.Landlord)
             .HasForeignKey(r => r.LandlordId);
 

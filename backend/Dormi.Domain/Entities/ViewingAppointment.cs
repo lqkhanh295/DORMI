@@ -7,7 +7,7 @@ public class ViewingAppointment
     public Guid Id { get; set; }
     
     public Guid CustomerId { get; set; }
-    public CustomerProfile Customer { get; set; } = null!;
+    public User Customer { get; set; } = null!;
 
     public Guid RoomId { get; set; }
     public Room Room { get; set; } = null!;
