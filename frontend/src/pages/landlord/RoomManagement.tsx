@@ -164,6 +164,39 @@ export default function RoomManagement() {
     }
   };
 
+  const handleDeleteRoom = async (roomId: string) => {
+    if (!window.confirm('Bạn có chắc chắn muốn xóa bài đăng phòng trọ này không? Hành động này không thể hoàn tác.')) return;
+    try {
+      await roomsApi.deleteRoom(roomId);
+      toast.success('Đã xóa phòng trọ thành công!');
+      loadRooms();
+    } catch {
+      toast.error('Không thể xóa phòng trọ.');
+    }
+  };
+
+  const handleToggleHideRoom = async (room: RoomResponse) => {
+    const newStatus = room.status === 3 ? 0 : 3;
+    try {
+      await roomsApi.updateRoom(room.id, {
+        title: room.title,
+        description: room.description || 'Mô tả phòng trọ',
+        price: room.price,
+        area: room.area || 25,
+        utilities: room.utilities || 'Wifi',
+        roomType: room.roomType || 'Studio',
+        address: room.address,
+        virtual3DUrl: room.virtual3DUrl,
+        status: newStatus,
+        imageUrls: room.images ? room.images.map(img => img.imageUrl) : []
+      });
+      toast.success(newStatus === 3 ? 'Đã ẩn phòng trọ khỏi trang công khai (Home/Search)!' : 'Đã hiển thị phòng trọ trở lại!');
+      loadRooms();
+    } catch {
+      toast.error('Thao tác ẩn/hiện tin không thành công.');
+    }
+  };
+
   const handleSaveEdit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!editingRoom) return;
@@ -252,7 +285,7 @@ export default function RoomManagement() {
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-h2 font-bold text-[#0F172A]">Phòng của tôi (API Connected)</h1>
-          <p className="text-body text-[#64748B]">Quản lý danh sách phòng trọ và tình trạng cho thuê thời gian thực.</p>
+          <p className="text-body text-[#64748B]">Quản lý danh sách phòng trọ, ẩn/hiện tin đăng và xóa phòng.</p>
         </div>
         <Button onClick={() => setIsAdding(true)}>+ Thêm phòng mới</Button>
       </div>
@@ -292,7 +325,23 @@ export default function RoomManagement() {
                   </div>
                 </div>
                 <div className="flex md:flex-col gap-2 shrink-0 w-full md:w-auto mt-4 md:mt-0">
-                  <Button variant="secondary" size="sm" className="w-full" onClick={() => setEditingRoom(room)}>Sửa API</Button>
+                  <Button variant="secondary" size="sm" className="w-full" onClick={() => setEditingRoom(room)}>✏️ Chỉnh sửa</Button>
+                  <Button 
+                    variant="secondary" 
+                    size="sm" 
+                    className={`w-full ${room.status === 3 ? 'bg-emerald-50 text-emerald-700 border-emerald-200 hover:bg-emerald-100' : 'bg-amber-50 text-amber-700 border-amber-200 hover:bg-amber-100'}`}
+                    onClick={() => handleToggleHideRoom(room)}
+                  >
+                    {room.status === 3 ? '👁️ Hiện tin' : '🙈 Ẩn tin'}
+                  </Button>
+                  <Button 
+                    variant="secondary" 
+                    size="sm" 
+                    className="w-full bg-rose-50 text-rose-700 border-rose-200 hover:bg-rose-100"
+                    onClick={() => handleDeleteRoom(room.id)}
+                  >
+                    🗑️ Xóa
+                  </Button>
                 </div>
               </Card>
             );
