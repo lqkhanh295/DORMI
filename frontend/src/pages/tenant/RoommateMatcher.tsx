@@ -22,11 +22,12 @@ export default function RoommateMatcher() {
         if (Array.isArray(res) && res.length > 0) {
           const apiRoommates: RoommateProfile[] = res.map((r: any, idx: number) => ({
             id: idx + 1,
+            customerId: r.customerId,
             name: r.customerName || 'Người ở ghép',
             age: 22,
             major: r.title || 'Sinh viên',
             image: r.customerAvatar || 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=400&q=80',
-            matchScore: r.matchScore || 85,
+            matchScore: r.matchScore ? Math.round(r.matchScore) : 85,
             budget: `${Number(r.budget || 3000000).toLocaleString('vi-VN')}đ`,
             bio: r.description || 'Tìm bạn cùng phòng giữ vệ sinh tốt và thân thiện.',
             tags: (r.lifestyleTraits || 'Yên tĩnh, Sạch sẽ').split(',').map((t: string) => t.trim())
@@ -52,8 +53,14 @@ export default function RoommateMatcher() {
     setCurrentIndex(prev => prev + 1);
   };
 
-  const navigateToChat = (targetId: number) => {
-    navigate('/tenant/chat', { state: { targetUserId: `r${targetId}` } });
+  const navigateToChat = (targetProfile: RoommateProfile) => {
+    navigate('/tenant/chat', { 
+      state: { 
+        targetUserId: targetProfile.customerId || `r${targetProfile.id}`,
+        targetUserName: targetProfile.name,
+        targetUserRole: 'Roommate'
+      } 
+    });
   };
 
   const profile = roommates[currentIndex];
@@ -77,7 +84,7 @@ export default function RoommateMatcher() {
               </p>
             </div>
             <button 
-              onClick={() => navigateToChat(r.id)} 
+              onClick={() => navigateToChat(r)} 
               className="w-10 h-10 flex items-center justify-center bg-[#00153D] text-white rounded-[10px] hover:bg-[#073372] transition-colors flex-shrink-0 touch-target"
               title="Nhắn tin"
             >

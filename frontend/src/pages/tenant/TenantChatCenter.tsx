@@ -4,6 +4,7 @@ import { useStore } from '../../store/useStore';
 import { Button } from '../../components/ui/Button';
 import { Hand, Paperclip, Calendar, MessageCircle, Clock, MapPin, CheckCircle2, AlertCircle } from 'lucide-react';
 import { messagesApi, appointmentsApi } from '../../services/api';
+import { signalRService } from '../../services/signalr';
 
 export default function TenantChatCenter() {
   const { currentUser, messages, sendMessageWithApi, likedRoommates } = useStore();
@@ -27,6 +28,16 @@ export default function TenantChatCenter() {
       setActiveTab('appointments');
     }
   }, [initialTab]);
+
+  // SignalR real-time messaging connection
+  useEffect(() => {
+    if (currentUser?.id) {
+      signalRService.startConnection(currentUser.id, currentUser.token);
+    }
+    return () => {
+      // Keep alive during chat session
+    };
+  }, [currentUser]);
 
   // Load active conversations from backend
   useEffect(() => {
@@ -97,7 +108,7 @@ export default function TenantChatCenter() {
 
   // Liked Roommates
   likedRoommates.forEach(r => {
-    const rId = `r${r.id}`;
+    const rId = r.customerId || `r${r.id}`;
     if (!contactsMap.has(rId)) {
       contactsMap.set(rId, {
         id: rId,

@@ -22,8 +22,9 @@ builder.WebHost.ConfigureKestrel(serverOptions =>
 // 1. Add Infrastructure (DbContext, Services, Cloudinary, JwtTokenGenerator)
 builder.Services.AddInfrastructure(builder.Configuration);
 
-// 2. Add Controllers
+// 2. Add Controllers & SignalR
 builder.Services.AddControllers();
+builder.Services.AddSignalR();
 
 // 3. Configure JWT Authentication
 var secretKey = builder.Configuration["JwtSettings:SecretKey"] ?? "DormiSuperSecretKeyForJWTAuthentication2026!#$";
@@ -46,6 +47,21 @@ builder.Services.AddAuthentication(options =>
         ValidIssuer = issuer,
         ValidAudience = audience,
         IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(secretKey))
+    };
+
+    // Support SignalR token passing in query string
+    options.Events = new JwtBearerEvents
+    {
+        OnMessageReceived = context =>
+        {
+            var accessToken = context.Request.Query["access_token"];
+            var path = context.HttpContext.Request.Path;
+            if (!string.IsNullOrEmpty(accessToken) && path.StartsWithSegments("/hubs"))
+            {
+                context.Token = accessToken;
+            }
+            return Task.CompletedTask;
+        }
     };
 });
 
@@ -70,14 +86,15 @@ builder.Services.AddSwaggerGen(c =>
     });
 });
 
-// 5. Configure CORS
+// 5. Configure CORS (allow credentials for SignalR WebSockets)
 builder.Services.AddCors(options =>
 {
     options.AddPolicy("AllowAll", policy =>
     {
-        policy.AllowAnyOrigin()
+        policy.SetIsOriginAllowed(_ => true)
               .AllowAnyMethod()
-              .AllowAnyHeader();
+              .AllowAnyHeader()
+              .AllowCredentials();
     });
 });
 
@@ -102,6 +119,7 @@ app.UseAuthentication();
 app.UseAuthorization();
 
 app.MapControllers();
+app.MapHub<Dormi.API.Hubs.ChatHub>("/hubs/chat");
 
 // Seed initial database
 try

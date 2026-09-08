@@ -2,6 +2,7 @@ import { useState, useRef, useEffect } from 'react';
 import { useStore } from '../../store/useStore';
 import { Button } from '../../components/ui/Button';
 import { messagesApi, appointmentsApi } from '../../services/api';
+import { signalRService } from '../../services/signalr';
 import { Hand, Paperclip, CheckCircle2 } from 'lucide-react';
 
 export default function LandlordChatCenter() {
@@ -11,6 +12,13 @@ export default function LandlordChatCenter() {
   const [appointments, setAppointments] = useState<any[]>([]);
   const [selectedContactId, setSelectedContactId] = useState<string>('');
   const messagesEndRef = useRef<HTMLDivElement>(null);
+
+  // SignalR real-time messaging connection
+  useEffect(() => {
+    if (currentUser?.id) {
+      signalRService.startConnection(currentUser.id, currentUser.token);
+    }
+  }, [currentUser]);
 
   // Load backend conversations
   useEffect(() => {
