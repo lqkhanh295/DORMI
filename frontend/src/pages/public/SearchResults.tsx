@@ -5,6 +5,7 @@ import { useStore } from '../../store/useStore';
 import { useNavigate } from 'react-router-dom';
 import { ArrowLeft, SlidersHorizontal, Map as MapTrifold, X, Sliders as FadersHorizontal } from 'lucide-react';
 import { RoomCard } from '../../components/landing/RoomCard';
+import RoomMapView from '../../components/map/RoomMapView';
 
 export default function SearchResults() {
   const listings = useStore(state => state.listings);
@@ -22,6 +23,7 @@ export default function SearchResults() {
   const [showMap, setShowMap] = useState(true);
   const [showMobileFilter, setShowMobileFilter] = useState(false);
   const [isLoading] = useState(false);
+  const [selectedRoomId, setSelectedRoomId] = useState<string | null>(null);
 
   // Active filters list
   const activeFilters = useMemo(() => {
@@ -213,38 +215,37 @@ export default function SearchResults() {
           {!isLoading && filteredListings.length > 0 && (
             <div className={`grid grid-cols-1 ${!showMap ? 'sm:grid-cols-2 lg:grid-cols-3' : 'sm:grid-cols-2'} gap-6`}>
               {filteredListings.map(room => (
-                <RoomCard 
-                  key={room.id} 
-                  room={{
-                    id: room.id,
-                    title: room.title,
-                    price: `${room.price.toLocaleString('vi-VN')}đ / tháng`,
-                    location: room.address.split(',')[0],
-                    area: '25m²',
-                    image: room.image,
-                    verified: room.trustScore > 90
-                  }} 
-                />
+                <div 
+                  key={room.id}
+                  onClick={() => setSelectedRoomId(room.id)}
+                  className={`cursor-pointer transition-all rounded-[18px] ${selectedRoomId === room.id ? 'ring-3 ring-[#00153D] shadow-clay-primary' : ''}`}
+                >
+                  <RoomCard 
+                    room={{
+                      id: room.id,
+                      title: room.title,
+                      price: `${room.price.toLocaleString('vi-VN')}đ / tháng`,
+                      location: room.address.split(',')[0],
+                      area: '25m²',
+                      image: room.image,
+                      verified: room.trustScore > 90
+                    }} 
+                  />
+                </div>
               ))}
             </div>
           )}
         </div>
       </div>  
       
-      {/* Map View */}
+      {/* Interactive Map View with User Geolocation & Room Markers */}
       {showMap && (
-        <div className="hidden lg:block flex-1 bg-[#EEF2F6] relative border-l border-[#E2E8F0]">
-          <div className="absolute inset-0">
-            <iframe 
-              src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d250826.96265738801!2d106.4950553754972!3d10.814234032128713!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x317529292e8d3dd1%3A0xf15f5aad773c112b!2zVGjDoG5oIHBo4buRIEjhu5MgQ2jDrSBNaW5oLCBWaeG7h3QgTmFt!5e0!3m2!1svi!2s!4v1709194215160!5m2!1svi!2s" 
-              width="100%" 
-              height="100%" 
-              style={{ border: 0 }} 
-              allowFullScreen={true} 
-              loading="lazy" 
-              referrerPolicy="no-referrer-when-downgrade"
-            ></iframe>
-          </div>
+        <div className="hidden lg:block flex-1 h-full relative border-l border-[#E2E8F0]">
+          <RoomMapView 
+            rooms={filteredListings} 
+            selectedRoomId={selectedRoomId}
+            onSelectRoom={setSelectedRoomId}
+          />
         </div>
       )}
 
