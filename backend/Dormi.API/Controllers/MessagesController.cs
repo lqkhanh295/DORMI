@@ -2,11 +2,13 @@ using System;
 using System.Linq;
 using System.Security.Claims;
 using System.Threading.Tasks;
+using Dormi.API.Hubs;
 using Dormi.Application.DTOs;
 using Dormi.Domain.Entities;
 using Dormi.Infrastructure.Data;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.SignalR;
 using Microsoft.EntityFrameworkCore;
 
 namespace Dormi.API.Controllers;
@@ -17,10 +19,12 @@ namespace Dormi.API.Controllers;
 public class MessagesController : ControllerBase
 {
     private readonly DormiDbContext _db;
+    private readonly IHubContext<ChatHub> _hubContext;
 
-    public MessagesController(DormiDbContext db)
+    public MessagesController(DormiDbContext db, IHubContext<ChatHub> hubContext)
     {
         _db = db;
+        _hubContext = hubContext;
     }
 
     [HttpPost]
@@ -37,6 +41,8 @@ public class MessagesController : ControllerBase
         var receiverExists = await _db.Users.AnyAsync(u => u.Id == dto.ReceiverId);
         if (!receiverExists) return NotFound(new { message = "Không tìm thấy người nhận." });
 
+        var sender = await _db.Users.FindAsync(senderId);
+
         var message = new Message
         {
             Id = Guid.NewGuid(),
@@ -50,7 +56,30 @@ public class MessagesController : ControllerBase
         _db.Messages.Add(message);
         await _db.SaveChangesAsync();
 
-        return Ok(new { id = message.Id, message = "Đã gửi tin nhắn." });
+        var messagePayload = new
+        {
+            id = message.Id.ToString(),
+            senderId = message.SenderId.ToString(),
+            senderName = sender?.FullName ?? "Người dùng",
+            receiverId = message.ReceiverId.ToString(),
+            text = message.Content,
+            timestamp = message.SentAt.ToString("o")
+        };
+
+        // Broadcast to receiver's and sender's SignalR groups in real-time
+        try
+        {
+            await _hubContext.Clients.Group(dto.ReceiverId.ToString().ToLower())
+                .SendAsync("ReceiveMessage", messagePayload);
+            await _hubContext.Clients.Group(senderId.ToString().ToLower())
+                .SendAsync("ReceiveMessage", messagePayload);
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"[SignalR Notification Notice]: {ex.Message}");
+        }
+
+        return Ok(new { id = message.Id, message = "Đã gửi tin nhắn.", data = messagePayload });
     }
 
     [HttpGet("{otherUserId}")]

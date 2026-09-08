@@ -1,3 +1,4 @@
+import { useEffect } from 'react';
 import { Card } from '../../components/ui/Card';
 import { Button } from '../../components/ui/Button';
 import { useStore } from '../../store/useStore';
@@ -5,8 +6,12 @@ import { useNavigate } from 'react-router-dom';
 import { ShieldCheck, MapPin, Search } from 'lucide-react';
 
 export default function TenantDashboard() {
-  const listings = useStore(state => state.listings);
+  const { listings, fetchListings } = useStore();
   const navigate = useNavigate();
+
+  useEffect(() => {
+    fetchListings();
+  }, [fetchListings]);
 
   // ponytail: TenantDashboard using Functional Clay (Level 1 Primary Clay Search, Level 2 Soft Clay Cards)
   return (
@@ -103,7 +108,7 @@ export default function TenantDashboard() {
         </div>
         
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
-          {listings.slice(0, 4).map(room => (
+          {listings.slice(4, 8).map(room => (
             <Card 
               key={`new-${room.id}`} 
               onClick={() => navigate('/room/' + room.id)} 
