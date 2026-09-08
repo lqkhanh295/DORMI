@@ -50,12 +50,27 @@ export default function ContentModeration() {
     }
   };
 
+  const renderStatusBadge = (status: number) => {
+    switch (status) {
+      case 0:
+        return <span className="text-caption font-bold bg-[#F0FDF4] text-[#16803C] border border-[#DCFCE7] px-2.5 py-0.5 rounded-full">✓ Đã duyệt (Công khai)</span>;
+      case 2:
+        return <span className="text-caption font-bold bg-[#FEF3C7] text-[#D97706] border border-[#FDE68A] px-2.5 py-0.5 rounded-full">⏳ Chờ phê duyệt</span>;
+      case 3:
+        return <span className="text-caption font-bold bg-[#FEF2F2] text-[#C62828] border border-[#FECACA] px-2.5 py-0.5 rounded-full">✕ Bị từ chối / Ẩn</span>;
+      case 1:
+        return <span className="text-caption font-bold bg-[#F1F5F9] text-[#475569] border border-[#E2E8F0] px-2.5 py-0.5 rounded-full">Đã thuê</span>;
+      default:
+        return null;
+    }
+  };
+
   return (
     <div className="flex flex-col h-[calc(100vh-8rem)] bg-[#F5F7FA]">
       <div className="flex items-center justify-between mb-6">
         <div>
-          <h1 className="text-h2 font-bold text-[#0F172A]">Kiểm duyệt nội dung phòng trọ (API Realtime)</h1>
-          <p className="text-body text-[#64748B]">Xem xét và phê duyệt các tin đăng bài trọ từ Backend API.</p>
+          <h1 className="text-h2 font-bold text-[#0F172A]">Kiểm duyệt nội dung phòng trọ (Admin Portal)</h1>
+          <p className="text-body text-[#64748B]">Xem xét và phê duyệt các tin đăng bài trọ trước khi hiển thị công khai cho người dùng.</p>
         </div>
       </div>
 
@@ -64,7 +79,7 @@ export default function ContentModeration() {
           <div className="p-4 border-b border-[#E2E8F0] bg-[#F5F7FA]">
             <h3 className="font-bold text-h3 text-[#0F172A] flex justify-between items-center">
               Danh sách tin đăng
-              <span className="bg-[#FEF2F2] text-[#C62828] border border-[#FECACA] px-2.5 py-0.5 rounded-full text-caption">{rooms.length}</span>
+              <span className="bg-[#EEF2F6] text-[#00153D] border border-[#E2E8F0] px-2.5 py-0.5 rounded-full text-caption">{rooms.length}</span>
             </h3>
           </div>
           <div className="flex-1 overflow-y-auto p-3 space-y-3">
@@ -75,10 +90,8 @@ export default function ContentModeration() {
                 onClick={() => setSelectedId(room.id)}
                 className={`p-4 rounded-[14px] cursor-pointer transition-all ${selectedId === room.id ? 'bg-white shadow-clay-primary border-2 border-[#00153D]' : 'bg-[#F5F7FA] border border-[#E2E8F0] hover:bg-white'}`}
               >
-                <div className="flex justify-between items-start mb-1">
-                  <span className="text-caption font-bold bg-[#F0FDF4] text-[#16803C] border border-[#DCFCE7] px-2 py-0.5 rounded-full">
-                    {room.status === 0 ? 'Còn trống' : 'Đã thuê/Ẩn'}
-                  </span>
+                <div className="flex justify-between items-start mb-2">
+                  {renderStatusBadge(room.status)}
                 </div>
                 <p className="font-semibold text-[#0F172A] text-body line-clamp-1">{room.title}</p>
                 <p className="text-caption text-[#64748B] mt-1">Chủ trọ: <span className="font-semibold text-[#0F172A]">{room.landlordName}</span></p>
@@ -93,12 +106,13 @@ export default function ContentModeration() {
         <div className="flex-1 bg-white rounded-[18px] shadow-clay-primary overflow-hidden flex flex-col border-none">
           {selectedRoom ? (
             <>
-              <div className="p-6 border-b border-[#E2E8F0]">
-                <div className="flex justify-between items-start">
-                  <div>
-                    <h2 className="text-h2 font-bold text-[#0F172A] mb-1">Chi tiết tin đăng</h2>
-                    <p className="text-caption text-[#64748B]">Chủ trọ: <span className="font-semibold text-[#0F172A]">{selectedRoom.landlordName}</span></p>
-                  </div>
+              <div className="p-6 border-b border-[#E2E8F0] flex justify-between items-center">
+                <div>
+                  <h2 className="text-h2 font-bold text-[#0F172A] mb-1">Chi tiết tin đăng</h2>
+                  <p className="text-caption text-[#64748B]">Chủ trọ: <span className="font-semibold text-[#0F172A]">{selectedRoom.landlordName}</span></p>
+                </div>
+                <div>
+                  {renderStatusBadge(selectedRoom.status)}
                 </div>
               </div>
               <div className="p-6 flex-1 overflow-y-auto space-y-4">
@@ -112,8 +126,8 @@ export default function ContentModeration() {
                 </Card>
               </div>
               <div className="p-6 border-t border-[#E2E8F0] bg-[#F5F7FA] flex justify-end gap-3">
-                <Button variant="secondary" className="bg-[#FEF2F2] text-[#C62828] border border-[#FECACA]" onClick={() => handleAction(selectedRoom.id, 1)}>Tạm ẩn tin API</Button>
-                <Button variant="primary" onClick={() => handleAction(selectedRoom.id, 0)}>Phê duyệt Công khai API</Button>
+                <Button variant="secondary" className="bg-[#FEF2F2] text-[#C62828] border border-[#FECACA] hover:bg-[#FEE2E2]" onClick={() => handleAction(selectedRoom.id, 3)}>✕ Từ chối / Tạm ẩn tin</Button>
+                <Button variant="primary" className="btn-clay-primary" onClick={() => handleAction(selectedRoom.id, 0)}>✓ Phê duyệt Công khai</Button>
               </div>
             </>
           ) : (
