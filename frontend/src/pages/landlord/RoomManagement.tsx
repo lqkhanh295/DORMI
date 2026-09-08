@@ -3,7 +3,7 @@ import { Card } from '../../components/ui/Card';
 import { Button } from '../../components/ui/Button';
 import { roomsApi, imagesApi, type RoomResponse } from '../../services/api';
 import { toast } from 'sonner';
-import { Pencil, Eye, EyeOff, Trash2, CheckCircle2, Clock, XCircle } from 'lucide-react';
+import { Pencil, Eye, EyeOff, Trash2, CheckCircle2, Clock, XCircle, Image as ImageIcon, Check, X } from 'lucide-react';
 
 const UTILITY_OPTIONS = [
   'Wifi', 'Máy lạnh', 'Tủ lạnh', 'Máy giặt', 'Ban công', 
@@ -362,8 +362,10 @@ export default function RoomManagement() {
         <div className="fixed inset-0 bg-[#0F172A]/40 flex items-center justify-center z-50 p-4 overflow-y-auto">
           <Card className="w-full max-w-2xl p-6 md:p-8 bg-white rounded-[18px] shadow-clay-primary border-none max-h-[90vh] overflow-y-auto space-y-6">
             <div className="flex justify-between items-center pb-3 border-b border-[#E2E8F0]">
-              <h2 className="text-h2 font-bold text-[#0F172A]">Thêm phòng trọ mới (Nén ảnh HTML5 Canvas ⚡)</h2>
-              <button onClick={() => setIsAdding(false)} className="text-[#64748B] hover:text-[#0F172A] text-xl font-bold">✕</button>
+              <h2 className="text-h2 font-bold text-[#0F172A]">Thêm phòng trọ mới (Tối ưu ảnh tức thì)</h2>
+              <button onClick={() => setIsAdding(false)} className="text-[#64748B] hover:text-[#0F172A] p-1">
+                <X className="w-5 h-5" />
+              </button>
             </div>
 
             <form onSubmit={handleAddNew} className="space-y-5">
@@ -442,13 +444,13 @@ export default function RoomManagement() {
                         key={util}
                         type="button"
                         onClick={() => toggleUtility(util)}
-                        className={`px-3 py-1.5 rounded-[10px] text-caption font-semibold transition-all ${
+                        className={`px-3 py-1.5 rounded-[10px] text-caption font-semibold transition-all inline-flex items-center gap-1 ${
                           active 
                             ? 'btn-clay-primary' 
                             : 'bg-[#F5F7FA] text-[#64748B] border border-[#E2E8F0] hover:bg-white hover:text-[#0F172A]'
                         }`}
                       >
-                        {active ? `✓ ${util}` : `+ ${util}`}
+                        {active ? <><Check className="w-3.5 h-3.5" /> {util}</> : <>+ {util}</>}
                       </button>
                     );
                   })}
@@ -489,8 +491,8 @@ export default function RoomManagement() {
                     onChange={(e) => handleImageUpload(e, false)}
                     disabled={uploadingImage}
                   />
-                  <p className="text-body font-semibold text-[#00153D] mb-1">
-                    {uploadingImage ? '⏳ Đang tối ưu hóa ảnh...' : '📷 Bấm hoặc Kéo thả ảnh thực tế vào đây'}
+                  <p className="text-body font-semibold text-[#00153D] mb-1 inline-flex items-center justify-center gap-1.5">
+                    {uploadingImage ? <><Clock className="w-4 h-4 animate-spin text-[#00153D]" /> Đang tối ưu hóa ảnh...</> : <><ImageIcon className="w-5 h-5 text-[#00153D]" /> Bấm hoặc Kéo thả ảnh thực tế vào đây</>}
                   </p>
                   <p className="text-caption text-[#64748B]">Ảnh tự động nén tối ưu hiển thị sắc nét và lưu trữ trực tiếp vào CSDL.</p>
                 </div>
@@ -505,7 +507,7 @@ export default function RoomManagement() {
                           onClick={() => removeImage(idx, false)}
                           className="absolute top-1 right-1 bg-red-600 text-white rounded-full w-6 h-6 flex items-center justify-center text-xs font-bold shadow-md hover:bg-red-700"
                         >
-                          ✕
+                          <X className="w-3.5 h-3.5" />
                         </button>
                       </div>
                     ))}
@@ -528,7 +530,9 @@ export default function RoomManagement() {
           <Card className="w-full max-w-2xl p-6 md:p-8 bg-white rounded-[18px] shadow-clay-primary border-none max-h-[90vh] overflow-y-auto space-y-6">
             <div className="flex justify-between items-center pb-3 border-b border-[#E2E8F0]">
               <h2 className="text-h2 font-bold text-[#0F172A]">Chỉnh sửa bài đăng phòng trọ</h2>
-              <button onClick={() => setEditingRoom(null)} className="text-[#64748B] hover:text-[#0F172A] text-xl font-bold">✕</button>
+              <button onClick={() => setEditingRoom(null)} className="text-[#64748B] hover:text-[#0F172A] p-1">
+                <X className="w-5 h-5" />
+              </button>
             </div>
 
             <form onSubmit={handleSaveEdit} className="space-y-5">
@@ -586,10 +590,10 @@ export default function RoomManagement() {
                   onChange={e => setEditingRoom({...editingRoom, status: Number(e.target.value)})}
                   className="w-full bg-[#F5F7FA] shadow-clay-inset border border-[#E2E8F0] rounded-[12px] px-4 py-2.5 text-body text-[#0F172A] focus:outline-none focus:ring-1 focus:ring-[#00153D] focus:bg-white min-h-[44px]"
                 >
-                  <option value={0}>✓ Đã duyệt (Công khai - Còn trống)</option>
-                  <option value={2}>⏳ Chờ phê duyệt (Admin)</option>
+                  <option value={0}>Đã duyệt (Công khai - Còn trống)</option>
+                  <option value={2}>Chờ phê duyệt (Admin)</option>
                   <option value={1}>Đã thuê</option>
-                  <option value={3}>✕ Tạm ẩn / Từ chối</option>
+                  <option value={3}>Tạm ẩn / Từ chối</option>
                 </select>
               </div>
 
