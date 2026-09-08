@@ -88,52 +88,55 @@ export default function RoomManagement() {
   };
 
   const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>, isEdit: boolean = false) => {
-    const file = e.target.files?.[0];
-    if (!file) return;
+    const files = Array.from(e.target.files || []);
+    if (files.length === 0) return;
 
     setUploadingImage(true);
 
     try {
-      // 1. Instant 800px Canvas Compression (0.02s) -> Fast 50KB JPEG Data URL
-      const compressedUrl = await compressImage(file);
+      for (const file of files) {
+        // 1. Instant 800px Canvas Compression (0.02s) -> Fast 50KB JPEG Data URL
+        const compressedUrl = await compressImage(file);
 
-      if (isEdit && editingRoom) {
-        setEditingRoom({
-          ...editingRoom,
-          images: [
-            ...(editingRoom.images || []),
-            { id: GuidRandom(), imageUrl: compressedUrl, isPrimary: (editingRoom.images?.length || 0) === 0 }
-          ]
-        });
-      } else {
-        setNewRoom(prev => ({
-          ...prev,
-          imageUrls: [...prev.imageUrls, compressedUrl]
-        }));
-      }
-      toast.success('Đã nạp và tối ưu ảnh phòng trọ!');
-
-      // 2. Async Cloudinary sync in background
-      imagesApi.uploadImage(file).then(res => {
-        if (res?.imageUrl && !res.imageUrl.includes('unsplash')) {
-          if (isEdit) {
-            setEditingRoom(prev => prev ? {
-              ...prev,
-              images: prev.images.map(img => img.imageUrl === compressedUrl ? { ...img, imageUrl: res.imageUrl } : img)
-            } : null);
-          } else {
-            setNewRoom(prev => ({
-              ...prev,
-              imageUrls: prev.imageUrls.map(url => url === compressedUrl ? res.imageUrl : url)
-            }));
-          }
+        if (isEdit) {
+          setEditingRoom(prev => prev ? {
+            ...prev,
+            images: [
+              ...(prev.images || []),
+              { id: GuidRandom(), imageUrl: compressedUrl, isPrimary: (prev.images?.length || 0) === 0 }
+            ]
+          } : null);
+        } else {
+          setNewRoom(prev => ({
+            ...prev,
+            imageUrls: [...prev.imageUrls, compressedUrl]
+          }));
         }
-      }).catch(() => {});
 
+        // 2. Async Cloudinary sync in background
+        imagesApi.uploadImage(file).then(res => {
+          if (res?.imageUrl && !res.imageUrl.includes('unsplash')) {
+            if (isEdit) {
+              setEditingRoom(prev => prev ? {
+                ...prev,
+                images: prev.images.map(img => img.imageUrl === compressedUrl ? { ...img, imageUrl: res.imageUrl } : img)
+              } : null);
+            } else {
+              setNewRoom(prev => ({
+                ...prev,
+                imageUrls: prev.imageUrls.map(url => url === compressedUrl ? res.imageUrl : url)
+              }));
+            }
+          }
+        }).catch(() => {});
+      }
+
+      toast.success(`Đã nạp và tối ưu ${files.length} ảnh phòng trọ!`);
     } catch (err) {
       toast.error('Không thể đọc file ảnh.');
     } finally {
       setUploadingImage(false);
+      e.target.value = '';
     }
   };
 
@@ -424,6 +427,7 @@ export default function RoomManagement() {
                   <input 
                     type="file" 
                     accept="image/*"
+                    multiple
                     className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
                     onChange={(e) => handleImageUpload(e, false)}
                     disabled={uploadingImage}
@@ -580,6 +584,7 @@ export default function RoomManagement() {
                   <input 
                     type="file" 
                     accept="image/*"
+                    multiple
                     className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
                     onChange={(e) => handleImageUpload(e, true)}
                   />
