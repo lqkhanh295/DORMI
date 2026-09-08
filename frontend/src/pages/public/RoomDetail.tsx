@@ -154,8 +154,10 @@ export default function RoomDetail() {
                 <p className="font-bold text-[#0F172A] text-body">{roomData?.area ? `${roomData.area} m²` : '25 m²'}</p>
               </div>
               <div className="bg-[#F5F7FA] shadow-clay-inset p-4 rounded-[12px]">
-                <p className="text-[#64748B] text-caption font-semibold uppercase mb-1">Tiện ích</p>
-                <p className="font-bold text-[#0F172A] text-body line-clamp-1">{roomData?.utilities || 'Đầy đủ'}</p>
+                <p className="text-[#64748B] text-caption font-semibold uppercase mb-1">Số tiện ích</p>
+                <p className="font-bold text-[#0F172A] text-body">
+                  {roomData?.utilities ? `${roomData.utilities.split(',').filter(Boolean).length} tiện ích` : 'Đầy đủ'}
+                </p>
               </div>
             </div>
 
@@ -164,6 +166,22 @@ export default function RoomDetail() {
               <p className="text-[#64748B] text-body leading-relaxed whitespace-pre-line">
                 {roomData?.description || 'Phòng trọ tiện nghi, thiết kế hiện đại, không gian thoáng mát.'}
               </p>
+            </div>
+
+            <div className="space-y-4 pt-6 border-t border-[#E2E8F0]">
+              <h2 className="text-h2 font-bold text-[#0F172A]">Tiện ích đi kèm</h2>
+              <div className="flex flex-wrap gap-2.5">
+                {(roomData?.utilities ? roomData.utilities.split(',') : ['Wifi', 'Máy lạnh', 'Tủ lạnh', 'Ban công', 'Bãi giữ xe']).map((util, i) => {
+                  const name = util.trim();
+                  if (!name) return null;
+                  return (
+                    <span key={i} className="px-3.5 py-2 rounded-[12px] bg-[#F5F7FA] text-[#00153D] border border-[#E2E8F0] text-body font-semibold flex items-center gap-2 shadow-clay-inset">
+                      <CheckCircle className="w-4.5 h-4.5 text-[#16803C]" weight="fill" />
+                      {name}
+                    </span>
+                  );
+                })}
+              </div>
             </div>
           </div>
         </div>
