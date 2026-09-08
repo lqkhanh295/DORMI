@@ -3,7 +3,7 @@ import { Card } from '../../components/ui/Card';
 import { Button } from '../../components/ui/Button';
 import { adminApi } from '../../services/api';
 import { toast } from 'sonner';
-import { CheckCircle2, Clock, XCircle, ShieldCheck, Mail, Phone, UserCheck } from 'lucide-react';
+import { CheckCircle2, Clock, XCircle, ShieldCheck, Mail, Phone, UserCheck, ZoomIn, Check, Globe } from 'lucide-react';
 
 interface ModerationRoomItem {
   id: string;
@@ -234,9 +234,9 @@ export default function ContentModeration() {
                     variant="secondary" 
                     size="sm" 
                     onClick={() => setPreviewAvatar(getLandlordAvatar(selectedRoom))}
-                    className="shrink-0 text-caption font-semibold"
+                    className="shrink-0 text-caption font-semibold inline-flex items-center gap-1.5"
                   >
-                    🔍 Phóng to ảnh chủ trọ
+                    <ZoomIn className="w-4 h-4 text-[#00153D]" /> Phóng to ảnh chủ trọ
                   </Button>
                 </Card>
 
@@ -284,8 +284,8 @@ export default function ContentModeration() {
                     <h4 className="font-semibold text-caption text-[#64748B] uppercase mb-2">Tiện ích đi kèm</h4>
                     <div className="flex flex-wrap gap-2">
                       {selectedRoom.utilities.split(',').map((util, i) => (
-                        <span key={i} className="px-3 py-1 bg-white border border-[#CBD5E1] rounded-lg text-caption font-semibold text-[#00153D] shadow-sm">
-                          ✓ {util.trim()}
+                        <span key={i} className="px-3 py-1 bg-white border border-[#CBD5E1] rounded-lg text-caption font-semibold text-[#00153D] shadow-sm inline-flex items-center gap-1">
+                          <Check className="w-3.5 h-3.5 text-[#16803C]" /> {util.trim()}
                         </span>
                       ))}
                     </div>
@@ -304,8 +304,8 @@ export default function ContentModeration() {
                 {selectedRoom.virtual3DUrl && (
                   <Card className="p-4 bg-[#F5F7FA] shadow-clay-inset rounded-[12px] border border-[#E2E8F0]">
                     <h4 className="font-semibold text-caption text-[#64748B] uppercase mb-1">Link 3D Virtual Tour</h4>
-                    <a href={selectedRoom.virtual3DUrl} target="_blank" rel="noreferrer" className="text-body text-[#00153D] font-bold underline hover:text-blue-600 break-all">
-                      🌐 {selectedRoom.virtual3DUrl}
+                    <a href={selectedRoom.virtual3DUrl} target="_blank" rel="noreferrer" className="text-body text-[#00153D] font-bold underline hover:text-blue-600 break-all inline-flex items-center gap-1.5">
+                      <Globe className="w-4 h-4 text-blue-600" /> {selectedRoom.virtual3DUrl}
                     </a>
                   </Card>
                 )}
