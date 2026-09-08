@@ -31,6 +31,7 @@ export default function ContentModeration() {
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const [filterStatus, setFilterStatus] = useState<'all' | number>('all');
   const [previewAvatar, setPreviewAvatar] = useState<string | null>(null);
+  const [previewImage, setPreviewImage] = useState<string | null>(null);
 
   const loadRooms = async () => {
     try {
@@ -246,7 +247,7 @@ export default function ContentModeration() {
                     <h4 className="font-semibold text-caption text-[#64748B] uppercase mb-3">Hình ảnh phòng trọ thực tế ({selectedRoom.images.length} ảnh)</h4>
                     <div className="grid grid-cols-4 gap-3">
                       {selectedRoom.images.map((img, idx) => (
-                        <div key={img.id || idx} className="h-28 rounded-lg overflow-hidden border border-[#E2E8F0] bg-black/5">
+                        <div key={img.id || idx} className="h-28 rounded-lg overflow-hidden border border-[#E2E8F0] bg-black/5 cursor-pointer" onClick={() => setPreviewImage(img.imageUrl)}>
                           <img src={img.imageUrl} alt={`Room detail ${idx}`} className="w-full h-full object-cover hover:scale-105 transition-transform" />
                         </div>
                       ))}
@@ -365,6 +366,18 @@ export default function ContentModeration() {
             </div>
             <p className="text-caption text-[#64748B] font-semibold">{selectedRoom?.landlordName}</p>
             <Button variant="secondary" size="sm" onClick={() => setPreviewAvatar(null)} className="w-full">Đóng</Button>
+          </div>
+        </div>
+      )}
+
+      {/* Room Image Preview Modal */}
+      {previewImage && (
+        <div 
+          className="fixed inset-0 z-50 bg-black/70 flex items-center justify-center p-4 backdrop-blur-xs"
+          onClick={() => setPreviewImage(null)}
+        >
+          <div className="max-w-3xl max-h-[85vh] rounded-2xl overflow-hidden shadow-2xl" onClick={e => e.stopPropagation()}>
+            <img src={previewImage} alt="Ảnh phòng trọ" className="w-full h-full object-contain" />
           </div>
         </div>
       )}
