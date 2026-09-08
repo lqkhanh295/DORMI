@@ -3,7 +3,7 @@ import { GlobalNav } from '../../components/ui/GlobalNav';
 import { LocalNav } from '../../components/ui/LocalNav';
 import { BentoCard } from '../../components/ui/BentoCard';
 import { AppleButton } from '../../components/ui/AppleButton';
-import { User, Sparkle, ChatText, CalendarCheck, Heart } from '@phosphor-icons/react';
+import { User, Sparkles, MessageSquare, CalendarCheck, Heart } from 'lucide-react';
 
 export function CustomerLayout() {
   const items = [
@@ -60,7 +60,7 @@ export function CustomerMatcher() {
   return (
     <div className="flex flex-col items-center justify-center pt-12">
        <div className="flex items-center justify-center w-16 h-16 rounded-pill bg-gradient-to-br from-indigo-500 to-purple-500 text-white mb-6">
-          <Sparkle className="w-8 h-8"  />
+          <Sparkles className="w-8 h-8" />
        </div>
        <h1 className="text-[40px] font-bold text-[#1d1d1f] mb-2">Dormi AI Matcher.</h1>
        <p className="text-[17px] text-[#6e6e73] mb-12 text-center max-w-[500px]">Thuật toán ghép nối thông minh giúp bạn tìm được người bạn cùng phòng lý tưởng nhất.</p>
@@ -136,7 +136,7 @@ export function CustomerMessages() {
   return (
     <div className="h-[70vh] flex flex-col items-center justify-center text-center">
       <div className="w-20 h-20 rounded-pill bg-[#e8e8ed] flex items-center justify-center text-[#86868b] mb-6">
-        <ChatText className="w-10 h-10"  />
+        <MessageSquare className="w-10 h-10" />
       </div>
       <h1 className="text-[28px] font-bold text-[#1d1d1f] mb-2">Hộp thư đến.</h1>
       <p className="text-[17px] text-[#6e6e73]">Tất cả tin nhắn trao đổi với chủ nhà sẽ hiển thị ở đây.</p>

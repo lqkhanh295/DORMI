@@ -3,7 +3,7 @@ import { GlobalNav } from '../components/ui/GlobalNav';
 import { LocalNav } from '../components/ui/LocalNav';
 import { BentoCard } from '../components/ui/BentoCard';
 import { AppleButton } from '../components/ui/AppleButton';
-import { MapPin, MagnifyingGlass, SlidersHorizontal, X, MagnifyingGlassMinus } from '@phosphor-icons/react';
+import { MapPin, Search as SearchIcon, SlidersHorizontal, X, SearchX } from 'lucide-react';
 import { roomsApi } from '../services/api';
 
 const defaultRentalRooms = [
@@ -101,7 +101,7 @@ export function Search() {
         <div className="mb-8 md:mb-10 w-full">
           <div className="relative flex w-full max-w-[600px] items-center mx-auto">
             <label htmlFor="searchInput" className="sr-only">Tìm kiếm</label>
-            <MagnifyingGlass className="absolute left-4 h-5 w-5 text-text-secondary" />
+            <SearchIcon className="absolute left-4 h-5 w-5 text-text-secondary" />
             <input 
               id="searchInput"
               type="text" 
@@ -116,7 +116,7 @@ export function Search() {
                 aria-label="Xóa tìm kiếm"
                 className="absolute right-12 text-text-secondary hover:text-foreground p-1 transition-colors"
               >
-                <X className="h-4 w-4 md:h-5 md:w-5" weight="bold" />
+                <X className="h-4 w-4 md:h-5 md:w-5" />
               </button>
             )}
             <button aria-label="Bộ lọc tìm kiếm" className="absolute right-3 md:right-4 text-text-secondary hover:text-foreground transition-colors p-1">
@@ -129,7 +129,7 @@ export function Search() {
         {isLoading ? (
           <div className="grid gap-4 md:gap-6 grid-cols-1 sm:grid-cols-2 lg:grid-cols-3">
             {[1, 2, 3].map((i) => (
-              <BentoCard key={i} noPadding className="bg-white flex flex-col h-[380px] md:h-[420px] animate-pulse">
+              <BentoCard key={i} noPadding className="bg-[#FFFFFF] flex flex-col h-[380px] md:h-[420px] animate-pulse">
                 <div className="relative h-[200px] md:h-[220px] w-full bg-neutral-200"></div>
                 <div className="flex flex-1 flex-col justify-between p-5 md:p-6">
                   <div>
@@ -149,7 +149,7 @@ export function Search() {
           /* Empty State */
           <div className="flex flex-col items-center justify-center py-16 md:py-20 text-center px-4">
             <div className="h-16 w-16 md:h-20 md:w-20 rounded-pill bg-surface-alt flex items-center justify-center text-text-muted mb-4">
-              <MagnifyingGlassMinus className="w-8 h-8 md:w-10 md:h-10" />
+              <SearchX className="w-8 h-8 md:w-10 md:h-10" />
             </div>
             <h3 className="text-lg md:text-xl font-bold text-foreground mb-2">Không tìm thấy phòng trọ nào</h3>
             <p className="text-sm md:text-base text-text-secondary max-w-md">Rất tiếc, không có kết quả nào phù hợp với tìm kiếm của bạn. Vui lòng thử lại bằng từ khóa khác.</p>

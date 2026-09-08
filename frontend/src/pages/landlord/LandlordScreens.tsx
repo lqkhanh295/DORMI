@@ -3,7 +3,7 @@ import { GlobalNav } from '../../components/ui/GlobalNav';
 import { LocalNav } from '../../components/ui/LocalNav';
 import { BentoCard } from '../../components/ui/BentoCard';
 import { AppleButton } from '../../components/ui/AppleButton';
-import { ShieldCheck, House, Plus, Image as ImageIcon, CalendarBlank as Calendar, ChatText } from '@phosphor-icons/react';
+import { ShieldCheck, Home as House, Plus, Image as ImageIcon, Calendar, MessageSquare as ChatText } from 'lucide-react';
 
 export function LandlordLayout() {
   const items = [

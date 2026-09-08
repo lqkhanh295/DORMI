@@ -3,7 +3,7 @@ import { GlobalNav } from '../../components/ui/GlobalNav';
 import { LocalNav } from '../../components/ui/LocalNav';
 import { BentoCard } from '../../components/ui/BentoCard';
 import { AppleButton } from '../../components/ui/AppleButton';
-import { Users, ShieldCheck, Warning, FileText, CheckCircle, XCircle } from '@phosphor-icons/react';
+import { Users, ShieldCheck, AlertTriangle, FileText, CheckCircle, XCircle } from 'lucide-react';
 
 export function AdminLayout() {
   const items = [
@@ -50,7 +50,7 @@ export function AdminDashboard() {
         </BentoCard>
         <BentoCard className="bg-white p-8">
           <div className="flex h-12 w-12 items-center justify-center rounded-pill bg-[#ff3b30]/10 mb-4">
-             <Warning className="w-6 h-6 text-[#ff3b30]"  />
+             <AlertTriangle className="w-6 h-6 text-[#ff3b30]"  />
           </div>
           <p className="text-[15px] font-medium text-[#6e6e73]">Báo cáo mở</p>
           <p className="text-[40px] font-bold text-[#1d1d1f]">2</p>

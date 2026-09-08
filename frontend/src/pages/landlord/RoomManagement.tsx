@@ -3,6 +3,7 @@ import { Card } from '../../components/ui/Card';
 import { Button } from '../../components/ui/Button';
 import { roomsApi, imagesApi, type RoomResponse } from '../../services/api';
 import { toast } from 'sonner';
+import { Pencil, Eye, EyeOff, Trash2, CheckCircle2, Clock, XCircle } from 'lucide-react';
 
 const UTILITY_OPTIONS = [
   'Wifi', 'Máy lạnh', 'Tủ lạnh', 'Máy giặt', 'Ban công', 
@@ -311,9 +312,9 @@ export default function RoomManagement() {
                 <div className="flex-1 space-y-2">
                   <div className="flex items-start justify-between">
                     <h3 className="font-bold text-h3 text-[#0F172A]">{room.title}</h3>
-                    {room.status === 0 && <span className="px-3 py-1 text-caption font-bold rounded-full border bg-[#F0FDF4] text-[#16803C] border-[#DCFCE7]">✓ Đã duyệt (Còn trống)</span>}
-                    {room.status === 2 && <span className="px-3 py-1 text-caption font-bold rounded-full border bg-[#FEF3C7] text-[#D97706] border-[#FDE68A]">⏳ Chờ phê duyệt</span>}
-                    {room.status === 3 && <span className="px-3 py-1 text-caption font-bold rounded-full border bg-[#FEF2F2] text-[#C62828] border-[#FECACA]">✕ Bị từ chối / Ẩn</span>}
+                    {room.status === 0 && <span className="px-3 py-1 text-caption font-bold rounded-full border bg-[#F0FDF4] text-[#16803C] border-[#DCFCE7] inline-flex items-center gap-1"><CheckCircle2 className="w-3.5 h-3.5" /> Đã duyệt (Còn trống)</span>}
+                    {room.status === 2 && <span className="px-3 py-1 text-caption font-bold rounded-full border bg-[#FEF3C7] text-[#D97706] border-[#FDE68A] inline-flex items-center gap-1"><Clock className="w-3.5 h-3.5" /> Chờ phê duyệt</span>}
+                    {room.status === 3 && <span className="px-3 py-1 text-caption font-bold rounded-full border bg-[#FEF2F2] text-[#C62828] border-[#FECACA] inline-flex items-center gap-1"><XCircle className="w-3.5 h-3.5" /> Bị từ chối / Ẩn</span>}
                     {room.status === 1 && <span className="px-3 py-1 text-caption font-bold rounded-full border bg-[#F1F5F9] text-[#475569] border-[#E2E8F0]">Đã thuê</span>}
                   </div>
                   <p className="text-[#64748B] text-caption">{room.address}</p>
@@ -325,22 +326,24 @@ export default function RoomManagement() {
                   </div>
                 </div>
                 <div className="flex md:flex-col gap-2 shrink-0 w-full md:w-auto mt-4 md:mt-0">
-                  <Button variant="secondary" size="sm" className="w-full" onClick={() => setEditingRoom(room)}>✏️ Chỉnh sửa</Button>
-                  <Button 
-                    variant="secondary" 
-                    size="sm" 
-                    className={`w-full ${room.status === 3 ? 'bg-emerald-50 text-emerald-700 border-emerald-200 hover:bg-emerald-100' : 'bg-amber-50 text-amber-700 border-amber-200 hover:bg-amber-100'}`}
-                    onClick={() => handleToggleHideRoom(room)}
-                  >
-                    {room.status === 3 ? '👁️ Hiện tin' : '🙈 Ẩn tin'}
+                  <Button variant="secondary" size="sm" className="w-full inline-flex items-center justify-center gap-1" onClick={() => setEditingRoom(room)}>
+                    <Pencil className="w-3.5 h-3.5" /> Chỉnh sửa
                   </Button>
                   <Button 
                     variant="secondary" 
                     size="sm" 
-                    className="w-full bg-rose-50 text-rose-700 border-rose-200 hover:bg-rose-100"
+                    className={`w-full inline-flex items-center justify-center gap-1 ${room.status === 3 ? 'bg-emerald-50 text-emerald-700 border-emerald-200 hover:bg-emerald-100' : 'bg-amber-50 text-amber-700 border-amber-200 hover:bg-amber-100'}`}
+                    onClick={() => handleToggleHideRoom(room)}
+                  >
+                    {room.status === 3 ? <><Eye className="w-3.5 h-3.5" /> Hiện tin</> : <><EyeOff className="w-3.5 h-3.5" /> Ẩn tin</>}
+                  </Button>
+                  <Button 
+                    variant="secondary" 
+                    size="sm" 
+                    className="w-full bg-rose-50 text-rose-700 border-rose-200 hover:bg-rose-100 inline-flex items-center justify-center gap-1"
                     onClick={() => handleDeleteRoom(room.id)}
                   >
-                    🗑️ Xóa
+                    <Trash2 className="w-3.5 h-3.5" /> Xóa
                   </Button>
                 </div>
               </Card>

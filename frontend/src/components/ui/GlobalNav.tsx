@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { Link, useNavigate, useLocation } from 'react-router-dom';
-import { List, X, Plus, Users, ArrowLeft, SignIn, SignOut } from '@phosphor-icons/react';
+import { Menu, X, Plus, Users, ArrowLeft, LogIn, LogOut } from 'lucide-react';
 import { useStore } from '../../store/useStore';
 
 export function GlobalNav() {
@@ -22,7 +22,7 @@ export function GlobalNav() {
               className="text-[#64748B] hover:text-[#0F172A] transition-colors touch-target flex items-center justify-center" 
               title="Quay lại"
             >
-              <ArrowLeft className="w-5 h-5" weight="bold" />
+              <ArrowLeft className="w-5 h-5" />
             </button>
           )}
           <Link to="/" className="text-[22px] font-black tracking-wider text-[#00153D] flex items-center">
@@ -54,7 +54,7 @@ export function GlobalNav() {
               to="/landlord" 
               className="bg-[#00153D] text-white hover:bg-[#073372] text-body font-semibold px-4 py-2 rounded-[10px] transition-colors flex items-center gap-1.5 min-h-[44px]"
             >
-              <Plus className="w-4 h-4" weight="bold" />
+              <Plus className="w-4 h-4" />
               Đăng tin
             </Link>
           )}
@@ -64,7 +64,7 @@ export function GlobalNav() {
               to="/auth" 
               className="border border-[#E2E8F0] text-[#0F172A] hover:bg-[#F1F5F9] text-body font-semibold px-4 py-2 rounded-[10px] transition-colors flex items-center gap-1.5 min-h-[44px]"
             >
-              <SignIn className="w-4 h-4" />
+              <LogIn className="w-4 h-4" />
               Đăng nhập
             </Link>
           ) : (
@@ -82,7 +82,7 @@ export function GlobalNav() {
                 onClick={() => logout()} 
                 className="text-caption font-medium text-[#C62828] hover:underline p-1"
               >
-                <SignOut className="w-4 h-4" />
+                <LogOut className="w-4 h-4" />
               </button>
             </div>
           )}
@@ -94,7 +94,7 @@ export function GlobalNav() {
           className="md:hidden text-[#0F172A] touch-target flex items-center justify-center p-2"
           aria-label="Toggle menu"
         >
-          {mobileMenuOpen ? <X className="w-6 h-6" /> : <List className="w-6 h-6" />}
+          {mobileMenuOpen ? <X className="w-6 h-6" /> : <Menu className="w-6 h-6" />}
         </button>
       </div>
 

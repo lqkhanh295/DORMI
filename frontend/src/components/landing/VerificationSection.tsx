@@ -1,4 +1,4 @@
-import { CheckCircle } from '@phosphor-icons/react';
+import { CheckCircle } from 'lucide-react';
 
 export function VerificationSection() {
   // ponytail: Consolidated single card container for Verification Section (replacing 3 separate horizontal cards)
@@ -20,7 +20,7 @@ export function VerificationSection() {
             {/* Step 1 */}
             <div className="flex items-start gap-4 p-4 rounded-[14px] bg-[#F5F7FA] shadow-clay-inset">
               <div className="w-8 h-8 rounded-full bg-[#F0FDF4] text-[#16803C] flex items-center justify-center flex-shrink-0 mt-0.5">
-                <CheckCircle className="w-5 h-5" weight="fill" />
+                <CheckCircle className="w-5 h-5" />
               </div>
               <div className="space-y-1">
                 <h3 className="text-h3 text-[#0F172A]">Người đăng được xác minh</h3>
@@ -33,7 +33,7 @@ export function VerificationSection() {
             {/* Step 2 */}
             <div className="flex items-start gap-4 p-4 rounded-[14px] bg-[#F5F7FA] shadow-clay-inset">
               <div className="w-8 h-8 rounded-full bg-[#F0FDF4] text-[#16803C] flex items-center justify-center flex-shrink-0 mt-0.5">
-                <CheckCircle className="w-5 h-5" weight="fill" />
+                <CheckCircle className="w-5 h-5" />
               </div>
               <div className="space-y-1">
                 <h3 className="text-h3 text-[#0F172A]">Hình ảnh được kiểm tra</h3>
@@ -46,7 +46,7 @@ export function VerificationSection() {
             {/* Step 3 */}
             <div className="flex items-start gap-4 p-4 rounded-[14px] bg-[#F5F7FA] shadow-clay-inset">
               <div className="w-8 h-8 rounded-full bg-[#F0FDF4] text-[#16803C] flex items-center justify-center flex-shrink-0 mt-0.5">
-                <CheckCircle className="w-5 h-5" weight="fill" />
+                <CheckCircle className="w-5 h-5" />
               </div>
               <div className="space-y-1">
                 <h3 className="text-h3 text-[#0F172A]">Thông tin rõ ràng</h3>

@@ -1,5 +1,5 @@
 import { Link } from 'react-router-dom';
-import { WarningCircle, House } from '@phosphor-icons/react';
+import { AlertCircle as WarningCircle, Home as House } from 'lucide-react';
 
 export default function NotFound() {
   return (
@@ -13,7 +13,7 @@ export default function NotFound() {
           </p>
         </div>
         <Link to="/" className="btn-clay-primary text-body font-semibold px-8 py-3 rounded-[12px] inline-flex items-center gap-2 min-h-[44px]">
-          <House className="w-5 h-5" weight="bold" />
+          <House className="w-5 h-5" />
           Về trang chủ
         </Link>
       </div>

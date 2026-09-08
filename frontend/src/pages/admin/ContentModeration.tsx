@@ -3,6 +3,7 @@ import { Card } from '../../components/ui/Card';
 import { Button } from '../../components/ui/Button';
 import { adminApi } from '../../services/api';
 import { toast } from 'sonner';
+import { CheckCircle2, Clock, XCircle } from 'lucide-react';
 
 interface ModerationRoomItem {
   id: string;
@@ -65,11 +66,11 @@ export default function ContentModeration() {
   const renderStatusBadge = (status: number) => {
     switch (status) {
       case 0:
-        return <span className="text-caption font-bold bg-[#F0FDF4] text-[#16803C] border border-[#DCFCE7] px-2.5 py-0.5 rounded-full">✓ Đã duyệt (Công khai)</span>;
+        return <span className="text-caption font-bold bg-[#F0FDF4] text-[#16803C] border border-[#DCFCE7] px-2.5 py-0.5 rounded-full inline-flex items-center gap-1"><CheckCircle2 className="w-3.5 h-3.5" /> Đã duyệt (Công khai)</span>;
       case 2:
-        return <span className="text-caption font-bold bg-[#FEF3C7] text-[#D97706] border border-[#FDE68A] px-2.5 py-0.5 rounded-full">⏳ Chờ phê duyệt</span>;
+        return <span className="text-caption font-bold bg-[#FEF3C7] text-[#D97706] border border-[#FDE68A] px-2.5 py-0.5 rounded-full inline-flex items-center gap-1"><Clock className="w-3.5 h-3.5" /> Chờ phê duyệt</span>;
       case 3:
-        return <span className="text-caption font-bold bg-[#FEF2F2] text-[#C62828] border border-[#FECACA] px-2.5 py-0.5 rounded-full">✕ Bị từ chối / Ẩn</span>;
+        return <span className="text-caption font-bold bg-[#FEF2F2] text-[#C62828] border border-[#FECACA] px-2.5 py-0.5 rounded-full inline-flex items-center gap-1"><XCircle className="w-3.5 h-3.5" /> Bị từ chối / Ẩn</span>;
       case 1:
         return <span className="text-caption font-bold bg-[#F1F5F9] text-[#475569] border border-[#E2E8F0] px-2.5 py-0.5 rounded-full">Đã thuê</span>;
       default:
@@ -235,24 +236,24 @@ export default function ContentModeration() {
                 <div className="flex gap-2">
                   <Button
                     variant="secondary"
-                    className="bg-[#FEF3C7] text-[#D97706] border border-[#FDE68A] hover:bg-[#FDE68A]"
+                    className="bg-[#FEF3C7] text-[#D97706] border border-[#FDE68A] hover:bg-[#FDE68A] inline-flex items-center gap-1.5"
                     onClick={() => handleAction(selectedRoom.id, 2)}
                   >
-                    Chờ duyệt
+                    <Clock className="w-4 h-4" /> Chờ duyệt
                   </Button>
                   <Button
                     variant="secondary"
-                    className="bg-[#FEF2F2] text-[#C62828] border border-[#FECACA] hover:bg-[#FEE2E2]"
+                    className="bg-[#FEF2F2] text-[#C62828] border border-[#FECACA] hover:bg-[#FEE2E2] inline-flex items-center gap-1.5"
                     onClick={() => handleAction(selectedRoom.id, 3)}
                   >
-                    Từ chối
+                    <XCircle className="w-4 h-4" /> Từ chối
                   </Button>
                   <Button
                     variant="primary"
-                    className="btn-clay-primary"
+                    className="btn-clay-primary inline-flex items-center gap-1.5"
                     onClick={() => handleAction(selectedRoom.id, 0)}
                   >
-                    Phê duyệt
+                    <CheckCircle2 className="w-4 h-4" /> Phê duyệt
                   </Button>
                 </div>
               </div>
