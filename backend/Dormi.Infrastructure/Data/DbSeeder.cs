@@ -16,7 +16,6 @@ public static class DbSeeder
     {
         try
         {
-            await db.Database.EnsureDeletedAsync();
             await db.Database.EnsureCreatedAsync();
         }
         catch
