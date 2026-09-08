@@ -46,22 +46,32 @@ export default function RoomMapView({ rooms, selectedRoomId, onSelectRoom, class
       attributionControl: false
     });
 
-    // Clean OpenStreetMap tiles
-    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-      maxZoom: 19,
-      attribution: '© OpenStreetMap contributors'
+    // Google Maps Roadmap tiles (High performance, complete Vietnamese labels & streets)
+    L.tileLayer('https://mt{s}.google.com/vt/lyrs=m&x={x}&y={y}&z={z}', {
+      subdomains: ['0', '1', '2', '3'],
+      maxZoom: 20,
+      attribution: '© Google Maps'
     }).addTo(map);
 
     const markersLayer = L.layerGroup().addTo(map);
     markersLayerRef.current = markersLayer;
     mapInstanceRef.current = map;
 
-    // Invalidate size after mount in case parent container resized
-    setTimeout(() => {
+    // Invalidate size immediately and with ResizeObserver for guaranteed rendering
+    const resizeObserver = new ResizeObserver(() => {
       map.invalidateSize();
-    }, 200);
+    });
+    if (mapContainerRef.current) {
+      resizeObserver.observe(mapContainerRef.current);
+    }
+
+    const t1 = setTimeout(() => map.invalidateSize(), 100);
+    const t2 = setTimeout(() => map.invalidateSize(), 500);
 
     return () => {
+      clearTimeout(t1);
+      clearTimeout(t2);
+      resizeObserver.disconnect();
       map.remove();
       mapInstanceRef.current = null;
     };
@@ -272,7 +282,7 @@ export default function RoomMapView({ rooms, selectedRoomId, onSelectRoom, class
   return (
     <div className={`relative w-full h-full overflow-hidden bg-[#EEF2F6] ${className}`}>
       {/* Map Container */}
-      <div ref={mapContainerRef} className="w-full h-full z-0" />
+      <div ref={mapContainerRef} className="w-full h-full z-0" style={{ width: '100%', height: '100%', minHeight: '400px' }} />
 
       {/* Top Banner Status (GPS Notification) */}
       <div className="absolute top-4 left-4 z-10 flex flex-col gap-2 max-w-sm pointer-events-none">

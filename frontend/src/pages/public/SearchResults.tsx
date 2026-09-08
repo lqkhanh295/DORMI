@@ -88,27 +88,40 @@ export default function SearchResults() {
         {/* Top Bar: Search Input & Controls */}
         <div className="p-6 bg-white rounded-b-[18px] shadow-clay-primary space-y-4 z-10">
           <div className="flex items-center gap-3">
-            <Button variant="secondary" className="w-[44px] h-[44px] p-0 flex-shrink-0" onClick={() => navigate(-1)} aria-label="Quay lại">
+            <button 
+              type="button"
+              onClick={() => navigate(-1)} 
+              className="w-11 h-11 bg-white hover:bg-[#F5F7FA] text-[#0F172A] border border-[#E2E8F0] rounded-[12px] shadow-clay-soft flex items-center justify-center shrink-0 transition-all touch-target active:scale-95"
+              aria-label="Quay lại"
+            >
               <ArrowLeft className="w-5 h-5 text-[#0F172A]" />
-            </Button>
+            </button>
             <Input 
               placeholder="Tìm kiếm khu vực, tên đường..." 
               className="flex-1"
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
             />
-            <Button variant="secondary" className="h-[44px] px-4 hidden sm:flex items-center gap-2" onClick={() => setShowMobileFilter(true)}>
-              <SlidersHorizontal className="w-5 h-5" />
-              <span>Bộ lọc</span>
-            </Button>
-            <Button 
-              variant="secondary" 
-              className={`h-[44px] px-4 flex-shrink-0 hidden lg:flex items-center gap-2 transition-colors ${showMap ? 'bg-[#00153D] text-white' : ''}`} 
-              onClick={() => setShowMap(!showMap)}
+            <button 
+              type="button"
+              onClick={() => setShowMobileFilter(true)}
+              className="h-11 px-4 bg-white hover:bg-[#F5F7FA] text-[#0F172A] border border-[#E2E8F0] rounded-[12px] shadow-clay-soft hidden sm:flex items-center gap-2 shrink-0 text-caption font-semibold whitespace-nowrap transition-all touch-target active:scale-95"
             >
-              <MapTrifold className="w-5 h-5" />
-              <span className="text-body font-semibold">{showMap ? 'Ẩn bản đồ' : 'Hiện bản đồ'}</span>
-            </Button>
+              <SlidersHorizontal className="w-4 h-4 text-[#00153D]" />
+              <span>Bộ lọc</span>
+            </button>
+            <button 
+              type="button"
+              onClick={() => setShowMap(!showMap)}
+              className={`h-11 px-4 rounded-[12px] shadow-clay-soft border hidden lg:flex items-center gap-2 shrink-0 text-caption font-semibold whitespace-nowrap transition-all touch-target active:scale-95 ${
+                showMap 
+                  ? 'bg-[#00153D] text-white border-[#00153D] hover:bg-[#0A2558]' 
+                  : 'bg-white text-[#0F172A] border-[#E2E8F0] hover:bg-[#F5F7FA]'
+              }`}
+            >
+              <MapTrifold className="w-4 h-4" />
+              <span>{showMap ? 'Ẩn bản đồ' : 'Hiện bản đồ'}</span>
+            </button>
           </div>
           
           {/* District Pills */}
