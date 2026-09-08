@@ -23,6 +23,14 @@ public static class DbSeeder
             // Fallback
         }
 
+        // ponytail: safe schema patch — EnsureCreated won't add new columns to existing tables
+        try
+        {
+            await db.Database.ExecuteSqlRawAsync(
+                "ALTER TABLE \"Users\" ADD COLUMN IF NOT EXISTS \"IsLookingForRoommate\" boolean NOT NULL DEFAULT false");
+        }
+        catch { /* column already exists or non-Postgres */ }
+
         if (await db.Users.AnyAsync()) return; // Already seeded
 
         var hasher = new PasswordHasher<User>();

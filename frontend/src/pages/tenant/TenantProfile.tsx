@@ -5,12 +5,14 @@ import { Input } from '../../components/ui/Input';
 import { useStore } from '../../store/useStore';
 import { profilesApi } from '../../services/api';
 import { toast } from 'sonner';
+import { Users } from 'lucide-react';
 
 export default function TenantProfile() {
   const { currentUser, updateUser } = useStore();
   const [firstName, setFirstName] = useState('');
   const [lastName, setLastName] = useState('');
   const [phoneNumber, setPhoneNumber] = useState('');
+  const [isLookingForRoommate, setIsLookingForRoommate] = useState(false);
   const [loading, setLoading] = useState(true);
 
   const [tags, setTags] = useState([
@@ -46,6 +48,9 @@ export default function TenantProfile() {
             setTags(parsedTags.map((name: string) => ({ name, active: true })));
           }
         }
+        if (res?.isLookingForRoommate != null) {
+          setIsLookingForRoommate(res.isLookingForRoommate);
+        }
       })
       .catch((err) => {
         console.warn('Failed to fetch customer profile from API:', err);
@@ -79,7 +84,8 @@ export default function TenantProfile() {
         fullName,
         phoneNumber,
         lifestyle,
-        preferences: 'Phòng yên tĩnh, sạch sẽ'
+        preferences: 'Phòng yên tĩnh, sạch sẽ',
+        isLookingForRoommate
       });
       updateUser({ name: fullName });
       toast.success('Lưu thông tin hồ sơ vào Backend API thành công!');
@@ -126,6 +132,26 @@ export default function TenantProfile() {
               <Input label="Họ & Tên đệm" value={lastName} onChange={e => setLastName(e.target.value)} />
               <Input label="Email" type="email" value={currentUser?.email || "tenant@dormi.vn"} disabled />
               <Input label="Số điện thoại" value={phoneNumber} onChange={e => setPhoneNumber(e.target.value)} placeholder="0901234567" />
+            </div>
+          </div>
+          <div className="pt-6 border-t border-[#E2E8F0]">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-3">
+                <div className={`w-10 h-10 rounded-full flex items-center justify-center ${isLookingForRoommate ? 'bg-[#F0FDF4] text-[#16803C]' : 'bg-[#F5F7FA] text-[#64748B]'}`}>
+                  <Users className="w-5 h-5" />
+                </div>
+                <div>
+                  <h3 className="text-h3 text-[#0F172A]">Tìm người ở ghép</h3>
+                  <p className="text-caption text-[#64748B]">Bật để hồ sơ của bạn xuất hiện trong gợi ý ở ghép cho người dùng khác.</p>
+                </div>
+              </div>
+              <button
+                type="button"
+                onClick={() => setIsLookingForRoommate(!isLookingForRoommate)}
+                className={`relative w-12 h-7 rounded-full transition-colors ${isLookingForRoommate ? 'bg-[#16803C]' : 'bg-[#CBD5E1]'}`}
+              >
+                <span className={`absolute top-0.5 left-0.5 w-6 h-6 bg-white rounded-full shadow-md transition-transform ${isLookingForRoommate ? 'translate-x-5' : ''}`} />
+              </button>
             </div>
           </div>
 

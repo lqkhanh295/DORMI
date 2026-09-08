@@ -65,6 +65,7 @@ public class CustomerProfileDto
     public string? PhoneNumber { get; set; }
     public string? Preferences { get; set; }
     public string? Lifestyle { get; set; }
+    public bool? IsLookingForRoommate { get; set; }
 }
 
 public class LandlordProfileDto

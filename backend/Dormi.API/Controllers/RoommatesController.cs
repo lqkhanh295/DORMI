@@ -190,7 +190,7 @@ public class RoommatesController : ControllerBase
 
         var posts = await _db.RoommatePosts
             .Include(r => r.Customer)
-            .Where(r => r.IsActive && r.CustomerId != userId)
+            .Where(r => r.IsActive && r.CustomerId != userId && r.Customer.IsLookingForRoommate)
             .ToListAsync();
 
         var recommendations = posts.Select(post =>

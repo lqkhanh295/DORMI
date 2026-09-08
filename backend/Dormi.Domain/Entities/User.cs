@@ -16,6 +16,7 @@ public class User
     public bool IsVerified { get; set; } = false;
     public string? Preferences { get; set; }
     public string? Lifestyle { get; set; }
+    public bool IsLookingForRoommate { get; set; } = false;
     public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
 
     // Navigations

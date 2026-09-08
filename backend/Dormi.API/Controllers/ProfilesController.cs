@@ -52,7 +52,8 @@ public class ProfilesController : ControllerBase
             FullName = user.FullName,
             PhoneNumber = user.PhoneNumber,
             Preferences = user.Preferences,
-            Lifestyle = user.Lifestyle
+            Lifestyle = user.Lifestyle,
+            IsLookingForRoommate = user.IsLookingForRoommate
         });
     }
 
@@ -86,6 +87,7 @@ public class ProfilesController : ControllerBase
             if (dto.PhoneNumber != null) user.PhoneNumber = dto.PhoneNumber;
             if (dto.Preferences != null) user.Preferences = dto.Preferences;
             if (dto.Lifestyle != null) user.Lifestyle = dto.Lifestyle;
+            if (dto.IsLookingForRoommate.HasValue) user.IsLookingForRoommate = dto.IsLookingForRoommate.Value;
             if (string.IsNullOrWhiteSpace(user.PasswordHash))
             {
                 user.PasswordHash = _passwordHasher.HashPassword(user, "Password123!");
