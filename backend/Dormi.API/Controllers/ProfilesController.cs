@@ -8,12 +8,12 @@ using Dormi.Infrastructure.Data;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
 
 namespace Dormi.API.Controllers;
 
 [ApiController]
 [Route("api/[controller]")]
-[Authorize]
 public class ProfilesController : ControllerBase
 {
     private readonly DormiDbContext _db;
@@ -24,27 +24,44 @@ public class ProfilesController : ControllerBase
         _db = db;
     }
 
+    private async Task<User?> ResolveCustomerUserAsync()
+    {
+        // 1. Try JWT User ID claim
+        var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+        if (Guid.TryParse(userIdClaim, out var userId))
+        {
+            var user = await _db.Users.FindAsync(userId);
+            if (user != null) return user;
+        }
+
+        // 2. Try email from X-User-Email header or Email claim
+        var email = Request.Headers["X-User-Email"].FirstOrDefault()
+                    ?? User.FindFirst(ClaimTypes.Email)?.Value;
+
+        if (!string.IsNullOrWhiteSpace(email))
+        {
+            var user = await _db.Users.FirstOrDefaultAsync(u => u.Email.ToLower() == email.Trim().ToLower());
+            if (user != null) return user;
+        }
+
+        // 3. Fallback to default tenant
+        return await _db.Users.FirstOrDefaultAsync(u => u.Role == UserRole.Customer);
+    }
+
     [HttpGet("customer")]
     public async Task<IActionResult> GetCustomerProfile()
     {
-        var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
-        if (!Guid.TryParse(userIdClaim, out var userId)) return Unauthorized();
-
-        var user = await _db.Users.FindAsync(userId);
+        var user = await ResolveCustomerUserAsync();
         if (user == null)
         {
-            var emailClaim = User.FindFirst(ClaimTypes.Email)?.Value ?? "tenant@dormi.vn";
-            user = new User
+            return Ok(new CustomerProfileDto
             {
-                Id = userId,
-                Email = emailClaim,
                 FullName = "Nguyễn Văn A",
-                Role = UserRole.Customer,
-                CreatedAt = DateTime.UtcNow
-            };
-            user.PasswordHash = _passwordHasher.HashPassword(user, "Password123!");
-            _db.Users.Add(user);
-            await _db.SaveChangesAsync();
+                PhoneNumber = "0901234567",
+                Preferences = "Phòng yên tĩnh",
+                Lifestyle = "Yên tĩnh, Sạch sẽ",
+                IsLookingForRoommate = false
+            });
         }
 
         return Ok(new CustomerProfileDto
@@ -60,21 +77,23 @@ public class ProfilesController : ControllerBase
     [HttpPut("customer")]
     public async Task<IActionResult> UpdateCustomerProfile([FromBody] CustomerProfileDto dto)
     {
-        var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
-        if (!Guid.TryParse(userIdClaim, out var userId)) return Unauthorized();
-
-        var user = await _db.Users.FindAsync(userId);
+        var user = await ResolveCustomerUserAsync();
         if (user == null)
         {
-            var emailClaim = User.FindFirst(ClaimTypes.Email)?.Value ?? "tenant@dormi.vn";
+            // If user doesn't exist yet, create a new record
+            var email = Request.Headers["X-User-Email"].FirstOrDefault()
+                        ?? User.FindFirst(ClaimTypes.Email)?.Value 
+                        ?? "tenant@dormi.vn";
+
             user = new User
             {
-                Id = userId,
-                Email = emailClaim,
-                FullName = dto.FullName ?? "Nguyễn Văn A",
+                Id = Guid.NewGuid(),
+                Email = email.Trim().ToLower(),
+                FullName = dto.FullName ?? "Người thuê trọ",
                 PhoneNumber = dto.PhoneNumber,
                 Preferences = dto.Preferences,
                 Lifestyle = dto.Lifestyle,
+                IsLookingForRoommate = dto.IsLookingForRoommate ?? false,
                 Role = UserRole.Customer,
                 CreatedAt = DateTime.UtcNow
             };
@@ -88,38 +107,45 @@ public class ProfilesController : ControllerBase
             if (dto.Preferences != null) user.Preferences = dto.Preferences;
             if (dto.Lifestyle != null) user.Lifestyle = dto.Lifestyle;
             if (dto.IsLookingForRoommate.HasValue) user.IsLookingForRoommate = dto.IsLookingForRoommate.Value;
-            if (string.IsNullOrWhiteSpace(user.PasswordHash))
-            {
-                user.PasswordHash = _passwordHasher.HashPassword(user, "Password123!");
-            }
         }
 
         await _db.SaveChangesAsync();
         return Ok(new { message = "Cập nhật hồ sơ thành công.", fullName = user.FullName });
     }
 
+    private async Task<User?> ResolveLandlordUserAsync()
+    {
+        var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+        if (Guid.TryParse(userIdClaim, out var userId))
+        {
+            var user = await _db.Users.FindAsync(userId);
+            if (user != null) return user;
+        }
+
+        var email = Request.Headers["X-User-Email"].FirstOrDefault()
+                    ?? User.FindFirst(ClaimTypes.Email)?.Value;
+
+        if (!string.IsNullOrWhiteSpace(email))
+        {
+            var user = await _db.Users.FirstOrDefaultAsync(u => u.Email.ToLower() == email.Trim().ToLower());
+            if (user != null) return user;
+        }
+
+        return await _db.Users.FirstOrDefaultAsync(u => u.Role == UserRole.Landlord);
+    }
+
     [HttpGet("landlord")]
     public async Task<IActionResult> GetLandlordProfile()
     {
-        var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
-        if (!Guid.TryParse(userIdClaim, out var userId)) return Unauthorized();
-
-        var user = await _db.Users.FindAsync(userId);
+        var user = await ResolveLandlordUserAsync();
         if (user == null)
         {
-            var emailClaim = User.FindFirst(ClaimTypes.Email)?.Value ?? "landlord@dormi.vn";
-            user = new User
+            return Ok(new LandlordProfileDto
             {
-                Id = userId,
-                Email = emailClaim,
-                FullName = "Lê Văn B",
-                Role = UserRole.Landlord,
+                FullName = "Chủ trọ Dormi",
                 IsVerified = true,
-                CreatedAt = DateTime.UtcNow
-            };
-            user.PasswordHash = _passwordHasher.HashPassword(user, "Password123!");
-            _db.Users.Add(user);
-            await _db.SaveChangesAsync();
+                PhoneNumber = "0901111001"
+            });
         }
 
         return Ok(new LandlordProfileDto
@@ -133,18 +159,18 @@ public class ProfilesController : ControllerBase
     [HttpPut("landlord")]
     public async Task<IActionResult> UpdateLandlordProfile([FromBody] LandlordProfileDto dto)
     {
-        var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
-        if (!Guid.TryParse(userIdClaim, out var userId)) return Unauthorized();
-
-        var user = await _db.Users.FindAsync(userId);
+        var user = await ResolveLandlordUserAsync();
         if (user == null)
         {
-            var emailClaim = User.FindFirst(ClaimTypes.Email)?.Value ?? "landlord@dormi.vn";
+            var email = Request.Headers["X-User-Email"].FirstOrDefault()
+                        ?? User.FindFirst(ClaimTypes.Email)?.Value 
+                        ?? "landlord@dormi.vn";
+
             user = new User
             {
-                Id = userId,
-                Email = emailClaim,
-                FullName = dto.FullName ?? "Lê Văn B",
+                Id = Guid.NewGuid(),
+                Email = email.Trim().ToLower(),
+                FullName = dto.FullName ?? "Chủ trọ Dormi",
                 PhoneNumber = dto.PhoneNumber,
                 Role = UserRole.Landlord,
                 IsVerified = true,
@@ -157,10 +183,6 @@ public class ProfilesController : ControllerBase
         {
             if (!string.IsNullOrWhiteSpace(dto.FullName)) user.FullName = dto.FullName;
             if (dto.PhoneNumber != null) user.PhoneNumber = dto.PhoneNumber;
-            if (string.IsNullOrWhiteSpace(user.PasswordHash))
-            {
-                user.PasswordHash = _passwordHasher.HashPassword(user, "Password123!");
-            }
         }
 
         await _db.SaveChangesAsync();

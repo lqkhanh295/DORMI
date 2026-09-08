@@ -79,6 +79,8 @@ export default function TenantProfile() {
     const fullName = `${firstName} ${lastName}`.trim();
     const lifestyle = tags.filter(t => t.active).map(t => t.name).join(', ');
 
+    updateUser({ name: fullName });
+
     try {
       await profilesApi.updateCustomerProfile({
         fullName,
@@ -87,10 +89,10 @@ export default function TenantProfile() {
         preferences: 'Phòng yên tĩnh, sạch sẽ',
         isLookingForRoommate
       });
-      updateUser({ name: fullName });
       toast.success('Lưu thông tin hồ sơ vào Backend API thành công!');
-    } catch {
-      toast.error('Không thể cập nhật hồ sơ vào API.');
+    } catch (err: any) {
+      console.warn('Profile update warning:', err);
+      toast.error('Không thể cập nhật hồ sơ: ' + (err?.message || 'Lỗi kết nối'));
     }
   };
 
