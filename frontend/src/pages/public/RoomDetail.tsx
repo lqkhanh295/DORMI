@@ -1,16 +1,18 @@
-import { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useState, useEffect } from 'react';
+import { useNavigate, useParams } from 'react-router-dom';
 import { Card } from '../../components/ui/Card';
 import { Button } from '../../components/ui/Button';
 import { useStore } from '../../store/useStore';
 import { Toaster, toast } from 'sonner';
-import { ArrowLeft, Star, CheckCircle, Heart, ShareNetwork, Warning, CalendarCheck, X } from '@phosphor-icons/react';
-import { appointmentsApi, favoritesApi } from '../../services/api';
+import { ArrowLeft, CheckCircle, Heart, ShareNetwork, Warning, CalendarCheck, X } from '@phosphor-icons/react';
+import { appointmentsApi, favoritesApi, roomsApi, type RoomResponse } from '../../services/api';
 
 export default function RoomDetail() {
   const navigate = useNavigate();
+  const { id } = useParams<{ id: string }>();
   const { currentUser } = useStore();
   
+  const [roomData, setRoomData] = useState<RoomResponse | null>(null);
   const [showGallery, setShowGallery] = useState(false);
   const [showVerificationModal, setShowVerificationModal] = useState(false);
   const [showScheduler, setShowScheduler] = useState(false);
@@ -26,16 +28,32 @@ export default function RoomDetail() {
     "https://images.unsplash.com/photo-1555854877-bab0e564b8d5?auto=format&fit=crop&w=1200&q=80"
   ];
 
+  useEffect(() => {
+    if (id) {
+      roomsApi.getRoomById(id)
+        .then(res => {
+          if (res && res.id) {
+            setRoomData(res);
+          }
+        })
+        .catch(() => {});
+    }
+  }, [id]);
+
+  const photos = roomData?.images && roomData.images.length > 0 
+    ? roomData.images.map(img => img.imageUrl) 
+    : MOCK_PHOTOS;
+
   const handleFavorite = async () => {
     const newState = !isSaved;
     setIsSaved(newState);
     try {
       if (newState) {
-        await favoritesApi.addFavorite('l1');
-        toast.success('Đã lưu phòng vào danh sách yêu thích (API)!');
+        await favoritesApi.addFavorite(id || 'l1');
+        toast.success('Đã lưu phòng vào danh sách yêu thích!');
       } else {
-        await favoritesApi.removeFavorite('l1');
-        toast('Đã bỏ lưu phòng (API).');
+        await favoritesApi.removeFavorite(id || 'l1');
+        toast('Đã bỏ lưu phòng.');
       }
     } catch {
       toast.success(newState ? 'Đã lưu phòng!' : 'Đã bỏ lưu phòng.');
@@ -59,7 +77,7 @@ export default function RoomDetail() {
 
     try {
       await appointmentsApi.createAppointment({
-        roomId: 'l1',
+        roomId: id || 'l1',
         appointmentDate: `${selectedDate}T${selectedTime}:00Z`,
         notes: 'Xem phòng trực tiếp'
       });
@@ -83,23 +101,25 @@ export default function RoomDetail() {
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6 h-[40vh] md:h-[55vh]">
         <div className="md:col-span-2 h-full bg-white shadow-clay-soft rounded-[18px] overflow-hidden relative group cursor-pointer p-2" onClick={() => setShowGallery(true)}>
           <div className="w-full h-full rounded-[14px] overflow-hidden">
-            <img src={MOCK_PHOTOS[0]} alt="Room Main" className="w-full h-full object-cover transition-transform duration-200 group-hover:scale-[1.02]" />
+            <img src={photos[0]} alt="Room Main" className="w-full h-full object-cover transition-transform duration-200 group-hover:scale-[1.02]" />
           </div>
           <div className="absolute inset-0 bg-[#0F172A]/20 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
             <Button variant="secondary" className="bg-white text-[#0F172A] border-none shadow-clay-soft">
-              Xem tất cả ảnh
+              Xem tất cả ({photos.length}) ảnh
             </Button>
           </div>
         </div>
         <div className="hidden md:flex flex-col gap-6 h-full">
           <div className="flex-1 bg-white shadow-clay-soft rounded-[18px] p-2 cursor-pointer" onClick={() => setShowGallery(true)}>
-            <img src={MOCK_PHOTOS[1]} alt="Room 2" className="w-full h-full object-cover rounded-[14px] transition-transform hover:scale-[1.02]" />
+            <img src={photos[1] || photos[0]} alt="Room 2" className="w-full h-full object-cover rounded-[14px] transition-transform hover:scale-[1.02]" />
           </div>
           <div className="flex-1 bg-white shadow-clay-soft rounded-[18px] p-2 relative group cursor-pointer" onClick={() => setShowGallery(true)}>
-            <img src={MOCK_PHOTOS[2]} alt="Room 3" className="w-full h-full object-cover rounded-[14px] transition-transform group-hover:scale-[1.02]" />
-            <div className="absolute inset-2 rounded-[14px] bg-[#0F172A]/50 flex items-center justify-center">
-              <span className="text-white font-bold text-h2">+9 Ảnh</span>
-            </div>
+            <img src={photos[2] || photos[0]} alt="Room 3" className="w-full h-full object-cover rounded-[14px] transition-transform group-hover:scale-[1.02]" />
+            {photos.length > 3 && (
+              <div className="absolute inset-2 rounded-[14px] bg-[#0F172A]/50 flex items-center justify-center">
+                <span className="text-white font-bold text-h2">+{photos.length - 3} Ảnh</span>
+              </div>
+            )}
           </div>
         </div>
       </div>
@@ -109,7 +129,7 @@ export default function RoomDetail() {
           <div className="bg-white rounded-[18px] shadow-clay-soft p-8 space-y-6">
             <div>
               <div className="flex flex-col sm:flex-row sm:justify-between sm:items-start gap-4 mb-3">
-                <h1 className="text-hero text-[#0F172A]">Studio Hiện Đại - Quận 3</h1>
+                <h1 className="text-hero text-[#0F172A]">{roomData?.title || 'Studio Hiện Đại'}</h1>
                 <button 
                   onClick={() => setShowVerificationModal(true)}
                   className="bg-[#F0FDF4] text-[#16803C] border border-[#DCFCE7] text-caption font-bold px-3.5 py-1.5 rounded-full flex items-center gap-1.5 self-start hover:bg-[#DCFCE7] transition-colors touch-target"
@@ -117,32 +137,32 @@ export default function RoomDetail() {
                   <CheckCircle className="w-4 h-4" weight="fill" /> Đã xác minh
                 </button>
               </div>
-              <p className="text-body text-[#64748B]">123 Nguyễn Đình Chiểu, Phường Võ Thị Sáu, Quận 3, TP.HCM</p>
+              <p className="text-body text-[#64748B]">{roomData?.address || 'Địa chỉ phòng trọ'}</p>
             </div>
 
             <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 pt-6 border-t border-[#E2E8F0]">
               <div className="bg-[#F5F7FA] shadow-clay-inset p-4 rounded-[12px]">
                 <p className="text-[#64748B] text-caption font-semibold uppercase mb-1">Loại phòng</p>
-                <p className="font-bold text-[#0F172A] text-body">Studio</p>
+                <p className="font-bold text-[#0F172A] text-body">{roomData?.roomType || 'Studio'}</p>
               </div>
               <div className="bg-[#F5F7FA] shadow-clay-inset p-4 rounded-[12px]">
-                <p className="text-[#64748B] text-caption font-semibold uppercase mb-1">Sức chứa</p>
-                <p className="font-bold text-[#0F172A] text-body">2 Người</p>
+                <p className="text-[#64748B] text-caption font-semibold uppercase mb-1">Trạng thái</p>
+                <p className="font-bold text-[#0F172A] text-body">{roomData?.status === 0 ? 'Còn trống' : 'Đã thuê'}</p>
               </div>
               <div className="bg-[#F5F7FA] shadow-clay-inset p-4 rounded-[12px]">
                 <p className="text-[#64748B] text-caption font-semibold uppercase mb-1">Diện tích</p>
-                <p className="font-bold text-[#0F172A] text-body">35 m²</p>
+                <p className="font-bold text-[#0F172A] text-body">{roomData?.area ? `${roomData.area} m²` : '25 m²'}</p>
               </div>
               <div className="bg-[#F5F7FA] shadow-clay-inset p-4 rounded-[12px]">
-                <p className="text-[#64748B] text-caption font-semibold uppercase mb-1">Phòng tắm</p>
-                <p className="font-bold text-[#0F172A] text-body">Riêng biệt</p>
+                <p className="text-[#64748B] text-caption font-semibold uppercase mb-1">Tiện ích</p>
+                <p className="font-bold text-[#0F172A] text-body line-clamp-1">{roomData?.utilities || 'Đầy đủ'}</p>
               </div>
             </div>
 
             <div className="space-y-4 pt-4 border-t border-[#E2E8F0]">
               <h2 className="text-h2 font-bold text-[#0F172A]">Mô tả phòng</h2>
-              <p className="text-[#64748B] text-body leading-relaxed">
-                Studio hiện đại với đầy đủ nội thất tọa lạc tại trung tâm Quận 3. Rất gần các trường đại học, cửa hàng tiện lợi và quán cà phê. Tòa nhà có bảo vệ 24/7, ra vào bằng vân tay, và máy giặt miễn phí trên sân thượng.
+              <p className="text-[#64748B] text-body leading-relaxed whitespace-pre-line">
+                {roomData?.description || 'Phòng trọ tiện nghi, thiết kế hiện đại, không gian thoáng mát.'}
               </p>
             </div>
           </div>
@@ -152,9 +172,9 @@ export default function RoomDetail() {
           <Card className="p-6 bg-white shadow-clay-primary rounded-[18px] lg:sticky lg:top-20 border-none space-y-6">
             <div>
               <p className="text-[36px] font-bold text-[#00153D] leading-none mb-2">
-                4.500.000đ <span className="text-caption text-[#64748B] font-normal">/ tháng</span>
+                {roomData ? `${Number(roomData.price).toLocaleString('vi-VN')}đ` : '0đ'} <span className="text-caption text-[#64748B] font-normal">/ tháng</span>
               </p>
-              <p className="text-caption text-[#64748B]">Tiền cọc: 4.500.000đ</p>
+              <p className="text-caption text-[#64748B]">Giá thuê niêm yết chủ nhà</p>
             </div>
 
             <div className="space-y-3">
@@ -203,13 +223,12 @@ export default function RoomDetail() {
 
             <div className="pt-4 border-t border-[#E2E8F0] space-y-4">
               <div className="flex items-center gap-3">
-                <div className="w-12 h-12 bg-[#00153D] text-white rounded-full flex items-center justify-center font-bold text-h3">L</div>
+                <div className="w-12 h-12 bg-[#00153D] text-white rounded-full flex items-center justify-center font-bold text-h3">
+                  {(roomData?.landlordName || 'L')[0]}
+                </div>
                 <div>
-                  <p className="font-bold text-[#0F172A] text-body">Lê Văn B</p>
-                  <div className="flex items-center gap-1">
-                    <Star className="w-4 h-4 text-[#F2A900]" weight="fill" />
-                    <span className="text-caption text-[#64748B] font-semibold">4.9 (12 đánh giá)</span>
-                  </div>
+                  <p className="font-bold text-[#0F172A] text-body">{roomData?.landlordName || 'Chủ nhà'}</p>
+                  {roomData?.landlordPhone && <p className="text-caption text-[#64748B]">SĐT: {roomData.landlordPhone}</p>}
                 </div>
               </div>
             </div>
@@ -221,13 +240,13 @@ export default function RoomDetail() {
       {showGallery && (
         <div className="fixed inset-0 z-50 bg-[#0F172A] flex flex-col p-6 overflow-y-auto">
           <div className="flex justify-between items-center mb-6">
-            <h3 className="text-h2 font-bold text-white">Hình ảnh căn hộ</h3>
+            <h3 className="text-h2 font-bold text-white">Hình ảnh căn hộ ({photos.length})</h3>
             <button onClick={() => setShowGallery(false)} className="text-white hover:text-[#EEF2F6] p-2">
               <X className="w-6 h-6" />
             </button>
           </div>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4 max-w-5xl mx-auto w-full">
-            {MOCK_PHOTOS.map((photo, i) => (
+            {photos.map((photo, i) => (
               <img key={i} src={photo} alt={`Photo ${i}`} className="w-full h-64 object-cover rounded-[14px]" />
             ))}
           </div>
