@@ -58,6 +58,18 @@ public class RoomsController : ControllerBase
         {
             query = query.Where(r => r.Status == filter.Status.Value);
         }
+        else
+        {
+            var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+            if (Guid.TryParse(userIdClaim, out var userId) && User.IsInRole("Landlord"))
+            {
+                query = query.Where(r => r.LandlordId == userId);
+            }
+            else
+            {
+                query = query.Where(r => r.Status == RoomStatus.Available);
+            }
+        }
 
         var totalItems = await query.CountAsync();
         var page = filter.Page < 1 ? 1 : filter.Page;
@@ -164,7 +176,7 @@ public class RoomsController : ControllerBase
             RoomType = dto.RoomType,
             Address = dto.Address,
             Virtual3DUrl = dto.Virtual3DUrl,
-            Status = RoomStatus.Available,
+            Status = RoomStatus.PendingApproval,
             CreatedAt = DateTime.UtcNow
         };
 

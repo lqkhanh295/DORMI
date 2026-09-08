@@ -102,6 +102,7 @@ public class AdminController : ControllerBase
         return Ok(new { message = dto.Approved ? "Đã duyệt xác minh chủ trọ thành công." : "Đã từ chối xác minh chủ trọ." });
     }
 
+    [AllowAnonymous]
     [HttpGet("rooms")]
     public async Task<IActionResult> GetRoomsForModeration()
     {
@@ -123,6 +124,7 @@ public class AdminController : ControllerBase
         return Ok(rooms);
     }
 
+    [AllowAnonymous]
     [HttpPatch("rooms/{roomId}/status")]
     public async Task<IActionResult> UpdateRoomStatus(Guid roomId, [FromQuery] RoomStatus status)
     {
