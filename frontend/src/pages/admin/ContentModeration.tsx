@@ -7,11 +7,18 @@ import { toast } from 'sonner';
 interface ModerationRoomItem {
   id: string;
   title: string;
+  description?: string;
   address: string;
   price: number;
+  area?: number;
+  roomType?: string;
+  utilities?: string;
+  virtual3DUrl?: string;
   landlordName: string;
+  landlordPhone?: string;
   status: number;
   createdAt: string;
+  images?: { id: string; imageUrl: string; isPrimary: boolean }[];
 }
 
 export default function ContentModeration() {
@@ -75,7 +82,7 @@ export default function ContentModeration() {
       <div className="flex items-center justify-between mb-4">
         <div>
           <h1 className="text-h2 font-bold text-[#0F172A]">Kiểm duyệt nội dung phòng trọ (Admin Portal)</h1>
-          <p className="text-body text-[#64748B]">Xem xét và phê duyệt các tin đăng bài trọ với 3 trạng thái: Chờ duyệt, Đã duyệt, và Từ chối.</p>
+          <p className="text-body text-[#64748B]">Xem xét và phê duyệt đầy đủ thông tin tin đăng phòng trọ trước khi công khai.</p>
         </div>
       </div>
 
@@ -138,25 +145,91 @@ export default function ContentModeration() {
         <div className="flex-1 bg-white rounded-[18px] shadow-clay-primary overflow-hidden flex flex-col border-none">
           {selectedRoom ? (
             <>
-              <div className="p-6 border-b border-[#E2E8F0] flex justify-between items-center">
+              <div className="p-6 border-b border-[#E2E8F0] flex justify-between items-center bg-[#F5F7FA]">
                 <div>
                   <h2 className="text-h2 font-bold text-[#0F172A] mb-1">Chi tiết tin đăng</h2>
-                  <p className="text-caption text-[#64748B]">Chủ trọ: <span className="font-semibold text-[#0F172A]">{selectedRoom.landlordName}</span></p>
+                  <p className="text-caption text-[#64748B]">
+                    Chủ trọ: <span className="font-semibold text-[#0F172A]">{selectedRoom.landlordName}</span>
+                    {selectedRoom.landlordPhone && ` • SĐT: ${selectedRoom.landlordPhone}`}
+                  </p>
                 </div>
                 <div>
                   {renderStatusBadge(selectedRoom.status)}
                 </div>
               </div>
+
               <div className="p-6 flex-1 overflow-y-auto space-y-4">
+                {/* 1. Gallery Hình ảnh */}
+                {selectedRoom.images && selectedRoom.images.length > 0 && (
+                  <Card className="p-4 bg-[#F5F7FA] shadow-clay-inset rounded-[12px] border border-[#E2E8F0]">
+                    <h4 className="font-semibold text-caption text-[#64748B] uppercase mb-3">Hình ảnh bài đăng ({selectedRoom.images.length} ảnh)</h4>
+                    <div className="grid grid-cols-4 gap-3">
+                      {selectedRoom.images.map((img, idx) => (
+                        <div key={img.id || idx} className="h-28 rounded-lg overflow-hidden border border-[#E2E8F0] bg-black/5">
+                          <img src={img.imageUrl} alt={`Room detail ${idx}`} className="w-full h-full object-cover hover:scale-105 transition-transform" />
+                        </div>
+                      ))}
+                    </div>
+                  </Card>
+                )}
+
+                {/* 2. Thông tin chính */}
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                  <Card className="p-4 bg-[#F5F7FA] shadow-clay-inset rounded-[12px] border border-[#E2E8F0]">
+                    <h4 className="font-semibold text-caption text-[#64748B] uppercase mb-1">Giá thuê</h4>
+                    <p className="text-h3 font-bold text-[#00153D]">{Number(selectedRoom.price).toLocaleString('vi-VN')} ₫/tháng</p>
+                  </Card>
+                  <Card className="p-4 bg-[#F5F7FA] shadow-clay-inset rounded-[12px] border border-[#E2E8F0]">
+                    <h4 className="font-semibold text-caption text-[#64748B] uppercase mb-1">Diện tích & Loại phòng</h4>
+                    <p className="text-h3 font-bold text-[#0F172A]">{selectedRoom.roomType || 'Studio'} • {selectedRoom.area || 25} m²</p>
+                  </Card>
+                  <Card className="p-4 bg-[#F5F7FA] shadow-clay-inset rounded-[12px] border border-[#E2E8F0]">
+                    <h4 className="font-semibold text-caption text-[#64748B] uppercase mb-1">Ngày tạo tin</h4>
+                    <p className="text-body font-bold text-[#0F172A]">{new Date(selectedRoom.createdAt).toLocaleDateString('vi-VN')}</p>
+                  </Card>
+                </div>
+
+                {/* 3. Tiêu đề & Địa chỉ */}
                 <Card className="p-4 bg-[#F5F7FA] shadow-clay-inset rounded-[12px] border border-[#E2E8F0]">
-                  <h4 className="font-semibold text-caption text-[#64748B] uppercase mb-2">Tiêu đề bài trọ</h4>
-                  <p className="text-body font-bold text-[#0F172A]">{selectedRoom.title}</p>
+                  <h4 className="font-semibold text-caption text-[#64748B] uppercase mb-1">Tiêu đề tin đăng</h4>
+                  <p className="text-body font-bold text-[#0F172A] mb-3">{selectedRoom.title}</p>
+                  <h4 className="font-semibold text-caption text-[#64748B] uppercase mb-1">Địa chỉ chi tiết</h4>
+                  <p className="text-body font-medium text-[#0F172A]">{selectedRoom.address}</p>
                 </Card>
-                <Card className="p-4 bg-[#F5F7FA] shadow-clay-inset rounded-[12px] border border-[#E2E8F0]">
-                  <h4 className="font-semibold text-caption text-[#64748B] uppercase mb-2">Địa chỉ & Giá thuê</h4>
-                  <p className="text-body font-bold text-[#0F172A]">{selectedRoom.address} - {Number(selectedRoom.price).toLocaleString('vi-VN')}₫/tháng</p>
-                </Card>
+
+                {/* 4. Tiện ích */}
+                {selectedRoom.utilities && (
+                  <Card className="p-4 bg-[#F5F7FA] shadow-clay-inset rounded-[12px] border border-[#E2E8F0]">
+                    <h4 className="font-semibold text-caption text-[#64748B] uppercase mb-2">Tiện ích đi kèm</h4>
+                    <div className="flex flex-wrap gap-2">
+                      {selectedRoom.utilities.split(',').map((util, i) => (
+                        <span key={i} className="px-3 py-1 bg-white border border-[#CBD5E1] rounded-lg text-caption font-semibold text-[#00153D] shadow-sm">
+                          ✓ {util.trim()}
+                        </span>
+                      ))}
+                    </div>
+                  </Card>
+                )}
+
+                {/* 5. Mô tả chi tiết */}
+                {selectedRoom.description && (
+                  <Card className="p-4 bg-[#F5F7FA] shadow-clay-inset rounded-[12px] border border-[#E2E8F0]">
+                    <h4 className="font-semibold text-caption text-[#64748B] uppercase mb-2">Mô tả chi tiết từ chủ trọ</h4>
+                    <p className="text-body text-[#334155] whitespace-pre-line leading-relaxed">{selectedRoom.description}</p>
+                  </Card>
+                )}
+
+                {/* 6. Virtual 3D Tour */}
+                {selectedRoom.virtual3DUrl && (
+                  <Card className="p-4 bg-[#F5F7FA] shadow-clay-inset rounded-[12px] border border-[#E2E8F0]">
+                    <h4 className="font-semibold text-caption text-[#64748B] uppercase mb-1">Link 3D Virtual Tour</h4>
+                    <a href={selectedRoom.virtual3DUrl} target="_blank" rel="noreferrer" className="text-body text-[#00153D] font-bold underline hover:text-blue-600 break-all">
+                      🌐 {selectedRoom.virtual3DUrl}
+                    </a>
+                  </Card>
+                )}
               </div>
+
               <div className="p-6 border-t border-[#E2E8F0] bg-[#F5F7FA] flex items-center justify-between gap-3">
                 <span className="text-caption text-[#64748B] font-semibold">Chuyển trạng thái:</span>
                 <div className="flex gap-2">

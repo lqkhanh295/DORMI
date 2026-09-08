@@ -108,16 +108,24 @@ public class AdminController : ControllerBase
     {
         var rooms = await _db.Rooms
             .Include(r => r.Landlord)
+            .Include(r => r.Images)
             .OrderByDescending(r => r.CreatedAt)
             .Select(r => new
             {
                 r.Id,
                 r.Title,
+                r.Description,
                 r.Address,
                 r.Price,
+                r.Area,
+                r.RoomType,
+                r.Utilities,
+                r.Virtual3DUrl,
                 LandlordName = r.Landlord.FullName,
+                LandlordPhone = r.Landlord.PhoneNumber,
                 r.Status,
-                r.CreatedAt
+                r.CreatedAt,
+                Images = r.Images.Select(img => new { img.Id, img.ImageUrl, img.IsPrimary }).ToList()
             })
             .ToListAsync();
 
