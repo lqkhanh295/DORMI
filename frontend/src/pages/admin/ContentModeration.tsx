@@ -3,7 +3,7 @@ import { Card } from '../../components/ui/Card';
 import { Button } from '../../components/ui/Button';
 import { adminApi } from '../../services/api';
 import { toast } from 'sonner';
-import { CheckCircle2, Clock, XCircle } from 'lucide-react';
+import { CheckCircle2, Clock, XCircle, ShieldCheck, Mail, Phone, UserCheck } from 'lucide-react';
 
 interface ModerationRoomItem {
   id: string;
@@ -17,6 +17,9 @@ interface ModerationRoomItem {
   virtual3DUrl?: string;
   landlordName: string;
   landlordPhone?: string;
+  landlordEmail?: string;
+  landlordAvatarUrl?: string;
+  isVerifiedLandlord?: boolean;
   status: number;
   createdAt: string;
   images?: { id: string; imageUrl: string; isPrimary: boolean }[];
@@ -27,6 +30,7 @@ export default function ContentModeration() {
   const [loading, setLoading] = useState(true);
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const [filterStatus, setFilterStatus] = useState<'all' | number>('all');
+  const [previewAvatar, setPreviewAvatar] = useState<string | null>(null);
 
   const loadRooms = async () => {
     try {
@@ -78,12 +82,19 @@ export default function ContentModeration() {
     }
   };
 
+  const getLandlordAvatar = (room: ModerationRoomItem) => {
+    if (room.landlordAvatarUrl && room.landlordAvatarUrl.trim()) {
+      return room.landlordAvatarUrl;
+    }
+    return `https://ui-avatars.com/api/?name=${encodeURIComponent(room.landlordName)}&background=00153D&color=fff&bold=true`;
+  };
+
   return (
     <div className="flex flex-col h-[calc(100vh-8rem)] bg-[#F5F7FA]">
       <div className="flex items-center justify-between mb-4">
         <div>
           <h1 className="text-h2 font-bold text-[#0F172A]">Kiểm duyệt nội dung phòng trọ (Admin Portal)</h1>
-          <p className="text-body text-[#64748B]">Xem xét và phê duyệt đầy đủ thông tin tin đăng phòng trọ trước khi công khai.</p>
+          <p className="text-body text-[#64748B]">Xem xét và phê duyệt đầy đủ thông tin tin đăng phòng trọ và chân dung chủ nhà.</p>
         </div>
       </div>
 
@@ -134,7 +145,14 @@ export default function ContentModeration() {
                   {renderStatusBadge(room.status)}
                 </div>
                 <p className="font-semibold text-[#0F172A] text-body line-clamp-1">{room.title}</p>
-                <p className="text-caption text-[#64748B] mt-1">Chủ trọ: <span className="font-semibold text-[#0F172A]">{room.landlordName}</span></p>
+                <div className="flex items-center gap-2 mt-2 pt-2 border-t border-[#E2E8F0]/60">
+                  <img 
+                    src={getLandlordAvatar(room)} 
+                    alt={room.landlordName} 
+                    className="w-6 h-6 rounded-full object-cover border border-[#CBD5E1]" 
+                  />
+                  <span className="text-caption text-[#64748B]">Chủ trọ: <strong className="text-[#0F172A]">{room.landlordName}</strong></span>
+                </div>
               </div>
             ))}
             {!loading && filteredRooms.length === 0 && (
@@ -149,10 +167,18 @@ export default function ContentModeration() {
               <div className="p-6 border-b border-[#E2E8F0] flex justify-between items-center bg-[#F5F7FA]">
                 <div>
                   <h2 className="text-h2 font-bold text-[#0F172A] mb-1">Chi tiết tin đăng</h2>
-                  <p className="text-caption text-[#64748B]">
-                    Chủ trọ: <span className="font-semibold text-[#0F172A]">{selectedRoom.landlordName}</span>
-                    {selectedRoom.landlordPhone && ` • SĐT: ${selectedRoom.landlordPhone}`}
-                  </p>
+                  <div className="flex items-center gap-2">
+                    <img 
+                      src={getLandlordAvatar(selectedRoom)} 
+                      alt={selectedRoom.landlordName} 
+                      className="w-7 h-7 rounded-full object-cover border border-[#00153D]/20 cursor-pointer"
+                      onClick={() => setPreviewAvatar(getLandlordAvatar(selectedRoom))}
+                    />
+                    <p className="text-caption text-[#64748B]">
+                      Chủ trọ: <span className="font-semibold text-[#0F172A]">{selectedRoom.landlordName}</span>
+                      {selectedRoom.landlordPhone && ` • SĐT: ${selectedRoom.landlordPhone}`}
+                    </p>
+                  </div>
                 </div>
                 <div>
                   {renderStatusBadge(selectedRoom.status)}
@@ -160,10 +186,64 @@ export default function ContentModeration() {
               </div>
 
               <div className="p-6 flex-1 overflow-y-auto space-y-4">
-                {/* 1. Gallery Hình ảnh */}
+                {/* 1. Card Thông tin Chủ trọ (Hình ảnh & Thông tin chi tiết) */}
+                <Card className="p-4 bg-[#F5F7FA] shadow-clay-inset rounded-[14px] border border-[#E2E8F0] flex items-center justify-between gap-4">
+                  <div className="flex items-center gap-4">
+                    <div 
+                      className="relative group cursor-pointer"
+                      onClick={() => setPreviewAvatar(getLandlordAvatar(selectedRoom))}
+                      title="Bấm để xem ảnh phóng to"
+                    >
+                      <img 
+                        src={getLandlordAvatar(selectedRoom)} 
+                        alt={selectedRoom.landlordName} 
+                        className="w-16 h-16 rounded-full object-cover border-2 border-[#00153D] shadow-md group-hover:opacity-90 transition-opacity" 
+                      />
+                      <div className="absolute inset-0 rounded-full bg-black/20 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity text-white text-[10px] font-bold">
+                        Xem ảnh
+                      </div>
+                    </div>
+                    <div>
+                      <div className="flex items-center gap-2">
+                        <h3 className="font-bold text-h3 text-[#0F172A]">{selectedRoom.landlordName}</h3>
+                        {selectedRoom.isVerifiedLandlord ? (
+                          <span className="bg-[#F0FDF4] text-[#16803C] border border-[#DCFCE7] text-[11px] font-bold px-2 py-0.5 rounded-full flex items-center gap-1">
+                            <ShieldCheck className="w-3.5 h-3.5" /> Đã xác minh chính chủ
+                          </span>
+                        ) : (
+                          <span className="bg-[#F1F5F9] text-[#64748B] border border-[#E2E8F0] text-[11px] font-medium px-2 py-0.5 rounded-full flex items-center gap-1">
+                            <UserCheck className="w-3.5 h-3.5" /> Chưa xác minh
+                          </span>
+                        )}
+                      </div>
+                      <div className="flex flex-wrap gap-4 mt-2 text-caption text-[#64748B]">
+                        {selectedRoom.landlordPhone && (
+                          <span className="flex items-center gap-1 font-semibold text-[#0F172A]">
+                            <Phone className="w-3.5 h-3.5 text-[#00153D]" /> {selectedRoom.landlordPhone}
+                          </span>
+                        )}
+                        {selectedRoom.landlordEmail && (
+                          <span className="flex items-center gap-1 text-[#64748B]">
+                            <Mail className="w-3.5 h-3.5 text-[#00153D]" /> {selectedRoom.landlordEmail}
+                          </span>
+                        )}
+                      </div>
+                    </div>
+                  </div>
+                  <Button 
+                    variant="secondary" 
+                    size="sm" 
+                    onClick={() => setPreviewAvatar(getLandlordAvatar(selectedRoom))}
+                    className="shrink-0 text-caption font-semibold"
+                  >
+                    🔍 Phóng to ảnh chủ trọ
+                  </Button>
+                </Card>
+
+                {/* 2. Gallery Hình ảnh bài đăng */}
                 {selectedRoom.images && selectedRoom.images.length > 0 && (
                   <Card className="p-4 bg-[#F5F7FA] shadow-clay-inset rounded-[12px] border border-[#E2E8F0]">
-                    <h4 className="font-semibold text-caption text-[#64748B] uppercase mb-3">Hình ảnh bài đăng ({selectedRoom.images.length} ảnh)</h4>
+                    <h4 className="font-semibold text-caption text-[#64748B] uppercase mb-3">Hình ảnh phòng trọ thực tế ({selectedRoom.images.length} ảnh)</h4>
                     <div className="grid grid-cols-4 gap-3">
                       {selectedRoom.images.map((img, idx) => (
                         <div key={img.id || idx} className="h-28 rounded-lg overflow-hidden border border-[#E2E8F0] bg-black/5">
@@ -174,7 +254,7 @@ export default function ContentModeration() {
                   </Card>
                 )}
 
-                {/* 2. Thông tin chính */}
+                {/* 3. Thông tin chính */}
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                   <Card className="p-4 bg-[#F5F7FA] shadow-clay-inset rounded-[12px] border border-[#E2E8F0]">
                     <h4 className="font-semibold text-caption text-[#64748B] uppercase mb-1">Giá thuê</h4>
@@ -265,6 +345,29 @@ export default function ContentModeration() {
           )}
         </div>
       </div>
+
+      {/* Avatar Preview Modal Overlay */}
+      {previewAvatar && (
+        <div 
+          className="fixed inset-0 z-50 bg-black/60 flex items-center justify-center p-4 backdrop-blur-xs"
+          onClick={() => setPreviewAvatar(null)}
+        >
+          <div className="bg-white rounded-[24px] p-6 max-w-sm w-full flex flex-col items-center space-y-4 shadow-2xl relative" onClick={e => e.stopPropagation()}>
+            <button 
+              onClick={() => setPreviewAvatar(null)} 
+              className="absolute top-4 right-4 text-[#64748B] hover:text-[#0F172A] text-xl font-bold w-8 h-8 flex items-center justify-center rounded-full bg-[#F5F7FA]"
+            >
+              ✕
+            </button>
+            <h3 className="font-bold text-h3 text-[#0F172A]">Chân dung Chủ trọ</h3>
+            <div className="w-48 h-48 rounded-full overflow-hidden border-4 border-[#00153D] shadow-lg bg-[#F5F7FA]">
+              <img src={previewAvatar} alt="Chân dung chủ nhà" className="w-full h-full object-cover" />
+            </div>
+            <p className="text-caption text-[#64748B] font-semibold">{selectedRoom?.landlordName}</p>
+            <Button variant="secondary" size="sm" onClick={() => setPreviewAvatar(null)} className="w-full">Đóng</Button>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
