@@ -73,7 +73,11 @@ export default function RoomManagement() {
         canvas.width = width;
         canvas.height = height;
         const ctx = canvas.getContext('2d');
-        ctx?.drawImage(img, 0, 0, width, height);
+        if (ctx) {
+          ctx.fillStyle = '#FFFFFF';
+          ctx.fillRect(0, 0, width, height);
+          ctx.drawImage(img, 0, 0, width, height);
+        }
 
         const dataUrl = canvas.toDataURL('image/jpeg', 0.82);
         URL.revokeObjectURL(url);
@@ -426,7 +430,7 @@ export default function RoomManagement() {
                 <div className="border-2 border-dashed border-[#CBD5E1] rounded-[14px] p-6 text-center bg-[#F5F7FA] shadow-clay-inset hover:bg-white transition-all cursor-pointer relative">
                   <input 
                     type="file" 
-                    accept="image/*"
+                    accept="image/png, image/jpeg, image/jpg, image/webp, image/gif, image/bmp, image/heic, image/heif, image/*, .png, .jpg, .jpeg, .webp, .gif, .bmp, .heic, .heif"
                     multiple
                     className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
                     onChange={(e) => handleImageUpload(e, false)}
@@ -583,7 +587,7 @@ export default function RoomManagement() {
                 <div className="border-2 border-dashed border-[#CBD5E1] rounded-[14px] p-6 text-center bg-[#F5F7FA] shadow-clay-inset hover:bg-white transition-all cursor-pointer relative">
                   <input 
                     type="file" 
-                    accept="image/*"
+                    accept="image/png, image/jpeg, image/jpg, image/webp, image/gif, image/bmp, image/heic, image/heif, image/*, .png, .jpg, .jpeg, .webp, .gif, .bmp, .heic, .heif"
                     multiple
                     className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
                     onChange={(e) => handleImageUpload(e, true)}
