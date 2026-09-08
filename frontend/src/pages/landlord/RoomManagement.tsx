@@ -1,23 +1,32 @@
 import { useState, useEffect } from 'react';
 import { Card } from '../../components/ui/Card';
 import { Button } from '../../components/ui/Button';
-import { roomsApi, type RoomResponse } from '../../services/api';
+import { roomsApi, imagesApi, type RoomResponse } from '../../services/api';
 import { toast } from 'sonner';
+
+const UTILITY_OPTIONS = [
+  'Wifi', 'Máy lạnh', 'Tủ lạnh', 'Máy giặt', 'Ban công', 
+  'Giờ giấc tự do', 'Thang máy', 'Bãi giữ xe', 'Nội thất đầy đủ', 
+  'Bảo vệ 24/7', 'Bếp riêng', 'Không chung chủ'
+];
 
 export default function RoomManagement() {
   const [myRooms, setMyRooms] = useState<RoomResponse[]>([]);
   const [loading, setLoading] = useState(true);
   const [editingRoom, setEditingRoom] = useState<RoomResponse | null>(null);
   const [isAdding, setIsAdding] = useState(false);
+  const [uploadingImage, setUploadingImage] = useState(false);
   
   const [newRoom, setNewRoom] = useState({
     title: '',
     price: 0,
     address: '',
     roomType: 'Studio',
-    description: 'Phòng trọ mới đăng',
+    description: '',
     area: 25,
-    utilities: 'Wifi, Máy lạnh'
+    utilities: ['Wifi', 'Máy lạnh'],
+    virtual3DUrl: '',
+    imageUrls: [] as string[]
   });
 
   const loadRooms = async () => {
@@ -38,6 +47,67 @@ export default function RoomManagement() {
     loadRooms();
   }, []);
 
+  const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>, isEdit: boolean = false) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    setUploadingImage(true);
+    try {
+      const res = await imagesApi.uploadImage(file);
+      if (res?.imageUrl) {
+        toast.success('Đã tải ảnh lên Cloudinary thành công!');
+        if (isEdit && editingRoom) {
+          const currentImages = editingRoom.images || [];
+          setEditingRoom({
+            ...editingRoom,
+            images: [
+              ...currentImages,
+              { id: GuidRandom(), imageUrl: res.imageUrl, isPrimary: currentImages.length === 0 }
+            ]
+          });
+        } else {
+          setNewRoom(prev => ({
+            ...prev,
+            imageUrls: [...prev.imageUrls, res.imageUrl]
+          }));
+        }
+      }
+    } catch (err) {
+      toast.error('Tải ảnh thất bại. Đã tạo URL xem trước cục bộ.');
+      const localUrl = URL.createObjectURL(file);
+      if (isEdit && editingRoom) {
+        setEditingRoom({
+          ...editingRoom,
+          images: [...(editingRoom.images || []), { id: GuidRandom(), imageUrl: localUrl, isPrimary: false }]
+        });
+      } else {
+        setNewRoom(prev => ({ ...prev, imageUrls: [...prev.imageUrls, localUrl] }));
+      }
+    } finally {
+      setUploadingImage(false);
+    }
+  };
+
+  const GuidRandom = () => Math.random().toString(36).substring(2, 9);
+
+  const toggleUtility = (utility: string, isEdit: boolean = false) => {
+    if (isEdit && editingRoom) {
+      const currentUtils = editingRoom.utilities ? editingRoom.utilities.split(',').map(u => u.trim()) : [];
+      const updated = currentUtils.includes(utility)
+        ? currentUtils.filter(u => u !== utility)
+        : [...currentUtils, utility];
+      setEditingRoom({ ...editingRoom, utilities: updated.join(', ') });
+    } else {
+      setNewRoom(prev => {
+        const exists = prev.utilities.includes(utility);
+        return {
+          ...prev,
+          utilities: exists ? prev.utilities.filter(u => u !== utility) : [...prev.utilities, utility]
+        };
+      });
+    }
+  };
+
   const handleSaveEdit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!editingRoom) return;
@@ -50,9 +120,10 @@ export default function RoomManagement() {
         utilities: editingRoom.utilities || 'Wifi',
         roomType: editingRoom.roomType || 'Studio',
         address: editingRoom.address,
+        virtual3DUrl: editingRoom.virtual3DUrl,
         status: editingRoom.status
       });
-      toast.success('Đã lưu thay đổi thông tin phòng (API)!');
+      toast.success('Đã lưu thay đổi thông tin phòng vào Backend API!');
       setEditingRoom(null);
       loadRooms();
     } catch {
@@ -62,23 +133,60 @@ export default function RoomManagement() {
 
   const handleAddNew = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (!newRoom.title.trim()) {
+      toast.error('Vui lòng nhập tiêu đề bài đăng.');
+      return;
+    }
+    if (!newRoom.address.trim()) {
+      toast.error('Vui lòng nhập địa chỉ chi tiết.');
+      return;
+    }
+
     try {
+      const finalImages = newRoom.imageUrls.length > 0 
+        ? newRoom.imageUrls 
+        : ['https://images.unsplash.com/photo-1522708323590-d24dbb6b0267?auto=format&fit=crop&w=800&q=80'];
+
       await roomsApi.createRoom({
         title: newRoom.title,
-        price: newRoom.price,
+        price: Number(newRoom.price),
         address: newRoom.address,
         roomType: newRoom.roomType,
-        description: newRoom.description,
-        area: newRoom.area,
-        utilities: newRoom.utilities,
-        imageUrls: ['https://images.unsplash.com/photo-1522708323590-d24dbb6b0267?auto=format&fit=crop&w=400&q=80']
+        description: newRoom.description || 'Phòng trọ tiện nghi, không gian thoáng mát.',
+        area: Number(newRoom.area) || 25,
+        utilities: newRoom.utilities.join(', '),
+        virtual3DUrl: newRoom.virtual3DUrl,
+        imageUrls: finalImages
       });
-      toast.success('Tạo tin đăng phòng trọ mới thành công (API)!');
+      toast.success('Đăng bài phòng trọ mới thành công (Backend Cloudinary API)!');
       setIsAdding(false);
-      setNewRoom({ title: '', price: 0, address: '', roomType: 'Studio', description: 'Phòng trọ mới đăng', area: 25, utilities: 'Wifi, Máy lạnh' });
+      setNewRoom({
+        title: '',
+        price: 0,
+        address: '',
+        roomType: 'Studio',
+        description: '',
+        area: 25,
+        utilities: ['Wifi', 'Máy lạnh'],
+        virtual3DUrl: '',
+        imageUrls: []
+      });
       loadRooms();
     } catch {
-      toast.error('Không thể thêm phòng trọ mới.');
+      toast.error('Không thể tạo bài đăng phòng trọ mới.');
+    }
+  };
+
+  const removeImage = (index: number, isEdit: boolean = false) => {
+    if (isEdit && editingRoom) {
+      const updated = [...editingRoom.images];
+      updated.splice(index, 1);
+      setEditingRoom({ ...editingRoom, images: updated });
+    } else {
+      setNewRoom(prev => ({
+        ...prev,
+        imageUrls: prev.imageUrls.filter((_, i) => i !== index)
+      }));
     }
   };
 
@@ -86,7 +194,7 @@ export default function RoomManagement() {
     <div className="space-y-6 relative bg-[#F5F7FA]">
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-h2 font-bold text-[#0F172A]">Phòng của tôi (API Connected)</h1>
+          <h1 className="text-h2 font-bold text-[#0F172A]">Phòng của tôi (Cloudinary API)</h1>
           <p className="text-body text-[#64748B]">Quản lý danh sách phòng trọ và tình trạng cho thuê thời gian thực.</p>
         </div>
         <Button onClick={() => setIsAdding(true)}>+ Thêm phòng mới</Button>
@@ -117,6 +225,7 @@ export default function RoomManagement() {
                   <p><span className="font-semibold text-[#0F172A]">Giá:</span> {Number(room.price).toLocaleString('vi-VN')}₫/tháng</p>
                   <p><span className="font-semibold text-[#0F172A]">Diện tích:</span> {room.area}m²</p>
                   <p><span className="font-semibold text-[#0F172A]">Loại:</span> {room.roomType}</p>
+                  {room.utilities && <p><span className="font-semibold text-[#0F172A]">Tiện ích:</span> {room.utilities}</p>}
                 </div>
               </div>
               <div className="flex md:flex-col gap-2 shrink-0 w-full md:w-auto mt-4 md:mt-0">
@@ -132,11 +241,181 @@ export default function RoomManagement() {
         )}
       </div>
 
+      {/* Add New Room Modal (Detailed & Cloudinary Upload) */}
+      {isAdding && (
+        <div className="fixed inset-0 bg-[#0F172A]/40 flex items-center justify-center z-50 p-4 overflow-y-auto">
+          <Card className="w-full max-w-2xl p-6 md:p-8 bg-white rounded-[18px] shadow-clay-primary border-none max-h-[90vh] overflow-y-auto space-y-6">
+            <div className="flex justify-between items-center pb-3 border-b border-[#E2E8F0]">
+              <h2 className="text-h2 font-bold text-[#0F172A]">Thêm phòng trọ mới (Chi tiết & Cloudinary API)</h2>
+              <button onClick={() => setIsAdding(false)} className="text-[#64748B] hover:text-[#0F172A] text-xl font-bold">✕</button>
+            </div>
+
+            <form onSubmit={handleAddNew} className="space-y-5">
+              <div>
+                <label className="block text-caption font-semibold text-[#64748B] mb-1">Tiêu đề bài đăng *</label>
+                <input 
+                  type="text" 
+                  required
+                  value={newRoom.title}
+                  onChange={e => setNewRoom({...newRoom, title: e.target.value})}
+                  className="w-full bg-[#F5F7FA] shadow-clay-inset border border-[#E2E8F0] rounded-[12px] px-4 py-2.5 text-body text-[#0F172A] focus:outline-none focus:ring-1 focus:ring-[#00153D] focus:bg-white"
+                  placeholder="Ví dụ: Căn hộ Studio cao cấp Quận 1 ngập tràn ánh sáng"
+                />
+              </div>
+
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                <div>
+                  <label className="block text-caption font-semibold text-[#64748B] mb-1">Loại phòng *</label>
+                  <select 
+                    value={newRoom.roomType}
+                    onChange={e => setNewRoom({...newRoom, roomType: e.target.value})}
+                    className="w-full bg-[#F5F7FA] shadow-clay-inset border border-[#E2E8F0] rounded-[12px] px-4 py-2.5 text-body text-[#0F172A] focus:outline-none focus:ring-1 focus:ring-[#00153D] focus:bg-white min-h-[44px]"
+                  >
+                    <option value="Studio">Studio</option>
+                    <option value="1 Bedroom">1 Phòng ngủ</option>
+                    <option value="2 Bedrooms">2 Phòng ngủ</option>
+                    <option value="Phòng trọ">Phòng trọ</option>
+                    <option value="Ở ghép / KTX">Ở ghép / KTX</option>
+                  </select>
+                </div>
+
+                <div>
+                  <label className="block text-caption font-semibold text-[#64748B] mb-1">Giá thuê (VNĐ/tháng) *</label>
+                  <input 
+                    type="number" 
+                    required
+                    value={newRoom.price || ''}
+                    onChange={e => setNewRoom({...newRoom, price: Number(e.target.value)})}
+                    className="w-full bg-[#F5F7FA] shadow-clay-inset border border-[#E2E8F0] rounded-[12px] px-4 py-2.5 text-body text-[#0F172A] focus:outline-none focus:ring-1 focus:ring-[#00153D] focus:bg-white"
+                    placeholder="4500000"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-caption font-semibold text-[#64748B] mb-1">Diện tích (m²) *</label>
+                  <input 
+                    type="number" 
+                    required
+                    value={newRoom.area || ''}
+                    onChange={e => setNewRoom({...newRoom, area: Number(e.target.value)})}
+                    className="w-full bg-[#F5F7FA] shadow-clay-inset border border-[#E2E8F0] rounded-[12px] px-4 py-2.5 text-body text-[#0F172A] focus:outline-none focus:ring-1 focus:ring-[#00153D] focus:bg-white"
+                    placeholder="30"
+                  />
+                </div>
+              </div>
+
+              <div>
+                <label className="block text-caption font-semibold text-[#64748B] mb-1">Địa chỉ chi tiết *</label>
+                <input 
+                  type="text" 
+                  required
+                  value={newRoom.address}
+                  onChange={e => setNewRoom({...newRoom, address: e.target.value})}
+                  className="w-full bg-[#F5F7FA] shadow-clay-inset border border-[#E2E8F0] rounded-[12px] px-4 py-2.5 text-body text-[#0F172A] focus:outline-none focus:ring-1 focus:ring-[#00153D] focus:bg-white"
+                  placeholder="Ví dụ: 123 Nguyễn Đình Chiểu, Phường Võ Thị Sáu, Quận 3, TP.HCM"
+                />
+              </div>
+
+              <div>
+                <label className="block text-caption font-semibold text-[#64748B] mb-2">Tiện ích chọn nhanh</label>
+                <div className="flex flex-wrap gap-2">
+                  {UTILITY_OPTIONS.map(util => {
+                    const active = newRoom.utilities.includes(util);
+                    return (
+                      <button
+                        key={util}
+                        type="button"
+                        onClick={() => toggleUtility(util)}
+                        className={`px-3 py-1.5 rounded-[10px] text-caption font-semibold transition-all ${
+                          active 
+                            ? 'btn-clay-primary' 
+                            : 'bg-[#F5F7FA] text-[#64748B] border border-[#E2E8F0] hover:bg-white hover:text-[#0F172A]'
+                        }`}
+                      >
+                        {active ? `✓ ${util}` : `+ ${util}`}
+                      </button>
+                    );
+                  })}
+                </div>
+              </div>
+
+              <div>
+                <label className="block text-caption font-semibold text-[#64748B] mb-1">Mô tả chi tiết phòng trọ</label>
+                <textarea 
+                  rows={3}
+                  value={newRoom.description}
+                  onChange={e => setNewRoom({...newRoom, description: e.target.value})}
+                  className="w-full bg-[#F5F7FA] shadow-clay-inset border border-[#E2E8F0] rounded-[12px] px-4 py-2.5 text-body text-[#0F172A] focus:outline-none focus:ring-1 focus:ring-[#00153D] focus:bg-white"
+                  placeholder="Mô tả về nội thất, tình trạng phòng, quy định giờ giấc, tiền điện nước..."
+                />
+              </div>
+
+              <div>
+                <label className="block text-caption font-semibold text-[#64748B] mb-1">Link VR 3D Tour (Tùy chọn)</label>
+                <input 
+                  type="text" 
+                  value={newRoom.virtual3DUrl}
+                  onChange={e => setNewRoom({...newRoom, virtual3DUrl: e.target.value})}
+                  className="w-full bg-[#F5F7FA] shadow-clay-inset border border-[#E2E8F0] rounded-[12px] px-4 py-2.5 text-body text-[#0F172A] focus:outline-none focus:ring-1 focus:ring-[#00153D] focus:bg-white"
+                  placeholder="https://my.matterport.com/show/?m=..."
+                />
+              </div>
+
+              {/* Cloudinary Image Upload Section */}
+              <div>
+                <label className="block text-caption font-semibold text-[#64748B] mb-2">Hình ảnh thực tế (Tải lên Cloudinary API)</label>
+                
+                <div className="border-2 border-dashed border-[#CBD5E1] rounded-[14px] p-6 text-center bg-[#F5F7FA] shadow-clay-inset hover:bg-white transition-all cursor-pointer relative">
+                  <input 
+                    type="file" 
+                    accept="image/*"
+                    className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
+                    onChange={(e) => handleImageUpload(e, false)}
+                    disabled={uploadingImage}
+                  />
+                  <p className="text-body font-semibold text-[#00153D] mb-1">
+                    {uploadingImage ? '⏳ Đang upload ảnh lên Cloudinary...' : '📷 Bấm hoặc Kéo thả ảnh thực tế vào đây'}
+                  </p>
+                  <p className="text-caption text-[#64748B]">Hỗ trợ JPG, PNG, WEBP. Ảnh tự động tối ưu hóa và lưu trữ trên Cloudinary.</p>
+                </div>
+
+                {newRoom.imageUrls.length > 0 && (
+                  <div className="grid grid-cols-3 gap-3 mt-4">
+                    {newRoom.imageUrls.map((url, idx) => (
+                      <div key={idx} className="relative group rounded-[10px] overflow-hidden border border-[#E2E8F0] h-24 bg-black/5">
+                        <img src={url} alt={`Upload ${idx}`} className="w-full h-full object-cover" />
+                        <button
+                          type="button"
+                          onClick={() => removeImage(idx, false)}
+                          className="absolute top-1 right-1 bg-red-600 text-white rounded-full w-6 h-6 flex items-center justify-center text-xs font-bold shadow-md hover:bg-red-700"
+                        >
+                          ✕
+                        </button>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
+
+              <div className="flex justify-end gap-3 pt-4 border-t border-[#E2E8F0]">
+                <Button type="button" variant="secondary" onClick={() => setIsAdding(false)}>Hủy</Button>
+                <Button type="submit">Đăng tin phòng trọ (Cloudinary API)</Button>
+              </div>
+            </form>
+          </Card>
+        </div>
+      )}
+
+      {/* Edit Room Modal */}
       {editingRoom && (
-        <div className="fixed inset-0 bg-[#0F172A]/40 flex items-center justify-center z-50 p-4">
-          <Card className="w-full max-w-md p-6 bg-white rounded-[18px] shadow-clay-primary border-none">
-            <h2 className="text-h2 font-bold text-[#0F172A] mb-4">Chỉnh sửa phòng (API)</h2>
-            <form onSubmit={handleSaveEdit} className="space-y-4">
+        <div className="fixed inset-0 bg-[#0F172A]/40 flex items-center justify-center z-50 p-4 overflow-y-auto">
+          <Card className="w-full max-w-2xl p-6 md:p-8 bg-white rounded-[18px] shadow-clay-primary border-none max-h-[90vh] overflow-y-auto space-y-6">
+            <div className="flex justify-between items-center pb-3 border-b border-[#E2E8F0]">
+              <h2 className="text-h2 font-bold text-[#0F172A]">Chỉnh sửa bài đăng phòng trọ</h2>
+              <button onClick={() => setEditingRoom(null)} className="text-[#64748B] hover:text-[#0F172A] text-xl font-bold">✕</button>
+            </div>
+
+            <form onSubmit={handleSaveEdit} className="space-y-5">
               <div>
                 <label className="block text-caption font-semibold text-[#64748B] mb-1">Tiêu đề</label>
                 <input 
@@ -146,17 +425,46 @@ export default function RoomManagement() {
                   className="w-full bg-[#F5F7FA] shadow-clay-inset border border-[#E2E8F0] rounded-[12px] px-4 py-2.5 text-body text-[#0F172A] focus:outline-none focus:ring-1 focus:ring-[#00153D] focus:bg-white"
                 />
               </div>
-              <div>
-                <label className="block text-caption font-semibold text-[#64748B] mb-1">Giá (VNĐ)</label>
-                <input 
-                  type="number" 
-                  value={editingRoom.price}
-                  onChange={e => setEditingRoom({...editingRoom, price: Number(e.target.value)})}
-                  className="w-full bg-[#F5F7FA] shadow-clay-inset border border-[#E2E8F0] rounded-[12px] px-4 py-2.5 text-body text-[#0F172A] focus:outline-none focus:ring-1 focus:ring-[#00153D] focus:bg-white"
-                />
+
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                <div>
+                  <label className="block text-caption font-semibold text-[#64748B] mb-1">Loại phòng</label>
+                  <select 
+                    value={editingRoom.roomType || 'Studio'}
+                    onChange={e => setEditingRoom({...editingRoom, roomType: e.target.value})}
+                    className="w-full bg-[#F5F7FA] shadow-clay-inset border border-[#E2E8F0] rounded-[12px] px-4 py-2.5 text-body text-[#0F172A] focus:outline-none focus:ring-1 focus:ring-[#00153D] focus:bg-white min-h-[44px]"
+                  >
+                    <option value="Studio">Studio</option>
+                    <option value="1 Bedroom">1 Phòng ngủ</option>
+                    <option value="2 Bedrooms">2 Phòng ngủ</option>
+                    <option value="Phòng trọ">Phòng trọ</option>
+                    <option value="Ở ghép / KTX">Ở ghép / KTX</option>
+                  </select>
+                </div>
+
+                <div>
+                  <label className="block text-caption font-semibold text-[#64748B] mb-1">Giá thuê (VNĐ/tháng)</label>
+                  <input 
+                    type="number" 
+                    value={editingRoom.price}
+                    onChange={e => setEditingRoom({...editingRoom, price: Number(e.target.value)})}
+                    className="w-full bg-[#F5F7FA] shadow-clay-inset border border-[#E2E8F0] rounded-[12px] px-4 py-2.5 text-body text-[#0F172A] focus:outline-none focus:ring-1 focus:ring-[#00153D] focus:bg-white"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-caption font-semibold text-[#64748B] mb-1">Diện tích (m²)</label>
+                  <input 
+                    type="number" 
+                    value={editingRoom.area}
+                    onChange={e => setEditingRoom({...editingRoom, area: Number(e.target.value)})}
+                    className="w-full bg-[#F5F7FA] shadow-clay-inset border border-[#E2E8F0] rounded-[12px] px-4 py-2.5 text-body text-[#0F172A] focus:outline-none focus:ring-1 focus:ring-[#00153D] focus:bg-white"
+                  />
+                </div>
               </div>
+
               <div>
-                <label className="block text-caption font-semibold text-[#64748B] mb-1">Trạng thái</label>
+                <label className="block text-caption font-semibold text-[#64748B] mb-1">Trạng thái phòng</label>
                 <select 
                   value={editingRoom.status}
                   onChange={e => setEditingRoom({...editingRoom, status: Number(e.target.value)})}
@@ -166,70 +474,87 @@ export default function RoomManagement() {
                   <option value={1}>Đã thuê</option>
                 </select>
               </div>
-              <div className="flex justify-end gap-2 mt-6">
+
+              <div>
+                <label className="block text-caption font-semibold text-[#64748B] mb-1">Địa chỉ chi tiết</label>
+                <input 
+                  type="text" 
+                  value={editingRoom.address}
+                  onChange={e => setEditingRoom({...editingRoom, address: e.target.value})}
+                  className="w-full bg-[#F5F7FA] shadow-clay-inset border border-[#E2E8F0] rounded-[12px] px-4 py-2.5 text-body text-[#0F172A] focus:outline-none focus:ring-1 focus:ring-[#00153D] focus:bg-white"
+                />
+              </div>
+
+              <div>
+                <label className="block text-caption font-semibold text-[#64748B] mb-2">Tiện ích đi kèm</label>
+                <div className="flex flex-wrap gap-2">
+                  {UTILITY_OPTIONS.map(util => {
+                    const currentUtils = editingRoom.utilities ? editingRoom.utilities.split(',').map(u => u.trim()) : [];
+                    const active = currentUtils.includes(util);
+                    return (
+                      <button
+                        key={util}
+                        type="button"
+                        onClick={() => toggleUtility(util, true)}
+                        className={`px-3 py-1.5 rounded-[10px] text-caption font-semibold transition-all ${
+                          active 
+                            ? 'btn-clay-primary' 
+                            : 'bg-[#F5F7FA] text-[#64748B] border border-[#E2E8F0] hover:bg-white hover:text-[#0F172A]'
+                        }`}
+                      >
+                        {active ? `✓ ${util}` : `+ ${util}`}
+                      </button>
+                    );
+                  })}
+                </div>
+              </div>
+
+              <div>
+                <label className="block text-caption font-semibold text-[#64748B] mb-1">Mô tả chi tiết</label>
+                <textarea 
+                  rows={3}
+                  value={editingRoom.description || ''}
+                  onChange={e => setEditingRoom({...editingRoom, description: e.target.value})}
+                  className="w-full bg-[#F5F7FA] shadow-clay-inset border border-[#E2E8F0] rounded-[12px] px-4 py-2.5 text-body text-[#0F172A] focus:outline-none focus:ring-1 focus:ring-[#00153D] focus:bg-white"
+                />
+              </div>
+
+              <div>
+                <label className="block text-caption font-semibold text-[#64748B] mb-2">Thêm ảnh thực tế mới (Cloudinary API)</label>
+                <div className="border-2 border-dashed border-[#CBD5E1] rounded-[14px] p-6 text-center bg-[#F5F7FA] shadow-clay-inset hover:bg-white transition-all cursor-pointer relative">
+                  <input 
+                    type="file" 
+                    accept="image/*"
+                    className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
+                    onChange={(e) => handleImageUpload(e, true)}
+                    disabled={uploadingImage}
+                  />
+                  <p className="text-body font-semibold text-[#00153D] mb-1">
+                    {uploadingImage ? '⏳ Đang upload ảnh lên Cloudinary...' : '📷 Bấm để thêm ảnh phòng vào bài trọ này'}
+                  </p>
+                </div>
+
+                {editingRoom.images && editingRoom.images.length > 0 && (
+                  <div className="grid grid-cols-3 gap-3 mt-4">
+                    {editingRoom.images.map((img, idx) => (
+                      <div key={idx} className="relative group rounded-[10px] overflow-hidden border border-[#E2E8F0] h-24 bg-black/5">
+                        <img src={img.imageUrl} alt={`Room ${idx}`} className="w-full h-full object-cover" />
+                        <button
+                          type="button"
+                          onClick={() => removeImage(idx, true)}
+                          className="absolute top-1 right-1 bg-red-600 text-white rounded-full w-6 h-6 flex items-center justify-center text-xs font-bold shadow-md hover:bg-red-700"
+                        >
+                          ✕
+                        </button>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
+
+              <div className="flex justify-end gap-3 pt-4 border-t border-[#E2E8F0]">
                 <Button type="button" variant="secondary" onClick={() => setEditingRoom(null)}>Hủy</Button>
                 <Button type="submit">Lưu vào Backend API</Button>
-              </div>
-            </form>
-          </Card>
-        </div>
-      )}
-
-      {isAdding && (
-        <div className="fixed inset-0 bg-[#0F172A]/40 flex items-center justify-center z-50 p-4">
-          <Card className="w-full max-w-md p-6 bg-white rounded-[18px] shadow-clay-primary border-none">
-            <h2 className="text-h2 font-bold text-[#0F172A] mb-4">Thêm phòng mới (API)</h2>
-            <form onSubmit={handleAddNew} className="space-y-4">
-              <div>
-                <label className="block text-caption font-semibold text-[#64748B] mb-1">Tiêu đề</label>
-                <input 
-                  type="text" 
-                  required
-                  value={newRoom.title}
-                  onChange={e => setNewRoom({...newRoom, title: e.target.value})}
-                  className="w-full bg-[#F5F7FA] shadow-clay-inset border border-[#E2E8F0] rounded-[12px] px-4 py-2.5 text-body text-[#0F172A] focus:outline-none focus:ring-1 focus:ring-[#00153D] focus:bg-white"
-                  placeholder="VD: Căn hộ Studio Quận 1"
-                />
-              </div>
-              <div>
-                <label className="block text-caption font-semibold text-[#64748B] mb-1">Địa chỉ</label>
-                <input 
-                  type="text" 
-                  required
-                  value={newRoom.address}
-                  onChange={e => setNewRoom({...newRoom, address: e.target.value})}
-                  className="w-full bg-[#F5F7FA] shadow-clay-inset border border-[#E2E8F0] rounded-[12px] px-4 py-2.5 text-body text-[#0F172A] focus:outline-none focus:ring-1 focus:ring-[#00153D] focus:bg-white"
-                  placeholder="VD: 123 Nguyễn Trãi, Q1"
-                />
-              </div>
-              <div className="grid grid-cols-2 gap-4">
-                <div>
-                  <label className="block text-caption font-semibold text-[#64748B] mb-1">Giá (VNĐ)</label>
-                  <input 
-                    type="number" 
-                    required
-                    value={newRoom.price || ''}
-                    onChange={e => setNewRoom({...newRoom, price: Number(e.target.value)})}
-                    className="w-full bg-[#F5F7FA] shadow-clay-inset border border-[#E2E8F0] rounded-[12px] px-4 py-2.5 text-body text-[#0F172A] focus:outline-none focus:ring-1 focus:ring-[#00153D] focus:bg-white"
-                    placeholder="5000000"
-                  />
-                </div>
-                <div>
-                  <label className="block text-caption font-semibold text-[#64748B] mb-1">Loại phòng</label>
-                  <select 
-                    value={newRoom.roomType}
-                    onChange={e => setNewRoom({...newRoom, roomType: e.target.value})}
-                    className="w-full bg-[#F5F7FA] shadow-clay-inset border border-[#E2E8F0] rounded-[12px] px-4 py-2.5 text-body text-[#0F172A] focus:outline-none focus:ring-1 focus:ring-[#00153D] focus:bg-white min-h-[44px]"
-                  >
-                    <option value="Studio">Studio</option>
-                    <option value="1 Bedroom">1 Phòng ngủ</option>
-                    <option value="Phòng trọ">Phòng trọ</option>
-                  </select>
-                </div>
-              </div>
-              <div className="flex justify-end gap-2 mt-6">
-                <Button type="button" variant="secondary" onClick={() => setIsAdding(false)}>Hủy</Button>
-                <Button type="submit">Gửi API Tạo tin</Button>
               </div>
             </form>
           </Card>
