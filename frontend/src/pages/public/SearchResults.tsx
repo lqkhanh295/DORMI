@@ -1,4 +1,4 @@
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useEffect } from 'react';
 import { Button } from '../../components/ui/Button';
 import { Input } from '../../components/ui/Input';
 import { useStore } from '../../store/useStore';
@@ -8,7 +8,12 @@ import { RoomCard } from '../../components/landing/RoomCard';
 
 export default function SearchResults() {
   const listings = useStore(state => state.listings);
+  const fetchListings = useStore(state => state.fetchListings);
   const navigate = useNavigate();
+
+  useEffect(() => {
+    fetchListings();
+  }, [fetchListings]);
   
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedDistrict, setSelectedDistrict] = useState<string | null>(null);

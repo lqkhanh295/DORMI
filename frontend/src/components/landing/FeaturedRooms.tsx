@@ -39,11 +39,11 @@ export function FeaturedRooms() {
 
   useEffect(() => {
     let isMounted = true;
-    roomsApi.getRooms({ page: 1 })
+    roomsApi.getRooms({ page: 1, pageSize: 12 })
       .then(res => {
         if (!isMounted) return;
         if (res?.data && Array.isArray(res.data) && res.data.length > 0) {
-          const apiItems: RoomItem[] = res.data.slice(0, 3).map((r: any) => ({
+          const apiItems: RoomItem[] = res.data.map((r: any) => ({
             id: r.id,
             title: r.title,
             price: `${Number(r.price).toLocaleString('vi-VN')}đ / tháng`,

@@ -117,12 +117,12 @@ export const useStore = create<AppState>()(
 
       fetchListings: async () => {
         try {
-          const res = await roomsApi.getRooms();
+          const res = await roomsApi.getRooms({ pageSize: 50 });
           if (res?.data && Array.isArray(res.data) && res.data.length > 0) {
             const apiListings: Listing[] = res.data.map((r: any) => ({
               id: r.id,
               title: r.title,
-              price: r.price,
+              price: Number(r.price),
               address: r.address,
               image: r.images?.[0]?.imageUrl || 'https://images.unsplash.com/photo-1522708323590-d24dbb6b0267?auto=format&fit=crop&w=400&q=80',
               type: r.roomType || 'Studio',
