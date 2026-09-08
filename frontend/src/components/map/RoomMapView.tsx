@@ -66,17 +66,34 @@ export default function RoomMapView({ rooms, selectedRoomId, onSelectRoom, class
       resizeObserver.observe(mapContainerRef.current);
     }
 
+    // Delegated click handler to intercept any /room/ navigation from popup
+    const container = mapContainerRef.current;
+    const handlePopupClick = (e: MouseEvent) => {
+      const target = e.target as HTMLElement;
+      const link = target.closest('a[href^="/room/"]');
+      if (link) {
+        e.preventDefault();
+        e.stopPropagation();
+        const href = link.getAttribute('href');
+        if (href) {
+          navigate(href);
+        }
+      }
+    };
+    container?.addEventListener('click', handlePopupClick);
+
     const t1 = setTimeout(() => map.invalidateSize(), 100);
     const t2 = setTimeout(() => map.invalidateSize(), 500);
 
     return () => {
       clearTimeout(t1);
       clearTimeout(t2);
+      container?.removeEventListener('click', handlePopupClick);
       resizeObserver.disconnect();
       map.remove();
       mapInstanceRef.current = null;
     };
-  }, []);
+  }, [navigate]);
 
   // 2. Request User Location (HTML5 Geolocation)
   const locateUser = () => {
@@ -204,19 +221,21 @@ export default function RoomMapView({ rooms, selectedRoomId, onSelectRoom, class
       // Popup Content Card
       const popupHtml = `
         <div style="font-family: inherit; width: 240px; overflow: hidden; border-radius: 14px; background: #fff;">
-          <div style="width: 100%; height: 130px; overflow: hidden; position: relative; background: #EEF2F6;">
+          <a href="/room/${room.id}" style="display: block; width: 100%; height: 130px; overflow: hidden; position: relative; background: #EEF2F6; text-decoration: none;">
             <img src="${room.image}" alt="${room.title}" style="width: 100%; height: 100%; object-fit: cover;" />
             <div style="position: absolute; top: 8px; left: 8px; background: rgba(0,21,61,0.85); backdrop-filter: blur(4px); color: #fff; padding: 3px 8px; border-radius: 6px; font-size: 10px; font-weight: 700;">
               ${room.type || 'Phòng trọ'}
             </div>
-          </div>
+          </a>
           <div style="padding: 12px;">
             <div style="font-weight: 800; color: #00153D; font-size: 16px; margin-bottom: 4px;">
               ${Number(room.price).toLocaleString('vi-VN')} ₫/tháng
             </div>
-            <h4 style="font-weight: 600; color: #0F172A; font-size: 13px; margin: 0 0 6px 0; line-height: 1.35; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden;">
-              ${room.title}
-            </h4>
+            <a href="/room/${room.id}" style="text-decoration: none; display: block; margin-bottom: 6px;">
+              <h4 style="font-weight: 600; color: #0F172A; font-size: 13px; margin: 0; line-height: 1.35; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden;">
+                ${room.title}
+              </h4>
+            </a>
             <p style="font-size: 11px; color: #64748B; margin: 0 0 6px 0; display: flex; align-items: center; gap: 3px;">
               <span>📍</span>
               <span style="white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">${room.address}</span>
@@ -227,12 +246,12 @@ export default function RoomMapView({ rooms, selectedRoomId, onSelectRoom, class
                 <span>Cách bạn: ${formatDistance(distance)}</span>
               </div>
             ` : '<div style="margin-bottom: 10px;"></div>'}
-            <button 
-              id="view-room-btn-${room.id}"
-              style="width: 100%; background: #00153D; color: #FFFFFF; border: none; padding: 8px 0; border-radius: 10px; font-weight: 700; font-size: 12px; cursor: pointer; transition: background 0.15s;"
+            <a 
+              href="/room/${room.id}"
+              style="display: block; width: 100%; text-align: center; text-decoration: none; box-sizing: border-box; background: #00153D; color: #FFFFFF; padding: 9px 0; border-radius: 10px; font-weight: 700; font-size: 12px; cursor: pointer; box-shadow: 0 2px 6px rgba(0,21,61,0.25);"
             >
               Xem chi tiết phòng
-            </button>
+            </a>
           </div>
         </div>
       `;
@@ -250,16 +269,6 @@ export default function RoomMapView({ rooms, selectedRoomId, onSelectRoom, class
         marker.openPopup();
         if (onSelectRoom) {
           onSelectRoom(room.id);
-        }
-      });
-
-      marker.on('popupopen', () => {
-        const btn = document.getElementById(`view-room-btn-${room.id}`);
-        if (btn) {
-          btn.onclick = (e) => {
-            e.stopPropagation();
-            navigate(`/room/${room.id}`);
-          };
         }
       });
 
