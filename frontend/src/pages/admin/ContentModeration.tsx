@@ -18,6 +18,7 @@ export default function ContentModeration() {
   const [rooms, setRooms] = useState<ModerationRoomItem[]>([]);
   const [loading, setLoading] = useState(true);
   const [selectedId, setSelectedId] = useState<string | null>(null);
+  const [filterStatus, setFilterStatus] = useState<'all' | number>('all');
 
   const loadRooms = async () => {
     try {
@@ -25,7 +26,7 @@ export default function ContentModeration() {
       const res = await adminApi.getRoomsForModeration();
       if (res && Array.isArray(res)) {
         setRooms(res);
-        if (res.length > 0) setSelectedId(res[0].id);
+        if (res.length > 0 && !selectedId) setSelectedId(res[0].id);
       }
     } catch (err) {
       console.warn('Failed to load rooms for moderation:', err);
@@ -38,12 +39,16 @@ export default function ContentModeration() {
     loadRooms();
   }, []);
 
+  const filteredRooms = filterStatus === 'all'
+    ? rooms
+    : rooms.filter(r => r.status === filterStatus);
+
   const selectedRoom = rooms.find(r => r.id === selectedId);
 
   const handleAction = async (roomId: string, status: number) => {
     try {
       await adminApi.updateRoomStatus(roomId, status);
-      toast.success('Đã cập nhật trạng thái phòng trọ thành công (API)!');
+      toast.success('Đã cập nhật trạng thái phòng trọ thành công!');
       loadRooms();
     } catch {
       toast.error('Thao tác không thành công.');
@@ -67,25 +72,52 @@ export default function ContentModeration() {
 
   return (
     <div className="flex flex-col h-[calc(100vh-8rem)] bg-[#F5F7FA]">
-      <div className="flex items-center justify-between mb-6">
+      <div className="flex items-center justify-between mb-4">
         <div>
           <h1 className="text-h2 font-bold text-[#0F172A]">Kiểm duyệt nội dung phòng trọ (Admin Portal)</h1>
-          <p className="text-body text-[#64748B]">Xem xét và phê duyệt các tin đăng bài trọ trước khi hiển thị công khai cho người dùng.</p>
+          <p className="text-body text-[#64748B]">Xem xét và phê duyệt các tin đăng bài trọ với 3 trạng thái: Chờ duyệt, Đã duyệt, và Từ chối.</p>
         </div>
       </div>
 
       <div className="flex gap-6 flex-1 min-h-0">
         <div className="w-1/3 flex flex-col bg-white rounded-[18px] shadow-clay-soft overflow-hidden border border-[#E2E8F0]">
           <div className="p-4 border-b border-[#E2E8F0] bg-[#F5F7FA]">
-            <h3 className="font-bold text-h3 text-[#0F172A] flex justify-between items-center">
-              Danh sách tin đăng
-              <span className="bg-[#EEF2F6] text-[#00153D] border border-[#E2E8F0] px-2.5 py-0.5 rounded-full text-caption">{rooms.length}</span>
-            </h3>
+            <div className="flex justify-between items-center mb-3">
+              <h3 className="font-bold text-h3 text-[#0F172A]">Danh sách tin đăng</h3>
+              <span className="bg-[#EEF2F6] text-[#00153D] border border-[#E2E8F0] px-2.5 py-0.5 rounded-full text-caption font-semibold">{filteredRooms.length} / {rooms.length}</span>
+            </div>
+            {/* Status Filter Tabs */}
+            <div className="flex gap-1 bg-[#E2E8F0] p-1 rounded-xl text-caption font-semibold">
+              <button
+                onClick={() => setFilterStatus('all')}
+                className={`flex-1 py-1 rounded-lg transition-all ${filterStatus === 'all' ? 'bg-white text-[#00153D] shadow-sm' : 'text-[#64748B] hover:text-[#00153D]'}`}
+              >
+                Tất cả
+              </button>
+              <button
+                onClick={() => setFilterStatus(2)}
+                className={`flex-1 py-1 rounded-lg transition-all ${filterStatus === 2 ? 'bg-amber-100 text-amber-800 shadow-sm font-bold' : 'text-[#64748B] hover:text-[#00153D]'}`}
+              >
+                Chờ duyệt
+              </button>
+              <button
+                onClick={() => setFilterStatus(0)}
+                className={`flex-1 py-1 rounded-lg transition-all ${filterStatus === 0 ? 'bg-emerald-100 text-emerald-800 shadow-sm font-bold' : 'text-[#64748B] hover:text-[#00153D]'}`}
+              >
+                Đã duyệt
+              </button>
+              <button
+                onClick={() => setFilterStatus(3)}
+                className={`flex-1 py-1 rounded-lg transition-all ${filterStatus === 3 ? 'bg-rose-100 text-rose-800 shadow-sm font-bold' : 'text-[#64748B] hover:text-[#00153D]'}`}
+              >
+                Từ chối
+              </button>
+            </div>
           </div>
           <div className="flex-1 overflow-y-auto p-3 space-y-3">
             {loading && <div className="p-8 text-center text-[#64748B]">Đang tải danh sách phòng...</div>}
-            {!loading && rooms.map(room => (
-              <div 
+            {!loading && filteredRooms.map(room => (
+              <div
                 key={room.id}
                 onClick={() => setSelectedId(room.id)}
                 className={`p-4 rounded-[14px] cursor-pointer transition-all ${selectedId === room.id ? 'bg-white shadow-clay-primary border-2 border-[#00153D]' : 'bg-[#F5F7FA] border border-[#E2E8F0] hover:bg-white'}`}
@@ -97,8 +129,8 @@ export default function ContentModeration() {
                 <p className="text-caption text-[#64748B] mt-1">Chủ trọ: <span className="font-semibold text-[#0F172A]">{room.landlordName}</span></p>
               </div>
             ))}
-            {!loading && rooms.length === 0 && (
-              <div className="p-8 text-center text-[#64748B]">Không có tin đăng nào.</div>
+            {!loading && filteredRooms.length === 0 && (
+              <div className="p-8 text-center text-[#64748B]">Không có tin đăng nào ở trạng thái này.</div>
             )}
           </div>
         </div>
@@ -125,9 +157,31 @@ export default function ContentModeration() {
                   <p className="text-body font-bold text-[#0F172A]">{selectedRoom.address} - {Number(selectedRoom.price).toLocaleString('vi-VN')}₫/tháng</p>
                 </Card>
               </div>
-              <div className="p-6 border-t border-[#E2E8F0] bg-[#F5F7FA] flex justify-end gap-3">
-                <Button variant="secondary" className="bg-[#FEF2F2] text-[#C62828] border border-[#FECACA] hover:bg-[#FEE2E2]" onClick={() => handleAction(selectedRoom.id, 3)}>✕ Từ chối / Tạm ẩn tin</Button>
-                <Button variant="primary" className="btn-clay-primary" onClick={() => handleAction(selectedRoom.id, 0)}>✓ Phê duyệt Công khai</Button>
+              <div className="p-6 border-t border-[#E2E8F0] bg-[#F5F7FA] flex items-center justify-between gap-3">
+                <span className="text-caption text-[#64748B] font-semibold">Chuyển trạng thái:</span>
+                <div className="flex gap-2">
+                  <Button
+                    variant="secondary"
+                    className="bg-[#FEF3C7] text-[#D97706] border border-[#FDE68A] hover:bg-[#FDE68A]"
+                    onClick={() => handleAction(selectedRoom.id, 2)}
+                  >
+                    Chờ duyệt
+                  </Button>
+                  <Button
+                    variant="secondary"
+                    className="bg-[#FEF2F2] text-[#C62828] border border-[#FECACA] hover:bg-[#FEE2E2]"
+                    onClick={() => handleAction(selectedRoom.id, 3)}
+                  >
+                    Từ chối
+                  </Button>
+                  <Button
+                    variant="primary"
+                    className="btn-clay-primary"
+                    onClick={() => handleAction(selectedRoom.id, 0)}
+                  >
+                    Phê duyệt
+                  </Button>
+                </div>
               </div>
             </>
           ) : (
