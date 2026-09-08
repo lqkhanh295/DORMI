@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { MagnifyingGlass, MapPin, Coins } from '@phosphor-icons/react';
+import { Search, MapPin, Coins } from 'lucide-react';
 
 export function HeroSearch() {
   const navigate = useNavigate();
@@ -78,7 +78,7 @@ export function HeroSearch() {
                 type="submit"
                 className="w-full btn-clay-primary font-semibold py-3 rounded-[12px] flex items-center justify-center gap-2 min-h-[44px] text-body"
               >
-                <MagnifyingGlass className="w-5 h-5" weight="bold" />
+                <Search className="w-5 h-5" />
                 Tìm phòng
               </button>
             </form>

@@ -3,7 +3,7 @@ import { Button } from '../../components/ui/Button';
 import { Input } from '../../components/ui/Input';
 import { useStore } from '../../store/useStore';
 import { useNavigate } from 'react-router-dom';
-import { ArrowLeft, SlidersHorizontal, MapTrifold, X, FadersHorizontal } from '@phosphor-icons/react';
+import { ArrowLeft, SlidersHorizontal, Map as MapTrifold, X, Sliders as FadersHorizontal } from 'lucide-react';
 import { RoomCard } from '../../components/landing/RoomCard';
 
 export default function SearchResults() {
@@ -87,7 +87,7 @@ export default function SearchResults() {
         <div className="p-6 bg-white rounded-b-[18px] shadow-clay-primary space-y-4 z-10">
           <div className="flex items-center gap-3">
             <Button variant="secondary" className="w-[44px] h-[44px] p-0 flex-shrink-0" onClick={() => navigate(-1)} aria-label="Quay lại">
-              <ArrowLeft className="w-5 h-5 text-[#0F172A]" weight="bold" />
+              <ArrowLeft className="w-5 h-5 text-[#0F172A]" />
             </Button>
             <Input 
               placeholder="Tìm kiếm khu vực, tên đường..." 
@@ -104,7 +104,7 @@ export default function SearchResults() {
               className={`h-[44px] px-4 flex-shrink-0 hidden lg:flex items-center gap-2 transition-colors ${showMap ? 'bg-[#00153D] text-white' : ''}`} 
               onClick={() => setShowMap(!showMap)}
             >
-              <MapTrifold className="w-5 h-5" weight={showMap ? "fill" : "regular"} />
+              <MapTrifold className="w-5 h-5" />
               <span className="text-body font-semibold">{showMap ? 'Ẩn bản đồ' : 'Hiện bản đồ'}</span>
             </Button>
           </div>
@@ -160,7 +160,7 @@ export default function SearchResults() {
                 >
                   {filter.label}
                   <button onClick={filter.clear} className="hover:text-[#C62828] touch-target min-h-0 min-w-0 p-0.5">
-                    <X className="w-3.5 h-3.5" weight="bold" />
+                    <X className="w-3.5 h-3.5" />
                   </button>
                 </span>
               ))}

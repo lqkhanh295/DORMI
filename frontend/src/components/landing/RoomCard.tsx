@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { Link } from 'react-router-dom';
-import { CheckCircle, Heart } from '@phosphor-icons/react';
+import { CheckCircle, Heart } from 'lucide-react';
 import { toast } from 'sonner';
 
 export interface RoomItem {
@@ -44,11 +44,11 @@ export function RoomCard({ room }: { room: RoomItem }) {
         {/* Verification Signal */}
         {room.verified && (
           <div className="absolute top-3 left-3 bg-white/95 backdrop-blur-xs text-[#16803C] border border-[#DCFCE7] text-caption font-bold px-2.5 py-1 rounded-full flex items-center gap-1 shadow-xs">
-            <CheckCircle className="w-4 h-4" weight="fill" /> Đã xác minh
+            <CheckCircle className="w-4 h-4" /> Đã xác minh
           </div>
         )}
 
-        {/* Independent Favorite Button (♡ -> ♥ with 180ms scale pulse, stopPropagation) */}
+        {/* Independent Favorite Button */}
         <button
           type="button"
           onClick={toggleFavorite}
@@ -59,7 +59,7 @@ export function RoomCard({ room }: { room: RoomItem }) {
               : 'bg-white/90 text-[#64748B] hover:text-[#C62828] hover:bg-white shadow-xs'
           }`}
         >
-          <Heart className="w-5 h-5" weight={isSaved ? "fill" : "regular"} />
+          <Heart className={`w-5 h-5 ${isSaved ? 'fill-current' : ''}`} />
         </button>
       </div>
 

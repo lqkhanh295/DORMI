@@ -4,7 +4,7 @@ import { Card } from '../../components/ui/Card';
 import { Button } from '../../components/ui/Button';
 import { useStore } from '../../store/useStore';
 import { Toaster, toast } from 'sonner';
-import { ArrowLeft, CheckCircle, Heart, ShareNetwork, Warning, CalendarCheck, X } from '@phosphor-icons/react';
+import { ArrowLeft, CheckCircle, Heart, Share2 as ShareNetwork, AlertTriangle as Warning, CalendarCheck, X } from 'lucide-react';
 import { appointmentsApi, favoritesApi, roomsApi, type RoomResponse } from '../../services/api';
 
 export default function RoomDetail() {
@@ -94,7 +94,7 @@ export default function RoomDetail() {
       
       <div className="flex justify-between items-center">
         <Button variant="secondary" className="flex items-center gap-2 touch-target" onClick={() => navigate(-1)}>
-          <ArrowLeft weight="bold" className="w-5 h-5" /> Quay lại
+          <ArrowLeft className="w-5 h-5" /> Quay lại
         </Button>
       </div>
 
@@ -134,7 +134,7 @@ export default function RoomDetail() {
                   onClick={() => setShowVerificationModal(true)}
                   className="bg-[#F0FDF4] text-[#16803C] border border-[#DCFCE7] text-caption font-bold px-3.5 py-1.5 rounded-full flex items-center gap-1.5 self-start hover:bg-[#DCFCE7] transition-colors touch-target"
                 >
-                  <CheckCircle className="w-4 h-4" weight="fill" /> Đã xác minh
+                  <CheckCircle className="w-4 h-4" /> Đã xác minh
                 </button>
               </div>
               <p className="text-body text-[#64748B]">{roomData?.address || 'Địa chỉ phòng trọ'}</p>
@@ -176,7 +176,7 @@ export default function RoomDetail() {
                   if (!name) return null;
                   return (
                     <span key={i} className="px-3.5 py-2 rounded-[12px] bg-[#F5F7FA] text-[#00153D] border border-[#E2E8F0] text-body font-semibold flex items-center gap-2 shadow-clay-inset">
-                      <CheckCircle className="w-4.5 h-4.5 text-[#16803C]" weight="fill" />
+                      <CheckCircle className="w-4.5 h-4.5 text-[#16803C]" />
                       {name}
                     </span>
                   );
@@ -218,7 +218,7 @@ export default function RoomDetail() {
                 onClick={handleFavorite}
                 className="flex items-center justify-center gap-2"
               >
-                <Heart className="w-5 h-5 text-[#C62828]" weight={isSaved ? "fill" : "regular"} />
+                <Heart className={`w-5 h-5 text-[#C62828] ${isSaved ? 'fill-current' : ''}`} />
                 {isSaved ? 'Đã lưu phòng' : 'Lưu phòng'}
               </Button>
             </div>
@@ -276,7 +276,7 @@ export default function RoomDetail() {
           <div className="bg-white rounded-[18px] shadow-clay-primary max-w-md w-full p-6 space-y-6 overflow-hidden">
             <div className="flex justify-between items-center border-b border-[#E2E8F0] pb-4">
               <div className="flex items-center gap-2 text-[#16803C]">
-                <CheckCircle className="w-6 h-6" weight="fill" />
+                <CheckCircle className="w-6 h-6" />
                 <h3 className="text-h3 font-bold text-[#0F172A]">Thông tin đã xác minh</h3>
               </div>
               <button onClick={() => setShowVerificationModal(false)} className="text-[#64748B] hover:text-[#0F172A] p-1">
@@ -286,11 +286,11 @@ export default function RoomDetail() {
 
             <div className="space-y-3 text-body text-[#0F172A]">
               <div className="flex items-center gap-3 p-3 bg-[#F5F7FA] rounded-[12px] shadow-clay-inset">
-                <CheckCircle className="w-5 h-5 text-[#16803C]" weight="fill" />
+                <CheckCircle className="w-5 h-5 text-[#16803C]" />
                 <span>Danh tính người đăng đã đối soát CCCD</span>
               </div>
               <div className="flex items-center gap-3 p-3 bg-[#F5F7FA] rounded-[12px] shadow-clay-inset">
-                <CheckCircle className="w-5 h-5 text-[#16803C]" weight="fill" />
+                <CheckCircle className="w-5 h-5 text-[#16803C]" />
                 <span>Hình ảnh phòng trọ chụp thực tế</span>
               </div>
             </div>
@@ -354,7 +354,7 @@ export default function RoomDetail() {
             {schedulerStep === 3 && (
               <div className="space-y-6 text-center py-4">
                 <div className="w-16 h-16 bg-[#F0FDF4] text-[#16803C] rounded-full flex items-center justify-center mx-auto">
-                  <CalendarCheck className="w-8 h-8" weight="fill" />
+                  <CalendarCheck className="w-8 h-8" />
                 </div>
                 <div className="space-y-2">
                   <h4 className="text-h3 font-bold text-[#0F172A]">Gửi yêu cầu lịch hẹn thành công!</h4>

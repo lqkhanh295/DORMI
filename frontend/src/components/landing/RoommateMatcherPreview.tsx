@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { Link } from 'react-router-dom';
-import { Users } from '@phosphor-icons/react';
+import { Users } from 'lucide-react';
 
 export function RoommateMatcherPreview() {
   const [sleepTime, setSleepTime] = useState('22h - 00h');

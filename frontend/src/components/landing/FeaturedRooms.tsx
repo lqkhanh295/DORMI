@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
-import { ArrowRight } from '@phosphor-icons/react';
+import { ArrowRight } from 'lucide-react';
 import { RoomCard, type RoomItem } from './RoomCard';
 import { roomsApi } from '../../services/api';
 
@@ -78,7 +78,7 @@ export function FeaturedRooms() {
             to="/search" 
             className="text-body font-semibold text-[#00153D] hover:underline flex items-center gap-1 min-h-[44px]"
           >
-            Xem tất cả <ArrowRight className="w-4 h-4" weight="bold" />
+            Xem tất cả <ArrowRight className="w-4 h-4" />
           </Link>
         </div>
 

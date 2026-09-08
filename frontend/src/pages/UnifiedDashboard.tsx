@@ -2,7 +2,7 @@ import { GlobalNav } from '../components/ui/GlobalNav';
 import { LocalNav } from '../components/ui/LocalNav';
 import { BentoCard } from '../components/ui/BentoCard';
 import { AppleButton } from '../components/ui/AppleButton';
-import { Heart, Clock, ChatText, ShieldCheck, Sparkle, MapPin, Star, CaretRight } from '@phosphor-icons/react';
+import { Heart, Clock, MessageSquare, ShieldCheck, Sparkles, MapPin, Star, ChevronRight } from 'lucide-react';
 import { Toaster, toast } from 'sonner';
 import { Link } from 'react-router-dom';
 
@@ -64,7 +64,7 @@ export function UnifiedDashboard() {
             <BentoCard className="bg-white flex flex-col justify-between h-[200px] shadow-[0_1px_3px_rgba(0,0,0,0.1)] border border-border-subtle hoverEffect">
               <div className="flex items-center gap-4">
                 <div className="flex h-12 w-12 items-center justify-center rounded-pill bg-[#34c759]/10 text-[#34c759]">
-                  <ChatText className="w-6 h-6"  />
+                  <MessageSquare className="w-6 h-6"  />
                 </div>
                 <h3 className="text-[17px] font-semibold text-foreground">Tin nhắn mới</h3>
               </div>
@@ -117,11 +117,11 @@ export function UnifiedDashboard() {
           <div className="flex justify-between items-end mb-6">
             <div>
               <h2 className="text-[21px] font-semibold text-foreground flex items-center gap-2">
-                <Sparkle  className="text-yellow-500" /> Gợi ý dành riêng cho bạn
+                <Sparkles className="text-yellow-500" /> Gợi ý dành riêng cho bạn
               </h2>
               <p className="text-sm text-text-secondary mt-1">Dựa trên khu vực và ngân sách bạn quan tâm</p>
             </div>
-            <AppleButton variant="ghost" size="sm">Xem thêm <CaretRight className="w-4 h-4 inline-block ml-1" /></AppleButton>
+            <AppleButton variant="ghost" size="sm">Xem thêm <ChevronRight className="w-4 h-4 inline-block ml-1" /></AppleButton>
           </div>
           
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
@@ -142,7 +142,7 @@ export function UnifiedDashboard() {
                       Quận {i === 1 ? '3' : i === 2 ? '1' : 'Bình Thạnh'}
                     </div>
                     <div className="absolute top-3 right-3 w-8 h-8 bg-white/90 backdrop-blur-sm rounded-pill flex items-center justify-center text-text-muted hover:text-red-500 transition-colors shadow-sm">
-                      <Heart className="w-4 h-4" weight="bold" />
+                      <Heart className="w-4 h-4" />
                     </div>
                   </div>
                   <div className="p-4">

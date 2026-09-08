@@ -2,7 +2,7 @@ import { Card } from '../../components/ui/Card';
 import { Button } from '../../components/ui/Button';
 import { useStore } from '../../store/useStore';
 import { useNavigate } from 'react-router-dom';
-import { ShieldCheck, MapPin, MagnifyingGlass } from '@phosphor-icons/react';
+import { ShieldCheck, MapPin, Search } from 'lucide-react';
 
 export default function TenantDashboard() {
   const listings = useStore(state => state.listings);
@@ -17,7 +17,7 @@ export default function TenantDashboard() {
         <h1 className="text-h2 font-bold text-[#0F172A] tracking-tight mb-6">Tìm kiếm không gian sống của bạn</h1>
         <div className="flex flex-col md:flex-row gap-4">
           <div className="flex-1 relative flex items-center">
-            <MagnifyingGlass className="absolute left-4 w-5 h-5 text-[#64748B]" />
+            <Search className="absolute left-4 w-5 h-5 text-[#64748B]" />
             <input 
               type="text" 
               placeholder="Nhập địa điểm, quận huyện, tên đường..." 
@@ -84,7 +84,7 @@ export default function TenantDashboard() {
                 </div>
                 
                 <div className="flex items-center text-caption text-[#64748B] mb-1 truncate border-t border-[#E2E8F0] pt-3">
-                  <MapPin className="w-4 h-4 mr-1.5 flex-shrink-0 text-[#64748B]" weight="bold" />
+                  <MapPin className="w-4 h-4 mr-1.5 flex-shrink-0 text-[#64748B]" />
                   {room.address}
                 </div>
               </div>
@@ -135,7 +135,7 @@ export default function TenantDashboard() {
                 </div>
                 
                 <div className="flex items-center text-caption text-[#64748B] mb-1 truncate border-t border-[#E2E8F0] pt-3">
-                  <MapPin className="w-4 h-4 mr-1.5 flex-shrink-0 text-[#64748B]" weight="bold" />
+                  <MapPin className="w-4 h-4 mr-1.5 flex-shrink-0 text-[#64748B]" />
                   {room.address}
                 </div>
               </div>

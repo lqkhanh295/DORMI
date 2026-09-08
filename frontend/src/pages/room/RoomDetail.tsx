@@ -1,7 +1,7 @@
 import { GlobalNav } from '../../components/ui/GlobalNav';
 import { AppleButton } from '../../components/ui/AppleButton';
 import { BentoCard } from '../../components/ui/BentoCard';
-import { MapPin, Info, Selection, Star, CurrencyCircleDollar } from '@phosphor-icons/react';
+import { MapPin, Info, LayoutGrid as Selection, Star, DollarSign as CurrencyCircleDollar } from 'lucide-react';
 
 export function RoomDetail() {
   return (
