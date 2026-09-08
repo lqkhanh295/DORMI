@@ -123,6 +123,9 @@ public class AdminController : ControllerBase
                 r.Virtual3DUrl,
                 LandlordName = r.Landlord.FullName,
                 LandlordPhone = r.Landlord.PhoneNumber,
+                LandlordEmail = r.Landlord.Email,
+                LandlordAvatarUrl = r.Landlord.AvatarUrl,
+                IsVerifiedLandlord = r.Landlord.IsVerified,
                 r.Status,
                 r.CreatedAt,
                 Images = r.Images.Select(img => new { img.Id, img.ImageUrl, img.IsPrimary }).ToList()
