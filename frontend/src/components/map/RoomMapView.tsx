@@ -18,6 +18,7 @@ export default function RoomMapView({ rooms, selectedRoomId, onSelectRoom, class
   const mapInstanceRef = useRef<L.Map | null>(null);
   const markersLayerRef = useRef<L.LayerGroup | null>(null);
   const userMarkerRef = useRef<L.Marker | null>(null);
+  const markersMapRef = useRef<Map<string, L.Marker>>(new Map());
   const navigate = useNavigate();
 
   const [userLocation, setUserLocation] = useState<GeoLocation | null>(null);
@@ -36,17 +37,17 @@ export default function RoomMapView({ rooms, selectedRoomId, onSelectRoom, class
   // 1. Initialize Leaflet Map
   useEffect(() => {
     if (!mapContainerRef.current) return;
-    if (mapInstanceRef.current) return; // Prevent double init
+    if (mapInstanceRef.current) return;
 
     // Default center: Ho Chi Minh City (District 1)
     const map = L.map(mapContainerRef.current, {
       center: [10.7769, 106.7009],
       zoom: 13,
-      zoomControl: false, // We'll render modern custom controls
+      zoomControl: false,
       attributionControl: false
     });
 
-    // Google Maps Roadmap tiles (High performance, complete Vietnamese labels & streets)
+    // Google Maps Roadmap tiles (Fast, crisp, 100% Vietnamese labels & streets)
     L.tileLayer('https://mt{s}.google.com/vt/lyrs=m&x={x}&y={y}&z={z}', {
       subdomains: ['0', '1', '2', '3'],
       maxZoom: 20,
@@ -57,7 +58,7 @@ export default function RoomMapView({ rooms, selectedRoomId, onSelectRoom, class
     markersLayerRef.current = markersLayer;
     mapInstanceRef.current = map;
 
-    // Invalidate size immediately and with ResizeObserver for guaranteed rendering
+    // Ensure map tiles are properly painted across resizes
     const resizeObserver = new ResizeObserver(() => {
       map.invalidateSize();
     });
@@ -124,34 +125,35 @@ export default function RoomMapView({ rooms, selectedRoomId, onSelectRoom, class
       const userIcon = L.divIcon({
         className: 'custom-user-marker',
         html: `
-          <div style="position: relative; width: 28px; height: 28px; display: flex; align-items: center; justify-content: center;">
-            <div style="position: absolute; width: 28px; height: 28px; border-radius: 50%; background: rgba(37, 99, 235, 0.25); animation: ping 1.8s cubic-bezier(0, 0, 0.2, 1) infinite;"></div>
-            <div style="width: 16px; height: 16px; border-radius: 50%; background: #2563EB; border: 3px solid #FFFFFF; box-shadow: 0 2px 8px rgba(0,0,0,0.3); z-index: 10;"></div>
+          <div style="position: relative; width: 32px; height: 32px; display: flex; align-items: center; justify-content: center;">
+            <div style="position: absolute; width: 32px; height: 32px; border-radius: 50%; background: rgba(37, 99, 235, 0.3); animation: ping 1.8s cubic-bezier(0, 0, 0.2, 1) infinite;"></div>
+            <div style="width: 16px; height: 16px; border-radius: 50%; background: #2563EB; border: 3px solid #FFFFFF; box-shadow: 0 2px 8px rgba(0,0,0,0.35); z-index: 10;"></div>
           </div>
         `,
-        iconSize: [28, 28],
-        iconAnchor: [14, 14]
+        iconSize: [32, 32],
+        iconAnchor: [16, 16]
       });
 
       const marker = L.marker([userLocation.lat, userLocation.lng], { icon: userIcon, zIndexOffset: 1000 })
         .addTo(map)
         .bindPopup(`
-          <div style="font-family: inherit; padding: 2px 4px; text-align: center;">
+          <div style="font-family: inherit; padding: 6px 8px; text-align: center;">
             <p style="font-weight: 700; color: #0F172A; font-size: 13px; margin: 0 0 2px 0;">📍 Vị trí của bạn</p>
             <p style="font-size: 11px; color: #64748B; margin: 0;">Đang định vị tại đây</p>
           </div>
-        `);
+        `, { closeButton: false });
       userMarkerRef.current = marker;
     }
   }, [userLocation]);
 
-  // 4. Render / Update Room Markers
+  // 4. Render Room Markers (Only re-renders when rooms list or userLocation changes)
   useEffect(() => {
     const map = mapInstanceRef.current;
     const markersLayer = markersLayerRef.current;
     if (!map || !markersLayer) return;
 
     markersLayer.clearLayers();
+    markersMapRef.current.clear();
 
     const bounds = L.latLngBounds([]);
 
@@ -159,32 +161,31 @@ export default function RoomMapView({ rooms, selectedRoomId, onSelectRoom, class
       const coords = getCoordinatesForAddress(room.address, room.id);
       bounds.extend(coords);
 
-      const isSelected = selectedRoomId === room.id;
       const distance = userLocation 
         ? calculateDistanceKm(userLocation.lat, userLocation.lng, coords[0], coords[1]) 
         : null;
 
-      // Airbnb-style price pill marker
+      // Modern Airbnb-style price pill marker
       const priceText = formatShortPrice(room.price);
       const markerHtml = `
         <div 
-          class="room-pill-marker ${isSelected ? 'selected' : ''}" 
+          id="marker-pill-${room.id}"
+          class="room-pill-marker" 
           style="
-            background: ${isSelected ? '#00153D' : '#FFFFFF'};
-            color: ${isSelected ? '#FFFFFF' : '#00153D'};
-            border: 2px solid ${isSelected ? '#00153D' : '#CBD5E1'};
-            padding: 3px 9px;
+            background: #FFFFFF;
+            color: #00153D;
+            border: 2px solid #CBD5E1;
+            padding: 3px 10px;
             border-radius: 20px;
             font-weight: 700;
             font-size: 12px;
-            box-shadow: 0 3px 8px rgba(0,21,61,0.22);
+            box-shadow: 0 3px 10px rgba(0,21,61,0.25);
             white-space: nowrap;
             cursor: pointer;
-            transition: all 0.2s ease;
-            transform: ${isSelected ? 'scale(1.15)' : 'scale(1)'};
+            transition: transform 0.2s cubic-bezier(0.4, 0, 0.2, 1), background 0.2s, color 0.2s;
             display: inline-flex;
             align-items: center;
-            gap: 3px;
+            user-select: none;
           "
         >
           <span>${priceText}</span>
@@ -194,39 +195,41 @@ export default function RoomMapView({ rooms, selectedRoomId, onSelectRoom, class
       const roomIcon = L.divIcon({
         className: 'custom-room-marker',
         html: markerHtml,
-        iconSize: [60, 26],
-        iconAnchor: [30, 13]
+        iconSize: [64, 28],
+        iconAnchor: [32, 14]
       });
 
       const marker = L.marker(coords, { icon: roomIcon });
 
       // Popup Content Card
       const popupHtml = `
-        <div style="font-family: inherit; width: 220px; overflow: hidden; border-radius: 12px;">
-          <div style="width: 100%; height: 120px; overflow: hidden; position: relative; border-radius: 8px 8px 0 0; background: #EEF2F6;">
+        <div style="font-family: inherit; width: 240px; overflow: hidden; border-radius: 14px; background: #fff;">
+          <div style="width: 100%; height: 130px; overflow: hidden; position: relative; background: #EEF2F6;">
             <img src="${room.image}" alt="${room.title}" style="width: 100%; height: 100%; object-fit: cover;" />
-            <div style="position: absolute; top: 6px; left: 6px; background: rgba(0,21,61,0.85); color: #fff; padding: 2px 7px; border-radius: 6px; font-size: 10px; font-weight: 700;">
+            <div style="position: absolute; top: 8px; left: 8px; background: rgba(0,21,61,0.85); backdrop-filter: blur(4px); color: #fff; padding: 3px 8px; border-radius: 6px; font-size: 10px; font-weight: 700;">
               ${room.type || 'Phòng trọ'}
             </div>
           </div>
-          <div style="padding: 10px;">
-            <p style="font-weight: 700; color: #00153D; font-size: 15px; margin: 0 0 4px 0;">
+          <div style="padding: 12px;">
+            <div style="font-weight: 800; color: #00153D; font-size: 16px; margin-bottom: 4px;">
               ${Number(room.price).toLocaleString('vi-VN')} ₫/tháng
-            </p>
-            <h4 style="font-weight: 600; color: #0F172A; font-size: 12px; margin: 0 0 4px 0; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; line-height: 1.3;">
+            </div>
+            <h4 style="font-weight: 600; color: #0F172A; font-size: 13px; margin: 0 0 6px 0; line-height: 1.35; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden;">
               ${room.title}
             </h4>
-            <p style="font-size: 11px; color: #64748B; margin: 0 0 6px 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">
-              📍 ${room.address}
+            <p style="font-size: 11px; color: #64748B; margin: 0 0 6px 0; display: flex; align-items: center; gap: 3px;">
+              <span>📍</span>
+              <span style="white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">${room.address}</span>
             </p>
             ${distance !== null ? `
-              <p style="font-size: 11px; font-weight: 700; color: #16803C; margin: 0 0 8px 0; display: flex; align-items: center; gap: 3px;">
-                🛵 Cách bạn: ${formatDistance(distance)}
-              </p>
-            ` : ''}
+              <div style="font-size: 11px; font-weight: 700; color: #16803C; margin-bottom: 10px; display: flex; align-items: center; gap: 4px;">
+                <span>🛵</span>
+                <span>Cách bạn: ${formatDistance(distance)}</span>
+              </div>
+            ` : '<div style="margin-bottom: 10px;"></div>'}
             <button 
               id="view-room-btn-${room.id}"
-              style="width: 100%; background: #00153D; color: #fff; border: none; padding: 6px 0; border-radius: 8px; font-weight: 700; font-size: 12px; cursor: pointer;"
+              style="width: 100%; background: #00153D; color: #FFFFFF; border: none; padding: 8px 0; border-radius: 10px; font-weight: 700; font-size: 12px; cursor: pointer; transition: background 0.15s;"
             >
               Xem chi tiết phòng
             </button>
@@ -234,39 +237,75 @@ export default function RoomMapView({ rooms, selectedRoomId, onSelectRoom, class
         </div>
       `;
 
-      marker.bindPopup(popupHtml, { maxWidth: 240, minWidth: 220, className: 'dormi-room-popup' });
+      marker.bindPopup(popupHtml, { 
+        maxWidth: 260, 
+        minWidth: 240, 
+        className: 'dormi-custom-popup',
+        autoPanPadding: [20, 20]
+      });
 
-      marker.on('click', () => {
-        if (onSelectRoom) onSelectRoom(room.id);
+      // Handle marker click: open popup immediately and notify parent
+      marker.on('click', (e) => {
+        L.DomEvent.stopPropagation(e);
+        marker.openPopup();
+        if (onSelectRoom) {
+          onSelectRoom(room.id);
+        }
       });
 
       marker.on('popupopen', () => {
         const btn = document.getElementById(`view-room-btn-${room.id}`);
         if (btn) {
-          btn.onclick = () => {
+          btn.onclick = (e) => {
+            e.stopPropagation();
             navigate(`/room/${room.id}`);
           };
         }
       });
 
       markersLayer.addLayer(marker);
+      markersMapRef.current.set(room.id, marker);
     });
 
-    // If rooms exist and no specific room is selected, fit all rooms on map
-    if (rooms.length > 0 && !selectedRoomId && bounds.isValid()) {
+    // Fit map bounds if rooms exist
+    if (rooms.length > 0 && bounds.isValid()) {
       map.fitBounds(bounds, { padding: [40, 40], maxZoom: 14 });
     }
-  }, [rooms, selectedRoomId, userLocation, navigate, onSelectRoom]);
+  }, [rooms, userLocation, navigate, onSelectRoom]);
 
-  // 5. Center map on selected room if changed
+  // 5. When selectedRoomId changes: highlight marker & open popup
   useEffect(() => {
     if (!selectedRoomId || !mapInstanceRef.current) return;
-    const targetRoom = rooms.find(r => r.id === selectedRoomId);
-    if (targetRoom) {
-      const coords = getCoordinatesForAddress(targetRoom.address, targetRoom.id);
-      mapInstanceRef.current.flyTo(coords, 15, { duration: 0.8 });
+
+    // Update styling on all markers
+    markersMapRef.current.forEach((_, id) => {
+      const el = document.getElementById(`marker-pill-${id}`);
+      if (el) {
+        if (id === selectedRoomId) {
+          el.style.background = '#00153D';
+          el.style.color = '#FFFFFF';
+          el.style.borderColor = '#00153D';
+          el.style.transform = 'scale(1.2)';
+          el.style.zIndex = '999';
+        } else {
+          el.style.background = '#FFFFFF';
+          el.style.color = '#00153D';
+          el.style.borderColor = '#CBD5E1';
+          el.style.transform = 'scale(1)';
+          el.style.zIndex = '1';
+        }
+      }
+    });
+
+    // Fly to target room and open popup
+    const targetMarker = markersMapRef.current.get(selectedRoomId);
+    if (targetMarker) {
+      mapInstanceRef.current.flyTo(targetMarker.getLatLng(), 15, { duration: 0.6 });
+      setTimeout(() => {
+        targetMarker.openPopup();
+      }, 350);
     }
-  }, [selectedRoomId, rooms]);
+  }, [selectedRoomId]);
 
   const handleZoomIn = () => mapInstanceRef.current?.zoomIn();
   const handleZoomOut = () => mapInstanceRef.current?.zoomOut();
@@ -281,15 +320,41 @@ export default function RoomMapView({ rooms, selectedRoomId, onSelectRoom, class
 
   return (
     <div className={`relative w-full h-full overflow-hidden bg-[#EEF2F6] ${className}`}>
+      {/* Embedded CSS for custom popup styling */}
+      <style>{`
+        .dormi-custom-popup .leaflet-popup-content-wrapper {
+          padding: 0 !important;
+          border-radius: 14px !important;
+          overflow: hidden !important;
+          box-shadow: 0 12px 32px rgba(0, 21, 61, 0.22) !important;
+          border: 1px solid #E2E8F0 !important;
+        }
+        .dormi-custom-popup .leaflet-popup-content {
+          margin: 0 !important;
+          line-height: normal !important;
+        }
+        .dormi-custom-popup .leaflet-popup-tip {
+          background: #FFFFFF !important;
+        }
+        .custom-room-marker {
+          background: transparent !important;
+          border: none !important;
+        }
+      `}</style>
+
       {/* Map Container */}
-      <div ref={mapContainerRef} className="w-full h-full z-0" style={{ width: '100%', height: '100%', minHeight: '400px' }} />
+      <div 
+        ref={mapContainerRef} 
+        className="w-full h-full z-0" 
+        style={{ width: '100%', height: '100%', minHeight: '400px' }} 
+      />
 
       {/* Top Banner Status (GPS Notification) */}
       <div className="absolute top-4 left-4 z-10 flex flex-col gap-2 max-w-sm pointer-events-none">
         <div className="bg-white/95 backdrop-blur-md px-3.5 py-2 rounded-xl shadow-clay-soft border border-[#E2E8F0] flex items-center gap-2.5 pointer-events-auto">
           <div className="w-2.5 h-2.5 rounded-full bg-emerald-500 animate-pulse"></div>
           <p className="text-caption font-semibold text-[#0F172A]">
-            Bản đồ phòng trọ thực tế ({rooms.length} phòng)
+            Bản đồ phòng trọ ({rooms.length} phòng)
           </p>
         </div>
 
