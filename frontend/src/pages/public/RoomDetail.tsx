@@ -4,7 +4,7 @@ import { Card } from '../../components/ui/Card';
 import { Button } from '../../components/ui/Button';
 import { useStore } from '../../store/useStore';
 import { Toaster, toast } from 'sonner';
-import { ArrowLeft, CheckCircle, Heart, Share2 as ShareNetwork, AlertTriangle as Warning, CalendarCheck, X } from 'lucide-react';
+import { ArrowLeft, CheckCircle, Heart, Share2 as ShareNetwork, AlertTriangle as Warning, CalendarCheck, X, MessageSquare } from 'lucide-react';
 import { appointmentsApi, favoritesApi, roomsApi, type RoomResponse } from '../../services/api';
 
 export default function RoomDetail() {
@@ -249,6 +249,29 @@ export default function RoomDetail() {
                   {roomData?.landlordPhone && <p className="text-caption text-[#64748B]">SĐT: {roomData.landlordPhone}</p>}
                 </div>
               </div>
+
+              <Button
+                variant="secondary"
+                fullWidth
+                size="md"
+                onClick={() => {
+                  if (!currentUser) {
+                    navigate('/auth');
+                    return;
+                  }
+                  navigate('/tenant/chat', {
+                    state: {
+                      targetUserId: roomData?.landlordId,
+                      targetUserName: roomData?.landlordName,
+                      targetUserRole: 'Landlord'
+                    }
+                  });
+                }}
+                className="flex items-center justify-center gap-2"
+              >
+                <MessageSquare className="w-4 h-4 text-[#00153D]" />
+                Nhắn tin với chủ nhà
+              </Button>
             </div>
           </Card>
         </div>
@@ -362,9 +385,23 @@ export default function RoomDetail() {
                     <p>Ngày: {selectedDate}</p>
                     <p>Giờ dự kiến: {selectedTime}</p>
                   </div>
-                  <p className="text-caption text-[#64748B]">Chủ nhà Lê Văn B sẽ xác nhận qua tin nhắn trong thời gian sớm nhất.</p>
+                  <p className="text-caption text-[#64748B]">
+                    Chủ nhà {roomData?.landlordName || 'Lê Văn B'} sẽ xác nhận qua tin nhắn trong thời gian sớm nhất.
+                  </p>
                 </div>
-                <Button fullWidth onClick={() => navigate('/tenant/chat')}>Xem lịch & Chat với chủ nhà</Button>
+                <Button 
+                  fullWidth 
+                  onClick={() => navigate('/tenant/chat', { 
+                    state: { 
+                      tab: 'appointments',
+                      targetUserId: roomData?.landlordId,
+                      targetUserName: roomData?.landlordName,
+                      targetUserRole: 'Landlord'
+                    } 
+                  })}
+                >
+                  Xem lịch & Chat với chủ nhà
+                </Button>
               </div>
             )}
           </div>
