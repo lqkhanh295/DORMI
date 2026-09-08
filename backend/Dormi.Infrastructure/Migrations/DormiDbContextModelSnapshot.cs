@@ -18,7 +18,7 @@ namespace Dormi.Infrastructure.Migrations
         {
 #pragma warning disable 612, 618
             modelBuilder
-                .HasAnnotation("ProductVersion", "10.0.8")
+                .HasAnnotation("ProductVersion", "10.0.11")
                 .HasAnnotation("Relational:MaxIdentifierLength", 63);
 
             NpgsqlModelBuilderExtensions.HasPostgresExtension(modelBuilder, "postgis");
@@ -40,7 +40,7 @@ namespace Dormi.Infrastructure.Migrations
 
                     b.HasKey("UserId");
 
-                    b.ToTable("CustomerProfiles");
+                    b.ToTable("CustomerProfiles", (string)null);
                 });
 
             modelBuilder.Entity("Dormi.Domain.Entities.FavoriteRoom", b =>
@@ -58,7 +58,7 @@ namespace Dormi.Infrastructure.Migrations
 
                     b.HasIndex("RoomId");
 
-                    b.ToTable("FavoriteRooms");
+                    b.ToTable("FavoriteRooms", (string)null);
                 });
 
             modelBuilder.Entity("Dormi.Domain.Entities.LandlordProfile", b =>
@@ -77,7 +77,7 @@ namespace Dormi.Infrastructure.Migrations
 
                     b.HasKey("UserId");
 
-                    b.ToTable("LandlordProfiles");
+                    b.ToTable("LandlordProfiles", (string)null);
                 });
 
             modelBuilder.Entity("Dormi.Domain.Entities.Message", b =>
@@ -108,7 +108,7 @@ namespace Dormi.Infrastructure.Migrations
 
                     b.HasIndex("SenderId");
 
-                    b.ToTable("Messages");
+                    b.ToTable("Messages", (string)null);
                 });
 
             modelBuilder.Entity("Dormi.Domain.Entities.Room", b =>
@@ -162,7 +162,7 @@ namespace Dormi.Infrastructure.Migrations
 
                     b.HasIndex("LandlordId");
 
-                    b.ToTable("Rooms");
+                    b.ToTable("Rooms", (string)null);
                 });
 
             modelBuilder.Entity("Dormi.Domain.Entities.RoomImage", b =>
@@ -185,7 +185,7 @@ namespace Dormi.Infrastructure.Migrations
 
                     b.HasIndex("RoomId");
 
-                    b.ToTable("RoomImages");
+                    b.ToTable("RoomImages", (string)null);
                 });
 
             modelBuilder.Entity("Dormi.Domain.Entities.User", b =>
@@ -217,7 +217,7 @@ namespace Dormi.Infrastructure.Migrations
 
                     b.HasKey("Id");
 
-                    b.ToTable("Users");
+                    b.ToTable("Users", (string)null);
                 });
 
             modelBuilder.Entity("Dormi.Domain.Entities.ViewingAppointment", b =>
@@ -251,7 +251,7 @@ namespace Dormi.Infrastructure.Migrations
 
                     b.HasIndex("RoomId");
 
-                    b.ToTable("ViewingAppointments");
+                    b.ToTable("ViewingAppointments", (string)null);
                 });
 
             modelBuilder.Entity("Dormi.Domain.Entities.CustomerProfile", b =>

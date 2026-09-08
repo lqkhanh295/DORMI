@@ -240,7 +240,7 @@ export const profilesApi = {
     return request<any>('/profiles/customer');
   },
 
-  updateCustomerProfile: async (data: { fullName?: string; phoneNumber?: string; preferences?: string; lifestyle?: string }) => {
+  updateCustomerProfile: async (data: { fullName?: string; phoneNumber?: string; preferences?: string; lifestyle?: string; isLookingForRoommate?: boolean }) => {
     return request<any>('/profiles/customer', {
       method: 'PUT',
       body: JSON.stringify(data)
