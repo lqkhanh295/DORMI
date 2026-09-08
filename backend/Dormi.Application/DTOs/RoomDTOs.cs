@@ -32,6 +32,7 @@ public class UpdateRoomDto
     public double? Longitude { get; set; }
     public string? Virtual3DUrl { get; set; }
     public RoomStatus Status { get; set; }
+    public List<string>? ImageUrls { get; set; }
 }
 
 public class RoomImageDto
