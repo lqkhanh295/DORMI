@@ -278,9 +278,10 @@ export default function RoomManagement() {
                 <div className="flex-1 space-y-2">
                   <div className="flex items-start justify-between">
                     <h3 className="font-bold text-h3 text-[#0F172A]">{room.title}</h3>
-                    <span className={`px-3 py-1 text-caption font-bold rounded-full border ${room.status === 0 ? 'bg-[#F0FDF4] text-[#16803C] border-[#DCFCE7]' : 'bg-[#F5F7FA] text-[#64748B] border-[#E2E8F0]'}`}>
-                      {room.status === 0 ? 'Còn trống' : 'Đã thuê'}
-                    </span>
+                    {room.status === 0 && <span className="px-3 py-1 text-caption font-bold rounded-full border bg-[#F0FDF4] text-[#16803C] border-[#DCFCE7]">✓ Đã duyệt (Còn trống)</span>}
+                    {room.status === 2 && <span className="px-3 py-1 text-caption font-bold rounded-full border bg-[#FEF3C7] text-[#D97706] border-[#FDE68A]">⏳ Chờ phê duyệt</span>}
+                    {room.status === 3 && <span className="px-3 py-1 text-caption font-bold rounded-full border bg-[#FEF2F2] text-[#C62828] border-[#FECACA]">✕ Bị từ chối / Ẩn</span>}
+                    {room.status === 1 && <span className="px-3 py-1 text-caption font-bold rounded-full border bg-[#F1F5F9] text-[#475569] border-[#E2E8F0]">Đã thuê</span>}
                   </div>
                   <p className="text-[#64748B] text-caption">{room.address}</p>
                   <div className="flex flex-wrap gap-4 text-caption pt-1">
@@ -533,8 +534,10 @@ export default function RoomManagement() {
                   onChange={e => setEditingRoom({...editingRoom, status: Number(e.target.value)})}
                   className="w-full bg-[#F5F7FA] shadow-clay-inset border border-[#E2E8F0] rounded-[12px] px-4 py-2.5 text-body text-[#0F172A] focus:outline-none focus:ring-1 focus:ring-[#00153D] focus:bg-white min-h-[44px]"
                 >
-                  <option value={0}>Còn trống</option>
+                  <option value={0}>✓ Đã duyệt (Công khai - Còn trống)</option>
+                  <option value={2}>⏳ Chờ phê duyệt (Admin)</option>
                   <option value={1}>Đã thuê</option>
+                  <option value={3}>✕ Tạm ẩn / Từ chối</option>
                 </select>
               </div>
 
