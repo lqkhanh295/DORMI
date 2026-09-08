@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { Card } from '../../components/ui/Card';
 import { Button } from '../../components/ui/Button';
 import { roomsApi, imagesApi, type RoomResponse } from '../../services/api';
@@ -17,6 +17,8 @@ export default function RoomManagement() {
   const [editingRoom, setEditingRoom] = useState<RoomResponse | null>(null);
   const [isAdding, setIsAdding] = useState(false);
   const [uploadingImage, setUploadingImage] = useState(false);
+  // ponytail: track in-flight Cloudinary uploads so we await them before submit
+  const pendingUploads = useRef<Promise<void>[]>([]);
   
   const [newRoom, setNewRoom] = useState({
     title: '',
@@ -118,8 +120,8 @@ export default function RoomManagement() {
           }));
         }
 
-        // 2. Async Cloudinary sync in background
-        imagesApi.uploadImage(file).then(res => {
+        // 2. Async Cloudinary sync in background — tracked so submit can await
+        const uploadPromise = imagesApi.uploadImage(file).then(res => {
           if (res?.imageUrl && !res.imageUrl.includes('unsplash')) {
             if (isEdit) {
               setEditingRoom(prev => prev ? {
@@ -134,6 +136,7 @@ export default function RoomManagement() {
             }
           }
         }).catch(() => {});
+        pendingUploads.current.push(uploadPromise);
       }
 
       toast.success(`Đã nạp và tối ưu ${files.length} ảnh phòng trọ!`);
@@ -202,6 +205,13 @@ export default function RoomManagement() {
     e.preventDefault();
     if (!editingRoom) return;
     try {
+      // Wait for any in-flight Cloudinary uploads to finish
+      if (pendingUploads.current.length > 0) {
+        toast.info('Đang chờ tải ảnh lên...');
+        await Promise.all(pendingUploads.current);
+        pendingUploads.current = [];
+      }
+
       await roomsApi.updateRoom(editingRoom.id, {
         title: editingRoom.title,
         description: editingRoom.description || 'Mô tả phòng trọ',
@@ -234,6 +244,13 @@ export default function RoomManagement() {
     }
 
     try {
+      // Wait for any in-flight Cloudinary uploads to finish
+      if (pendingUploads.current.length > 0) {
+        toast.info('Đang chờ tải ảnh lên...');
+        await Promise.all(pendingUploads.current);
+        pendingUploads.current = [];
+      }
+
       const finalImages = newRoom.imageUrls.length > 0 
         ? newRoom.imageUrls 
         : ['https://images.unsplash.com/photo-1522708323590-d24dbb6b0267?auto=format&fit=crop&w=800&q=80'];
