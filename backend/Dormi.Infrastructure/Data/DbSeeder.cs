@@ -31,19 +31,7 @@ public static class DbSeeder
         }
         catch { /* column already exists or non-Postgres */ }
 
-        if (await db.Rooms.CountAsync() >= 20) return; // Already seeded
-
-        // Clear existing tables to ensure complete fresh MVP dataset
-        db.RoomImages.RemoveRange(db.RoomImages);
-        db.RoomReviews.RemoveRange(db.RoomReviews);
-        db.ViewingAppointments.RemoveRange(db.ViewingAppointments);
-        db.FavoriteRooms.RemoveRange(db.FavoriteRooms);
-        db.Messages.RemoveRange(db.Messages);
-        db.RoommatePosts.RemoveRange(db.RoommatePosts);
-        db.LandlordSubscriptions.RemoveRange(db.LandlordSubscriptions);
-        db.Rooms.RemoveRange(db.Rooms);
-        db.Users.RemoveRange(db.Users);
-        await db.SaveChangesAsync();
+        if (await db.Users.AnyAsync()) return; // Already seeded, preserve all user modifications and created data
 
         var h = new PasswordHasher<User>();
         var now = DateTime.UtcNow;
