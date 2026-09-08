@@ -195,7 +195,7 @@ public class RoomsController : ControllerBase
         var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
         if (!Guid.TryParse(userIdClaim, out var userId)) return Unauthorized();
 
-        var room = await _db.Rooms.FindAsync(id);
+        var room = await _db.Rooms.Include(r => r.Images).FirstOrDefaultAsync(r => r.Id == id);
         if (room == null) return NotFound(new { message = "Không tìm thấy phòng trọ." });
 
         if (room.LandlordId != userId)
@@ -212,6 +212,21 @@ public class RoomsController : ControllerBase
         room.Address = dto.Address;
         room.Virtual3DUrl = dto.Virtual3DUrl;
         room.Status = dto.Status;
+
+        if (dto.ImageUrls != null)
+        {
+            _db.RoomImages.RemoveRange(room.Images);
+            for (int i = 0; i < dto.ImageUrls.Count; i++)
+            {
+                room.Images.Add(new RoomImage
+                {
+                    Id = Guid.NewGuid(),
+                    RoomId = room.Id,
+                    ImageUrl = dto.ImageUrls[i],
+                    IsPrimary = i == 0
+                });
+            }
+        }
 
         await _db.SaveChangesAsync();
         return Ok(new { message = "Cập nhật phòng thành công." });

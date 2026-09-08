@@ -1,10 +1,23 @@
 using System.Text;
 using Dormi.Infrastructure;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.AspNetCore.Http.Features;
 using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi;
 
 var builder = WebApplication.CreateBuilder(args);
+
+// Configure 50MB max body length limit for uploading images
+builder.Services.Configure<FormOptions>(options =>
+{
+    options.MultipartBodyLengthLimit = 52428800;
+    options.ValueLengthLimit = 52428800;
+});
+
+builder.WebHost.ConfigureKestrel(serverOptions =>
+{
+    serverOptions.Limits.MaxRequestBodySize = 52428800;
+});
 
 // 1. Add Infrastructure (DbContext, Services, Cloudinary, JwtTokenGenerator)
 builder.Services.AddInfrastructure(builder.Configuration);
