@@ -27,7 +27,18 @@ export interface RoomResponse {
 }
 
 export const getAuthToken = (): string | null => {
-  return localStorage.getItem('dormi_jwt_token');
+  const directToken = localStorage.getItem('dormi_jwt_token');
+  if (directToken) return directToken;
+  try {
+    const store = localStorage.getItem('dormi-storage');
+    if (store) {
+      const parsed = JSON.parse(store);
+      if (parsed?.state?.currentUser?.token) {
+        return parsed.state.currentUser.token;
+      }
+    }
+  } catch {}
+  return null;
 };
 
 export const setAuthToken = (token: string): void => {
@@ -40,9 +51,19 @@ export const removeAuthToken = (): void => {
 
 async function request<T>(endpoint: string, options: RequestInit = {}): Promise<T> {
   const token = getAuthToken();
+  let userEmail = '';
+  try {
+    const store = localStorage.getItem('dormi-storage');
+    if (store) {
+      const parsed = JSON.parse(store);
+      userEmail = parsed?.state?.currentUser?.email || '';
+    }
+  } catch {}
+
   const headers: HeadersInit = {
     'Content-Type': 'application/json',
     ...(token ? { Authorization: `Bearer ${token}` } : {}),
+    ...(userEmail ? { 'X-User-Email': userEmail } : {}),
     ...(options.headers || {})
   };
 
