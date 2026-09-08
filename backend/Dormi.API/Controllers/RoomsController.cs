@@ -216,6 +216,7 @@ public class RoomsController : ControllerBase
         if (dto.ImageUrls != null)
         {
             _db.RoomImages.RemoveRange(room.Images);
+            room.Images.Clear();
             for (int i = 0; i < dto.ImageUrls.Count; i++)
             {
                 room.Images.Add(new RoomImage
