@@ -94,6 +94,7 @@ public class RoomsController : ControllerBase
                 Address = r.Address,
                 Virtual3DUrl = r.Virtual3DUrl,
                 Status = r.Status,
+                IsVerifiedLandlord = r.Landlord.IsVerified,
                 CreatedAt = r.CreatedAt,
                 Images = r.Images.Select(img => new RoomImageDto
                 {
@@ -139,6 +140,7 @@ public class RoomsController : ControllerBase
             Address = room.Address,
             Virtual3DUrl = room.Virtual3DUrl,
             Status = room.Status,
+            IsVerifiedLandlord = room.Landlord.IsVerified,
             CreatedAt = room.CreatedAt,
             Images = room.Images.Select(img => new RoomImageDto
             {
@@ -162,6 +164,12 @@ public class RoomsController : ControllerBase
         if (user == null || user.Role != UserRole.Landlord)
         {
             return BadRequest(new { message = "Tài khoản của bạn chưa phải là Chủ trọ." });
+        }
+
+        // ponytail: Landlord must have verified identity (CCCD/approval) before publishing rooms
+        if (!user.IsVerified)
+        {
+            return BadRequest(new { message = "Tài khoản Chủ trọ của bạn chưa được xác minh danh tính. Vui lòng gửi yêu cầu xác minh trước khi đăng tin." });
         }
 
         var room = new Room

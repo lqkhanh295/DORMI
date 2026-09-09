@@ -76,6 +76,24 @@ public class ReviewsController : ControllerBase
             return BadRequest(new { message = "Số điểm đánh giá phải từ 1 đến 5 sao." });
         }
 
+        // ponytail: Prevent duplicate reviews for the same room by the same customer
+        var alreadyReviewed = await _db.RoomReviews.AnyAsync(r => r.RoomId == roomId && r.CustomerId == userId);
+        if (alreadyReviewed)
+        {
+            return BadRequest(new { message = "Bạn đã gửi đánh giá cho phòng trọ này rồi." });
+        }
+
+        // ponytail: Require at least one confirmed or completed appointment for this room
+        var hasValidAppointment = await _db.ViewingAppointments.AnyAsync(a =>
+            a.RoomId == roomId &&
+            a.CustomerId == userId &&
+            (a.Status == "Confirmed" || a.Status == "Completed"));
+
+        if (!hasValidAppointment)
+        {
+            return BadRequest(new { message = "Bạn chỉ có thể đánh giá sau khi đã có lịch hẹn xem phòng được xác nhận hoặc hoàn thành." });
+        }
+
         var review = new RoomReview
         {
             Id = Guid.NewGuid(),

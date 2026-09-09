@@ -66,7 +66,7 @@ export default function TenantDashboard() {
                 />
                 <div className="absolute top-3 left-3 flex gap-2">
                   <span className="bg-white border border-[#E2E8F0] text-[#0F172A] px-3 py-1 rounded-full text-caption font-bold shadow-sm">Cho thuê</span>
-                  {room.trustScore > 90 && (
+                  {room.isVerifiedLandlord && (
                     <span className="bg-[#F0FDF4] text-[#16803C] border border-[#DCFCE7] px-3 py-1 rounded-full text-caption font-bold flex items-center gap-1">
                       <ShieldCheck className="w-4 h-4" /> Xác thực
                     </span>

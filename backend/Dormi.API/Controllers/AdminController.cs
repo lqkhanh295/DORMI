@@ -135,7 +135,6 @@ public class AdminController : ControllerBase
         return Ok(rooms);
     }
 
-    [AllowAnonymous]
     [HttpPatch("rooms/{roomId}/status")]
     public async Task<IActionResult> UpdateRoomStatus(Guid roomId, [FromQuery] RoomStatus status)
     {

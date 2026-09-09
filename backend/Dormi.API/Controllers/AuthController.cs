@@ -35,6 +35,12 @@ public class AuthController : ControllerBase
             return BadRequest(new { message = "Email đã tồn tại trong hệ thống." });
         }
 
+        // ponytail: Disallow self-registration of Admin role. Only Customer or Landlord allowed publicly.
+        if (dto.Role == UserRole.Admin || !Enum.IsDefined(typeof(UserRole), dto.Role))
+        {
+            return BadRequest(new { message = "Không được phép tự tạo tài khoản Quản trị viên." });
+        }
+
         var user = new User
         {
             Id = Guid.NewGuid(),
