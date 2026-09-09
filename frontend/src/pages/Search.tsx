@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { GlobalNav } from '../components/ui/GlobalNav';
 import { LocalNav } from '../components/ui/LocalNav';
 import { BentoCard } from '../components/ui/BentoCard';
@@ -37,6 +38,7 @@ const defaultRentalRooms = [
 ];
 
 export function Search() {
+  const navigate = useNavigate();
   const [searchQuery, setSearchQuery] = useState('');
   const [isLoading, setIsLoading] = useState(true);
   const [results, setResults] = useState(defaultRentalRooms);
@@ -160,7 +162,13 @@ export function Search() {
           <>
             <div className="grid gap-4 md:gap-6 grid-cols-1 sm:grid-cols-2 lg:grid-cols-3">
               {results.map((room) => (
-                <BentoCard key={room.id} noPadding hoverEffect className="bg-white flex flex-col h-[380px] md:h-[420px]">
+                <BentoCard 
+                  key={room.id} 
+                  noPadding 
+                  hoverEffect 
+                  onClick={() => navigate(`/room/${room.id}`)}
+                  className="bg-white flex flex-col h-[380px] md:h-[420px] cursor-pointer"
+                >
                   <div className="relative h-[200px] md:h-[220px] w-full shrink-0 overflow-hidden bg-surface-alt">
                     <img 
                       src={room.image} 
@@ -186,7 +194,16 @@ export function Search() {
                     
                     <div className="flex items-center justify-between pt-3 md:pt-4 mt-3 md:mt-4 border-t border-border-subtle">
                       <p className="text-[20px] md:text-[24px] font-bold text-foreground tracking-tight">{room.price}</p>
-                      <AppleButton variant="secondary" size="sm">Chi tiết</AppleButton>
+                      <AppleButton 
+                        variant="secondary" 
+                        size="sm"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          navigate(`/room/${room.id}`);
+                        }}
+                      >
+                        Chi tiết
+                      </AppleButton>
                     </div>
                   </div>
                 </BentoCard>

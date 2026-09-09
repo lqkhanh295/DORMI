@@ -27,7 +27,7 @@ export default function RoommateMatcher() {
             age: 22,
             major: r.title || 'Sinh viên',
             image: r.customerAvatar || 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=400&q=80',
-            matchScore: r.matchScore ? Math.round(r.matchScore) : 85,
+            matchScore: r.matchScore != null ? Math.round(r.matchScore) : null,
             budget: `${Number(r.budget || 3000000).toLocaleString('vi-VN')}đ`,
             bio: r.description || 'Tìm bạn cùng phòng giữ vệ sinh tốt và thân thiện.',
             tags: (r.lifestyleTraits || 'Yên tĩnh, Sạch sẽ').split(',').map((t: string) => t.trim())
@@ -80,7 +80,7 @@ export default function RoommateMatcher() {
             <div className="flex-1 text-left overflow-hidden">
               <h4 className="text-body font-bold text-[#0F172A] truncate">{r.name}, {r.age}</h4>
               <p className="text-caption font-bold text-[#16803C]">
-                {r.matchScore}% Phù hợp
+                {r.matchScore != null ? `${r.matchScore}% Phù hợp` : 'Chưa đủ dữ liệu'}
               </p>
             </div>
             <button 
@@ -148,7 +148,7 @@ export default function RoommateMatcher() {
               <div className="h-64 bg-[#EEF2F6] w-full relative">
                 <img src={profile.image} alt={profile.name} className="w-full h-full object-cover" />
                 <div className="absolute top-4 right-4 bg-white/95 text-[#16803C] border border-[#DCFCE7] px-3.5 py-1.5 rounded-full text-body font-bold shadow-sm">
-                  {profile.matchScore}% Phù hợp (AI)
+                  {profile.matchScore != null ? `${profile.matchScore}% Phù hợp (AI)` : 'Chưa đủ dữ liệu'}
                 </div>
               </div>
               

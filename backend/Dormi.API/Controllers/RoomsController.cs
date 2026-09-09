@@ -54,16 +54,45 @@ public class RoomsController : ControllerBase
             query = query.Where(r => r.Price <= filter.MaxPrice.Value);
         }
 
-        if (filter.Status.HasValue)
+        var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+        Guid.TryParse(userIdClaim, out var currentUserId);
+        bool isAdmin = User.IsInRole("Admin");
+        bool isLandlord = User.IsInRole("Landlord");
+
+        // ponytail: Strict visibility rules to prevent leaking PendingApproval/Hidden listings to public
+        if (isAdmin)
         {
-            query = query.Where(r => r.Status == filter.Status.Value);
+            if (filter.Status.HasValue)
+            {
+                query = query.Where(r => r.Status == filter.Status.Value);
+            }
+        }
+        else if (isLandlord && currentUserId != Guid.Empty)
+        {
+            if (filter.Status.HasValue && (filter.Status.Value == RoomStatus.PendingApproval || filter.Status.Value == RoomStatus.Hidden))
+            {
+                query = query.Where(r => r.LandlordId == currentUserId && r.Status == filter.Status.Value);
+            }
+            else if (filter.Status.HasValue)
+            {
+                query = query.Where(r => r.Status == filter.Status.Value);
+            }
+            else
+            {
+                query = query.Where(r => r.LandlordId == currentUserId);
+            }
         }
         else
         {
-            var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
-            if (Guid.TryParse(userIdClaim, out var userId) && User.IsInRole("Landlord"))
+            // Anonymous / Customer: Can strictly ONLY see Available (or Rented if explicitly filtered)
+            if (filter.Status.HasValue && (filter.Status.Value == RoomStatus.PendingApproval || filter.Status.Value == RoomStatus.Hidden))
             {
-                query = query.Where(r => r.LandlordId == userId);
+                return Forbid();
+            }
+
+            if (filter.Status.HasValue && filter.Status.Value == RoomStatus.Rented)
+            {
+                query = query.Where(r => r.Status == RoomStatus.Rented);
             }
             else
             {
@@ -124,6 +153,19 @@ public class RoomsController : ControllerBase
             .FirstOrDefaultAsync(r => r.Id == id);
 
         if (room == null) return NotFound(new { message = "Không tìm thấy phòng trọ." });
+
+        var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+        Guid.TryParse(userIdClaim, out var currentUserId);
+        bool isAdmin = User.IsInRole("Admin");
+
+        // ponytail: PendingApproval or Hidden rooms cannot be viewed by public users or other landlords
+        if (!isAdmin && room.LandlordId != currentUserId)
+        {
+            if (room.Status != RoomStatus.Available && room.Status != RoomStatus.Rented)
+            {
+                return NotFound(new { message = "Phòng trọ này hiện chưa được công khai." });
+            }
+        }
 
         var response = new RoomResponseDto
         {
@@ -296,5 +338,37 @@ public class RoomsController : ControllerBase
         await _db.SaveChangesAsync();
 
         return Ok(new { message = "Đã xoá phòng trọ thành công." });
+    }
+
+    [Authorize]
+    [HttpPost("{roomId}/report")]
+    public async Task<IActionResult> ReportRoom(Guid roomId, [FromBody] CreateRoomReportDto dto)
+    {
+        var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+        if (!Guid.TryParse(userIdClaim, out var userId)) return Unauthorized();
+
+        var room = await _db.Rooms.FindAsync(roomId);
+        if (room == null) return NotFound(new { message = "Không tìm thấy phòng trọ." });
+
+        if (string.IsNullOrWhiteSpace(dto.Reason))
+        {
+            return BadRequest(new { message = "Vui lòng chọn lý do báo cáo." });
+        }
+
+        var report = new RoomReport
+        {
+            Id = Guid.NewGuid(),
+            RoomId = roomId,
+            ReporterId = userId,
+            Reason = dto.Reason.Trim(),
+            Details = dto.Details?.Trim() ?? string.Empty,
+            Status = "Pending",
+            CreatedAt = DateTime.UtcNow
+        };
+
+        _db.RoomReports.Add(report);
+        await _db.SaveChangesAsync();
+
+        return Ok(new { message = "Gửi báo cáo thành công. Ban quản trị sẽ tiến hành xác minh.", reportId = report.Id });
     }
 }

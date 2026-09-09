@@ -145,4 +145,41 @@ public class AdminController : ControllerBase
 
         return Ok(new { message = $"Đã cập nhật trạng thái phòng thành: {status}" });
     }
+
+    [HttpGet("reports")]
+    public async Task<IActionResult> GetReports()
+    {
+        var reports = await _db.RoomReports
+            .Include(r => r.Room)
+            .Include(r => r.Reporter)
+            .OrderByDescending(r => r.CreatedAt)
+            .Select(r => new
+            {
+                r.Id,
+                r.RoomId,
+                RoomTitle = r.Room.Title,
+                r.ReporterId,
+                ReporterName = r.Reporter.FullName,
+                ReporterEmail = r.Reporter.Email,
+                r.Reason,
+                r.Details,
+                r.Status,
+                r.CreatedAt
+            })
+            .ToListAsync();
+
+        return Ok(reports);
+    }
+
+    [HttpPatch("reports/{reportId}/status")]
+    public async Task<IActionResult> UpdateReportStatus(Guid reportId, [FromQuery] string status)
+    {
+        var report = await _db.RoomReports.FindAsync(reportId);
+        if (report == null) return NotFound(new { message = "Không tìm thấy báo cáo." });
+
+        report.Status = status;
+        await _db.SaveChangesAsync();
+
+        return Ok(new { message = $"Đã cập nhật trạng thái báo cáo thành: {status}" });
+    }
 }

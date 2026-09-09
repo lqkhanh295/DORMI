@@ -7,6 +7,7 @@ import { authApi } from '../../services/api';
 
 export default function ForgotPassword() {
   const [email, setEmail] = useState('');
+  const [token, setToken] = useState('');
   const [newPassword, setNewPassword] = useState('');
   const [step, setStep] = useState<1 | 2>(1);
   const [loading, setLoading] = useState(false);
@@ -22,6 +23,9 @@ export default function ForgotPassword() {
     try {
       const res = await authApi.forgotPassword(email);
       setMessage(res.message);
+      if (res.resetToken) {
+        setToken(res.resetToken);
+      }
       setStep(2);
     } catch (err: any) {
       setError(err.message || 'Có lỗi xảy ra, vui lòng thử lại.');
@@ -32,6 +36,10 @@ export default function ForgotPassword() {
 
   const handleStep2 = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (!token) {
+      setError('Vui lòng nhập mã xác thực OTP.');
+      return;
+    }
     if (!newPassword || newPassword.length < 6) {
       setError('Mật khẩu mới phải có ít nhất 6 ký tự.');
       return;
@@ -39,7 +47,7 @@ export default function ForgotPassword() {
     setLoading(true);
     setError(null);
     try {
-      const res = await authApi.resetPassword({ email, newPassword });
+      const res = await authApi.resetPassword({ email, token, newPassword });
       setMessage(res.message);
       setSuccess(true);
     } catch (err: any) {
@@ -60,7 +68,7 @@ export default function ForgotPassword() {
           <p className="text-[#64748B] text-sm mt-2">
             {step === 1 
               ? 'Nhập địa chỉ email tài khoản DORMI của bạn để bắt đầu đặt lại mật khẩu.'
-              : `Nhập mật khẩu mới cho tài khoản: ${email}`}
+              : `Nhập mã xác thực và mật khẩu mới cho tài khoản: ${email}`}
           </p>
         </div>
 
@@ -98,6 +106,14 @@ export default function ForgotPassword() {
           </form>
         ) : (
           <form onSubmit={handleStep2} className="space-y-5">
+            <Input 
+              label="Mã xác thực OTP (6 chữ số)" 
+              type="text" 
+              placeholder="123456" 
+              value={token}
+              onChange={(e) => setToken(e.target.value)}
+              required 
+            />
             <Input 
               label="Mật khẩu mới (ít nhất 6 ký tự)" 
               type="password" 

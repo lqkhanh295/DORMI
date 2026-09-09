@@ -74,3 +74,9 @@ public class RoomQueryFilterDto
     public int Page { get; set; } = 1;
     public int PageSize { get; set; } = 10;
 }
+
+public class CreateRoomReportDto
+{
+    public string Reason { get; set; } = string.Empty;
+    public string Details { get; set; } = string.Empty;
+}

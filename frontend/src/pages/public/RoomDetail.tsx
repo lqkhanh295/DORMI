@@ -65,8 +65,21 @@ export default function RoomDetail() {
     toast.success('Đã sao chép liên kết phòng trọ!');
   };
 
-  const handleReport = () => {
-    toast.success('Đã gửi báo cáo tin đăng. Ban quản trị sẽ kiểm tra trong 24h.');
+  const handleReport = async () => {
+    if (!currentUser) {
+      toast.error('Vui lòng đăng nhập để gửi báo cáo tin đăng!');
+      return;
+    }
+    if (!id) return;
+    try {
+      const res = await roomsApi.reportRoom(id, {
+        reason: 'Thông tin phòng không chính xác hoặc vi phạm chính sách',
+        details: 'Báo cáo vi phạm từ người dùng xem phòng.'
+      });
+      toast.success(res?.message || 'Đã gửi báo cáo tin đăng. Ban quản trị sẽ kiểm tra trong 24h.');
+    } catch (err: any) {
+      toast.error(err?.message || 'Không thể gửi báo cáo vào lúc này. Vui lòng thử lại sau.');
+    }
   };
 
   const handleConfirmSchedule = async () => {
@@ -81,11 +94,10 @@ export default function RoomDetail() {
         appointmentDate: `${selectedDate}T${selectedTime}:00Z`,
         notes: 'Xem phòng trực tiếp'
       });
-    } catch (err) {
-      console.warn('API Appointment booking fallback:', err);
+      setSchedulerStep(3);
+    } catch (err: any) {
+      toast.error(err.message || 'Đặt lịch hẹn xem phòng thất bại. Vui lòng kiểm tra lại thời gian hoặc đăng nhập.');
     }
-
-    setSchedulerStep(3);
   };
 
   return (

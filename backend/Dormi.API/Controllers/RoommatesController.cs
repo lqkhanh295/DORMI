@@ -212,7 +212,7 @@ public class RoommatesController : ControllerBase
 
         var recommendations = posts.Select(post =>
         {
-            double matchScore = CalculateMatchScore(userLifestyle, post.LifestyleTraits);
+            double? matchScore = CalculateMatchScore(userLifestyle, post.LifestyleTraits);
             return new RoommatePostResponseDto
             {
                 Id = post.Id,
@@ -231,23 +231,23 @@ public class RoommatesController : ControllerBase
                 CreatedAt = post.CreatedAt
             };
         })
-        .OrderByDescending(r => r.MatchScore)
+        .OrderByDescending(r => r.MatchScore ?? 0)
         .ToList();
 
         return Ok(recommendations);
     }
 
-    public static double CalculateMatchScore(string userTraits, string candidateTraits)
+    public static double? CalculateMatchScore(string userTraits, string candidateTraits)
     {
         if (string.IsNullOrWhiteSpace(userTraits) || string.IsNullOrWhiteSpace(candidateTraits))
         {
-            return 75.0;
+            return null;
         }
 
         var uSet = userTraits.Split(',', ';', ' ').Where(s => !string.IsNullOrWhiteSpace(s)).Select(s => s.Trim().ToLower()).ToHashSet();
         var cSet = candidateTraits.Split(',', ';', ' ').Where(s => !string.IsNullOrWhiteSpace(s)).Select(s => s.Trim().ToLower()).ToHashSet();
 
-        if (uSet.Count == 0 || cSet.Count == 0) return 75.0;
+        if (uSet.Count == 0 || cSet.Count == 0) return null;
 
         int intersectCount = uSet.Intersect(cSet).Count();
         int unionCount = uSet.Union(cSet).Count();
