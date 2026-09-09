@@ -50,26 +50,35 @@ public class RoommatesController : ControllerBase
             query = query.Where(r => r.GenderPreference == "Any" || r.GenderPreference == genderPreference);
         }
 
-        var posts = await query
+        string userLifestyle = "";
+        var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+        if (Guid.TryParse(userIdClaim, out var currentUserId))
+        {
+            var currentUser = await _db.Users.FindAsync(currentUserId);
+            userLifestyle = currentUser?.Lifestyle?.ToLower() ?? "";
+        }
+
+        var rawPosts = await query
             .OrderByDescending(r => r.CreatedAt)
-            .Select(r => new RoommatePostResponseDto
-            {
-                Id = r.Id,
-                CustomerId = r.CustomerId,
-                CustomerName = r.Customer.FullName,
-                CustomerAvatar = r.Customer.AvatarUrl,
-                Title = r.Title,
-                Description = r.Description,
-                Budget = r.Budget,
-                Location = r.Location,
-                MoveInDate = r.MoveInDate,
-                GenderPreference = r.GenderPreference,
-                LifestyleTraits = r.LifestyleTraits,
-                IsActive = r.IsActive,
-                MatchScore = 85.0,
-                CreatedAt = r.CreatedAt
-            })
             .ToListAsync();
+
+        var posts = rawPosts.Select(r => new RoommatePostResponseDto
+        {
+            Id = r.Id,
+            CustomerId = r.CustomerId,
+            CustomerName = r.Customer.FullName,
+            CustomerAvatar = r.Customer.AvatarUrl,
+            Title = r.Title,
+            Description = r.Description,
+            Budget = r.Budget,
+            Location = r.Location,
+            MoveInDate = r.MoveInDate,
+            GenderPreference = r.GenderPreference,
+            LifestyleTraits = r.LifestyleTraits,
+            IsActive = r.IsActive,
+            MatchScore = CalculateMatchScore(userLifestyle, r.LifestyleTraits),
+            CreatedAt = r.CreatedAt
+        }).ToList();
 
         return Ok(posts);
     }
@@ -82,6 +91,14 @@ public class RoommatesController : ControllerBase
             .FirstOrDefaultAsync(r => r.Id == id);
 
         if (post == null) return NotFound(new { message = "Không tìm thấy bài đăng ở ghép." });
+
+        string userLifestyle = "";
+        var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+        if (Guid.TryParse(userIdClaim, out var currentUserId))
+        {
+            var currentUser = await _db.Users.FindAsync(currentUserId);
+            userLifestyle = currentUser?.Lifestyle?.ToLower() ?? "";
+        }
 
         return Ok(new RoommatePostResponseDto
         {
@@ -97,7 +114,7 @@ public class RoommatesController : ControllerBase
             GenderPreference = post.GenderPreference,
             LifestyleTraits = post.LifestyleTraits,
             IsActive = post.IsActive,
-            MatchScore = 90.0,
+            MatchScore = CalculateMatchScore(userLifestyle, post.LifestyleTraits),
             CreatedAt = post.CreatedAt
         });
     }

@@ -39,6 +39,29 @@ public class AppointmentsController : ControllerBase
         var room = await _db.Rooms.FindAsync(dto.RoomId);
         if (room == null) return NotFound(new { message = "Không tìm thấy phòng trọ." });
 
+        // ponytail: Target room must be available
+        if (room.Status != RoomStatus.Available)
+        {
+            return BadRequest(new { message = "Phòng trọ này hiện không khả dụng để đặt lịch hẹn." });
+        }
+
+        // ponytail: Appointment date must be strictly in the future
+        if (dto.AppointmentDate <= DateTime.UtcNow)
+        {
+            return BadRequest(new { message = "Thời gian hẹn xem phòng phải ở trong tương lai." });
+        }
+
+        // ponytail: Customer cannot double book active appointments for the same room
+        var hasActive = await _db.ViewingAppointments.AnyAsync(a =>
+            a.RoomId == dto.RoomId &&
+            a.CustomerId == userId &&
+            (a.Status == "Pending" || a.Status == "Confirmed"));
+
+        if (hasActive)
+        {
+            return BadRequest(new { message = "Bạn đã có một lịch hẹn đang chờ hoặc đã xác nhận cho phòng trọ này." });
+        }
+
         var appointment = new ViewingAppointment
         {
             Id = Guid.NewGuid(),
@@ -91,6 +114,13 @@ public class AppointmentsController : ControllerBase
         var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
         if (!Guid.TryParse(userIdClaim, out var userId)) return Unauthorized();
 
+        // ponytail: Whitelist valid appointment statuses
+        var validStatuses = new[] { "Pending", "Confirmed", "Cancelled", "Completed" };
+        if (string.IsNullOrWhiteSpace(dto.Status) || !validStatuses.Contains(dto.Status))
+        {
+            return BadRequest(new { message = "Trạng thái lịch hẹn không hợp lệ. Các trạng thái được hỗ trợ: Pending, Confirmed, Cancelled, Completed." });
+        }
+
         var appointment = await _db.ViewingAppointments
             .Include(a => a.Room)
             .FirstOrDefaultAsync(a => a.Id == id);
@@ -100,6 +130,15 @@ public class AppointmentsController : ControllerBase
         if (appointment.CustomerId != userId && appointment.Room.LandlordId != userId)
         {
             return Forbid();
+        }
+
+        // ponytail: Customer can only cancel their appointment
+        if (appointment.CustomerId == userId && appointment.Room.LandlordId != userId)
+        {
+            if (dto.Status != "Cancelled")
+            {
+                return BadRequest(new { message = "Khách thuê chỉ có thể hủy lịch hẹn (Cancelled)." });
+            }
         }
 
         appointment.Status = dto.Status;

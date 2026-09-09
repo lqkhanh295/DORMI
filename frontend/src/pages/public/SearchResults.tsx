@@ -67,7 +67,7 @@ export default function SearchResults() {
     } else if (sortBy === 'price-high') {
       result.sort((a, b) => b.price - a.price);
     } else {
-      result.sort((a, b) => b.trustScore - a.trustScore);
+      result.sort((a, b) => (b.isVerifiedLandlord ? 1 : 0) - (a.isVerifiedLandlord ? 1 : 0));
     }
 
     return result;
@@ -241,7 +241,7 @@ export default function SearchResults() {
                       location: room.address.split(',')[0],
                       area: '25m²',
                       image: room.image,
-                      verified: room.trustScore > 90
+                      verified: !!room.isVerifiedLandlord
                     }} 
                   />
                 </div>

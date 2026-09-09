@@ -20,11 +20,12 @@ export interface Listing {
   address: string;
   image: string;
   type: string;
-  trustScore: number;
   landlordId: string;
   status: 'Available' | 'Rented';
-  views: number;
-  leads: number;
+  isVerifiedLandlord?: boolean;
+  trustScore?: number;
+  views?: number;
+  leads?: number;
 }
 
 export interface Message {
@@ -127,11 +128,9 @@ export const useStore = create<AppState>()(
               address: r.address,
               image: r.images?.[0]?.imageUrl || 'https://images.unsplash.com/photo-1522708323590-d24dbb6b0267?auto=format&fit=crop&w=400&q=80',
               type: r.roomType || 'Studio',
-              trustScore: 95,
               landlordId: r.landlordId,
               status: r.status === 0 ? 'Available' : 'Rented',
-              views: 150,
-              leads: 12
+              isVerifiedLandlord: r.isVerifiedLandlord ?? false
             }));
             set({ listings: apiListings });
           }

@@ -59,6 +59,7 @@ public class RoomResponseDto
     public double? Longitude { get; set; }
     public string? Virtual3DUrl { get; set; }
     public RoomStatus Status { get; set; }
+    public bool IsVerifiedLandlord { get; set; }
     public DateTime CreatedAt { get; set; }
     public List<RoomImageDto> Images { get; set; } = new();
 }
