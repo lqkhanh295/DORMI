@@ -156,18 +156,7 @@ export const useStore = create<AppState>()(
           get().fetchListings();
           return true;
         } catch (err) {
-          console.warn('API createRoom failed, fallback to local addListing:', err);
-          get().addListing({
-            title: data.title,
-            price: data.price,
-            address: data.address,
-            image: data.imageUrls?.[0] || 'https://images.unsplash.com/photo-1522708323590-d24dbb6b0267?auto=format&fit=crop&w=400&q=80',
-            type: data.roomType || 'Studio',
-            trustScore: 90,
-            status: 'Available',
-            views: 0,
-            leads: 0
-          });
+          console.error('API createRoom failed:', err);
           return false;
         }
       },
@@ -194,7 +183,7 @@ export const useStore = create<AppState>()(
           get().sendMessage(receiverId, text);
           return true;
         } catch (err) {
-          get().sendMessage(receiverId, text);
+          console.error('API sendMessage failed:', err);
           return false;
         }
       },
