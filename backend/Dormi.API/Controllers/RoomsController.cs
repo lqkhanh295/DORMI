@@ -231,7 +231,32 @@ public class RoomsController : ControllerBase
         room.RoomType = dto.RoomType;
         room.Address = dto.Address;
         room.Virtual3DUrl = dto.Virtual3DUrl;
-        room.Status = dto.Status;
+
+        // ponytail: Enforce room status transition rules for Landlords
+        if (dto.Status != room.Status)
+        {
+            // If room is currently PendingApproval, Landlord cannot self-approve to Available
+            if (room.Status == RoomStatus.PendingApproval)
+            {
+                if (dto.Status == RoomStatus.Available)
+                {
+                    return BadRequest(new { message = "Phòng trọ đang chờ duyệt không thể tự chuyển sang trạng thái 'Đang cho thuê'." });
+                }
+                room.Status = RoomStatus.PendingApproval;
+            }
+            else if (room.Status == RoomStatus.Available || room.Status == RoomStatus.Rented || room.Status == RoomStatus.Hidden)
+            {
+                // Once approved by admin, landlord can toggle between Available, Rented, Hidden
+                if (dto.Status == RoomStatus.Available || dto.Status == RoomStatus.Rented || dto.Status == RoomStatus.Hidden)
+                {
+                    room.Status = dto.Status;
+                }
+                else
+                {
+                    return BadRequest(new { message = "Chủ trọ chỉ có thể chuyển đổi trạng thái giữa 'Đang cho thuê', 'Đã thuê' hoặc 'Ẩn tin'." });
+                }
+            }
+        }
 
         if (dto.ImageUrls != null)
         {

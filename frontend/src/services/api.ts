@@ -104,6 +104,20 @@ export const authApi = {
     return request<any>('/auth/me');
   },
 
+  forgotPassword: async (email: string) => {
+    return request<{ message: string }>('/auth/forgot-password', {
+      method: 'POST',
+      body: JSON.stringify({ email })
+    });
+  },
+
+  resetPassword: async (data: { email: string; newPassword: string }) => {
+    return request<{ message: string }>('/auth/reset-password', {
+      method: 'POST',
+      body: JSON.stringify(data)
+    });
+  },
+
   logout: () => {
     removeAuthToken();
   }

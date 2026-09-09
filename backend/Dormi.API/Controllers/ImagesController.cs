@@ -25,13 +25,46 @@ public class ImagesController : ControllerBase
         _db = db;
     }
 
+    private static bool IsValidImageFile(IFormFile file, out string? errorMessage)
+    {
+        if (file == null || file.Length == 0)
+        {
+            errorMessage = "Vui lòng chọn tập tin ảnh hợp lệ.";
+            return false;
+        }
+
+        if (file.Length > 5 * 1024 * 1024)
+        {
+            errorMessage = "Dung lượng ảnh vượt quá giới hạn tối đa 5MB.";
+            return false;
+        }
+
+        var allowedExtensions = new[] { ".jpg", ".jpeg", ".png", ".webp" };
+        var ext = Path.GetExtension(file.FileName).ToLowerInvariant();
+        if (string.IsNullOrEmpty(ext) || !allowedExtensions.Contains(ext))
+        {
+            errorMessage = "Định dạng tập tin không được hỗ trợ. Chỉ chấp nhận các định dạng: .jpg, .jpeg, .png, .webp.";
+            return false;
+        }
+
+        var allowedMimeTypes = new[] { "image/jpeg", "image/png", "image/webp" };
+        if (string.IsNullOrEmpty(file.ContentType) || !allowedMimeTypes.Contains(file.ContentType.ToLowerInvariant()))
+        {
+            errorMessage = "MIME type tập tin không hợp lệ. Chỉ chấp nhận hình ảnh JPEG, PNG, WEBP.";
+            return false;
+        }
+
+        errorMessage = null;
+        return true;
+    }
+
     [HttpPost("upload")]
     [Authorize]
     public async Task<IActionResult> UploadImage(IFormFile file)
     {
-        if (file == null || file.Length == 0)
+        if (!IsValidImageFile(file, out var error))
         {
-            return BadRequest(new { message = "Vui lòng chọn tập tin ảnh hợp lệ." });
+            return BadRequest(new { message = error });
         }
 
         using var stream = file.OpenReadStream();
@@ -57,9 +90,9 @@ public class ImagesController : ControllerBase
 
         if (room.LandlordId != userId) return Forbid();
 
-        if (file == null || file.Length == 0)
+        if (!IsValidImageFile(file, out var error))
         {
-            return BadRequest(new { message = "Vui lòng chọn tập tin ảnh hợp lệ." });
+            return BadRequest(new { message = error });
         }
 
         using var stream = file.OpenReadStream();

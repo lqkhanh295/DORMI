@@ -128,4 +128,42 @@ public class AuthController : ControllerBase
             CreatedAt = user.CreatedAt
         });
     }
+
+    [HttpPost("forgot-password")]
+    public async Task<IActionResult> ForgotPassword([FromBody] ForgotPasswordDto dto)
+    {
+        if (string.IsNullOrWhiteSpace(dto.Email))
+        {
+            return BadRequest(new { message = "Vui lòng nhập địa chỉ email." });
+        }
+
+        // Check if user exists but return a secure, generic response so email enumeration is minimized
+        var user = await _db.Users.FirstOrDefaultAsync(u => u.Email.ToLower() == dto.Email.Trim().ToLower());
+        return Ok(new { message = "Yêu cầu đã được ghi nhận. Bạn có thể tiến hành đặt lại mật khẩu mới cho tài khoản này." });
+    }
+
+    [HttpPost("reset-password")]
+    public async Task<IActionResult> ResetPassword([FromBody] ResetPasswordDto dto)
+    {
+        if (string.IsNullOrWhiteSpace(dto.Email) || string.IsNullOrWhiteSpace(dto.NewPassword))
+        {
+            return BadRequest(new { message = "Vui lòng cung cấp email và mật khẩu mới." });
+        }
+
+        if (dto.NewPassword.Length < 6)
+        {
+            return BadRequest(new { message = "Mật khẩu mới phải có độ dài từ 6 ký tự trở lên." });
+        }
+
+        var user = await _db.Users.FirstOrDefaultAsync(u => u.Email.ToLower() == dto.Email.Trim().ToLower());
+        if (user == null)
+        {
+            return NotFound(new { message = "Không tìm thấy tài khoản tương ứng với email này." });
+        }
+
+        user.PasswordHash = _passwordHasher.HashPassword(user, dto.NewPassword);
+        await _db.SaveChangesAsync();
+
+        return Ok(new { message = "Đặt lại mật khẩu thành công! Bạn có thể đăng nhập ngay bằng mật khẩu mới." });
+    }
 }

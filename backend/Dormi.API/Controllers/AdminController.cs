@@ -102,7 +102,6 @@ public class AdminController : ControllerBase
         return Ok(new { message = dto.Approved ? "Đã duyệt xác minh chủ trọ thành công." : "Đã từ chối xác minh chủ trọ." });
     }
 
-    [AllowAnonymous]
     [HttpGet("rooms")]
     public async Task<IActionResult> GetRoomsForModeration()
     {
