@@ -21,7 +21,7 @@ export interface Listing {
   image: string;
   type: string;
   landlordId: string;
-  status: 'Available' | 'Rented';
+  status: 'Available' | 'Rented' | 'PendingApproval' | 'Hidden';
   isVerifiedLandlord?: boolean;
   trustScore?: number;
   views?: number;
@@ -43,7 +43,7 @@ export interface RoommateProfile {
   age: number;
   major: string;
   image: string;
-  matchScore: number;
+  matchScore?: number | null;
   budget: string;
   bio: string;
   tags: string[];
@@ -55,7 +55,6 @@ interface AppState {
   messages: Message[];
   likedRoommates: RoommateProfile[];
   isLoadingApi: boolean;
-  login: (role: Role, email: string) => void;
   loginWithApi: (email: string, pass: string) => Promise<boolean>;
   logout: () => void;
   fetchListings: () => Promise<void>;
@@ -78,16 +77,6 @@ export const useStore = create<AppState>()(
       likedRoommates: [],
       isLoadingApi: false,
 
-      login: (role, email) => set({
-        currentUser: {
-          id: role === 'Landlord' ? 'b0000000-0000-0000-0000-000000000001' : (role === 'Admin' ? 'a0000000-0000-0000-0000-000000000001' : '16c169d9-eaee-4e33-9914-eb34a19a13dc'),
-          name: role === 'Landlord' ? 'Trần Minh Tuấn' : (role === 'Admin' ? 'Quản trị viên Dormi' : 'Lê Quốc Khánh'),
-          email,
-          role,
-          avatar: 'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?auto=format&fit=crop&w=200&q=80'
-        }
-      }),
-
       loginWithApi: async (email, password) => {
         try {
           set({ isLoadingApi: true });
@@ -107,7 +96,7 @@ export const useStore = create<AppState>()(
           return true;
         } catch (err) {
           set({ isLoadingApi: false });
-          console.warn('API Login failed, falling back to local login:', err);
+          console.error('API Login failed:', err);
           return false;
         }
       },
@@ -121,6 +110,12 @@ export const useStore = create<AppState>()(
         try {
           const res = await roomsApi.getRooms({ pageSize: 50 });
           if (res?.data && Array.isArray(res.data) && res.data.length > 0) {
+            const statusMap: Record<number, 'Available' | 'Rented' | 'PendingApproval' | 'Hidden'> = {
+              0: 'Available',
+              1: 'Rented',
+              2: 'PendingApproval',
+              3: 'Hidden'
+            };
             const apiListings: Listing[] = res.data.map((r: any) => ({
               id: r.id,
               title: r.title,
@@ -129,7 +124,7 @@ export const useStore = create<AppState>()(
               image: r.images?.[0]?.imageUrl || 'https://images.unsplash.com/photo-1522708323590-d24dbb6b0267?auto=format&fit=crop&w=400&q=80',
               type: r.roomType || 'Studio',
               landlordId: r.landlordId,
-              status: r.status === 0 ? 'Available' : 'Rented',
+              status: statusMap[r.status] || 'Available',
               isVerifiedLandlord: r.isVerifiedLandlord ?? false
             }));
             set({ listings: apiListings });

@@ -94,12 +94,13 @@ public class BackendLogicTests
         string userTraits = "clean, quiet, non-smoker, student";
         string candidateTraits = "clean, quiet, gamer";
 
-        double score = Dormi.API.Controllers.RoommatesController.CalculateMatchScore(userTraits, candidateTraits);
+        double? score = Dormi.API.Controllers.RoommatesController.CalculateMatchScore(userTraits, candidateTraits);
         
+        Assert.NotNull(score);
         Assert.True(score >= 60.0 && score <= 100.0);
 
-        double emptyScore = Dormi.API.Controllers.RoommatesController.CalculateMatchScore("", "");
-        Assert.Equal(75.0, emptyScore);
+        double? emptyScore = Dormi.API.Controllers.RoommatesController.CalculateMatchScore("", "");
+        Assert.Null(emptyScore);
     }
 
     [Fact]

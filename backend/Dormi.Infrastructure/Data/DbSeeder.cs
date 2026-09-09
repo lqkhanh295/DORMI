@@ -28,8 +28,20 @@ public static class DbSeeder
         {
             await db.Database.ExecuteSqlRawAsync(
                 "ALTER TABLE \"Users\" ADD COLUMN IF NOT EXISTS \"IsLookingForRoommate\" boolean NOT NULL DEFAULT false");
+            await db.Database.ExecuteSqlRawAsync(
+                @"CREATE TABLE IF NOT EXISTS ""RoomReports"" (
+                    ""Id"" uuid NOT NULL PRIMARY KEY,
+                    ""RoomId"" uuid NOT NULL,
+                    ""ReporterId"" uuid NOT NULL,
+                    ""Reason"" text NOT NULL,
+                    ""Details"" text NOT NULL,
+                    ""Status"" text NOT NULL DEFAULT 'Pending',
+                    ""CreatedAt"" timestamp with time zone NOT NULL DEFAULT CURRENT_TIMESTAMP,
+                    CONSTRAINT ""FK_RoomReports_Rooms_RoomId"" FOREIGN KEY (""RoomId"") REFERENCES ""Rooms"" (""Id"") ON DELETE CASCADE,
+                    CONSTRAINT ""FK_RoomReports_Users_ReporterId"" FOREIGN KEY (""ReporterId"") REFERENCES ""Users"" (""Id"") ON DELETE CASCADE
+                );");
         }
-        catch { /* column already exists or non-Postgres */ }
+        catch { /* column/table already exists or non-Postgres */ }
 
         if (await db.Users.AnyAsync()) return; // Already seeded, preserve all user modifications and created data
 

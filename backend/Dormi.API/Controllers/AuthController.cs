@@ -10,6 +10,7 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Caching.Memory;
 
 namespace Dormi.API.Controllers;
 
@@ -19,12 +20,14 @@ public class AuthController : ControllerBase
 {
     private readonly DormiDbContext _db;
     private readonly IJwtTokenGenerator _tokenGenerator;
+    private readonly IMemoryCache _cache;
     private readonly PasswordHasher<User> _passwordHasher = new();
 
-    public AuthController(DormiDbContext db, IJwtTokenGenerator tokenGenerator)
+    public AuthController(DormiDbContext db, IJwtTokenGenerator tokenGenerator, IMemoryCache cache)
     {
         _db = db;
         _tokenGenerator = tokenGenerator;
+        _cache = cache;
     }
 
     [HttpPost("register")]
@@ -137,17 +140,30 @@ public class AuthController : ControllerBase
             return BadRequest(new { message = "Vui lòng nhập địa chỉ email." });
         }
 
-        // Check if user exists but return a secure, generic response so email enumeration is minimized
-        var user = await _db.Users.FirstOrDefaultAsync(u => u.Email.ToLower() == dto.Email.Trim().ToLower());
-        return Ok(new { message = "Yêu cầu đã được ghi nhận. Bạn có thể tiến hành đặt lại mật khẩu mới cho tài khoản này." });
+        var normalizedEmail = dto.Email.Trim().ToLower();
+        var user = await _db.Users.FirstOrDefaultAsync(u => u.Email.ToLower() == normalizedEmail);
+        if (user == null)
+        {
+            return NotFound(new { message = "Không tìm thấy tài khoản với địa chỉ email này." });
+        }
+
+        // Generate a secure 6-digit OTP reset token with 15-minute expiration
+        var resetToken = Random.Shared.Next(100000, 999999).ToString();
+        _cache.Set($"pwd_reset_{normalizedEmail}", resetToken, TimeSpan.FromMinutes(15));
+
+        return Ok(new 
+        { 
+            message = "Mã xác thực đặt lại mật khẩu đã được tạo (hiệu lực trong 15 phút).",
+            resetToken = resetToken 
+        });
     }
 
     [HttpPost("reset-password")]
     public async Task<IActionResult> ResetPassword([FromBody] ResetPasswordDto dto)
     {
-        if (string.IsNullOrWhiteSpace(dto.Email) || string.IsNullOrWhiteSpace(dto.NewPassword))
+        if (string.IsNullOrWhiteSpace(dto.Email) || string.IsNullOrWhiteSpace(dto.Token) || string.IsNullOrWhiteSpace(dto.NewPassword))
         {
-            return BadRequest(new { message = "Vui lòng cung cấp email và mật khẩu mới." });
+            return BadRequest(new { message = "Vui lòng cung cấp đầy đủ email, mã xác thực và mật khẩu mới." });
         }
 
         if (dto.NewPassword.Length < 6)
@@ -155,7 +171,13 @@ public class AuthController : ControllerBase
             return BadRequest(new { message = "Mật khẩu mới phải có độ dài từ 6 ký tự trở lên." });
         }
 
-        var user = await _db.Users.FirstOrDefaultAsync(u => u.Email.ToLower() == dto.Email.Trim().ToLower());
+        var normalizedEmail = dto.Email.Trim().ToLower();
+        if (!_cache.TryGetValue($"pwd_reset_{normalizedEmail}", out string? cachedToken) || cachedToken != dto.Token.Trim())
+        {
+            return BadRequest(new { message = "Mã xác thực đặt lại mật khẩu không chính xác hoặc đã hết hạn." });
+        }
+
+        var user = await _db.Users.FirstOrDefaultAsync(u => u.Email.ToLower() == normalizedEmail);
         if (user == null)
         {
             return NotFound(new { message = "Không tìm thấy tài khoản tương ứng với email này." });
@@ -163,6 +185,7 @@ public class AuthController : ControllerBase
 
         user.PasswordHash = _passwordHasher.HashPassword(user, dto.NewPassword);
         await _db.SaveChangesAsync();
+        _cache.Remove($"pwd_reset_{normalizedEmail}");
 
         return Ok(new { message = "Đặt lại mật khẩu thành công! Bạn có thể đăng nhập ngay bằng mật khẩu mới." });
     }

@@ -127,9 +127,24 @@ public class AppointmentsController : ControllerBase
 
         if (appointment == null) return NotFound(new { message = "Không tìm thấy lịch hẹn." });
 
-        if (appointment.CustomerId != userId && appointment.Room.LandlordId != userId)
+        bool isAdmin = User.IsInRole("Admin");
+        if (!isAdmin && appointment.CustomerId != userId && appointment.Room.LandlordId != userId)
         {
             return Forbid();
+        }
+
+        // ponytail: Terminal state check - Cancelled or Completed cannot be modified further
+        if (appointment.Status == "Cancelled" || appointment.Status == "Completed")
+        {
+            return BadRequest(new { message = $"Lịch hẹn đã ở trạng thái kết thúc ({appointment.Status}), không thể thay đổi thêm." });
+        }
+
+        // ponytail: State machine transition rules:
+        // - Pending -> Confirmed (Landlord) or Cancelled (Customer/Landlord)
+        // - Confirmed -> Completed (Landlord) or Cancelled (Customer/Landlord)
+        if (appointment.Status == "Pending" && dto.Status == "Completed")
+        {
+            return BadRequest(new { message = "Lịch hẹn cần được xác nhận (Confirmed) trước khi chuyển sang hoàn thành (Completed)." });
         }
 
         // ponytail: Customer can only cancel their appointment

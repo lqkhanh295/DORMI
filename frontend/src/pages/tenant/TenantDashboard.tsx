@@ -1,4 +1,4 @@
-import { useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import { Card } from '../../components/ui/Card';
 import { Button } from '../../components/ui/Button';
 import { useStore } from '../../store/useStore';
@@ -8,10 +8,19 @@ import { ShieldCheck, MapPin, Search } from 'lucide-react';
 export default function TenantDashboard() {
   const { listings, fetchListings } = useStore();
   const navigate = useNavigate();
+  const [searchQuery, setSearchQuery] = useState('');
+  const [selectedPrice, setSelectedPrice] = useState('Mức giá');
 
   useEffect(() => {
     fetchListings();
   }, [fetchListings]);
+
+  const handleSearch = () => {
+    const params = new URLSearchParams();
+    if (searchQuery.trim()) params.set('q', searchQuery.trim());
+    if (selectedPrice && selectedPrice !== 'Mức giá') params.set('price', selectedPrice);
+    navigate(`/search?${params.toString()}`);
+  };
 
   // ponytail: TenantDashboard using Functional Clay (Level 1 Primary Clay Search, Level 2 Soft Clay Cards)
   return (
@@ -25,17 +34,24 @@ export default function TenantDashboard() {
             <Search className="absolute left-4 w-5 h-5 text-[#64748B]" />
             <input 
               type="text" 
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              onKeyDown={(e) => e.key === 'Enter' && handleSearch()}
               placeholder="Nhập địa điểm, quận huyện, tên đường..." 
               className="w-full pl-12 pr-4 py-3 bg-[#F5F7FA] shadow-clay-inset border border-[#E2E8F0] rounded-[12px] focus:outline-none focus:ring-1 focus:ring-[#00153D] focus:bg-white transition-all text-body text-[#0F172A] placeholder-[#94A3B8] min-h-[44px]"
             />
           </div>
-          <select className="px-4 py-3 bg-[#F5F7FA] shadow-clay-inset border border-[#E2E8F0] rounded-[12px] focus:outline-none focus:ring-1 focus:ring-[#00153D] focus:bg-white transition-all min-w-[160px] text-[#64748B] font-semibold text-body min-h-[44px]">
+          <select 
+            value={selectedPrice}
+            onChange={(e) => setSelectedPrice(e.target.value)}
+            className="px-4 py-3 bg-[#F5F7FA] shadow-clay-inset border border-[#E2E8F0] rounded-[12px] focus:outline-none focus:ring-1 focus:ring-[#00153D] focus:bg-white transition-all min-w-[160px] text-[#64748B] font-semibold text-body min-h-[44px]"
+          >
             <option>Mức giá</option>
             <option>Dưới 2 triệu</option>
             <option>2 - 3 triệu</option>
             <option>3 - 5 triệu</option>
           </select>
-          <Button onClick={() => navigate('/search')} variant="primary" className="px-8 min-h-[44px]">
+          <Button onClick={handleSearch} variant="primary" className="px-8 min-h-[44px]">
             Tìm kiếm
           </Button>
         </div>

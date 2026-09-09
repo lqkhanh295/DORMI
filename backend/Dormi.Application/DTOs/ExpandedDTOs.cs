@@ -57,7 +57,7 @@ public class RoommatePostResponseDto
     public string GenderPreference { get; set; } = string.Empty;
     public string LifestyleTraits { get; set; } = string.Empty;
     public bool IsActive { get; set; }
-    public double MatchScore { get; set; } // AI match score (0-100%)
+    public double? MatchScore { get; set; } // AI match score (0-100%) or null if missing traits
     public DateTime CreatedAt { get; set; }
 }
 

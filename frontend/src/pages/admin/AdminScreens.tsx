@@ -1,9 +1,11 @@
+import { useState, useEffect } from 'react';
 import { Outlet } from 'react-router-dom';
 import { GlobalNav } from '../../components/ui/GlobalNav';
 import { LocalNav } from '../../components/ui/LocalNav';
 import { BentoCard } from '../../components/ui/BentoCard';
 import { AppleButton } from '../../components/ui/AppleButton';
 import { Users, ShieldCheck, AlertTriangle, FileText, CheckCircle, XCircle } from 'lucide-react';
+import { adminApi } from '../../services/api';
 
 export function AdminLayout() {
   const items = [
@@ -125,12 +127,76 @@ export function AdminUsers() {
 }
 
 export function AdminReports() {
+  const [reports, setReports] = useState<any[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  const fetchReports = async () => {
+    try {
+      const data = await adminApi.getReports();
+      setReports(data || []);
+    } catch {
+      setReports([]);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    fetchReports();
+  }, []);
+
+  const handleUpdateStatus = async (id: string, status: string) => {
+    try {
+      await adminApi.updateReportStatus(id, status);
+      fetchReports();
+    } catch (e) {
+      console.error(e);
+    }
+  };
+
   return (
     <div>
       <h1 className="text-[34px] font-bold text-[#1d1d1f] mb-8">Báo cáo vi phạm.</h1>
-      <BentoCard className="bg-white">
-        <p className="text-[17px] text-[#6e6e73]">Theo dõi báo cáo từ người dùng về tin giả, chủ phòng lừa đảo hoặc nội dung không phù hợp.</p>
-      </BentoCard>
+      {loading ? (
+        <p className="text-[#6e6e73]">Đang tải danh sách báo cáo...</p>
+      ) : reports.length === 0 ? (
+        <BentoCard className="bg-white">
+          <p className="text-[17px] text-[#6e6e73]">Hiện không có báo cáo vi phạm nào.</p>
+        </BentoCard>
+      ) : (
+        <div className="space-y-4">
+          {reports.map((r) => (
+            <BentoCard key={r.id} className="bg-white p-6">
+              <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+                <div>
+                  <div className="flex items-center gap-2 mb-2">
+                    <span className="font-bold text-[#1d1d1f] text-lg">{r.roomTitle || 'Phòng trọ'}</span>
+                    <span className={`px-2 py-0.5 text-xs font-semibold rounded-full ${
+                      r.status === 'Resolved' ? 'bg-green-100 text-green-700' :
+                      r.status === 'Dismissed' ? 'bg-gray-100 text-gray-700' : 'bg-red-100 text-red-700'
+                    }`}>
+                      {r.status === 'Resolved' ? 'Đã xử lý' : r.status === 'Dismissed' ? 'Đã bỏ qua' : 'Chờ xử lý'}
+                    </span>
+                  </div>
+                  <p className="text-sm text-[#1d1d1f]"><span className="font-semibold">Lý do:</span> {r.reason}</p>
+                  {r.details && <p className="text-sm text-[#6e6e73] mt-1"><span className="font-semibold">Chi tiết:</span> {r.details}</p>}
+                  <p className="text-xs text-[#86868b] mt-2">Người báo cáo: {r.reporterName} ({r.reporterEmail}) · {new Date(r.createdAt).toLocaleString('vi-VN')}</p>
+                </div>
+                {r.status === 'Pending' && (
+                  <div className="flex gap-2 shrink-0">
+                    <AppleButton size="sm" onClick={() => handleUpdateStatus(r.id, 'Resolved')}>
+                      Xử lý
+                    </AppleButton>
+                    <AppleButton variant="secondary" size="sm" onClick={() => handleUpdateStatus(r.id, 'Dismissed')}>
+                      Bỏ qua
+                    </AppleButton>
+                  </div>
+                )}
+              </div>
+            </BentoCard>
+          ))}
+        </div>
+      )}
     </div>
   );
 }

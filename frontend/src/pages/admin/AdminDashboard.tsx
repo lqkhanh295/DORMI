@@ -18,11 +18,8 @@ export default function AdminDashboard() {
     let isMounted = true;
 
     Promise.all([
-      adminApi.getStats().catch(() => ({ totalUsers: 12450, totalRooms: 3210, pendingVerifications: 3, totalRevenue: 5970000 })),
-      adminApi.getPendingVerifications().catch(() => [
-        { landlordId: '1', fullName: 'Nguyễn Văn A', doc: 'CCCD & Giấy phép kinh doanh' },
-        { landlordId: '2', fullName: 'Trần Thị B', doc: 'Chỉ có CCCD' }
-      ])
+      adminApi.getStats().catch(() => ({ totalUsers: 0, totalRooms: 0, pendingVerifications: 0, totalRevenue: 0 })),
+      adminApi.getPendingVerifications().catch(() => [])
     ]).then(([sRes, vRes]) => {
       if (!isMounted) return;
       setStats(sRes);

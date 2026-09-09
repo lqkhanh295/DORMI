@@ -16,7 +16,6 @@ export default function AuthPage() {
   const [errorMsg, setErrorMsg] = useState('');
 
   const navigate = useNavigate();
-  const login = useStore(state => state.login);
   const loginWithApi = useStore(state => state.loginWithApi);
 
   const getDefaultEmail = (selectedRole: Role) => {
@@ -51,7 +50,8 @@ export default function AuthPage() {
 
       const apiSuccess = await loginWithApi(targetEmail, targetPassword);
       if (!apiSuccess) {
-        login(role, targetEmail);
+        setErrorMsg('Đăng nhập thất bại: Email hoặc mật khẩu không chính xác.');
+        return;
       }
 
       if (role === 'Tenant') navigate('/tenant');
@@ -59,11 +59,7 @@ export default function AuthPage() {
       else if (role === 'Admin') navigate('/admin');
       else navigate('/');
     } catch (err: any) {
-      setErrorMsg(err.message || 'Xử lý đăng nhập thất bại. Đang mở tài khoản dự phòng.');
-      login(role, targetEmail);
-      if (role === 'Tenant') navigate('/tenant');
-      else if (role === 'Landlord') navigate('/landlord');
-      else if (role === 'Admin') navigate('/admin');
+      setErrorMsg(err.message || 'Đăng nhập thất bại. Vui lòng kiểm tra lại thông tin.');
     } finally {
       setLoading(false);
     }

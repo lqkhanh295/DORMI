@@ -22,9 +22,10 @@ builder.WebHost.ConfigureKestrel(serverOptions =>
 // 1. Add Infrastructure (DbContext, Services, Cloudinary, JwtTokenGenerator)
 builder.Services.AddInfrastructure(builder.Configuration);
 
-// 2. Add Controllers & SignalR
+// 2. Add Controllers, SignalR & MemoryCache
 builder.Services.AddControllers();
 builder.Services.AddSignalR();
+builder.Services.AddMemoryCache();
 
 // 3. Configure JWT Authentication
 var secretKey = builder.Configuration["JwtSettings:SecretKey"] ?? "DormiSuperSecretKeyForJWTAuthentication2026!#$";

@@ -18,6 +18,7 @@ public class DormiDbContext : DbContext
     public DbSet<RoommatePost> RoommatePosts { get; set; } = null!;
     public DbSet<RoomReview> RoomReviews { get; set; } = null!;
     public DbSet<LandlordSubscription> LandlordSubscriptions { get; set; } = null!;
+    public DbSet<RoomReport> RoomReports { get; set; } = null!;
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {

@@ -105,13 +105,13 @@ export const authApi = {
   },
 
   forgotPassword: async (email: string) => {
-    return request<{ message: string }>('/auth/forgot-password', {
+    return request<{ message: string; resetToken?: string }>('/auth/forgot-password', {
       method: 'POST',
       body: JSON.stringify({ email })
     });
   },
 
-  resetPassword: async (data: { email: string; newPassword: string }) => {
+  resetPassword: async (data: { email: string; token: string; newPassword: string }) => {
     return request<{ message: string }>('/auth/reset-password', {
       method: 'POST',
       body: JSON.stringify(data)
@@ -170,6 +170,13 @@ export const roomsApi = {
   deleteRoom: async (id: string) => {
     return request<any>(`/rooms/${id}`, {
       method: 'DELETE'
+    });
+  },
+
+  reportRoom: async (roomId: string, data: { reason: string; details?: string }) => {
+    return request<any>(`/rooms/${roomId}/report`, {
+      method: 'POST',
+      body: JSON.stringify(data)
     });
   }
 };
@@ -366,6 +373,16 @@ export const adminApi = {
 
   updateRoomStatus: async (roomId: string, status: number) => {
     return request<any>(`/admin/rooms/${roomId}/status?status=${status}`, {
+      method: 'PATCH'
+    });
+  },
+
+  getReports: async () => {
+    return request<any[]>('/admin/reports');
+  },
+
+  updateReportStatus: async (reportId: string, status: string) => {
+    return request<any>(`/admin/reports/${reportId}/status?status=${encodeURIComponent(status)}`, {
       method: 'PATCH'
     });
   }
