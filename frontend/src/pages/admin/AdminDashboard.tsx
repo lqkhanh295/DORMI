@@ -1,105 +1,248 @@
 import { useState, useEffect } from 'react';
+import { Link } from 'react-router-dom';
 import { Card } from '../../components/ui/Card';
 import { Button } from '../../components/ui/Button';
 import { adminApi } from '../../services/api';
+import { Users, UserCheck, Home, AlertTriangle, ArrowRight } from 'lucide-react';
+import { toast } from 'sonner';
 
 export default function AdminDashboard() {
   const [stats, setStats] = useState({
     totalUsers: 0,
-    totalRooms: 0,
     pendingVerifications: 0,
-    totalRevenue: 0
+    pendingRooms: 0,
+    openReports: 0
   });
 
   const [verifications, setVerifications] = useState<any[]>([]);
+  const [reports, setReports] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
 
+  const loadData = async () => {
+    try {
+      setLoading(true);
+      const [sRes, vRes, rRes, repRes] = await Promise.all([
+        adminApi.getStats().catch(() => ({ totalUsers: 0 })),
+        adminApi.getPendingVerifications().catch(() => []),
+        adminApi.getRoomsForModeration().catch(() => []),
+        adminApi.getReports().catch(() => [])
+      ]);
+
+      const pendingRoomsList = Array.isArray(rRes) ? rRes.filter((r: any) => r.status === 2) : [];
+      const openReportsList = Array.isArray(repRes) ? repRes.filter((r: any) => r.status === 'Pending') : [];
+
+      setStats({
+        totalUsers: sRes?.totalUsers || 0,
+        pendingVerifications: Array.isArray(vRes) ? vRes.length : 0,
+        pendingRooms: pendingRoomsList.length,
+        openReports: openReportsList.length
+      });
+
+      setVerifications(Array.isArray(vRes) ? vRes : []);
+      setReports(openReportsList);
+    } finally {
+      setLoading(false);
+    }
+  };
+
   useEffect(() => {
-    let isMounted = true;
-
-    Promise.all([
-      adminApi.getStats().catch(() => ({ totalUsers: 0, totalRooms: 0, pendingVerifications: 0, totalRevenue: 0 })),
-      adminApi.getPendingVerifications().catch(() => [])
-    ]).then(([sRes, vRes]) => {
-      if (!isMounted) return;
-      setStats(sRes);
-      setVerifications(vRes);
-    }).finally(() => {
-      if (isMounted) setLoading(false);
-    });
-
-    return () => { isMounted = false; };
+    loadData();
   }, []);
 
-  const handleReview = async (id: string, approve: boolean) => {
+  const handleReviewVerification = async (id: string, approve: boolean) => {
     try {
       await adminApi.approveVerification(id, approve);
-    } catch (err) {
-      console.warn('API error:', err);
+      toast.success(approve ? 'Đã duyệt xác minh chủ trọ!' : 'Đã từ chối xác minh.');
+      loadData();
+    } catch {
+      toast.error('Thao tác không thành công.');
     }
-    setVerifications(prev => prev.filter(v => (v.landlordId || v.id) !== id));
+  };
+
+  const handleResolveReport = async (id: string, status: string) => {
+    try {
+      await adminApi.updateReportStatus(id, status);
+      toast.success(status === 'Resolved' ? 'Đã xử lý báo cáo!' : 'Đã bỏ qua báo cáo.');
+      loadData();
+    } catch {
+      toast.error('Thao tác không thành công.');
+    }
   };
 
   return (
-    <div className="space-y-6 pb-6 bg-[#F5F7FA]">
-      <div className="bg-white p-6 rounded-[18px] shadow-clay-soft flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
+    <div className="space-y-8 pb-8 bg-[#F8FAFC]">
+      {/* Header */}
+      <div className="bg-white p-6 rounded-2xl border border-slate-200 shadow-sm flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
         <div>
-          <h1 className="text-2xl font-bold text-[#0F172A]">Tổng quan Hệ thống (API Realtime)</h1>
-          <p className="text-sm text-[#64748B] mt-1">Số liệu thực tế từ hệ thống Backend .NET.</p>
+          <h1 className="text-2xl font-bold text-slate-900">Bảng điều khiển Quản trị viên</h1>
+          <p className="text-sm text-slate-500 mt-1">Theo dõi hoạt động kiểm duyệt và số liệu thời gian thực của hệ thống.</p>
         </div>
       </div>
 
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-        <Card className="p-6 bg-white rounded-[18px] shadow-clay-soft hover:-translate-y-[2px] transition-all">
-          <h3 className="text-xs font-semibold text-[#64748B] uppercase tracking-wider mb-2">Tổng người dùng</h3>
-          <p className="text-3xl font-bold text-[#00153D] mt-1">{loading ? '...' : stats.totalUsers.toLocaleString()}</p>
-          <span className="text-xs text-[#16803C] font-semibold bg-[#F0FDF4] border border-[#DCFCE7] px-2.5 py-0.5 rounded-full inline-block mt-2">API Connected</span>
+      {/* 4 Real KPI Cards */}
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5">
+        <Card className="p-5 bg-white rounded-2xl border border-slate-200 shadow-sm hover:shadow-md transition-all">
+          <div className="flex items-center justify-between mb-3">
+            <span className="text-xs font-bold text-slate-500 uppercase tracking-wider">Tổng người dùng</span>
+            <div className="w-9 h-9 rounded-xl bg-blue-50 text-blue-600 flex items-center justify-center">
+              <Users className="w-5 h-5" />
+            </div>
+          </div>
+          <p className="text-3xl font-extrabold text-slate-900">{loading ? '...' : stats.totalUsers.toLocaleString()}</p>
+          <p className="text-xs text-slate-400 mt-2">Dữ liệu từ CSDL hệ thống</p>
         </Card>
-        
-        <Card className="p-6 bg-white rounded-[18px] shadow-clay-soft hover:-translate-y-[2px] transition-all">
-          <h3 className="text-xs font-semibold text-[#64748B] uppercase tracking-wider mb-2">Tin đăng hoạt động</h3>
-          <p className="text-3xl font-bold text-[#00153D] mt-1">{loading ? '...' : stats.totalRooms.toLocaleString()}</p>
-          <span className="text-xs text-[#16803C] font-semibold bg-[#F0FDF4] border border-[#DCFCE7] px-2.5 py-0.5 rounded-full inline-block mt-2">API Connected</span>
+
+        <Card className="p-5 bg-white rounded-2xl border border-slate-200 shadow-sm hover:shadow-md transition-all">
+          <div className="flex items-center justify-between mb-3">
+            <span className="text-xs font-bold text-amber-600 uppercase tracking-wider">Chờ xác minh</span>
+            <div className="w-9 h-9 rounded-xl bg-amber-50 text-amber-600 flex items-center justify-center">
+              <UserCheck className="w-5 h-5" />
+            </div>
+          </div>
+          <p className="text-3xl font-extrabold text-amber-600">{loading ? '...' : stats.pendingVerifications}</p>
+          <Link to="/admin/verify" className="text-xs font-semibold text-amber-700 hover:underline inline-flex items-center gap-1 mt-2">
+            Xem danh sách <ArrowRight className="w-3 h-3" />
+          </Link>
         </Card>
-        
-        <Card className="p-6 bg-white rounded-[18px] shadow-clay-soft hover:-translate-y-[2px] transition-all">
-          <h3 className="text-xs font-semibold text-[#C62828] uppercase tracking-wider mb-2">Chờ xác thực</h3>
-          <p className="text-3xl font-bold text-[#C62828] mt-1">{loading ? '...' : verifications.length}</p>
-          <span className="text-xs text-[#C62828] font-semibold bg-[#FEF2F2] border border-[#FECACA] px-2.5 py-0.5 rounded-full inline-block mt-2">Cần xử lý ngay</span>
+
+        <Card className="p-5 bg-white rounded-2xl border border-slate-200 shadow-sm hover:shadow-md transition-all">
+          <div className="flex items-center justify-between mb-3">
+            <span className="text-xs font-bold text-indigo-600 uppercase tracking-wider">Phòng chờ duyệt</span>
+            <div className="w-9 h-9 rounded-xl bg-indigo-50 text-indigo-600 flex items-center justify-center">
+              <Home className="w-5 h-5" />
+            </div>
+          </div>
+          <p className="text-3xl font-extrabold text-indigo-600">{loading ? '...' : stats.pendingRooms}</p>
+          <Link to="/admin/rooms" className="text-xs font-semibold text-indigo-700 hover:underline inline-flex items-center gap-1 mt-2">
+            Kiểm duyệt ngay <ArrowRight className="w-3 h-3" />
+          </Link>
+        </Card>
+
+        <Card className="p-5 bg-white rounded-2xl border border-slate-200 shadow-sm hover:shadow-md transition-all">
+          <div className="flex items-center justify-between mb-3">
+            <span className="text-xs font-bold text-rose-600 uppercase tracking-wider">Báo cáo chưa xử lý</span>
+            <div className="w-9 h-9 rounded-xl bg-rose-50 text-rose-600 flex items-center justify-center">
+              <AlertTriangle className="w-5 h-5" />
+            </div>
+          </div>
+          <p className="text-3xl font-extrabold text-rose-600">{loading ? '...' : stats.openReports}</p>
+          <Link to="/admin/reports" className="text-xs font-semibold text-rose-700 hover:underline inline-flex items-center gap-1 mt-2">
+            Xử lý vi phạm <ArrowRight className="w-3 h-3" />
+          </Link>
         </Card>
       </div>
 
-      <Card className="p-6 bg-white rounded-[18px] shadow-clay-soft">
-        <div className="flex justify-between items-center mb-5 border-b border-[#E2E8F0] pb-4">
-          <h3 className="text-lg font-bold text-[#0F172A]">Hàng đợi xác thực (API Queue)</h3>
-        </div>
-        
-        <div className="space-y-3">
-          {verifications.length === 0 && (
-            <p className="text-sm text-[#64748B] py-6 text-center bg-[#F5F7FA] rounded-[12px] border border-dashed border-[#E2E8F0]">Không có yêu cầu xác thực mới.</p>
-          )}
-          {verifications.map(v => {
-            const vId = v.landlordId || v.id;
-            return (
-              <div key={vId} className="flex items-center justify-between p-4 bg-[#F5F7FA] border border-[#E2E8F0] rounded-[12px]">
-                <div className="flex items-center gap-3.5">
-                  <div className="w-10 h-10 bg-[#00153D] text-white rounded-full flex items-center justify-center font-bold">
-                    {(v.fullName || v.name || 'L').charAt(0)}
-                  </div>
-                  <div>
-                    <p className="font-semibold text-sm text-[#0F172A]">{v.fullName || v.name}</p>
-                    <p className="text-xs text-[#64748B] mt-0.5">{v.doc || v.identificationDocumentsUrl || 'Hồ sơ CCCD'}</p>
-                  </div>
-                </div>
-                <div className="flex gap-2">
-                  <Button size="sm" onClick={() => handleReview(vId, true)} className="text-xs px-3 bg-[#16803C] hover:bg-[#11632E]">Duyệt</Button>
-                  <Button size="sm" variant="ghost" onClick={() => handleReview(vId, false)} className="text-xs px-3 text-[#C62828] hover:bg-red-50">Từ chối</Button>
-                </div>
+      {/* Actionable Queues */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        {/* Reports Queue */}
+        <Card className="p-6 bg-white rounded-2xl border border-slate-200 shadow-sm flex flex-col justify-between">
+          <div>
+            <div className="flex items-center justify-between mb-4 pb-3 border-b border-slate-100">
+              <h2 className="text-base font-bold text-slate-900 flex items-center gap-2">
+                <AlertTriangle className="w-4 h-4 text-rose-500" />
+                Báo cáo vi phạm cần xử lý
+              </h2>
+              <Link to="/admin/reports" className="text-xs text-indigo-600 hover:underline font-semibold flex items-center gap-1">
+                Xem tất cả ({stats.openReports}) <ArrowRight className="w-3 h-3" />
+              </Link>
+            </div>
+
+            {loading ? (
+              <p className="text-sm text-slate-400 py-6 text-center">Đang tải...</p>
+            ) : reports.length === 0 ? (
+              <div className="py-8 text-center bg-slate-50 rounded-xl border border-dashed border-slate-200">
+                <p className="text-sm text-slate-500 font-medium">Hiện không có báo cáo vi phạm nào chưa xử lý.</p>
               </div>
-            );
-          })}
-        </div>
-      </Card>
+            ) : (
+              <div className="space-y-3">
+                {reports.slice(0, 4).map(r => (
+                  <div key={r.id} className="p-3.5 bg-slate-50 border border-slate-200 rounded-xl flex items-center justify-between gap-3">
+                    <div className="min-w-0 flex-1">
+                      <p className="text-sm font-semibold text-slate-900 truncate">{r.roomTitle || 'Phòng trọ'}</p>
+                      <p className="text-xs text-slate-500 mt-0.5"><span className="font-medium text-rose-600">Lý do:</span> {r.reason}</p>
+                      <p className="text-[11px] text-slate-400 mt-0.5">Bởi: {r.reporterName} · {new Date(r.createdAt).toLocaleDateString('vi-VN')}</p>
+                    </div>
+                    <div className="flex gap-1.5 shrink-0">
+                      <button 
+                        onClick={() => handleResolveReport(r.id, 'Resolved')}
+                        className="px-2.5 py-1 text-xs font-semibold bg-emerald-600 text-white hover:bg-emerald-700 rounded-lg transition-colors"
+                      >
+                        Xử lý
+                      </button>
+                      <button 
+                        onClick={() => handleResolveReport(r.id, 'Dismissed')}
+                        className="px-2.5 py-1 text-xs font-semibold bg-slate-200 text-slate-700 hover:bg-slate-300 rounded-lg transition-colors"
+                      >
+                        Bỏ qua
+                      </button>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+        </Card>
+
+        {/* Verifications Queue */}
+        <Card className="p-6 bg-white rounded-2xl border border-slate-200 shadow-sm flex flex-col justify-between">
+          <div>
+            <div className="flex items-center justify-between mb-4 pb-3 border-b border-slate-100">
+              <h2 className="text-base font-bold text-slate-900 flex items-center gap-2">
+                <UserCheck className="w-4 h-4 text-amber-500" />
+                Chủ trọ chờ xác minh danh tính
+              </h2>
+              <Link to="/admin/verify" className="text-xs text-indigo-600 hover:underline font-semibold flex items-center gap-1">
+                Xem tất cả ({stats.pendingVerifications}) <ArrowRight className="w-3 h-3" />
+              </Link>
+            </div>
+
+            {loading ? (
+              <p className="text-sm text-slate-400 py-6 text-center">Đang tải...</p>
+            ) : verifications.length === 0 ? (
+              <div className="py-8 text-center bg-slate-50 rounded-xl border border-dashed border-slate-200">
+                <p className="text-sm text-slate-500 font-medium">Không có yêu cầu xác minh nào đang chờ.</p>
+              </div>
+            ) : (
+              <div className="space-y-3">
+                {verifications.slice(0, 4).map(v => {
+                  const vId = v.landlordId || v.id;
+                  return (
+                    <div key={vId} className="p-3.5 bg-slate-50 border border-slate-200 rounded-xl flex items-center justify-between gap-3">
+                      <div className="flex items-center gap-3 min-w-0">
+                        <div className="w-9 h-9 rounded-full bg-slate-800 text-white font-bold text-sm flex items-center justify-center shrink-0">
+                          {(v.fullName || 'L').charAt(0)}
+                        </div>
+                        <div className="min-w-0">
+                          <p className="text-sm font-semibold text-slate-900 truncate">{v.fullName}</p>
+                          <p className="text-xs text-slate-500 truncate">{v.email}</p>
+                          {v.phoneNumber && <p className="text-[11px] text-slate-400">SĐT: {v.phoneNumber}</p>}
+                        </div>
+                      </div>
+                      <div className="flex gap-1.5 shrink-0">
+                        <Button 
+                          size="sm" 
+                          onClick={() => handleReviewVerification(vId, true)} 
+                          className="text-xs px-2.5 py-1 bg-emerald-600 hover:bg-emerald-700"
+                        >
+                          Duyệt
+                        </Button>
+                        <Button 
+                          size="sm" 
+                          variant="ghost" 
+                          onClick={() => handleReviewVerification(vId, false)} 
+                          className="text-xs px-2.5 py-1 text-rose-600 hover:bg-rose-50"
+                        >
+                          Từ chối
+                        </Button>
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            )}
+          </div>
+        </Card>
+      </div>
     </div>
   );
 }

@@ -1,5 +1,6 @@
 import { Outlet, Link, useNavigate, useLocation } from 'react-router-dom';
 import { useStore } from '../store/useStore';
+import { LayoutDashboard, UserCheck, Home, Users, AlertTriangle } from 'lucide-react';
 
 export default function AdminLayout() {
   const { currentUser, logout } = useStore();
@@ -11,6 +12,14 @@ export default function AdminLayout() {
     navigate('/');
   };
 
+  const navItems = [
+    { name: 'Tổng quan', path: '/admin', icon: LayoutDashboard },
+    { name: 'Xác minh chủ phòng', path: '/admin/verify', icon: UserCheck },
+    { name: 'Kiểm duyệt phòng', path: '/admin/rooms', icon: Home },
+    { name: 'Người dùng', path: '/admin/users', icon: Users },
+    { name: 'Báo cáo vi phạm', path: '/admin/reports', icon: AlertTriangle },
+  ];
+
   return (
     <div className="min-h-screen bg-[#F8FAFC] flex text-[#1F2937]">
       {/* Sidebar */}
@@ -19,21 +28,21 @@ export default function AdminLayout() {
           <Link to="/" className="text-xl font-bold tracking-tight text-white">DORMI <span className="text-[#6366F1] text-xs ml-1 font-bold">ADMIN</span></Link>
         </div>
         <nav className="px-4 py-4 space-y-2">
-          {[
-            { name: 'Tổng quan', path: '/admin' },
-            { name: 'Xác thực', path: '/admin/verify' },
-            { name: 'Kiểm duyệt', path: '/admin/content' }
-          ].map(item => {
-            const isActive = location.pathname === item.path;
+          {navItems.map(item => {
+            const isActive = item.path === '/admin' 
+              ? location.pathname === '/admin' 
+              : location.pathname.startsWith(item.path);
+            const Icon = item.icon;
             return (
               <Link 
                 key={item.name}
                 to={item.path} 
-                className={`block px-4 py-2.5 rounded-full text-sm font-semibold transition-all min-h-[44px] flex items-center ${isActive ? 'text-white bg-[#6366F1] shadow-[0_10px_20px_-10px_rgba(99,102,241,0.5)]' : 'text-gray-300 hover:text-white hover:bg-gray-800'}`}
+                className={`px-4 py-2.5 rounded-full text-sm font-semibold transition-all min-h-[44px] flex items-center gap-3 ${isActive ? 'text-white bg-[#6366F1] shadow-[0_10px_20px_-10px_rgba(99,102,241,0.5)]' : 'text-gray-300 hover:text-white hover:bg-gray-800'}`}
               >
-                {item.name}
+                <Icon className="w-4 h-4 shrink-0" />
+                <span>{item.name}</span>
               </Link>
-            )
+            );
           })}
         </nav>
       </aside>
