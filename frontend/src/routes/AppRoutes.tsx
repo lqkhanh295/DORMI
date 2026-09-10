@@ -39,6 +39,8 @@ import LandlordSettings from '../pages/landlord/LandlordSettings';
 import AdminDashboard from '../pages/admin/AdminDashboard';
 import VerificationModeration from '../pages/admin/VerificationModeration';
 import ContentModeration from '../pages/admin/ContentModeration';
+import AdminUsers from '../pages/admin/AdminUsers';
+import AdminReports from '../pages/admin/AdminReports';
 
 export default function AppRoutes() {
   return (
@@ -88,7 +90,10 @@ export default function AppRoutes() {
         <Route path="/admin" element={<AdminLayout />}>
           <Route index element={<AdminDashboard />} />
           <Route path="verify" element={<VerificationModeration />} />
+          <Route path="rooms" element={<ContentModeration />} />
           <Route path="content" element={<ContentModeration />} />
+          <Route path="users" element={<AdminUsers />} />
+          <Route path="reports" element={<AdminReports />} />
         </Route>
       </Route>
 
