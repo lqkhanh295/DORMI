@@ -50,15 +50,13 @@ export function GlobalNav() {
 
         {/* Right Desktop Actions */}
         <div className="hidden md:flex items-center gap-4">
-          {currentUser?.role !== 'Tenant' && (
-            <Link 
-              to="/landlord" 
-              className="bg-[#00153D] text-white hover:bg-[#073372] text-body font-semibold px-4 py-2 rounded-[10px] transition-colors flex items-center gap-1.5 min-h-[44px]"
-            >
-              <Plus className="w-4 h-4" />
-              Đăng tin
-            </Link>
-          )}
+          <Link 
+            to={currentUser?.role === 'Tenant' ? '/tenant/post' : '/landlord/listing/new'} 
+            className="bg-[#00153D] text-white hover:bg-[#073372] text-body font-semibold px-4 py-2 rounded-[10px] transition-colors flex items-center gap-1.5 min-h-[44px]"
+          >
+            <Plus className="w-4 h-4" />
+            {currentUser?.role === 'Tenant' ? 'Đăng tin ghép' : 'Đăng tin'}
+          </Link>
 
           {!currentUser ? (
             <Link 
@@ -117,6 +115,14 @@ export function GlobalNav() {
           >
             <Users className="w-4 h-4" />
             Ở ghép
+          </Link>
+          <Link 
+            to={currentUser?.role === 'Tenant' ? '/tenant/post' : '/landlord/listing/new'} 
+            onClick={() => setMobileMenuOpen(false)}
+            className="text-body font-medium text-[#0F172A] py-2 border-b border-[#F1F5F9] flex items-center gap-2 text-[#00153D] font-semibold"
+          >
+            <Plus className="w-4 h-4" />
+            {currentUser?.role === 'Tenant' ? 'Đăng tin ở ghép' : 'Đăng phòng trọ'}
           </Link>
           {!currentUser ? (
             <Link 

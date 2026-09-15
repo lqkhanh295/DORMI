@@ -135,7 +135,21 @@ export default function RoomManagement() {
               }));
             }
           }
-        }).catch(() => {});
+        }).catch((err) => {
+          toast.error(err.message || 'Lỗi tải ảnh lên server');
+          // Remove the failed placeholder image
+          if (isEdit) {
+            setEditingRoom(prev => prev ? {
+              ...prev,
+              images: prev.images.filter(img => img.imageUrl !== compressedUrl)
+            } : null);
+          } else {
+            setNewRoom(prev => ({
+              ...prev,
+              imageUrls: prev.imageUrls.filter(url => url !== compressedUrl)
+            }));
+          }
+        });
         pendingUploads.current.push(uploadPromise);
       }
 

@@ -25,6 +25,23 @@ public class ImagesController : ControllerBase
         _db = db;
     }
 
+    private static async Task<bool> IsAiGeneratedAsync(IFormFile file)
+    {
+        // ponytail: naive heuristic scanning the raw binary for common AI metadata strings (C2PA, SynthID, etc).
+        // upgrade path: use a proper EXIF/XMP parsing library like MetadataExtractor, or an external AI detection API.
+        var signatures = new[] { "c2pa", "synthid", "midjourney", "dall-e", "stable diffusion" };
+        
+        using var stream = file.OpenReadStream();
+        using var reader = new StreamReader(stream, System.Text.Encoding.ASCII, false, 1024, true);
+        char[] buffer = new char[8192];
+        int bytesRead = await reader.ReadAsync(buffer, 0, buffer.Length);
+        string header = new string(buffer, 0, bytesRead).ToLowerInvariant();
+        
+        stream.Position = 0; // reset for subsequent upload
+        
+        return signatures.Any(sig => header.Contains(sig));
+    }
+
     private static bool IsValidImageFile(IFormFile file, out string? errorMessage)
     {
         if (file == null || file.Length == 0)
@@ -67,6 +84,11 @@ public class ImagesController : ControllerBase
             return BadRequest(new { message = error });
         }
 
+        if (await IsAiGeneratedAsync(file))
+        {
+            return BadRequest(new { message = "Ảnh được tạo bởi AI (chứa metadata/watermark) không được phép tải lên." });
+        }
+
         using var stream = file.OpenReadStream();
         var imageUrl = await _imageService.UploadImageAsync(stream, file.FileName);
 
@@ -93,6 +115,11 @@ public class ImagesController : ControllerBase
         if (!IsValidImageFile(file, out var error))
         {
             return BadRequest(new { message = error });
+        }
+
+        if (await IsAiGeneratedAsync(file))
+        {
+            return BadRequest(new { message = "Ảnh được tạo bởi AI (chứa metadata/watermark) không được phép tải lên." });
         }
 
         using var stream = file.OpenReadStream();

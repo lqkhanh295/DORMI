@@ -28,14 +28,16 @@ export default function SmartListingForm() {
     if (!file) return;
 
     setUploadingImage(true);
-    const uploadedUrl = await uploadImageToCloudinary(file);
-    setUploadingImage(false);
-
-    if (uploadedUrl) {
-      setImageUrl(uploadedUrl);
-    } else {
-      alert('Upload ảnh lên Cloudinary không thành công. Sử dụng ảnh mặc định.');
+    try {
+      const uploadedUrl = await uploadImageToCloudinary(file);
+      if (uploadedUrl) {
+        setImageUrl(uploadedUrl);
+      }
+    } catch (err: any) {
+      alert(err.message || 'Upload ảnh lên Cloudinary không thành công. Sử dụng ảnh mặc định.');
       setImageUrl(URL.createObjectURL(file));
+    } finally {
+      setUploadingImage(false);
     }
   };
 

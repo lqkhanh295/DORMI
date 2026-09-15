@@ -229,9 +229,9 @@ export const useStore = create<AppState>()(
         try {
           const res = await imagesApi.uploadImage(file);
           return res.imageUrl;
-        } catch (err) {
+        } catch (err: any) {
           console.error('Cloudinary Upload failed:', err);
-          return null;
+          throw err;
         }
       }
     }),
