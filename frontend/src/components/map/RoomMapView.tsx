@@ -175,7 +175,9 @@ export default function RoomMapView({ rooms, selectedRoomId, onSelectRoom, class
     const bounds = L.latLngBounds([]);
 
     rooms.forEach((room) => {
-      const coords = getCoordinatesForAddress(room.address, room.id);
+      const coords: [number, number] = (room.latitude && room.longitude) 
+        ? [room.latitude, room.longitude] 
+        : getCoordinatesForAddress(room.address, room.id);
       bounds.extend(coords);
 
       const distance = userLocation 

@@ -100,4 +100,83 @@ public class ProfilesController : ControllerBase
         await _db.SaveChangesAsync();
         return Ok(new { message = "Cập nhật hồ sơ chủ trọ thành công.", fullName = user.FullName });
     }
+
+    [HttpPost("landlord/verification")]
+    public async Task<IActionResult> SubmitLandlordVerification([FromBody] SubmitVerificationDto dto)
+    {
+        var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+        if (!Guid.TryParse(userIdClaim, out var userId)) return Unauthorized();
+
+        var user = await _db.Users.FindAsync(userId);
+        if (user == null || user.Role != UserRole.Landlord)
+        {
+            return BadRequest(new { message = "Chỉ tài khoản Chủ trọ mới có thể gửi yêu cầu xác minh danh tính." });
+        }
+
+        if (string.IsNullOrWhiteSpace(dto.DocumentNumber) || string.IsNullOrWhiteSpace(dto.FrontImageUrl) || string.IsNullOrWhiteSpace(dto.BackImageUrl))
+        {
+            return BadRequest(new { message = "Vui lòng cung cấp đầy đủ Số CCCD/ĐKKD và hình ảnh 2 mặt của giấy tờ xác minh." });
+        }
+
+        // Check if existing pending request
+        var existingRequest = await _db.VerificationRequests
+            .OrderByDescending(r => r.SubmittedAt)
+            .FirstOrDefaultAsync(r => r.UserId == userId);
+
+        if (existingRequest != null && existingRequest.Status == "Pending")
+        {
+            existingRequest.DocumentType = dto.DocumentType;
+            existingRequest.DocumentNumber = dto.DocumentNumber.Trim();
+            existingRequest.FrontImageUrl = dto.FrontImageUrl.Trim();
+            existingRequest.BackImageUrl = dto.BackImageUrl.Trim();
+            existingRequest.SubmittedAt = DateTime.UtcNow;
+            await _db.SaveChangesAsync();
+
+            return Ok(new { message = "Đã cập nhật hồ sơ xác minh đang chờ duyệt.", requestId = existingRequest.Id, status = "Pending" });
+        }
+
+        var newRequest = new VerificationRequest
+        {
+            Id = Guid.NewGuid(),
+            UserId = userId,
+            DocumentType = dto.DocumentType,
+            DocumentNumber = dto.DocumentNumber.Trim(),
+            FrontImageUrl = dto.FrontImageUrl.Trim(),
+            BackImageUrl = dto.BackImageUrl.Trim(),
+            Status = "Pending",
+            SubmittedAt = DateTime.UtcNow
+        };
+
+        _db.VerificationRequests.Add(newRequest);
+        await _db.SaveChangesAsync();
+
+        return Ok(new { message = "Hồ sơ xác minh đã được gửi thành công. Ban quản trị sẽ đối soát và phê duyệt trong vòng 24 giờ.", requestId = newRequest.Id, status = "Pending" });
+    }
+
+    [HttpGet("landlord/verification")]
+    public async Task<IActionResult> GetLandlordVerification()
+    {
+        var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+        if (!Guid.TryParse(userIdClaim, out var userId)) return Unauthorized();
+
+        var request = await _db.VerificationRequests
+            .OrderByDescending(r => r.SubmittedAt)
+            .FirstOrDefaultAsync(r => r.UserId == userId);
+
+        var user = await _db.Users.FindAsync(userId);
+
+        return Ok(new
+        {
+            isVerified = user?.IsVerified ?? false,
+            hasSubmitted = request != null,
+            status = request?.Status ?? (user?.IsVerified == true ? "Approved" : "NotSubmitted"),
+            documentType = request?.DocumentType,
+            documentNumber = request?.DocumentNumber,
+            frontImageUrl = request?.FrontImageUrl,
+            backImageUrl = request?.BackImageUrl,
+            submittedAt = request?.SubmittedAt,
+            reviewedAt = request?.ReviewedAt,
+            rejectReason = request?.RejectReason
+        });
+    }
 }

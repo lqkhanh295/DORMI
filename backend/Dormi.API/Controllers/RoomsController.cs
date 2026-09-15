@@ -54,6 +54,24 @@ public class RoomsController : ControllerBase
             query = query.Where(r => r.Price <= filter.MaxPrice.Value);
         }
 
+        if (!string.IsNullOrWhiteSpace(filter.District))
+        {
+            var districtTerm = filter.District.Trim().ToLower();
+            query = query.Where(r => r.Address.ToLower().Contains(districtTerm));
+        }
+
+        NetTopologySuite.Geometries.Point? userPoint = null;
+        if (filter.Latitude.HasValue && filter.Longitude.HasValue)
+        {
+            userPoint = new NetTopologySuite.Geometries.Point(filter.Longitude.Value, filter.Latitude.Value) { SRID = 4326 };
+            if (filter.RadiusKm.HasValue && filter.RadiusKm.Value > 0)
+            {
+                // In EPSG:4326 (degrees), 1 degree latitude is approx 111.32 km
+                double distanceDegrees = filter.RadiusKm.Value / 111.32;
+                query = query.Where(r => r.Location != null && r.Location.IsWithinDistance(userPoint, distanceDegrees));
+            }
+        }
+
         var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
         Guid.TryParse(userIdClaim, out var currentUserId);
         bool isAdmin = User.IsInRole("Admin");
@@ -121,6 +139,9 @@ public class RoomsController : ControllerBase
                 Utilities = r.Utilities,
                 RoomType = r.RoomType,
                 Address = r.Address,
+                Latitude = r.Latitude,
+                Longitude = r.Longitude,
+                DistanceKm = (userPoint != null && r.Location != null) ? Math.Round(r.Location.Distance(userPoint) * 111.32, 2) : null,
                 Virtual3DUrl = r.Virtual3DUrl,
                 Status = r.Status,
                 IsVerifiedLandlord = r.Landlord.IsVerified,
@@ -144,7 +165,49 @@ public class RoomsController : ControllerBase
         });
     }
 
-    [HttpGet("{id}")]
+    [HttpGet("featured")]
+    public async Task<IActionResult> GetFeaturedRooms([FromQuery] int limit = 6)
+    {
+        var featured = await _db.Rooms
+            .Include(r => r.Landlord)
+            .Include(r => r.Images)
+            .Where(r => r.Status == RoomStatus.Available)
+            .OrderByDescending(r => r.Landlord.IsVerified)
+            .ThenByDescending(r => r.CreatedAt)
+            .Take(limit)
+            .Select(r => new RoomResponseDto
+            {
+                Id = r.Id,
+                LandlordId = r.LandlordId,
+                LandlordName = r.Landlord.FullName,
+                LandlordPhone = r.Landlord.PhoneNumber,
+                Title = r.Title,
+                Description = r.Description,
+                Price = r.Price,
+                Area = r.Area,
+                Utilities = r.Utilities,
+                RoomType = r.RoomType,
+                Address = r.Address,
+                Latitude = r.Latitude,
+                Longitude = r.Longitude,
+                DistanceKm = null,
+                Virtual3DUrl = r.Virtual3DUrl,
+                Status = r.Status,
+                IsVerifiedLandlord = r.Landlord.IsVerified,
+                CreatedAt = r.CreatedAt,
+                Images = r.Images.Select(img => new RoomImageDto
+                {
+                    Id = img.Id,
+                    ImageUrl = img.ImageUrl,
+                    IsPrimary = img.IsPrimary
+                }).ToList()
+            })
+            .ToListAsync();
+
+        return Ok(featured);
+    }
+
+    [HttpGet("{id:guid}")]
     public async Task<IActionResult> GetRoomById(Guid id)
     {
         var room = await _db.Rooms
@@ -167,6 +230,21 @@ public class RoomsController : ControllerBase
             }
         }
 
+        // ponytail: Record real RoomView event for aggregate analytics
+        try
+        {
+            _db.RoomViews.Add(new RoomView
+            {
+                Id = Guid.NewGuid(),
+                RoomId = room.Id,
+                ViewerId = currentUserId != Guid.Empty ? currentUserId : null,
+                EventType = "View",
+                CreatedAt = DateTime.UtcNow
+            });
+            await _db.SaveChangesAsync();
+        }
+        catch {}
+
         var response = new RoomResponseDto
         {
             Id = room.Id,
@@ -180,6 +258,8 @@ public class RoomsController : ControllerBase
             Utilities = room.Utilities,
             RoomType = room.RoomType,
             Address = room.Address,
+            Latitude = room.Latitude,
+            Longitude = room.Longitude,
             Virtual3DUrl = room.Virtual3DUrl,
             Status = room.Status,
             IsVerifiedLandlord = room.Landlord.IsVerified,
@@ -225,6 +305,11 @@ public class RoomsController : ControllerBase
             Utilities = dto.Utilities,
             RoomType = dto.RoomType,
             Address = dto.Address,
+            Latitude = dto.Latitude,
+            Longitude = dto.Longitude,
+            Location = (dto.Latitude.HasValue && dto.Longitude.HasValue)
+                ? new NetTopologySuite.Geometries.Point(dto.Longitude.Value, dto.Latitude.Value) { SRID = 4326 }
+                : null,
             Virtual3DUrl = dto.Virtual3DUrl,
             Status = RoomStatus.PendingApproval,
             CreatedAt = DateTime.UtcNow
@@ -265,17 +350,27 @@ public class RoomsController : ControllerBase
             return Forbid();
         }
 
-        room.Title = dto.Title;
-        room.Description = dto.Description;
-        room.Price = dto.Price;
-        room.Area = dto.Area;
-        room.Utilities = dto.Utilities;
-        room.RoomType = dto.RoomType;
-        room.Address = dto.Address;
-        room.Virtual3DUrl = dto.Virtual3DUrl;
+        // ponytail: Re-moderation rule: If approved room has critical fields altered, reset to PendingApproval
+        bool criticalFieldsChanged = (room.Title != dto.Title) ||
+                                     (room.Price != dto.Price) ||
+                                     (room.Address != dto.Address) ||
+                                     (room.Description != dto.Description);
 
-        // ponytail: Enforce room status transition rules for Landlords
-        if (dto.Status != room.Status)
+        if (room.Status == RoomStatus.Available && criticalFieldsChanged)
+        {
+            room.Status = RoomStatus.PendingApproval;
+            _db.Notifications.Add(new Notification
+            {
+                Id = Guid.NewGuid(),
+                UserId = userId,
+                Title = "Tin đăng cần kiểm duyệt lại",
+                Message = $"Tin đăng '{dto.Title}' đã chỉnh sửa thông tin cốt lõi nên cần Ban quản trị kiểm duyệt lại trước khi tiếp tục hiển thị công khai.",
+                Type = "Room",
+                LinkUrl = "/landlord/rooms",
+                CreatedAt = DateTime.UtcNow
+            });
+        }
+        else if (dto.Status != room.Status)
         {
             // If room is currently PendingApproval, Landlord cannot self-approve to Available
             if (room.Status == RoomStatus.PendingApproval)
@@ -298,6 +393,21 @@ public class RoomsController : ControllerBase
                     return BadRequest(new { message = "Chủ trọ chỉ có thể chuyển đổi trạng thái giữa 'Đang cho thuê', 'Đã thuê' hoặc 'Ẩn tin'." });
                 }
             }
+        }
+
+        room.Title = dto.Title;
+        room.Description = dto.Description;
+        room.Price = dto.Price;
+        room.Area = dto.Area;
+        room.Utilities = dto.Utilities;
+        room.RoomType = dto.RoomType;
+        room.Address = dto.Address;
+        room.Virtual3DUrl = dto.Virtual3DUrl;
+        if (dto.Latitude.HasValue && dto.Longitude.HasValue)
+        {
+            room.Latitude = dto.Latitude;
+            room.Longitude = dto.Longitude;
+            room.Location = new NetTopologySuite.Geometries.Point(dto.Longitude.Value, dto.Latitude.Value) { SRID = 4326 };
         }
 
         if (dto.ImageUrls != null)

@@ -147,6 +147,7 @@ public class RoommatesController : ControllerBase
             CreatedAt = DateTime.UtcNow
         };
 
+        user.IsLookingForRoommate = true;
         _db.RoommatePosts.Add(post);
         await _db.SaveChangesAsync();
 
@@ -207,7 +208,7 @@ public class RoommatesController : ControllerBase
 
         var posts = await _db.RoommatePosts
             .Include(r => r.Customer)
-            .Where(r => r.IsActive && r.CustomerId != userId && r.Customer.IsLookingForRoommate)
+            .Where(r => r.IsActive && r.CustomerId != userId)
             .ToListAsync();
 
         var recommendations = posts.Select(post =>

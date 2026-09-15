@@ -7,6 +7,7 @@ using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Storage;
+using NetTopologySuite.Geometries;
 
 namespace Dormi.Infrastructure.Data;
 
@@ -26,6 +27,10 @@ public static class DbSeeder
         // ponytail: safe schema patch — EnsureCreated won't add new columns to existing tables
         try
         {
+            await db.Database.ExecuteSqlRawAsync("CREATE EXTENSION IF NOT EXISTS postgis;");
+            await db.Database.ExecuteSqlRawAsync("ALTER TABLE \"Rooms\" ADD COLUMN IF NOT EXISTS \"Latitude\" double precision;");
+            await db.Database.ExecuteSqlRawAsync("ALTER TABLE \"Rooms\" ADD COLUMN IF NOT EXISTS \"Longitude\" double precision;");
+            await db.Database.ExecuteSqlRawAsync("ALTER TABLE \"Rooms\" ADD COLUMN IF NOT EXISTS \"Location\" geometry(Point, 4326);");
             await db.Database.ExecuteSqlRawAsync(
                 "ALTER TABLE \"Users\" ADD COLUMN IF NOT EXISTS \"IsLookingForRoommate\" boolean NOT NULL DEFAULT false");
             await db.Database.ExecuteSqlRawAsync(
@@ -39,9 +44,80 @@ public static class DbSeeder
                     ""CreatedAt"" timestamp with time zone NOT NULL DEFAULT CURRENT_TIMESTAMP,
                     CONSTRAINT ""FK_RoomReports_Rooms_RoomId"" FOREIGN KEY (""RoomId"") REFERENCES ""Rooms"" (""Id"") ON DELETE CASCADE,
                     CONSTRAINT ""FK_RoomReports_Users_ReporterId"" FOREIGN KEY (""ReporterId"") REFERENCES ""Users"" (""Id"") ON DELETE CASCADE
+                );
+                CREATE TABLE IF NOT EXISTS ""Notifications"" (
+                    ""Id"" uuid PRIMARY KEY,
+                    ""UserId"" uuid NOT NULL REFERENCES ""Users""(""Id"") ON DELETE CASCADE,
+                    ""Title"" varchar(255) NOT NULL,
+                    ""Message"" text NOT NULL,
+                    ""Type"" varchar(50) NOT NULL DEFAULT 'General',
+                    ""LinkUrl"" text,
+                    ""IsRead"" boolean NOT NULL DEFAULT false,
+                    ""CreatedAt"" timestamp with time zone NOT NULL DEFAULT CURRENT_TIMESTAMP
+                );
+                CREATE TABLE IF NOT EXISTS ""VerificationRequests"" (
+                    ""Id"" uuid PRIMARY KEY,
+                    ""UserId"" uuid NOT NULL REFERENCES ""Users""(""Id"") ON DELETE CASCADE,
+                    ""DocumentType"" varchar(50) NOT NULL DEFAULT 'CCCD',
+                    ""DocumentNumber"" varchar(50),
+                    ""FrontImageUrl"" text NOT NULL,
+                    ""BackImageUrl"" text NOT NULL,
+                    ""Status"" varchar(50) NOT NULL DEFAULT 'Pending',
+                    ""RejectReason"" text,
+                    ""SubmittedAt"" timestamp with time zone NOT NULL DEFAULT CURRENT_TIMESTAMP,
+                    ""ReviewedAt"" timestamp with time zone,
+                    ""ReviewerId"" uuid REFERENCES ""Users""(""Id"") ON DELETE SET NULL
+                );
+                CREATE TABLE IF NOT EXISTS ""PaymentTransactions"" (
+                    ""Id"" uuid PRIMARY KEY,
+                    ""UserId"" uuid NOT NULL REFERENCES ""Users""(""Id"") ON DELETE CASCADE,
+                    ""SubscriptionId"" uuid,
+                    ""Amount"" numeric(18, 2) NOT NULL,
+                    ""PaymentMethod"" varchar(50) NOT NULL,
+                    ""TransactionRef"" varchar(100) NOT NULL,
+                    ""Description"" text,
+                    ""Status"" varchar(50) NOT NULL DEFAULT 'Pending',
+                    ""CreatedAt"" timestamp with time zone NOT NULL DEFAULT CURRENT_TIMESTAMP,
+                    ""CompletedAt"" timestamp with time zone
+                );
+                CREATE TABLE IF NOT EXISTS ""RoomViews"" (
+                    ""Id"" uuid PRIMARY KEY,
+                    ""RoomId"" uuid NOT NULL REFERENCES ""Rooms""(""Id"") ON DELETE CASCADE,
+                    ""ViewerId"" uuid REFERENCES ""Users""(""Id"") ON DELETE SET NULL,
+                    ""EventType"" varchar(50) NOT NULL DEFAULT 'DetailView',
+                    ""IpAddress"" varchar(100),
+                    ""CreatedAt"" timestamp with time zone NOT NULL DEFAULT CURRENT_TIMESTAMP
+                );
+                CREATE TABLE IF NOT EXISTS ""LeaseContracts"" (
+                    ""Id"" uuid PRIMARY KEY,
+                    ""LandlordId"" uuid NOT NULL REFERENCES ""Users""(""Id"") ON DELETE RESTRICT,
+                    ""TenantId"" uuid NOT NULL REFERENCES ""Users""(""Id"") ON DELETE RESTRICT,
+                    ""RoomId"" uuid NOT NULL REFERENCES ""Rooms""(""Id"") ON DELETE CASCADE,
+                    ""StartDate"" timestamp with time zone NOT NULL,
+                    ""EndDate"" timestamp with time zone NOT NULL,
+                    ""MonthlyRent"" numeric(18, 2) NOT NULL,
+                    ""Deposit"" numeric(18, 2) NOT NULL,
+                    ""Status"" varchar(50) NOT NULL DEFAULT 'Active',
+                    ""CreatedAt"" timestamp with time zone NOT NULL DEFAULT CURRENT_TIMESTAMP
+                );
+                CREATE TABLE IF NOT EXISTS ""TenantReviews"" (
+                    ""Id"" uuid PRIMARY KEY,
+                    ""LandlordId"" uuid NOT NULL REFERENCES ""Users""(""Id"") ON DELETE RESTRICT,
+                    ""TenantId"" uuid NOT NULL REFERENCES ""Users""(""Id"") ON DELETE RESTRICT,
+                    ""LeaseId"" uuid REFERENCES ""LeaseContracts""(""Id"") ON DELETE CASCADE,
+                    ""Rating"" integer NOT NULL,
+                    ""PunctualityScore"" integer NOT NULL DEFAULT 5,
+                    ""CleanlinessScore"" integer NOT NULL DEFAULT 5,
+                    ""RespectScore"" integer NOT NULL DEFAULT 5,
+                    ""Comment"" text NOT NULL,
+                    ""IsAnonymous"" boolean NOT NULL DEFAULT true,
+                    ""CreatedAt"" timestamp with time zone NOT NULL DEFAULT CURRENT_TIMESTAMP
                 );");
         }
-        catch { /* column/table already exists or non-Postgres */ }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"[Schema Patch Notice]: {ex.Message}");
+        }
 
         if (await db.Users.AnyAsync()) return; // Already seeded, preserve all user modifications and created data
 
@@ -221,15 +297,45 @@ public static class DbSeeder
                      "https://images.unsplash.com/photo-1497366216548-37526070297c?auto=format&fit=crop&w=800&q=80" }),
         };
 
+        var coords = new (double Lat, double Lng)[]
+        {
+            (10.7743, 106.7038), // 0: 88 Nguyễn Huệ, Q.1
+            (10.7850, 106.6965), // 1: 56 Hai Bà Trưng, Q.3
+            (10.7725, 106.7001), // 2: 15 Lê Lợi, Q.1
+            (10.7905, 106.6850), // 3: 290 Nam Kỳ Khởi Nghĩa, Q.3
+            (10.7285, 106.7218), // 4: 101 Nguyễn Lương Bằng, Q.7
+            (10.7315, 106.7050), // 5: 45 Nguyễn Văn Linh, Q.7
+            (10.7621, 106.7015), // 6: 12 Bến Vân Đồn, Q.4
+            (10.7420, 106.7280), // 7: 78 Huỳnh Tấn Phát, Q.7
+            (10.8540, 106.7900), // 8: Lô E2 Khu CNC, TP.Thủ Đức
+            (10.8402, 106.8400), // 9: Vinhomes Grand Park, TP.Thủ Đức
+            (10.8710, 106.7780), // 10: Khu phố 6, Linh Trung, TP.Thủ Đức
+            (10.8420, 106.7230), // 11: 25 Đường số 9, Hiệp Bình Phước, TP.Thủ Đức
+            (10.7980, 106.7110), // 12: 112 Điện Biên Phủ, Bình Thạnh
+            (10.8320, 106.6650), // 13: 67 Quang Trung, Gò Vấp
+            (10.8030, 106.7150), // 14: 210 Xô Viết Nghệ Tĩnh, Bình Thạnh
+            (10.8450, 106.6780), // 15: 300 Nguyễn Oanh, Gò Vấp
+            (10.8010, 106.6540), // 16: 55 Cộng Hòa, Tân Bình
+            (10.8035, 106.6180), // 17: Celadon City, Tân Phú
+            (10.8015, 106.6490), // 18: 132 Hoàng Hoa Thám, Tân Bình
+            (10.7990, 106.6500)  // 19: K300, Tân Bình
+        };
+
         var rooms = new Room[roomData.Length];
         for (int i = 0; i < roomData.Length; i++)
         {
             var d = roomData[i];
+            var lat = coords[i].Lat;
+            var lng = coords[i].Lng;
             var room = new Room
             {
                 Id = Guid.NewGuid(), LandlordId = d.Item1, Title = d.Item2, Description = d.Item3,
                 Price = d.Item4, Area = d.Item5, Utilities = d.Item6, RoomType = d.Item7,
-                Address = d.Item8, Status = d.Item9, CreatedAt = now.AddDays(-Random.Shared.Next(1, 60))
+                Address = d.Item8, Status = d.Item9,
+                Latitude = lat,
+                Longitude = lng,
+                Location = new Point(lng, lat) { SRID = 4326 },
+                CreatedAt = now.AddDays(-Random.Shared.Next(1, 60))
             };
             for (int j = 0; j < d.Item10.Length; j++)
             {
@@ -333,12 +439,292 @@ public static class DbSeeder
         // ============================================================
         // 8. LANDLORD SUBSCRIPTIONS
         // ============================================================
-        db.LandlordSubscriptions.AddRange(
-            new LandlordSubscription { Id = Guid.NewGuid(), LandlordId = ll1, PlanName = "Pro", Price = 199000, StartDate = now.AddDays(-30), EndDate = now.AddDays(335), IsActive = true },
-            new LandlordSubscription { Id = Guid.NewGuid(), LandlordId = ll2, PlanName = "Pro", Price = 199000, StartDate = now.AddDays(-60), EndDate = now.AddDays(305), IsActive = true },
-            new LandlordSubscription { Id = Guid.NewGuid(), LandlordId = ll3, PlanName = "Enterprise", Price = 499000, StartDate = now.AddDays(-15), EndDate = now.AddDays(350), IsActive = true },
-            new LandlordSubscription { Id = Guid.NewGuid(), LandlordId = ll5, PlanName = "Pro", Price = 199000, StartDate = now.AddDays(-45), EndDate = now.AddDays(320), IsActive = true },
-            new LandlordSubscription { Id = Guid.NewGuid(), LandlordId = ll4, PlanName = "Free", Price = 0, StartDate = now.AddDays(-10), EndDate = now.AddDays(355), IsActive = true }
+        var sub1 = new LandlordSubscription { Id = Guid.NewGuid(), LandlordId = ll1, PlanName = "Pro", Price = 199000, StartDate = now.AddDays(-30), EndDate = now.AddDays(335), IsActive = true };
+        var sub2 = new LandlordSubscription { Id = Guid.NewGuid(), LandlordId = ll2, PlanName = "Pro", Price = 199000, StartDate = now.AddDays(-60), EndDate = now.AddDays(305), IsActive = true };
+        var sub3 = new LandlordSubscription { Id = Guid.NewGuid(), LandlordId = ll3, PlanName = "Enterprise", Price = 499000, StartDate = now.AddDays(-15), EndDate = now.AddDays(350), IsActive = true };
+        var sub5 = new LandlordSubscription { Id = Guid.NewGuid(), LandlordId = ll5, PlanName = "Pro", Price = 199000, StartDate = now.AddDays(-45), EndDate = now.AddDays(320), IsActive = true };
+        var sub4 = new LandlordSubscription { Id = Guid.NewGuid(), LandlordId = ll4, PlanName = "Free", Price = 0, StartDate = now.AddDays(-10), EndDate = now.AddDays(355), IsActive = true };
+
+        db.LandlordSubscriptions.AddRange(sub1, sub2, sub3, sub5, sub4);
+
+        // ============================================================
+        // 9. VERIFICATION REQUESTS (CCCD / Documents)
+        // ============================================================
+        db.VerificationRequests.AddRange(
+            new VerificationRequest
+            {
+                Id = Guid.NewGuid(),
+                UserId = ll1,
+                DocumentType = "CCCD",
+                DocumentNumber = "079090001234",
+                FrontImageUrl = "https://images.unsplash.com/photo-1544717305-2782549b5136?w=600",
+                BackImageUrl = "https://images.unsplash.com/photo-1544717305-2782549b5136?w=600",
+                Status = "Approved",
+                SubmittedAt = now.AddDays(-65),
+                ReviewedAt = now.AddDays(-60),
+                ReviewerId = adminId
+            },
+            new VerificationRequest
+            {
+                Id = Guid.NewGuid(),
+                UserId = ll2,
+                DocumentType = "CCCD",
+                DocumentNumber = "079090001235",
+                FrontImageUrl = "https://images.unsplash.com/photo-1544717305-2782549b5136?w=600",
+                BackImageUrl = "https://images.unsplash.com/photo-1544717305-2782549b5136?w=600",
+                Status = "Approved",
+                SubmittedAt = now.AddDays(-42),
+                ReviewedAt = now.AddDays(-40),
+                ReviewerId = adminId
+            },
+            new VerificationRequest
+            {
+                Id = Guid.NewGuid(),
+                UserId = ll4,
+                DocumentType = "CCCD",
+                DocumentNumber = "079090001236",
+                FrontImageUrl = "https://images.unsplash.com/photo-1544717305-2782549b5136?w=600",
+                BackImageUrl = "https://images.unsplash.com/photo-1544717305-2782549b5136?w=600",
+                Status = "Pending",
+                SubmittedAt = now.AddDays(-2)
+            },
+            new VerificationRequest
+            {
+                Id = Guid.NewGuid(),
+                UserId = c1,
+                DocumentType = "CCCD",
+                DocumentNumber = "079090005678",
+                FrontImageUrl = "https://images.unsplash.com/photo-1544717305-2782549b5136?w=600",
+                BackImageUrl = "https://images.unsplash.com/photo-1544717305-2782549b5136?w=600",
+                Status = "Approved",
+                SubmittedAt = now.AddDays(-32),
+                ReviewedAt = now.AddDays(-30),
+                ReviewerId = adminId
+            }
+        );
+
+        // ============================================================
+        // 10. PAYMENT TRANSACTIONS (Revenue tracking & billing)
+        // ============================================================
+        db.PaymentTransactions.AddRange(
+            new PaymentTransaction
+            {
+                Id = Guid.NewGuid(),
+                UserId = ll1,
+                SubscriptionId = sub1.Id,
+                Amount = 199000,
+                PaymentMethod = "MoMo",
+                TransactionRef = "MOMO_LL1_" + Guid.NewGuid().ToString("N")[..8].ToUpper(),
+                Status = "Completed",
+                CreatedAt = now.AddDays(-30),
+                CompletedAt = now.AddDays(-30)
+            },
+            new PaymentTransaction
+            {
+                Id = Guid.NewGuid(),
+                UserId = ll2,
+                SubscriptionId = sub2.Id,
+                Amount = 199000,
+                PaymentMethod = "VNPay",
+                TransactionRef = "VNP_LL2_" + Guid.NewGuid().ToString("N")[..8].ToUpper(),
+                Status = "Completed",
+                CreatedAt = now.AddDays(-60),
+                CompletedAt = now.AddDays(-60)
+            },
+            new PaymentTransaction
+            {
+                Id = Guid.NewGuid(),
+                UserId = ll3,
+                SubscriptionId = sub3.Id,
+                Amount = 499000,
+                PaymentMethod = "BankTransfer",
+                TransactionRef = "BANK_LL3_" + Guid.NewGuid().ToString("N")[..8].ToUpper(),
+                Status = "Completed",
+                CreatedAt = now.AddDays(-15),
+                CompletedAt = now.AddDays(-15)
+            },
+            new PaymentTransaction
+            {
+                Id = Guid.NewGuid(),
+                UserId = ll5,
+                SubscriptionId = sub5.Id,
+                Amount = 199000,
+                PaymentMethod = "VNPay",
+                TransactionRef = "VNP_LL5_" + Guid.NewGuid().ToString("N")[..8].ToUpper(),
+                Status = "Completed",
+                CreatedAt = now.AddDays(-45),
+                CompletedAt = now.AddDays(-45)
+            },
+            new PaymentTransaction
+            {
+                Id = Guid.NewGuid(),
+                UserId = ll1,
+                SubscriptionId = sub1.Id,
+                Amount = 199000,
+                PaymentMethod = "VNPay",
+                TransactionRef = "VNP_LL1_PENDING",
+                Status = "Pending",
+                CreatedAt = now.AddHours(-3)
+            }
+        );
+
+        // ============================================================
+        // 11. ROOM VIEWS (Real Lead Analytics Funnel)
+        // ============================================================
+        var viewList = new System.Collections.Generic.List<RoomView>();
+        var customerIds = new[] { c1, c2, c3, c4, c5, c6, c7, c8, c9, c10, c11, c12, c13, c14 };
+        for (int r = 0; r < rooms.Length; r++)
+        {
+            var viewCount = 15 + (r % 7) * 12;
+            for (int v = 0; v < viewCount; v++)
+            {
+                viewList.Add(new RoomView
+                {
+                    Id = Guid.NewGuid(),
+                    RoomId = rooms[r].Id,
+                    ViewerId = (v % 3 == 0) ? customerIds[v % customerIds.Length] : null,
+                    EventType = "DetailView",
+                    CreatedAt = now.AddDays(-Random.Shared.Next(0, 30))
+                });
+            }
+        }
+        db.RoomViews.AddRange(viewList);
+
+        // ============================================================
+        // 12. NOTIFICATIONS
+        // ============================================================
+        db.Notifications.AddRange(
+            new Notification
+            {
+                Id = Guid.NewGuid(),
+                UserId = ll1,
+                Title = "Hồ sơ xác minh đã duyệt",
+                Message = "Tài khoản chủ trọ của bạn đã được chứng thực danh tính chính chủ.",
+                Type = "Verification",
+                LinkUrl = "/landlord/verify",
+                IsRead = true,
+                CreatedAt = now.AddDays(-60)
+            },
+            new Notification
+            {
+                Id = Guid.NewGuid(),
+                UserId = ll1,
+                Title = "Lịch hẹn xem phòng mới",
+                Message = "Khách thuê Nguyễn Văn An đã đặt lịch xem phòng Studio View Sông.",
+                Type = "Appointment",
+                LinkUrl = "/landlord/appointments",
+                IsRead = false,
+                CreatedAt = now.AddDays(-1)
+            },
+            new Notification
+            {
+                Id = Guid.NewGuid(),
+                UserId = c1,
+                Title = "Lịch hẹn được xác nhận",
+                Message = "Chủ trọ Trần Minh Tuấn đã xác nhận lịch xem phòng vào 15:00 ngày mai.",
+                Type = "Appointment",
+                LinkUrl = "/tenant/appointments",
+                IsRead = false,
+                CreatedAt = now.AddHours(-18)
+            },
+            new Notification
+            {
+                Id = Guid.NewGuid(),
+                UserId = ll4,
+                Title = "Hồ sơ xác minh đang chờ xét duyệt",
+                Message = "Hồ sơ CCCD của bạn đã được gửi tới Ban quản trị và đang chờ phê duyệt.",
+                Type = "Verification",
+                LinkUrl = "/landlord/verify",
+                IsRead = false,
+                CreatedAt = now.AddDays(-2)
+            },
+            new Notification
+            {
+                Id = Guid.NewGuid(),
+                UserId = adminId,
+                Title = "Hồ sơ chủ trọ mới cần duyệt",
+                Message = "Chủ trọ Lê Thị Mai đã nộp hồ sơ CCCD cần xét duyệt.",
+                Type = "AdminAlert",
+                LinkUrl = "/admin/verify",
+                IsRead = false,
+                CreatedAt = now.AddDays(-2)
+            }
+        );
+
+        // ============================================================
+        // 13. LEASE CONTRACTS & TENANT REVIEWS (Reputation system)
+        // ============================================================
+        var lease1 = new LeaseContract
+        {
+            Id = Guid.NewGuid(),
+            LandlordId = ll1,
+            TenantId = c3,
+            RoomId = rooms[2].Id,
+            StartDate = now.AddMonths(-6),
+            EndDate = now.AddDays(-5),
+            MonthlyRent = 6800000,
+            Deposit = 6800000,
+            Status = "Completed",
+            CreatedAt = now.AddMonths(-6)
+        };
+
+        var lease2 = new LeaseContract
+        {
+            Id = Guid.NewGuid(),
+            LandlordId = ll2,
+            TenantId = c1,
+            RoomId = rooms[5].Id,
+            StartDate = now.AddMonths(-3),
+            EndDate = now.AddDays(-10),
+            MonthlyRent = 3800000,
+            Deposit = 3800000,
+            Status = "Completed",
+            CreatedAt = now.AddMonths(-3)
+        };
+
+        var lease3 = new LeaseContract
+        {
+            Id = Guid.NewGuid(),
+            LandlordId = ll3,
+            TenantId = c5,
+            RoomId = rooms[8].Id,
+            StartDate = now.AddMonths(-1),
+            EndDate = now.AddMonths(5),
+            MonthlyRent = 3200000,
+            Deposit = 3200000,
+            Status = "Active",
+            CreatedAt = now.AddMonths(-1)
+        };
+
+        db.LeaseContracts.AddRange(lease1, lease2, lease3);
+
+        db.TenantReviews.AddRange(
+            new TenantReview
+            {
+                Id = Guid.NewGuid(),
+                LandlordId = ll1,
+                TenantId = c3,
+                LeaseContractId = lease1.Id,
+                Rating = 5,
+                Punctuality = 5,
+                Cleanliness = 5,
+                Respectfulness = 5,
+                Comment = "Bạn Minh thanh toán tiền phòng rất đúng hạn, phòng ốc giữ gìn sạch sẽ ngăn nắp, giao tiếp lịch sự hòa đồng.",
+                CreatedAt = now.AddDays(-4)
+            },
+            new TenantReview
+            {
+                Id = Guid.NewGuid(),
+                LandlordId = ll2,
+                TenantId = c1,
+                LeaseContractId = lease2.Id,
+                Rating = 5,
+                Punctuality = 5,
+                Cleanliness = 4,
+                Respectfulness = 5,
+                Comment = "Em An sinh viên ngoan, không làm ồn, chấp hành tốt nội quy nhà trọ.",
+                CreatedAt = now.AddDays(-9)
+            }
         );
 
         await db.SaveChangesAsync();

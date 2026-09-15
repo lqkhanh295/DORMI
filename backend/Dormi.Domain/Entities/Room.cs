@@ -19,6 +19,10 @@ public class Room
     public string RoomType { get; set; } = string.Empty;
     public string Address { get; set; } = string.Empty;
 
+    public double? Latitude { get; set; }
+    public double? Longitude { get; set; }
+    public NetTopologySuite.Geometries.Point? Location { get; set; }
+
     public string? Virtual3DUrl { get; set; }
     public RoomStatus Status { get; set; } = RoomStatus.Available;
     public DateTime CreatedAt { get; set; } = DateTime.UtcNow;

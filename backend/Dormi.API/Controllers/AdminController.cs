@@ -3,6 +3,7 @@ using System.Linq;
 using System.Security.Claims;
 using System.Threading.Tasks;
 using Dormi.Application.DTOs;
+using Dormi.Domain.Entities;
 using Dormi.Domain.Enums;
 using Dormi.Infrastructure.Data;
 using Microsoft.AspNetCore.Authorization;
@@ -30,8 +31,13 @@ public class AdminController : ControllerBase
         var totalCustomers = await _db.Users.CountAsync(u => u.Role == UserRole.Customer);
         var totalLandlords = await _db.Users.CountAsync(u => u.Role == UserRole.Landlord);
         var totalRooms = await _db.Rooms.CountAsync();
-        var pendingVerifications = await _db.Users.CountAsync(u => u.Role == UserRole.Landlord && !u.IsVerified);
+        var pendingVerifications = await _db.VerificationRequests.CountAsync(r => r.Status == "Pending");
         var totalAppointments = await _db.ViewingAppointments.CountAsync();
+
+        // ponytail: Real platform revenue aggregated from completed PaymentTransactions
+        var realRevenue = await _db.PaymentTransactions
+            .Where(t => t.Status == "Completed")
+            .SumAsync(t => (decimal?)t.Amount) ?? 0m;
 
         var stats = new AdminStatsDto
         {
@@ -41,7 +47,7 @@ public class AdminController : ControllerBase
             TotalRooms = totalRooms,
             PendingVerifications = pendingVerifications,
             TotalAppointments = totalAppointments,
-            TotalRevenue = totalLandlords * 199000m // Simulated platform subscription revenue
+            TotalRevenue = realRevenue
         };
 
         return Ok(stats);
@@ -76,14 +82,23 @@ public class AdminController : ControllerBase
     [HttpGet("verifications")]
     public async Task<IActionResult> GetPendingVerifications()
     {
-        var verifications = await _db.Users
-            .Where(u => u.Role == UserRole.Landlord && !u.IsVerified)
-            .Select(u => new
+        var verifications = await _db.VerificationRequests
+            .Include(v => v.User)
+            .Where(v => v.Status == "Pending")
+            .OrderByDescending(v => v.SubmittedAt)
+            .Select(v => new
             {
-                LandlordId = u.Id,
-                FullName = u.FullName,
-                Email = u.Email,
-                PhoneNumber = u.PhoneNumber
+                RequestId = v.Id,
+                LandlordId = v.UserId,
+                FullName = v.User.FullName,
+                Email = v.User.Email,
+                PhoneNumber = v.User.PhoneNumber,
+                DocumentType = v.DocumentType,
+                DocumentNumber = v.DocumentNumber,
+                FrontImageUrl = v.FrontImageUrl,
+                BackImageUrl = v.BackImageUrl,
+                Status = v.Status,
+                SubmittedAt = v.SubmittedAt
             })
             .ToListAsync();
 
@@ -91,12 +106,38 @@ public class AdminController : ControllerBase
     }
 
     [HttpPatch("verifications/{landlordId}")]
-    public async Task<IActionResult> UpdateVerificationStatus(Guid landlordId, [FromBody] VerificationApprovalDto dto)
+    public async Task<IActionResult> UpdateVerificationStatus(Guid landlordId, [FromBody] ReviewVerificationDto dto)
     {
         var landlord = await _db.Users.FirstOrDefaultAsync(u => u.Id == landlordId && u.Role == UserRole.Landlord);
         if (landlord == null) return NotFound(new { message = "Không tìm thấy thông tin chủ trọ." });
 
+        var request = await _db.VerificationRequests
+            .Where(r => r.UserId == landlordId && r.Status == "Pending")
+            .OrderByDescending(r => r.SubmittedAt)
+            .FirstOrDefaultAsync();
+
         landlord.IsVerified = dto.Approved;
+
+        if (request != null)
+        {
+            request.Status = dto.Approved ? "Approved" : "Rejected";
+            request.RejectReason = dto.Approved ? null : (dto.RejectReason ?? "Giấy tờ chưa hợp lệ hoặc mờ");
+            request.ReviewedAt = DateTime.UtcNow;
+        }
+
+        _db.Notifications.Add(new Notification
+        {
+            Id = Guid.NewGuid(),
+            UserId = landlordId,
+            Title = dto.Approved ? "Xác minh danh tính thành công" : "Yêu cầu xác minh bị từ chối",
+            Message = dto.Approved
+                ? "Hồ sơ xác minh CCCD của bạn đã được phê duyệt. Bạn đã nhận huy hiệu Chủ trọ xác thực và có thể đăng tin phòng."
+                : $"Hồ sơ xác minh bị từ chối với lý do: {dto.RejectReason ?? "Thông tin không khớp hoặc ảnh không rõ"}. Vui lòng cập nhật lại.",
+            Type = "Verification",
+            LinkUrl = "/landlord/verify",
+            CreatedAt = DateTime.UtcNow
+        });
+
         await _db.SaveChangesAsync();
 
         return Ok(new { message = dto.Approved ? "Đã duyệt xác minh chủ trọ thành công." : "Đã từ chối xác minh chủ trọ." });
@@ -181,5 +222,44 @@ public class AdminController : ControllerBase
         await _db.SaveChangesAsync();
 
         return Ok(new { message = $"Đã cập nhật trạng thái báo cáo thành: {status}" });
+    }
+
+    [HttpGet("roommate-posts")]
+    public async Task<IActionResult> GetRoommatePostsForModeration()
+    {
+        var posts = await _db.RoommatePosts
+            .Include(r => r.Customer)
+            .OrderByDescending(r => r.CreatedAt)
+            .Select(r => new
+            {
+                r.Id,
+                r.Title,
+                r.Description,
+                r.Budget,
+                r.Location,
+                r.MoveInDate,
+                r.GenderPreference,
+                r.LifestyleTraits,
+                r.IsActive,
+                r.CreatedAt,
+                CustomerId = r.CustomerId,
+                CustomerName = r.Customer.FullName,
+                CustomerEmail = r.Customer.Email
+            })
+            .ToListAsync();
+
+        return Ok(posts);
+    }
+
+    [HttpPatch("roommate-posts/{id}/status")]
+    public async Task<IActionResult> UpdateRoommatePostStatus(Guid id, [FromQuery] bool isActive)
+    {
+        var post = await _db.RoommatePosts.FindAsync(id);
+        if (post == null) return NotFound(new { message = "Không tìm thấy bài đăng ở ghép." });
+
+        post.IsActive = isActive;
+        await _db.SaveChangesAsync();
+
+        return Ok(new { message = isActive ? "Đã hiển thị lại bài đăng." : "Đã ẩn bài đăng vi phạm." });
     }
 }

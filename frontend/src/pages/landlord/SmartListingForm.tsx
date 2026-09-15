@@ -39,12 +39,101 @@ export default function SmartListingForm() {
     }
   };
 
-  const simulateAI = () => {
+  interface QualityCheckResult {
+    score: number;
+    titleCheck: { pass: boolean; note: string };
+    priceAreaCheck: { pass: boolean; note: string };
+    addressCheck: { pass: boolean; note: string };
+    imageCheck: { pass: boolean; note: string };
+    recommendations: string[];
+  }
+
+  const [qualityResult, setQualityResult] = useState<QualityCheckResult | null>(null);
+
+  const evaluateListingQuality = () => {
     setAiAnalyzing(true);
-    setTimeout(() => {
-      setAiAnalyzing(false);
-      setStep(4);
-    }, 1200);
+    // ponytail: deterministic rule-based evaluation instead of fake AI setTimeout
+    const pNum = parseFloat(price);
+    const aNum = parseFloat(area);
+
+    let score = 0;
+    const recs: string[] = [];
+
+    // 1. Title evaluation (max 25 pts)
+    const titleLen = title.trim().length;
+    let titlePass = false;
+    let titleNote = '';
+    if (titleLen >= 15) {
+      score += 25;
+      titlePass = true;
+      titleNote = 'Tiêu đề đầy đủ, rõ ràng';
+    } else if (titleLen >= 8) {
+      score += 15;
+      titlePass = true;
+      titleNote = 'Tiêu đề tạm ổn nhưng nên thêm từ khóa (ví dụ: gác lửng, ban công)';
+      recs.push('Thêm đặc điểm nổi bật vào tiêu đề để tăng 25% lượt click');
+    } else {
+      score += 5;
+      titleNote = 'Tiêu đề quá ngắn (< 8 ký tự)';
+      recs.push('Mở rộng tiêu đề mô tả rõ loại phòng và khu vực');
+    }
+
+    // 2. Price & Area reasonableness (max 25 pts)
+    let priceAreaPass = false;
+    let priceAreaNote = '';
+    if (pNum >= 500000 && pNum <= 50000000 && aNum >= 9 && aNum <= 150) {
+      score += 25;
+      priceAreaPass = true;
+      priceAreaNote = 'Giá thuê và diện tích hợp lệ cho thị trường TP.HCM';
+    } else {
+      score += 10;
+      priceAreaNote = 'Giá hoặc diện tích nằm ngoài khoảng phổ biến';
+      recs.push('Kiểm tra lại giá thuê và diện tích phòng');
+    }
+
+    // 3. Address completeness (max 25 pts)
+    let addressPass = false;
+    let addressNote = '';
+    const addrLower = address.toLowerCase();
+    if (address.trim().length >= 10 && (addrLower.includes('quận') || addrLower.includes('q.') || addrLower.includes('phường') || addrLower.includes('đường') || addrLower.includes('tp'))) {
+      score += 25;
+      addressPass = true;
+      addressNote = 'Địa chỉ đầy đủ, hỗ trợ định vị bản đồ chính xác';
+    } else if (address.trim().length >= 5) {
+      score += 15;
+      addressPass = true;
+      addressNote = 'Địa chỉ có thể chưa đủ phường/quận';
+      recs.push('Bổ sung tên phường, quận để bản đồ PostGIS định vị chuẩn xác');
+    } else {
+      score += 5;
+      addressNote = 'Địa chỉ quá ngắn';
+      recs.push('Cung cấp địa chỉ số nhà, tên đường chi tiết');
+    }
+
+    // 4. Image presence & quality (max 25 pts)
+    let imagePass = false;
+    let imageNote = '';
+    if (imageUrl && imageUrl.startsWith('http')) {
+      score += 25;
+      imagePass = true;
+      imageNote = 'Đã có ảnh thực tế (Cloudinary CDN)';
+    } else {
+      score += 5;
+      imageNote = 'Chưa tải ảnh thực tế hoặc dùng ảnh mặc định';
+      recs.push('Tải lên ít nhất 1 ảnh phòng chụp thực tế để tăng uy tín');
+    }
+
+    setQualityResult({
+      score,
+      titleCheck: { pass: titlePass, note: titleNote },
+      priceAreaCheck: { pass: priceAreaPass, note: priceAreaNote },
+      addressCheck: { pass: addressPass, note: addressNote },
+      imageCheck: { pass: imagePass, note: imageNote },
+      recommendations: recs
+    });
+
+    setAiAnalyzing(false);
+    setStep(4);
   };
 
   const handleFinalSubmit = async () => {
@@ -146,38 +235,102 @@ export default function SmartListingForm() {
         )}
 
         {step === 3 && (
-          <div className="space-y-6 text-center py-12">
-            <h2 className="text-h3 font-bold text-[#0F172A] mb-2">Bước 3: Kiểm tra chất lượng tin đăng</h2>
-            <p className="text-body text-[#64748B] mb-8 max-w-md mx-auto">
-              Hệ thống đối soát chất lượng ảnh và xác thực nội dung tin đăng để đảm bảo tính thực tế.
+          <div className="space-y-6 text-center py-8">
+            <h2 className="text-h3 font-bold text-[#0F172A] mb-2">Bước 3: Đánh giá chất lượng tin đăng</h2>
+            <p className="text-body text-[#64748B] mb-6 max-w-md mx-auto">
+              Hệ thống kiểm tra tính hoàn thiện của tiêu đề, giá cả, địa chỉ và chất lượng ảnh trước khi đưa vào hàng đợi kiểm duyệt.
             </p>
             {aiAnalyzing ? (
               <div className="flex flex-col items-center gap-4">
                 <div className="w-8 h-8 border-4 border-[#00153D] border-t-transparent rounded-full animate-spin"></div>
-                <p className="text-[#00153D] font-semibold text-body">Đang đối soát dữ liệu...</p>
+                <p className="text-[#00153D] font-semibold text-body">Đang phân tích dữ liệu tin đăng...</p>
               </div>
             ) : (
-              <Button size="lg" onClick={simulateAI}>Bắt đầu đối soát tin</Button>
+              <Button size="lg" onClick={evaluateListingQuality}>Bắt đầu chấm điểm chất lượng</Button>
             )}
-            <div className="pt-12 flex justify-start">
+            <div className="pt-8 flex justify-start">
               <Button variant="ghost" onClick={() => setStep(2)} disabled={aiAnalyzing}>Quay lại</Button>
             </div>
           </div>
         )}
 
-        {step === 4 && (
+        {step === 4 && qualityResult && (
           <div className="space-y-6">
-            <div className="flex items-start gap-4 p-4 bg-[#F0FDF4] border border-[#DCFCE7] rounded-[12px]">
-              <div className="text-[#16803C] text-xl font-bold">✓</div>
+            <div className="flex items-center justify-between p-4 bg-[#F8FAFC] border border-[#E2E8F0] rounded-[14px]">
               <div>
-                <h3 className="font-bold text-[#16803C] text-body">Tin đăng đạt yêu cầu xác thực</h3>
-                <p className="text-[#16803C] text-caption mt-0.5">Hình ảnh Cloudinary đã sẵn sàng. Tiêu đề và từ khóa đã được tối ưu.</p>
+                <span className="text-caption font-semibold text-[#64748B]">Điểm chất lượng tin đăng</span>
+                <div className="text-2xl font-bold text-[#0F172A] mt-0.5">
+                  {qualityResult.score} <span className="text-sm font-normal text-[#64748B]">/ 100</span>
+                </div>
+              </div>
+              <div className={`px-3 py-1.5 rounded-full text-xs font-bold ${
+                qualityResult.score >= 80 ? 'bg-[#DCFCE7] text-[#16803C]' :
+                qualityResult.score >= 50 ? 'bg-[#FEF9C3] text-[#A16207]' :
+                'bg-[#FEE2E2] text-[#B91C1C]'
+              }`}>
+                {qualityResult.score >= 80 ? '✓ Đạt chuẩn hiển thị cao' : qualityResult.score >= 50 ? '⚠️ Cần hoàn thiện thêm' : '❌ Chưa đủ điều kiện'}
               </div>
             </div>
 
-            <div className="pt-8 flex justify-between">
+            <div className="space-y-3">
+              <h3 className="text-sm font-bold text-[#0F172A]">Chi tiết tiêu chí kiểm tra:</h3>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-3 text-sm">
+                <div className="p-3 rounded-lg border bg-white flex items-start gap-2.5">
+                  <span className={qualityResult.titleCheck.pass ? "text-[#16803C] font-bold" : "text-[#E11D48] font-bold"}>
+                    {qualityResult.titleCheck.pass ? "✓" : "✗"}
+                  </span>
+                  <div>
+                    <span className="font-semibold text-gray-800">Tiêu đề:</span>
+                    <p className="text-xs text-gray-600 mt-0.5">{qualityResult.titleCheck.note}</p>
+                  </div>
+                </div>
+
+                <div className="p-3 rounded-lg border bg-white flex items-start gap-2.5">
+                  <span className={qualityResult.priceAreaCheck.pass ? "text-[#16803C] font-bold" : "text-[#E11D48] font-bold"}>
+                    {qualityResult.priceAreaCheck.pass ? "✓" : "✗"}
+                  </span>
+                  <div>
+                    <span className="font-semibold text-gray-800">Mức giá & Diện tích:</span>
+                    <p className="text-xs text-gray-600 mt-0.5">{qualityResult.priceAreaCheck.note}</p>
+                  </div>
+                </div>
+
+                <div className="p-3 rounded-lg border bg-white flex items-start gap-2.5">
+                  <span className={qualityResult.addressCheck.pass ? "text-[#16803C] font-bold" : "text-[#E11D48] font-bold"}>
+                    {qualityResult.addressCheck.pass ? "✓" : "✗"}
+                  </span>
+                  <div>
+                    <span className="font-semibold text-gray-800">Địa chỉ & PostGIS:</span>
+                    <p className="text-xs text-gray-600 mt-0.5">{qualityResult.addressCheck.note}</p>
+                  </div>
+                </div>
+
+                <div className="p-3 rounded-lg border bg-white flex items-start gap-2.5">
+                  <span className={qualityResult.imageCheck.pass ? "text-[#16803C] font-bold" : "text-[#E11D48] font-bold"}>
+                    {qualityResult.imageCheck.pass ? "✓" : "✗"}
+                  </span>
+                  <div>
+                    <span className="font-semibold text-gray-800">Hình ảnh phòng:</span>
+                    <p className="text-xs text-gray-600 mt-0.5">{qualityResult.imageCheck.note}</p>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            {qualityResult.recommendations.length > 0 && (
+              <div className="p-4 bg-[#FFFBEB] border border-[#FDE68A] rounded-[12px]">
+                <h4 className="text-xs font-bold text-[#B45309] uppercase tracking-wider mb-2">Khuyến nghị cải thiện tin:</h4>
+                <ul className="text-xs text-[#92400E] space-y-1 list-disc list-inside">
+                  {qualityResult.recommendations.map((rec, idx) => (
+                    <li key={idx}>{rec}</li>
+                  ))}
+                </ul>
+              </div>
+            )}
+
+            <div className="pt-4 flex justify-between">
               <Button variant="ghost" onClick={() => setStep(3)}>Quay lại</Button>
-              <Button onClick={handleFinalSubmit}>Đăng tin ngay (Gửi API)</Button>
+              <Button onClick={handleFinalSubmit}>Gửi tin đăng (Kiểm duyệt hệ thống)</Button>
             </div>
           </div>
         )}

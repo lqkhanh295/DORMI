@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { Link, useNavigate, useLocation } from 'react-router-dom';
 import { Menu, X, Plus, Users, ArrowLeft, LogIn, LogOut } from 'lucide-react';
 import { useStore } from '../../store/useStore';
+import { NotificationBell } from '../common/NotificationBell';
 
 export function GlobalNav() {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
@@ -69,6 +70,7 @@ export function GlobalNav() {
             </Link>
           ) : (
             <div className="flex items-center gap-3 border-l border-[#E2E8F0] pl-4">
+              <NotificationBell />
               <Link 
                 to={currentUser.role === 'Landlord' ? '/landlord' : currentUser.role === 'Admin' ? '/admin' : '/tenant'} 
                 className="flex items-center gap-2 touch-target"

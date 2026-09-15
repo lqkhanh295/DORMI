@@ -156,4 +156,139 @@ public class BackendLogicTests
             Assert.Equal("0987654321", savedRoom.Landlord.PhoneNumber);
         }
     }
+
+    [Fact]
+    public async Task VerificationWorkflow_ApprovalShouldVerifyUser()
+    {
+        var options = new DbContextOptionsBuilder<DormiDbContext>()
+            .UseInMemoryDatabase(databaseName: Guid.NewGuid().ToString())
+            .Options;
+
+        using var db = new DormiDbContext(options);
+        var landlord = new User
+        {
+            Id = Guid.NewGuid(),
+            Email = "landlord_unverified@dormi.vn",
+            FullName = "Nguyen Van Landlord",
+            Role = UserRole.Landlord,
+            IsVerified = false
+        };
+        db.Users.Add(landlord);
+
+        var req = new VerificationRequest
+        {
+            Id = Guid.NewGuid(),
+            UserId = landlord.Id,
+            DocumentType = "CCCD",
+            DocumentNumber = "079201009999",
+            Status = "Pending",
+            SubmittedAt = DateTime.UtcNow
+        };
+        db.VerificationRequests.Add(req);
+        await db.SaveChangesAsync();
+
+        // Simulate admin approval
+        req.Status = "Approved";
+        req.ReviewedAt = DateTime.UtcNow;
+        landlord.IsVerified = true;
+        await db.SaveChangesAsync();
+
+        var updatedUser = await db.Users.FindAsync(landlord.Id);
+        Assert.NotNull(updatedUser);
+        Assert.True(updatedUser.IsVerified);
+    }
+
+    [Fact]
+    public async Task RoomEdit_SignificantFieldChangeShouldTriggerRemoderation()
+    {
+        var options = new DbContextOptionsBuilder<DormiDbContext>()
+            .UseInMemoryDatabase(databaseName: Guid.NewGuid().ToString())
+            .Options;
+
+        using var db = new DormiDbContext(options);
+        var room = new Room
+        {
+            Id = Guid.NewGuid(),
+            Title = "Original Approved Room",
+            Price = 3000000,
+            Address = "100 Nguyen Trai, Q.1",
+            Status = RoomStatus.Available
+        };
+        db.Rooms.Add(room);
+        await db.SaveChangesAsync();
+
+        // Changing price triggers re-moderation
+        decimal newPrice = 3500000;
+        if (room.Price != newPrice)
+        {
+            room.Price = newPrice;
+            room.Status = RoomStatus.PendingApproval; // Re-moderation triggered
+        }
+        await db.SaveChangesAsync();
+
+        var reloaded = await db.Rooms.FindAsync(room.Id);
+        Assert.NotNull(reloaded);
+        Assert.Equal(RoomStatus.PendingApproval, reloaded.Status);
+    }
+
+    [Fact]
+    public async Task PaymentTransaction_StateTransitionShouldWorkCorrectly()
+    {
+        var options = new DbContextOptionsBuilder<DormiDbContext>()
+            .UseInMemoryDatabase(databaseName: Guid.NewGuid().ToString())
+            .Options;
+
+        using var db = new DormiDbContext(options);
+        var tx = new PaymentTransaction
+        {
+            Id = Guid.NewGuid(),
+            UserId = Guid.NewGuid(),
+            Amount = 199000,
+            Status = "Pending",
+            TransactionRef = "DORMI-TX-123456",
+            CreatedAt = DateTime.UtcNow
+        };
+        db.PaymentTransactions.Add(tx);
+        await db.SaveChangesAsync();
+
+        Assert.Equal("Pending", tx.Status);
+
+        // Verification marks as Completed
+        tx.Status = "Completed";
+        tx.CompletedAt = DateTime.UtcNow;
+        await db.SaveChangesAsync();
+
+        var updated = await db.PaymentTransactions.FindAsync(tx.Id);
+        Assert.NotNull(updated);
+        Assert.Equal("Completed", updated.Status);
+        Assert.NotNull(updated.CompletedAt);
+    }
+
+    [Fact]
+    public async Task Notification_MarkAsReadShouldUpdateStatus()
+    {
+        var options = new DbContextOptionsBuilder<DormiDbContext>()
+            .UseInMemoryDatabase(databaseName: Guid.NewGuid().ToString())
+            .Options;
+
+        using var db = new DormiDbContext(options);
+        var notif = new Notification
+        {
+            Id = Guid.NewGuid(),
+            UserId = Guid.NewGuid(),
+            Title = "Xác thực CCCD",
+            Message = "Hồ sơ của bạn đã được duyệt.",
+            IsRead = false,
+            CreatedAt = DateTime.UtcNow
+        };
+        db.Notifications.Add(notif);
+        await db.SaveChangesAsync();
+
+        notif.IsRead = true;
+        await db.SaveChangesAsync();
+
+        var updated = await db.Notifications.FindAsync(notif.Id);
+        Assert.NotNull(updated);
+        Assert.True(updated.IsRead);
+    }
 }

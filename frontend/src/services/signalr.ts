@@ -35,7 +35,13 @@ class SignalRService {
         };
 
         const currentMessages = useStore.getState().messages;
-        const exists = currentMessages.some(m => m.id === msg.id);
+        const exists = currentMessages.some(m => 
+          m.id === msg.id || 
+          (m.senderId.toLowerCase() === msg.senderId.toLowerCase() &&
+           m.receiverId.toLowerCase() === msg.receiverId.toLowerCase() &&
+           m.text === msg.text &&
+           Math.abs(new Date(m.timestamp).getTime() - new Date(msg.timestamp).getTime()) < 5000)
+        );
         if (!exists) {
           useStore.setState({ messages: [...currentMessages, msg] });
         }
