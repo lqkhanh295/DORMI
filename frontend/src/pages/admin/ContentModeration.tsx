@@ -25,13 +25,37 @@ interface ModerationRoomItem {
   images?: { id: string; imageUrl: string; isPrimary: boolean }[];
 }
 
+interface ModerationRoommatePost {
+  id: string;
+  title: string;
+  description: string;
+  budget: number;
+  location: string;
+  moveInDate: string;
+  genderPreference: string;
+  lifestyleTraits: string;
+  isActive: boolean;
+  createdAt: string;
+  customerId: string;
+  customerName: string;
+  customerEmail: string;
+}
+
 export default function ContentModeration() {
+  const [mainTab, setMainTab] = useState<'rooms' | 'roommates'>('rooms');
+
+  // Rooms state
   const [rooms, setRooms] = useState<ModerationRoomItem[]>([]);
   const [loading, setLoading] = useState(true);
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const [filterStatus, setFilterStatus] = useState<'all' | number>('all');
   const [previewAvatar, setPreviewAvatar] = useState<string | null>(null);
   const [previewImage, setPreviewImage] = useState<string | null>(null);
+
+  // Roommate posts state
+  const [roommatePosts, setRoommatePosts] = useState<ModerationRoommatePost[]>([]);
+  const [selectedRoommateId, setSelectedRoommateId] = useState<string | null>(null);
+  const [loadingRoommates, setLoadingRoommates] = useState(false);
 
   const loadRooms = async () => {
     try {
@@ -48,8 +72,24 @@ export default function ContentModeration() {
     }
   };
 
+  const loadRoommatePosts = async () => {
+    try {
+      setLoadingRoommates(true);
+      const res = await adminApi.getRoommatePosts();
+      if (res && Array.isArray(res)) {
+        setRoommatePosts(res);
+        if (res.length > 0 && !selectedRoommateId) setSelectedRoommateId(res[0].id);
+      }
+    } catch (err) {
+      console.warn('Failed to load roommate posts for moderation:', err);
+    } finally {
+      setLoadingRoommates(false);
+    }
+  };
+
   useEffect(() => {
     loadRooms();
+    loadRoommatePosts();
   }, []);
 
   const filteredRooms = filterStatus === 'all'
@@ -57,6 +97,7 @@ export default function ContentModeration() {
     : rooms.filter(r => r.status === filterStatus);
 
   const selectedRoom = rooms.find(r => r.id === selectedId);
+  const selectedRoommate = roommatePosts.find(r => r.id === selectedRoommateId);
 
   const handleAction = async (roomId: string, status: number) => {
     try {
@@ -65,6 +106,16 @@ export default function ContentModeration() {
       loadRooms();
     } catch {
       toast.error('Thao tác không thành công.');
+    }
+  };
+
+  const handleToggleRoommate = async (id: string, nextActive: boolean) => {
+    try {
+      await adminApi.updateRoommatePostStatus(id, nextActive);
+      toast.success(nextActive ? 'Đã duyệt hiển thị bài đăng!' : 'Đã ẩn bài đăng vi phạm!');
+      loadRoommatePosts();
+    } catch {
+      toast.error('Thao tác cập nhật bài đăng thất bại.');
     }
   };
 
@@ -94,11 +145,26 @@ export default function ContentModeration() {
     <div className="flex flex-col h-[calc(100vh-8rem)] bg-[#F5F7FA]">
       <div className="flex items-center justify-between mb-4">
         <div>
-          <h1 className="text-h2 font-bold text-[#0F172A]">Kiểm duyệt nội dung phòng trọ (Admin Portal)</h1>
-          <p className="text-body text-[#64748B]">Xem xét và phê duyệt đầy đủ thông tin tin đăng phòng trọ và chân dung chủ nhà.</p>
+          <h1 className="text-h2 font-bold text-[#0F172A]">Kiểm duyệt nội dung (Admin Portal)</h1>
+          <p className="text-body text-[#64748B]">Xem xét và phê duyệt tin đăng phòng trọ và tin tìm người ở ghép trên nền tảng.</p>
+        </div>
+        <div className="flex bg-[#E2E8F0] p-1.5 rounded-[14px]">
+          <button
+            onClick={() => setMainTab('rooms')}
+            className={`px-4 py-2 rounded-[10px] text-body font-semibold transition-all ${mainTab === 'rooms' ? 'bg-[#00153D] text-white shadow-sm' : 'text-[#64748B] hover:text-[#0F172A]'}`}
+          >
+            Tin phòng trọ ({rooms.length})
+          </button>
+          <button
+            onClick={() => setMainTab('roommates')}
+            className={`px-4 py-2 rounded-[10px] text-body font-semibold transition-all ${mainTab === 'roommates' ? 'bg-[#00153D] text-white shadow-sm' : 'text-[#64748B] hover:text-[#0F172A]'}`}
+          >
+            Tin tìm người ở ghép ({roommatePosts.length})
+          </button>
         </div>
       </div>
 
+      {mainTab === 'rooms' ? (
       <div className="flex gap-6 flex-1 min-h-0">
         <div className="w-1/3 flex flex-col bg-white rounded-[18px] shadow-clay-soft overflow-hidden border border-[#E2E8F0]">
           <div className="p-4 border-b border-[#E2E8F0] bg-[#F5F7FA]">
@@ -346,6 +412,147 @@ export default function ContentModeration() {
           )}
         </div>
       </div>
+      ) : (
+        /* Roommate Posts Moderation */
+        <div className="flex gap-6 flex-1 min-h-0">
+          <div className="w-1/3 flex flex-col bg-white rounded-[18px] shadow-clay-soft overflow-hidden border border-[#E2E8F0]">
+            <div className="p-4 border-b border-[#E2E8F0] bg-[#F5F7FA]">
+              <div className="flex justify-between items-center">
+                <h3 className="font-bold text-h3 text-[#0F172A]">Tin tìm người ở ghép</h3>
+                <span className="bg-[#EEF2F6] text-[#00153D] border border-[#E2E8F0] px-2.5 py-0.5 rounded-full text-caption font-semibold">
+                  {roommatePosts.length} bài đăng
+                </span>
+              </div>
+            </div>
+            <div className="flex-1 overflow-y-auto p-3 space-y-3">
+              {loadingRoommates && <div className="p-8 text-center text-[#64748B]">Đang tải danh sách bài đăng...</div>}
+              {!loadingRoommates && roommatePosts.map(post => (
+                <div
+                  key={post.id}
+                  onClick={() => setSelectedRoommateId(post.id)}
+                  className={`p-4 rounded-[14px] cursor-pointer transition-all ${selectedRoommateId === post.id ? 'bg-white shadow-clay-primary border-2 border-[#00153D]' : 'bg-[#F5F7FA] border border-[#E2E8F0] hover:bg-white'}`}
+                >
+                  <div className="flex justify-between items-start mb-2">
+                    <span className={`text-caption font-bold px-2.5 py-0.5 rounded-full inline-flex items-center gap-1 ${post.isActive ? 'bg-[#F0FDF4] text-[#16803C] border border-[#DCFCE7]' : 'bg-[#FEF2F2] text-[#C62828] border border-[#FECACA]'}`}>
+                      {post.isActive ? <CheckCircle2 className="w-3.5 h-3.5" /> : <XCircle className="w-3.5 h-3.5" />}
+                      {post.isActive ? 'Đang hiển thị' : 'Đã ẩn / Vi phạm'}
+                    </span>
+                    <span className="text-caption font-bold text-[#00153D]">
+                      {Number(post.budget).toLocaleString('vi-VN')} đ/th
+                    </span>
+                  </div>
+                  <p className="font-semibold text-[#0F172A] text-body line-clamp-1">{post.title}</p>
+                  <div className="flex items-center justify-between text-caption text-[#64748B] mt-2 pt-2 border-t border-[#E2E8F0]/60">
+                    <span>{post.customerName}</span>
+                    <span>{post.location}</span>
+                  </div>
+                </div>
+              ))}
+              {!loadingRoommates && roommatePosts.length === 0 && (
+                <div className="p-8 text-center text-[#64748B]">Không có bài đăng ở ghép nào.</div>
+              )}
+            </div>
+          </div>
+
+          <div className="flex-1 flex flex-col bg-white rounded-[18px] shadow-clay-soft overflow-hidden border border-[#E2E8F0]">
+            {selectedRoommate ? (
+              <>
+                <div className="p-6 border-b border-[#E2E8F0] bg-[#F5F7FA] flex justify-between items-start">
+                  <div>
+                    <div className="flex items-center gap-2 mb-2">
+                      <span className={`text-caption font-bold px-2.5 py-0.5 rounded-full inline-flex items-center gap-1 ${selectedRoommate.isActive ? 'bg-[#F0FDF4] text-[#16803C] border border-[#DCFCE7]' : 'bg-[#FEF2F2] text-[#C62828] border border-[#FECACA]'}`}>
+                        {selectedRoommate.isActive ? <CheckCircle2 className="w-3.5 h-3.5" /> : <XCircle className="w-3.5 h-3.5" />}
+                        {selectedRoommate.isActive ? 'Đang công khai' : 'Đã ẩn bài đăng'}
+                      </span>
+                    </div>
+                    <h2 className="text-h3 font-bold text-[#0F172A]">{selectedRoommate.title}</h2>
+                    <p className="text-caption text-[#64748B] mt-1">Khu vực: {selectedRoommate.location} · Ngân sách: <strong className="text-[#00153D]">{Number(selectedRoommate.budget).toLocaleString('vi-VN')} đ/tháng</strong></p>
+                  </div>
+                </div>
+
+                <div className="flex-1 overflow-y-auto p-6 space-y-6">
+                  {/* Người đăng */}
+                  <Card className="p-4 bg-[#F5F7FA] shadow-clay-soft rounded-[12px] border border-[#E2E8F0]">
+                    <h4 className="font-semibold text-caption text-[#64748B] uppercase mb-3">Thông tin người đăng</h4>
+                    <div className="flex items-center gap-4">
+                      <div className="w-12 h-12 rounded-full bg-[#00153D] text-white flex items-center justify-center font-bold text-lg">
+                        {selectedRoommate.customerName?.charAt(0) || 'U'}
+                      </div>
+                      <div className="space-y-1">
+                        <div className="font-bold text-[#0F172A] text-body">{selectedRoommate.customerName}</div>
+                        <div className="text-caption text-[#64748B] flex items-center gap-1">
+                          <Mail className="w-3.5 h-3.5" /> {selectedRoommate.customerEmail}
+                        </div>
+                      </div>
+                    </div>
+                  </Card>
+
+                  {/* Chi tiết yêu cầu */}
+                  <div className="grid grid-cols-2 gap-4">
+                    <Card className="p-4 bg-white shadow-clay-inset rounded-[12px] border border-[#E2E8F0]">
+                      <span className="text-caption font-semibold text-[#64748B] block mb-1">Giới tính mong muốn:</span>
+                      <span className="font-bold text-[#0F172A] text-body">{selectedRoommate.genderPreference || 'Không yêu cầu'}</span>
+                    </Card>
+                    <Card className="p-4 bg-white shadow-clay-inset rounded-[12px] border border-[#E2E8F0]">
+                      <span className="text-caption font-semibold text-[#64748B] block mb-1">Ngày dự kiến chuyển vào:</span>
+                      <span className="font-bold text-[#0F172A] text-body">
+                        {new Date(selectedRoommate.moveInDate).toLocaleDateString('vi-VN')}
+                      </span>
+                    </Card>
+                  </div>
+
+                  {/* Đặc điểm lối sống */}
+                  {selectedRoommate.lifestyleTraits && (
+                    <div>
+                      <h4 className="font-semibold text-caption text-[#64748B] uppercase mb-2">Đặc điểm lối sống / Sở thích</h4>
+                      <div className="flex flex-wrap gap-2">
+                        {selectedRoommate.lifestyleTraits.split(',').map((trait, i) => (
+                          <span key={i} className="px-3 py-1 bg-[#EEF2F6] text-[#00153D] font-medium text-caption rounded-full border border-[#CBD5E1]">
+                            {trait.trim()}
+                          </span>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Nội dung bài viết */}
+                  <div>
+                    <h4 className="font-semibold text-caption text-[#64748B] uppercase mb-2">Mô tả bài đăng</h4>
+                    <Card className="p-4 bg-white shadow-clay-inset rounded-[12px] border border-[#E2E8F0]">
+                      <p className="text-body text-[#334155] whitespace-pre-line leading-relaxed">{selectedRoommate.description}</p>
+                    </Card>
+                  </div>
+                </div>
+
+                <div className="p-6 border-t border-[#E2E8F0] bg-[#F5F7FA] flex items-center justify-between">
+                  <span className="text-caption text-[#64748B] font-semibold">Tác vụ kiểm duyệt:</span>
+                  {selectedRoommate.isActive ? (
+                    <Button
+                      variant="secondary"
+                      className="bg-[#FEF2F2] text-[#C62828] border border-[#FECACA] hover:bg-[#FEE2E2] inline-flex items-center gap-1.5"
+                      onClick={() => handleToggleRoommate(selectedRoommate.id, false)}
+                    >
+                      <XCircle className="w-4 h-4" /> Ẩn bài đăng (Vi phạm quy chuẩn)
+                    </Button>
+                  ) : (
+                    <Button
+                      variant="primary"
+                      className="btn-clay-primary inline-flex items-center gap-1.5"
+                      onClick={() => handleToggleRoommate(selectedRoommate.id, true)}
+                    >
+                      <CheckCircle2 className="w-4 h-4" /> Bỏ ẩn & Phê duyệt hiển thị
+                    </Button>
+                  )}
+                </div>
+              </>
+            ) : (
+              <div className="flex-1 flex flex-col items-center justify-center text-[#64748B]">
+                <p className="text-body font-semibold">Chọn một bài đăng ở ghép từ danh sách để kiểm duyệt.</p>
+              </div>
+            )}
+          </div>
+        </div>
+      )}
 
       {/* Avatar Preview Modal Overlay */}
       {previewAvatar && (

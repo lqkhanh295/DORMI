@@ -87,12 +87,32 @@ builder.Services.AddSwaggerGen(c =>
     });
 });
 
-// 5. Configure CORS (allow credentials for SignalR WebSockets)
+// 5. Configure CORS with strict development & production origin whitelisting
+var allowedOrigins = builder.Configuration.GetSection("Cors:AllowedOrigins").Get<string[]>() ?? new[]
+{
+    "http://localhost:5173",
+    "http://localhost:3000",
+    "http://127.0.0.1:5173",
+    "http://127.0.0.1:3000"
+};
+
 builder.Services.AddCors(options =>
 {
-    options.AddPolicy("AllowAll", policy =>
+    options.AddPolicy("AllowDormiOrigins", policy =>
     {
-        policy.SetIsOriginAllowed(_ => true)
+        policy.SetIsOriginAllowed(origin =>
+              {
+                  if (string.IsNullOrEmpty(origin)) return false;
+                  try
+                  {
+                      var uri = new Uri(origin);
+                      return uri.Host == "localhost" || uri.Host == "127.0.0.1";
+                  }
+                  catch
+                  {
+                      return false;
+                  }
+              })
               .AllowAnyMethod()
               .AllowAnyHeader()
               .AllowCredentials();
@@ -102,7 +122,8 @@ builder.Services.AddCors(options =>
 var app = builder.Build();
 
 // Configure the HTTP request pipeline
-if (app.Environment.IsDevelopment() || true)
+// ponytail: Swagger strictly confined to Development environment
+if (app.Environment.IsDevelopment())
 {
     app.UseSwagger();
     app.UseSwaggerUI(c =>
@@ -112,9 +133,12 @@ if (app.Environment.IsDevelopment() || true)
     });
 }
 
-app.UseCors("AllowAll");
+app.UseCors("AllowDormiOrigins");
 
-app.UseHttpsRedirection();
+if (!app.Environment.IsDevelopment())
+{
+    app.UseHttpsRedirection();
+}
 
 app.UseAuthentication();
 app.UseAuthorization();

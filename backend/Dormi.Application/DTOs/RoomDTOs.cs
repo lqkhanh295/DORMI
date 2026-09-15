@@ -57,6 +57,7 @@ public class RoomResponseDto
     public string Address { get; set; } = string.Empty;
     public double? Latitude { get; set; }
     public double? Longitude { get; set; }
+    public double? DistanceKm { get; set; }
     public string? Virtual3DUrl { get; set; }
     public RoomStatus Status { get; set; }
     public bool IsVerifiedLandlord { get; set; }
@@ -67,9 +68,13 @@ public class RoomResponseDto
 public class RoomQueryFilterDto
 {
     public string? Query { get; set; }
+    public string? District { get; set; }
     public string? RoomType { get; set; }
     public decimal? MinPrice { get; set; }
     public decimal? MaxPrice { get; set; }
+    public double? Latitude { get; set; }
+    public double? Longitude { get; set; }
+    public double? RadiusKm { get; set; }
     public RoomStatus? Status { get; set; }
     public int Page { get; set; } = 1;
     public int PageSize { get; set; } = 10;

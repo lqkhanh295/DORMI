@@ -4,12 +4,12 @@ import { landlordApi } from '../../services/api';
 
 export default function LandlordDashboard() {
   const [analytics, setAnalytics] = useState({
-    totalListings: 4,
-    activeListings: 4,
-    totalAppointments: 12,
-    pendingAppointments: 2,
-    totalViews: 1240,
-    conversionRate: 8.5
+    totalListings: 0,
+    activeListings: 0,
+    totalAppointments: 0,
+    pendingAppointments: 0,
+    totalViews: 0,
+    conversionRate: 0
   });
 
   const [loading, setLoading] = useState(true);
@@ -21,12 +21,12 @@ export default function LandlordDashboard() {
         if (!isMounted) return;
         if (res) {
           setAnalytics({
-            totalListings: res.totalListings || 4,
-            activeListings: res.activeListings || 4,
-            totalAppointments: res.totalAppointments || 12,
-            pendingAppointments: res.pendingAppointments || 2,
-            totalViews: res.totalViews || 1240,
-            conversionRate: res.conversionRate || 8.5
+            totalListings: res.totalListings ?? 0,
+            activeListings: res.activeListings ?? 0,
+            totalAppointments: res.totalAppointments ?? 0,
+            pendingAppointments: res.pendingAppointments ?? 0,
+            totalViews: res.totalViews ?? 0,
+            conversionRate: res.conversionRate ?? 0
           });
         }
       })

@@ -106,19 +106,21 @@ export default function TenantChatCenter() {
     });
   }
 
-  // Liked Roommates
-  likedRoommates.forEach(r => {
-    const rId = r.customerId || `r${r.id}`;
-    if (!contactsMap.has(rId)) {
-      contactsMap.set(rId, {
-        id: rId,
-        name: r.name,
-        role: 'Roommate',
-        online: false,
-        avatar: r.image
-      });
-    }
-  });
+  // Liked Roommates (Real DB profiles only)
+  (likedRoommates || [])
+    .filter(r => r && r.customerId && !['Alex', 'Sarah', 'Minh'].includes(r.name))
+    .forEach(r => {
+      const rId = r.customerId!;
+      if (!contactsMap.has(rId)) {
+        contactsMap.set(rId, {
+          id: rId,
+          name: r.name,
+          role: 'Roommate',
+          online: false,
+          avatar: r.image
+        });
+      }
+    });
 
   const contacts = Array.from(contactsMap.values());
   const initialContactId = targetUserId || contacts[0]?.id;

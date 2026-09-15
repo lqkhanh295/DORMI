@@ -21,7 +21,7 @@ export default function RoomDetail() {
   const [selectedTime, setSelectedTime] = useState('');
   const [isSaved, setIsSaved] = useState(false);
 
-  const MOCK_PHOTOS = [
+  const SAMPLE_PHOTOS = [
     "https://images.unsplash.com/photo-1522708323590-d24dbb6b0267?auto=format&fit=crop&w=1200&q=80",
     "https://images.unsplash.com/photo-1502672260266-1c1de2d96674?auto=format&fit=crop&w=1200&q=80",
     "https://images.unsplash.com/photo-1560448204-e02f11c3d0e2?auto=format&fit=crop&w=1200&q=80",
@@ -37,26 +37,43 @@ export default function RoomDetail() {
           }
         })
         .catch(() => {});
-    }
-  }, [id]);
 
-  const photos = roomData?.images && roomData.images.length > 0 
-    ? roomData.images.map(img => img.imageUrl) 
-    : MOCK_PHOTOS;
+      if (currentUser) {
+        favoritesApi.getFavorites()
+          .then(favs => {
+            if (Array.isArray(favs)) {
+              setIsSaved(favs.some((f: any) => f.id === id));
+            }
+          })
+          .catch(() => {});
+      }
+    }
+  }, [id, currentUser]);
+
+  const hasRealPhotos = Boolean(roomData?.images && roomData.images.length > 0);
+  const photos = hasRealPhotos
+    ? roomData!.images.map(img => img.imageUrl) 
+    : SAMPLE_PHOTOS;
 
   const handleFavorite = async () => {
+    if (!currentUser) {
+      toast.error('Vui lòng đăng nhập để lưu phòng vào danh sách yêu thích!');
+      return;
+    }
+    if (!id) return;
     const newState = !isSaved;
     setIsSaved(newState);
     try {
       if (newState) {
-        await favoritesApi.addFavorite(id || 'l1');
+        await favoritesApi.addFavorite(id);
         toast.success('Đã lưu phòng vào danh sách yêu thích!');
       } else {
-        await favoritesApi.removeFavorite(id || 'l1');
+        await favoritesApi.removeFavorite(id);
         toast('Đã bỏ lưu phòng.');
       }
-    } catch {
-      toast.success(newState ? 'Đã lưu phòng!' : 'Đã bỏ lưu phòng.');
+    } catch (err: any) {
+      setIsSaved(!newState);
+      toast.error(err?.message || 'Không thể cập nhật danh sách yêu thích.');
     }
   };
 
@@ -87,10 +104,11 @@ export default function RoomDetail() {
       toast.error('Vui lòng chọn ngày và giờ xem phòng!');
       return;
     }
+    if (!id) return;
 
     try {
       await appointmentsApi.createAppointment({
-        roomId: id || 'l1',
+        roomId: id,
         appointmentDate: `${selectedDate}T${selectedTime}:00Z`,
         notes: 'Xem phòng trực tiếp'
       });
@@ -112,6 +130,11 @@ export default function RoomDetail() {
 
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6 h-[40vh] md:h-[55vh]">
         <div className="md:col-span-2 h-full bg-white shadow-clay-soft rounded-[18px] overflow-hidden relative group cursor-pointer p-2" onClick={() => setShowGallery(true)}>
+          {!hasRealPhotos && (
+            <div className="absolute top-4 left-4 z-10 bg-amber-600/90 text-white text-xs font-semibold px-3 py-1.5 rounded-full backdrop-blur-xs shadow-sm">
+              Ảnh minh họa (Chưa có ảnh chụp thực tế từ chủ phòng)
+            </div>
+          )}
           <div className="w-full h-full rounded-[14px] overflow-hidden">
             <img src={photos[0]} alt="Room Main" className="w-full h-full object-cover transition-transform duration-200 group-hover:scale-[1.02]" />
           </div>
@@ -142,12 +165,18 @@ export default function RoomDetail() {
             <div>
               <div className="flex flex-col sm:flex-row sm:justify-between sm:items-start gap-4 mb-3">
                 <h1 className="text-hero text-[#0F172A]">{roomData?.title || 'Studio Hiện Đại'}</h1>
-                <button 
-                  onClick={() => setShowVerificationModal(true)}
-                  className="bg-[#F0FDF4] text-[#16803C] border border-[#DCFCE7] text-caption font-bold px-3.5 py-1.5 rounded-full flex items-center gap-1.5 self-start hover:bg-[#DCFCE7] transition-colors touch-target"
-                >
-                  <CheckCircle className="w-4 h-4" /> Đã xác minh
-                </button>
+                {roomData?.isVerifiedLandlord ? (
+                  <button 
+                    onClick={() => setShowVerificationModal(true)}
+                    className="bg-[#F0FDF4] text-[#16803C] border border-[#DCFCE7] text-caption font-bold px-3.5 py-1.5 rounded-full flex items-center gap-1.5 self-start hover:bg-[#DCFCE7] transition-colors touch-target"
+                  >
+                    <CheckCircle className="w-4 h-4" /> Chủ trọ đã xác minh CCCD
+                  </button>
+                ) : (
+                  <span className="bg-slate-100 text-slate-600 border border-slate-200 text-caption font-medium px-3.5 py-1.5 rounded-full flex items-center gap-1.5 self-start">
+                    Chưa xác thực CCCD
+                  </span>
+                )}
               </div>
               <p className="text-body text-[#64748B]">{roomData?.address || 'Địa chỉ phòng trọ'}</p>
             </div>

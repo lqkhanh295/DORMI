@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import { Button } from '../../components/ui/Button';
 import { useNavigate } from 'react-router-dom';
 import { useStore, type RoommateProfile } from '../../store/useStore';
-import { Heart, X, MessageCircle, Check, CheckCircle2 } from 'lucide-react';
+import { Heart, X, MessageCircle, Check, CheckCircle2, Trash2 } from 'lucide-react';
 import { roommatesApi } from '../../services/api';
 
 export default function RoommateMatcher() {
@@ -11,8 +11,13 @@ export default function RoommateMatcher() {
   const [roommates, setRoommates] = useState<RoommateProfile[]>([]);
   const [loading, setLoading] = useState(true);
 
-  const { likedRoommates, addLikedRoommate } = useStore();
+  const { likedRoommates, addLikedRoommate, removeLikedRoommate } = useStore();
   const navigate = useNavigate();
+
+  // Filter out any stale mock profiles defensively
+  const activeLikedRoommates = (likedRoommates || []).filter(
+    r => r && r.customerId && !['Alex', 'Sarah', 'Minh'].includes(r.name)
+  );
 
   useEffect(() => {
     let isMounted = true;
@@ -20,8 +25,8 @@ export default function RoommateMatcher() {
       .then(res => {
         if (!isMounted) return;
         if (Array.isArray(res) && res.length > 0) {
-          const apiRoommates: RoommateProfile[] = res.map((r: any, idx: number) => ({
-            id: idx + 1,
+          const apiRoommates: RoommateProfile[] = res.map((r: any) => ({
+            id: r.id,
             customerId: r.customerId,
             name: r.customerName || 'Người ở ghép',
             age: 22,
@@ -56,7 +61,7 @@ export default function RoommateMatcher() {
   const navigateToChat = (targetProfile: RoommateProfile) => {
     navigate('/tenant/chat', { 
       state: { 
-        targetUserId: targetProfile.customerId || `r${targetProfile.id}`,
+        targetUserId: targetProfile.customerId || targetProfile.id,
         targetUserName: targetProfile.name,
         targetUserRole: 'Roommate'
       } 
@@ -67,29 +72,38 @@ export default function RoommateMatcher() {
 
   const LikedList = () => (
     <div className="flex-1 overflow-y-auto flex flex-col p-5 space-y-4 bg-white">
-      {likedRoommates.length === 0 ? (
-        <div className="flex flex-col items-center justify-center h-full text-[#64748B] space-y-3">
+      {activeLikedRoommates.length === 0 ? (
+        <div className="flex flex-col items-center justify-center h-full text-[#64748B] space-y-3 py-10">
           <Heart size={32} className="text-[#CBD5E1]" />
           <p className="text-body font-bold text-[#0F172A]">Chưa có ai trong danh sách</p>
-          <p className="text-caption text-[#64748B] text-center max-w-[20ch]">Bấm thích để lưu hồ sơ phù hợp</p>
+          <p className="text-caption text-[#64748B] text-center max-w-[20ch]">Bấm thích (❤️) để lưu hồ sơ người ở ghép</p>
         </div>
       ) : (
-        likedRoommates.map(r => (
-          <div key={r.id} className="flex items-center gap-4 p-4 bg-[#F5F7FA] rounded-[12px] border border-[#E2E8F0] shadow-clay-inset">
-            <img src={r.image} className="w-12 h-12 rounded-full object-cover border border-[#E2E8F0]" alt={r.name} />
+        activeLikedRoommates.map(r => (
+          <div key={r.id} className="flex items-center gap-3 p-3 bg-[#F5F7FA] rounded-[12px] border border-[#E2E8F0] shadow-clay-inset">
+            <img src={r.image} className="w-12 h-12 rounded-full object-cover border border-[#E2E8F0] flex-shrink-0" alt={r.name} />
             <div className="flex-1 text-left overflow-hidden">
-              <h4 className="text-body font-bold text-[#0F172A] truncate">{r.name}, {r.age}</h4>
+              <h4 className="text-body font-bold text-[#0F172A] truncate">{r.name}</h4>
               <p className="text-caption font-bold text-[#16803C]">
-                {r.matchScore != null ? `${r.matchScore}% Phù hợp` : 'Chưa đủ dữ liệu'}
+                {r.matchScore != null ? `${r.matchScore}% Độ tương thích` : 'Chưa đủ dữ liệu'}
               </p>
             </div>
-            <button 
-              onClick={() => navigateToChat(r)} 
-              className="w-10 h-10 flex items-center justify-center bg-[#00153D] text-white rounded-[10px] hover:bg-[#073372] transition-colors flex-shrink-0 touch-target"
-              title="Nhắn tin"
-            >
-              <MessageCircle size={18} />
-            </button>
+            <div className="flex items-center gap-1.5 flex-shrink-0">
+              <button 
+                onClick={() => navigateToChat(r)} 
+                className="w-9 h-9 flex items-center justify-center bg-[#00153D] text-white rounded-[10px] hover:bg-[#073372] transition-colors touch-target"
+                title="Nhắn tin"
+              >
+                <MessageCircle size={16} />
+              </button>
+              <button 
+                onClick={() => removeLikedRoommate(r.id)} 
+                className="w-9 h-9 flex items-center justify-center bg-white text-[#C62828] border border-[#FECACA] rounded-[10px] hover:bg-[#FEF2F2] transition-colors touch-target"
+                title="Bỏ thích"
+              >
+                <Trash2 size={16} />
+              </button>
+            </div>
           </div>
         ))
       )}
@@ -104,7 +118,7 @@ export default function RoommateMatcher() {
         <div className="p-6 border-b border-[#E2E8F0] bg-white">
           <h2 className="text-h3 font-bold text-[#0F172A] flex items-center gap-2">
             <Heart size={20} className="text-[#C62828] fill-[#C62828]" />
-            Đã thích ({likedRoommates.length})
+            Đã thích ({activeLikedRoommates.length})
           </h2>
           <p className="text-caption text-[#64748B] mt-1">Hồ sơ người ở ghép bạn đã lưu.</p>
         </div>
@@ -115,12 +129,24 @@ export default function RoommateMatcher() {
       <div className="flex-1 flex flex-col relative bg-[#F5F7FA] rounded-[18px] justify-center">
         
         <div className="bg-white rounded-[18px] shadow-clay-soft p-4 mb-6 flex items-center justify-between">
-          <span className="text-caption font-bold text-[#00153D]">Gợi ý người ở ghép (AI Engine API)</span>
+          <span className="text-caption font-bold text-[#00153D]">Thuật toán đối soát độ tương thích lối sống (Lifestyle Compatibility Matching)</span>
           <div className="flex items-center gap-1.5">
             <span className="w-3 h-3 rounded-full bg-[#00153D]"></span>
             <span className="w-8 h-1.5 rounded-full bg-[#00153D]"></span>
             <span className="w-3 h-3 rounded-full bg-[#00153D]"></span>
           </div>
+        </div>
+
+        {/* Mobile Header */}
+        <div className="flex lg:hidden justify-between items-center mb-6">
+          <h2 className="text-h2 font-bold text-[#0F172A]">Gợi ý ở ghép</h2>
+          <button 
+            onClick={() => setShowLikedModal(true)}
+            className="bg-white border border-[#E2E8F0] text-[#00153D] px-4 py-2 rounded-full text-caption font-bold flex items-center gap-1.5 shadow-clay-soft touch-target"
+          >
+            <Heart size={16} className="fill-[#C62828] text-[#C62828]" />
+            {activeLikedRoommates.length}
+          </button>
         </div>
 
         {loading ? (
@@ -135,7 +161,7 @@ export default function RoommateMatcher() {
             </div>
             <h2 className="text-h2 font-bold text-[#0F172A]">Đã xem hết gợi ý!</h2>
             <p className="text-[#64748B] text-body max-w-xs mx-auto">
-              Bạn đã lưu <span className="font-bold text-[#00153D]">{likedRoommates.length}</span> hồ sơ phù hợp.
+              Bạn đã lưu <span className="font-bold text-[#00153D]">{activeLikedRoommates.length}</span> hồ sơ phù hợp.
             </p>
             <Button onClick={() => setCurrentIndex(0)} variant="secondary" className="px-6">
               Xem lại từ đầu
@@ -148,7 +174,7 @@ export default function RoommateMatcher() {
               <div className="h-64 bg-[#EEF2F6] w-full relative">
                 <img src={profile.image} alt={profile.name} className="w-full h-full object-cover" />
                 <div className="absolute top-4 right-4 bg-white/95 text-[#16803C] border border-[#DCFCE7] px-3.5 py-1.5 rounded-full text-body font-bold shadow-sm">
-                  {profile.matchScore != null ? `${profile.matchScore}% Phù hợp (AI)` : 'Chưa đủ dữ liệu'}
+                  {profile.matchScore != null ? `${profile.matchScore}% Độ tương thích` : 'Chưa đủ dữ liệu'}
                 </div>
               </div>
               
@@ -194,7 +220,7 @@ export default function RoommateMatcher() {
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-[#0F172A]/40 p-4 lg:hidden">
           <div className="bg-white rounded-[18px] shadow-clay-primary w-full max-w-md h-[80vh] flex flex-col overflow-hidden">
             <div className="p-4 border-b border-[#E2E8F0] flex justify-between items-center bg-white">
-              <h3 className="font-bold text-h3 text-[#0F172A]">Đã thích ({likedRoommates.length})</h3>
+              <h3 className="font-bold text-h3 text-[#0F172A]">Đã thích ({activeLikedRoommates.length})</h3>
               <button onClick={() => setShowLikedModal(false)} className="text-[#64748B] hover:text-[#0F172A] p-2">
                 <X size={24} />
               </button>

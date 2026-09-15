@@ -2,6 +2,7 @@ import { Outlet, Link, useNavigate, useLocation } from 'react-router-dom';
 import { useStore } from '../store/useStore';
 import { FloatingNav, type NavItem } from '../components/shared/FloatingNav';
 import { LayoutDashboard, Home, BarChart3, MessageCircle } from 'lucide-react';
+import { NotificationBell } from '../components/common/NotificationBell';
 
 export default function LandlordLayout() {
   const { currentUser, logout } = useStore();
@@ -32,7 +33,8 @@ export default function LandlordLayout() {
               DORMI<span className="text-[#6366F1]">.</span> <span className="text-xs font-bold text-[#6B7280] ml-1 hidden sm:inline-block">CHỦ NHÀ</span>
             </Link>
           </div>
-          <div className="flex items-center gap-4">
+          <div className="flex items-center gap-3">
+            <NotificationBell />
             <span className="text-sm font-semibold hidden md:block text-[#4B5563]">{currentUser?.name}</span>
             <div className="w-9 h-9 rounded-full bg-[#F3F4F6] flex items-center justify-center text-[#1F2937] font-bold overflow-hidden border-2 border-[#6366F1]/20 cursor-pointer shadow-sm hover:border-[#6366F1] transition-colors">
               {currentUser?.avatar ? <img src={currentUser.avatar} alt="avatar" className="w-full h-full object-cover" /> : 'L'}

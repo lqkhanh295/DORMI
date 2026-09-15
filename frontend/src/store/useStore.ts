@@ -26,6 +26,9 @@ export interface Listing {
   trustScore?: number;
   views?: number;
   leads?: number;
+  latitude?: number;
+  longitude?: number;
+  distanceKm?: number;
 }
 
 export interface Message {
@@ -37,7 +40,7 @@ export interface Message {
 }
 
 export interface RoommateProfile {
-  id: number;
+  id: string;
   customerId?: string;
   name: string;
   age: number;
@@ -65,6 +68,8 @@ interface AppState {
   sendMessageWithApi: (receiverId: string, text: string) => Promise<boolean>;
   updateUser: (updates: Partial<User>) => void;
   addLikedRoommate: (profile: RoommateProfile) => void;
+  removeLikedRoommate: (id: string) => void;
+  clearLikedRoommates: () => void;
   uploadImageToCloudinary: (file: File) => Promise<string | null>;
 }
 
@@ -103,7 +108,7 @@ export const useStore = create<AppState>()(
 
       logout: () => {
         authApi.logout();
-        set({ currentUser: null });
+        set({ currentUser: null, likedRoommates: [] });
       },
 
       fetchListings: async () => {
@@ -125,7 +130,10 @@ export const useStore = create<AppState>()(
               type: r.roomType || 'Studio',
               landlordId: r.landlordId,
               status: statusMap[r.status] || 'Available',
-              isVerifiedLandlord: r.isVerifiedLandlord ?? false
+              isVerifiedLandlord: r.isVerifiedLandlord ?? false,
+              latitude: r.latitude,
+              longitude: r.longitude,
+              distanceKm: r.distanceKm
             }));
             set({ listings: apiListings });
           }
@@ -174,8 +182,22 @@ export const useStore = create<AppState>()(
 
       sendMessageWithApi: async (receiverId, text) => {
         try {
-          await messagesApi.sendMessage(receiverId, text);
-          get().sendMessage(receiverId, text);
+          const res = await messagesApi.sendMessage(receiverId, text);
+          const currentMessages = get().messages;
+          const msgId = res?.id || res?.data?.id;
+          if (msgId) {
+            const alreadyExists = currentMessages.some(m => m.id === msgId);
+            if (!alreadyExists) {
+              const msg: Message = {
+                id: msgId,
+                senderId: get().currentUser?.id || '',
+                receiverId,
+                text,
+                timestamp: res?.data?.timestamp || new Date().toISOString()
+              };
+              set({ messages: [...currentMessages, msg] });
+            }
+          }
           return true;
         } catch (err) {
           console.error('API sendMessage failed:', err);
@@ -188,10 +210,16 @@ export const useStore = create<AppState>()(
       })),
 
       addLikedRoommate: (profile) => set((state) => ({
-        likedRoommates: state.likedRoommates.find(r => r.id === profile.id) 
+        likedRoommates: state.likedRoommates.find(r => (r.customerId && r.customerId === profile.customerId) || r.id === profile.id) 
           ? state.likedRoommates 
           : [...state.likedRoommates, profile]
       })),
+
+      removeLikedRoommate: (id) => set((state) => ({
+        likedRoommates: state.likedRoommates.filter(r => r.id !== id && r.customerId !== id)
+      })),
+
+      clearLikedRoommates: () => set({ likedRoommates: [] }),
 
       uploadImageToCloudinary: async (file) => {
         try {
@@ -204,7 +232,21 @@ export const useStore = create<AppState>()(
       }
     }),
     {
-      name: 'dormi-storage'
+      name: 'dormi-storage-v5',
+      partialize: (state) => ({
+        currentUser: state.currentUser,
+        likedRoommates: (state.likedRoommates || []).filter(
+          r => r && r.customerId && !['Alex', 'Sarah', 'Minh'].includes(r.name)
+        )
+      })
     }
   )
 );
+
+// One-time sanitization of legacy browser localStorage to prevent mock data leaks
+try {
+  const legacyStore = localStorage.getItem('dormi-storage');
+  if (legacyStore) {
+    localStorage.removeItem('dormi-storage');
+  }
+} catch {}

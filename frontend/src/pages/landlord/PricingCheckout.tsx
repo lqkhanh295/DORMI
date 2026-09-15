@@ -1,25 +1,53 @@
+import { useState } from 'react';
 import { Card } from '../../components/ui/Card';
 import { Button } from '../../components/ui/Button';
 import { landlordApi } from '../../services/api';
 import { toast } from 'sonner';
+import { X, CreditCard, ShieldCheck } from 'lucide-react';
 
 export default function PricingCheckout() {
+  const [checkoutData, setCheckoutData] = useState<any>(null);
+  const [paymentMethod, setPaymentMethod] = useState('VNPay');
+  const [verifying, setVerifying] = useState(false);
+  const [initiating, setInitiating] = useState(false);
+
   const handleUpgrade = async (plan: string) => {
     try {
+      setInitiating(true);
       const res = await landlordApi.checkout(plan);
-      toast.success(`Đăng ký gói ${res.planName || plan} thành công (API)!`, {
-        description: 'Đã lưu lịch sử đăng ký gói dịch vụ vào Backend.'
-      });
-    } catch {
-      toast.success(`Đã đăng ký gói ${plan}!`);
+      setCheckoutData(res);
+      toast.info(`Đã khởi tạo đơn hàng gói ${plan}. Vui lòng quét mã để thanh toán.`);
+    } catch (err: any) {
+      toast.error(err?.message || 'Khởi tạo thanh toán thất bại.');
+    } finally {
+      setInitiating(false);
+    }
+  };
+
+  const handleVerifyPayment = async () => {
+    if (!checkoutData?.transactionRef) return;
+    try {
+      setVerifying(true);
+      const res = await landlordApi.verifyPayment(checkoutData.transactionRef, paymentMethod);
+      toast.success(res.message || 'Thanh toán thành công! Gói dịch vụ của bạn đã được kích hoạt.');
+      setCheckoutData(null);
+    } catch (err: any) {
+      toast.error(err?.message || 'Xác nhận thanh toán chưa thành công. Vui lòng kiểm tra lại giao dịch.');
+    } finally {
+      setVerifying(false);
     }
   };
 
   return (
     <div className="max-w-5xl mx-auto space-y-8 bg-[#F5F7FA]">
       <div className="text-center space-y-3">
-        <h1 className="text-h2 font-bold text-[#0F172A]">Gói dịch vụ Chủ trọ (API Connected)</h1>
-        <p className="text-body text-[#64748B] max-w-xl mx-auto">Tối ưu hiệu quả tiếp cận khách thuê và nhận nhãn chủ trọ xác thực uy tín.</p>
+        <h1 className="text-h2 font-bold text-[#0F172A] flex items-center justify-center gap-2">
+          <ShieldCheck className="w-8 h-8 text-[#2563EB]" />
+          Gói dịch vụ Chủ trọ Dormi
+        </h1>
+        <p className="text-body text-[#64748B] max-w-xl mx-auto">
+          Tối ưu hiệu quả tiếp cận khách thuê, nhận huy hiệu xác thực và phân tích khách tiềm năng chuyên sâu.
+        </p>
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-3 gap-8 items-stretch">
@@ -28,7 +56,7 @@ export default function PricingCheckout() {
             <h3 className="text-h3 font-bold text-[#0F172A]">Gói Cơ Bản</h3>
             <p className="text-caption text-[#64748B]">Cho chủ trọ có 1 - 2 phòng trọ nhỏ.</p>
             <div className="pt-2">
-              <span className="text-[36px] font-bold text-[#00153D]">Miễn phí</span>
+              <span className="text-[36px] font-bold text-[#0F172A]">Miễn phí</span>
             </div>
             <ul className="space-y-2 text-caption text-[#64748B] pt-4 border-t border-[#E2E8F0]">
               <li>✓ Đăng tối đa 2 tin phòng</li>
@@ -36,28 +64,35 @@ export default function PricingCheckout() {
               <li>✓ Xác minh giấy tờ cơ bản</li>
             </ul>
           </div>
-          <Button variant="secondary" fullWidth onClick={() => handleUpgrade('Free')}>Đang sử dụng</Button>
+          <Button variant="secondary" fullWidth disabled>Đang sử dụng</Button>
         </Card>
 
-        <Card className="bg-white rounded-[18px] shadow-clay-primary p-8 flex flex-col justify-between space-y-6 border-2 border-[#00153D] relative">
-          <div className="absolute -top-3.5 left-1/2 -translate-x-1/2 bg-[#00153D] text-white text-caption font-bold px-4 py-1 rounded-full shadow-sm">
+        <Card className="bg-white rounded-[18px] shadow-clay-primary p-8 flex flex-col justify-between space-y-6 border-2 border-[#2563EB] relative">
+          <div className="absolute -top-3.5 left-1/2 -translate-x-1/2 bg-[#2563EB] text-white text-caption font-bold px-4 py-1 rounded-full shadow-sm">
             KHUYÊN DÙNG
           </div>
           <div className="space-y-4 pt-2">
             <h3 className="text-h3 font-bold text-[#0F172A]">Gói Chuyên Nghiệp</h3>
-            <p className="text-caption text-[#64748B]">Tối ưu hiển thị và ưu tiên đề xuất AI.</p>
+            <p className="text-caption text-[#64748B]">Tối ưu hiển thị và phân tích lead.</p>
             <div className="pt-2">
-              <span className="text-[36px] font-bold text-[#00153D]">199.000₫</span>
-              <span className="text-caption text-[#64748B]"> / tháng</span>
+              <span className="text-[36px] font-bold text-[#2563EB]">199.000₫</span>
+              <span className="text-caption text-[#64748B]"> / năm</span>
             </div>
             <ul className="space-y-2 text-caption text-[#0F172A] font-semibold pt-4 border-t border-[#E2E8F0]">
               <li>✓ Đăng tối đa 10 tin phòng</li>
               <li>✓ Huy hiệu Chủ trọ xác thực uy tín</li>
               <li>✓ Ưu tiên hiển thị top kết quả tìm kiếm</li>
-              <li>✓ Phân tích phễu chuyển đổi chi tiết</li>
+              <li>✓ Báo cáo phễu chuyển đổi & khách tiềm năng</li>
             </ul>
           </div>
-          <Button variant="primary" fullWidth onClick={() => handleUpgrade('Pro')}>Nâng cấp Pro API</Button>
+          <Button 
+            variant="primary" 
+            fullWidth 
+            disabled={initiating}
+            onClick={() => handleUpgrade('Pro')}
+          >
+            {initiating ? 'Đang tạo đơn...' : 'Nâng cấp gói Pro (199.000₫)'}
+          </Button>
         </Card>
 
         <Card className="bg-white rounded-[18px] shadow-clay-soft p-8 flex flex-col justify-between space-y-6 border-none">
@@ -65,19 +100,90 @@ export default function PricingCheckout() {
             <h3 className="text-h3 font-bold text-[#0F172A]">Gói Doanh Nghiệp</h3>
             <p className="text-caption text-[#64748B]">Dành cho chuỗi căn hộ mini & KTX.</p>
             <div className="pt-2">
-              <span className="text-[36px] font-bold text-[#00153D]">499.000₫</span>
-              <span className="text-caption text-[#64748B]"> / tháng</span>
+              <span className="text-[36px] font-bold text-[#0F172A]">499.000₫</span>
+              <span className="text-caption text-[#64748B]"> / năm</span>
             </div>
             <ul className="space-y-2 text-caption text-[#64748B] pt-4 border-t border-[#E2E8F0]">
               <li>✓ Không giới hạn số tin đăng</li>
-              <li>✓ Quản lý đa cơ sở & tài khoản nhân viên</li>
               <li>✓ Đẩy tin tự động hàng tuần</li>
+              <li>✓ Khám phá kho dữ liệu người tìm phòng</li>
               <li>✓ Hỗ trợ CSKH 24/7 riêng biệt</li>
             </ul>
           </div>
-          <Button variant="secondary" fullWidth onClick={() => handleUpgrade('Enterprise')}>Nâng cấp Enterprise API</Button>
+          <Button 
+            variant="secondary" 
+            fullWidth 
+            disabled={initiating}
+            onClick={() => handleUpgrade('Enterprise')}
+          >
+            {initiating ? 'Đang tạo đơn...' : 'Nâng cấp Doanh nghiệp (499.000₫)'}
+          </Button>
         </Card>
       </div>
+
+      {/* Interactive Payment QR Modal */}
+      {checkoutData && (
+        <div className="fixed inset-0 z-50 bg-black/60 flex items-center justify-center p-4 backdrop-blur-sm">
+          <div className="bg-white rounded-2xl max-w-md w-full p-6 space-y-5 shadow-2xl border border-slate-100 relative">
+            <button 
+              onClick={() => setCheckoutData(null)}
+              className="absolute top-4 right-4 text-slate-400 hover:text-slate-700 p-1"
+            >
+              <X className="w-5 h-5" />
+            </button>
+
+            <div className="text-center space-y-1">
+              <h3 className="text-lg font-bold text-slate-900 flex items-center justify-center gap-2">
+                <CreditCard className="w-5 h-5 text-[#2563EB]" />
+                Thanh toán gói {checkoutData.planName}
+              </h3>
+              <p className="text-xs text-slate-500">Mã giao dịch: <span className="font-mono font-bold text-slate-800">{checkoutData.transactionRef}</span></p>
+            </div>
+
+            <div className="flex justify-center bg-slate-50 p-4 rounded-xl border border-slate-200">
+              <img 
+                src={checkoutData.qrUrl} 
+                alt="QR Code" 
+                className="w-48 h-48 object-contain rounded-lg shadow-sm" 
+              />
+            </div>
+
+            <div className="bg-[#F8FAFC] p-3 rounded-xl border border-slate-200 text-xs space-y-1.5">
+              <div className="flex justify-between">
+                <span className="text-slate-500">Số tiền:</span>
+                <span className="font-bold text-slate-900 text-sm">{Number(checkoutData.amount).toLocaleString('vi-VN')} VNĐ</span>
+              </div>
+              <div className="flex justify-between">
+                <span className="text-slate-500">Nội dung chuyển khoản:</span>
+                <span className="font-mono font-bold text-[#2563EB]">{checkoutData.transactionRef}</span>
+              </div>
+            </div>
+
+            <div>
+              <label className="block text-xs font-semibold text-slate-700 mb-1.5">Phương thức thanh toán:</label>
+              <select 
+                value={paymentMethod} 
+                onChange={e => setPaymentMethod(e.target.value)}
+                className="w-full text-xs p-2.5 rounded-lg border border-slate-300 bg-white"
+              >
+                <option value="VNPay">VNPay QR / Thẻ nội địa</option>
+                <option value="MoMo">Ví điện tử MoMo</option>
+                <option value="BankTransfer">Chuyển khoản Ngân hàng (VietQR)</option>
+              </select>
+            </div>
+
+            <Button 
+              variant="primary" 
+              fullWidth 
+              disabled={verifying}
+              onClick={handleVerifyPayment}
+              className="py-3 font-bold"
+            >
+              {verifying ? 'Đang xác thực giao dịch...' : 'Xác nhận đã thanh toán'}
+            </Button>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

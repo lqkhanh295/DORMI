@@ -22,6 +22,7 @@ export interface RoomResponse {
   address: string;
   virtual3DUrl?: string;
   status: number;
+  isVerifiedLandlord?: boolean;
   createdAt: string;
   images: RoomImage[];
 }
@@ -30,7 +31,7 @@ export const getAuthToken = (): string | null => {
   const directToken = localStorage.getItem('dormi_jwt_token');
   if (directToken) return directToken;
   try {
-    const store = localStorage.getItem('dormi-storage');
+    const store = localStorage.getItem('dormi-storage-v5') || localStorage.getItem('dormi-storage');
     if (store) {
       const parsed = JSON.parse(store);
       if (parsed?.state?.currentUser?.token) {
@@ -53,7 +54,7 @@ async function request<T>(endpoint: string, options: RequestInit = {}): Promise<
   const token = getAuthToken();
   let userEmail = '';
   try {
-    const store = localStorage.getItem('dormi-storage');
+    const store = localStorage.getItem('dormi-storage-v5') || localStorage.getItem('dormi-storage');
     if (store) {
       const parsed = JSON.parse(store);
       userEmail = parsed?.state?.currentUser?.email || '';
@@ -125,12 +126,27 @@ export const authApi = {
 
 // 2. ROOMS API
 export const roomsApi = {
-  getRooms: async (params?: { query?: string; roomType?: string; minPrice?: number; maxPrice?: number; page?: number; pageSize?: number }) => {
+  getRooms: async (params?: { 
+    query?: string; 
+    roomType?: string; 
+    district?: string;
+    latitude?: number;
+    longitude?: number;
+    radiusKm?: number;
+    minPrice?: number; 
+    maxPrice?: number; 
+    page?: number; 
+    pageSize?: number;
+  }) => {
     const searchParams = new URLSearchParams();
     if (params?.query) searchParams.append('query', params.query);
     if (params?.roomType) searchParams.append('roomType', params.roomType);
-    if (params?.minPrice) searchParams.append('minPrice', params.minPrice.toString());
-    if (params?.maxPrice) searchParams.append('maxPrice', params.maxPrice.toString());
+    if (params?.district) searchParams.append('district', params.district);
+    if (params?.latitude !== undefined) searchParams.append('latitude', params.latitude.toString());
+    if (params?.longitude !== undefined) searchParams.append('longitude', params.longitude.toString());
+    if (params?.radiusKm !== undefined) searchParams.append('radiusKm', params.radiusKm.toString());
+    if (params?.minPrice !== undefined) searchParams.append('minPrice', params.minPrice.toString());
+    if (params?.maxPrice !== undefined) searchParams.append('maxPrice', params.maxPrice.toString());
     if (params?.page) searchParams.append('page', params.page.toString());
     if (params?.pageSize) searchParams.append('pageSize', params.pageSize.toString());
 
@@ -360,10 +376,10 @@ export const adminApi = {
     return request<any[]>('/admin/verifications');
   },
 
-  approveVerification: async (landlordId: string, approved: boolean) => {
-    return request<any>(`/admin/verifications/${landlordId}`, {
+  approveVerification: async (requestId: string, approved: boolean, rejectReason?: string) => {
+    return request<any>(`/admin/verifications/${requestId}/review`, {
       method: 'PATCH',
-      body: JSON.stringify({ approved })
+      body: JSON.stringify({ approved, rejectReason })
     });
   },
 
@@ -385,6 +401,16 @@ export const adminApi = {
     return request<any>(`/admin/reports/${reportId}/status?status=${encodeURIComponent(status)}`, {
       method: 'PATCH'
     });
+  },
+
+  getRoommatePosts: async (status?: string) => {
+    return request<any[]>(`/admin/roommate-posts${status ? `?status=${status}` : ''}`);
+  },
+
+  updateRoommatePostStatus: async (postId: string, isActive: boolean) => {
+    return request<any>(`/admin/roommate-posts/${postId}/status?isActive=${isActive}`, {
+      method: 'PATCH'
+    });
   }
 };
 
@@ -392,6 +418,10 @@ export const adminApi = {
 export const landlordApi = {
   getAnalytics: async () => {
     return request<any>('/landlord/analytics');
+  },
+
+  getLeadAnalytics: async () => {
+    return request<any>('/landlord/lead-analytics');
   },
 
   getBilling: async () => {
@@ -403,5 +433,77 @@ export const landlordApi = {
       method: 'POST',
       body: JSON.stringify({ planName })
     });
+  },
+
+  verifyPayment: async (transactionRef: string, paymentMethod: string = 'VNPay') => {
+    return request<any>('/landlord/payment/verify', {
+      method: 'POST',
+      body: JSON.stringify({ transactionRef, paymentMethod })
+    });
+  },
+
+  discoverTenants: async () => {
+    return request<any[]>('/landlord/discover-tenants');
+  },
+
+  submitVerification: async (data: {
+    documentType: string;
+    documentNumber?: string;
+    frontImageUrl: string;
+    backImageUrl: string;
+  }) => {
+    return request<any>('/profiles/landlord/verification', {
+      method: 'POST',
+      body: JSON.stringify(data)
+    });
+  },
+
+  getVerificationStatus: async () => {
+    return request<any>('/profiles/landlord/verification');
+  }
+};
+
+// 12. NOTIFICATIONS API
+export const notificationsApi = {
+  getNotifications: async () => {
+    return request<any[]>('/notifications');
+  },
+
+  markAsRead: async (id: string) => {
+    return request<any>(`/notifications/${id}/read`, {
+      method: 'PATCH'
+    });
+  },
+
+  markAllAsRead: async () => {
+    return request<any>('/notifications/read-all', {
+      method: 'POST'
+    });
+  }
+};
+
+// 13. TENANT REVIEWS API (Reputation System)
+export const tenantReviewsApi = {
+  getMyLeases: async () => {
+    return request<any[]>('/tenant-reviews/leases');
+  },
+
+  rateTenant: async (data: {
+    tenantId: string;
+    leaseContractId: string;
+    rating: number;
+    punctuality: number;
+    cleanliness: number;
+    respectfulness: number;
+    comment: string;
+  }) => {
+    return request<any>('/tenant-reviews', {
+      method: 'POST',
+      body: JSON.stringify(data)
+    });
+  },
+
+  getTenantReputation: async (tenantId: string) => {
+    return request<any>(`/tenant-reviews/tenants/${tenantId}/reputation`);
   }
 };
