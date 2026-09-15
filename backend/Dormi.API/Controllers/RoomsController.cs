@@ -23,6 +23,11 @@ public class RoomsController : ControllerBase
         _db = db;
     }
 
+    /// <summary>
+    /// Get all rooms.
+    /// </summary>
+    /// <param name="filter">The room filter.</param>
+    /// <returns>A list of rooms.</returns>
     [HttpGet]
     public async Task<IActionResult> GetRooms([FromQuery] RoomQueryFilterDto filter)
     {
@@ -207,6 +212,11 @@ public class RoomsController : ControllerBase
         return Ok(featured);
     }
 
+    /// <summary>
+    /// Get room by ID.
+    /// </summary>
+    /// <param name="id">The room ID.</param>
+    /// <returns>The room.</returns>
     [HttpGet("{id:guid}")]
     public async Task<IActionResult> GetRoomById(Guid id)
     {
@@ -301,6 +311,13 @@ public class RoomsController : ControllerBase
         return Ok(response);
     }
 
+    /// <summary>
+    /// Create a room.
+    /// Only landlords can create rooms.
+    /// The landlord must have verified identity (CCCD/approval) before publishing rooms.
+    /// </summary>
+    /// <param name="dto">The room data.</param>
+    /// <returns>The created room.</returns>
     [Authorize]
     [HttpPost]
     public async Task<IActionResult> CreateRoom([FromBody] CreateRoomDto dto)
@@ -361,6 +378,13 @@ public class RoomsController : ControllerBase
         return CreatedAtAction(nameof(GetRoomById), new { id = room.Id }, new { id = room.Id, message = "Tạo thông tin phòng thành công." });
     }
 
+    /// <summary>
+    /// Update a room.
+    /// Only landlords can update rooms.
+    /// </summary>
+    /// <param name="id">The room ID.</param>
+    /// <param name="dto">The room data.</param>
+    /// <returns>The updated room.</returns>
     [Authorize]
     [HttpPut("{id}")]
     public async Task<IActionResult> UpdateRoom(Guid id, [FromBody] UpdateRoomDto dto)
@@ -458,6 +482,12 @@ public class RoomsController : ControllerBase
         return Ok(new { message = "Cập nhật phòng thành công." });
     }
 
+    /// <summary>
+    /// Delete a room.
+    /// Only landlords can delete rooms.
+    /// </summary>
+    /// <param name="id">The room ID.</param>
+    /// <returns>The deleted room.</returns>
     [Authorize]
     [HttpDelete("{id}")]
     public async Task<IActionResult> DeleteRoom(Guid id)

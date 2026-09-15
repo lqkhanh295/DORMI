@@ -24,6 +24,10 @@ public class TenantReviewsController : ControllerBase
         _db = db;
     }
 
+    /// <summary>
+    /// Get all leases for the current user.
+    /// </summary>
+    /// <returns>A list of lease contracts.</returns>
     [HttpGet("leases")]
     public async Task<IActionResult> GetMyLeases()
     {
@@ -55,6 +59,13 @@ public class TenantReviewsController : ControllerBase
         return Ok(leases);
     }
 
+    /// <summary>
+    /// Rate a tenant.
+    /// Only landlords can rate tenants.
+    /// The landlord must have a lease contract with the tenant.
+    /// </summary>
+    /// <param name="dto">The tenant review data.</param>
+    /// <returns>The created tenant review.</returns>
     [HttpPost]
     public async Task<IActionResult> RateTenant([FromBody] CreateTenantReviewDto dto)
     {
@@ -134,6 +145,11 @@ public class TenantReviewsController : ControllerBase
         return Ok(new { message = "Gửi đánh giá người thuê thành công.", reviewId = review.Id });
     }
 
+    /// <summary>
+    /// Get tenant reputation.
+    /// </summary>
+    /// <param name="tenantId">The tenant ID.</param>
+    /// <returns>The tenant reputation.</returns>
     [HttpGet("tenant/{tenantId}")]
     [AllowAnonymous]
     public async Task<IActionResult> GetTenantReputation(Guid tenantId)

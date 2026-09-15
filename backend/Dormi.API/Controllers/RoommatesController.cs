@@ -119,6 +119,12 @@ public class RoommatesController : ControllerBase
         });
     }
 
+    /// <summary>
+    /// Create a roommate post.
+    /// Only customers can create roommate posts.
+    /// </summary>
+    /// <param name="dto">The roommate post data.</param>
+    /// <returns>The created roommate post.</returns>
     [Authorize]
     [HttpPost]
     public async Task<IActionResult> CreateRoommatePost([FromBody] CreateRoommatePostDto dto)
@@ -154,6 +160,13 @@ public class RoommatesController : ControllerBase
         return CreatedAtAction(nameof(GetRoommatePostById), new { id = post.Id }, new { id = post.Id, message = "Đã tạo bài tìm người ở ghép thành công!" });
     }
 
+    /// <summary>
+    /// Update a roommate post.
+    /// Only the post owner can update the post.
+    /// </summary>
+    /// <param name="id">The roommate post ID.</param>
+    /// <param name="dto">The roommate post data.</param>
+    /// <returns>The updated roommate post.</returns>
     [Authorize]
     [HttpPut("{id}")]
     public async Task<IActionResult> UpdateRoommatePost(Guid id, [FromBody] CreateRoommatePostDto dto)
@@ -178,6 +191,11 @@ public class RoommatesController : ControllerBase
         return Ok(new { message = "Cập nhật bài ở ghép thành công." });
     }
 
+    /// <summary>
+    /// Delete a roommate post.
+    /// </summary>
+    /// <param name="id">The roommate post ID.</param>
+    /// <returns>The deleted roommate post.</returns>
     [Authorize]
     [HttpDelete("{id}")]
     public async Task<IActionResult> DeleteRoommatePost(Guid id)
