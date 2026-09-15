@@ -181,7 +181,43 @@ public class AdminController : ControllerBase
         var room = await _db.Rooms.FindAsync(roomId);
         if (room == null) return NotFound(new { message = "Không tìm thấy phòng trọ." });
 
+        // ponytail: Enforce valid room lifecycle state transitions
+        bool isValidTransition = (room.Status, status) switch
+        {
+            (RoomStatus.PendingApproval, RoomStatus.Available) => true,
+            (RoomStatus.PendingApproval, RoomStatus.Hidden) => true,
+            (RoomStatus.Available, RoomStatus.Rented) => true,
+            (RoomStatus.Available, RoomStatus.Hidden) => true,
+            (RoomStatus.Rented, RoomStatus.Available) => true,
+            (RoomStatus.Rented, RoomStatus.Hidden) => true,
+            (RoomStatus.Hidden, RoomStatus.Available) => true,
+            (RoomStatus.Hidden, RoomStatus.PendingApproval) => true,
+            var (from, to) when from == to => true,
+            _ => false
+        };
+
+        if (!isValidTransition)
+        {
+            return BadRequest(new { message = $"Không thể chuyển đổi trạng thái phòng từ '{room.Status}' sang '{status}'." });
+        }
+
+        var oldStatus = room.Status;
         room.Status = status;
+
+        if (oldStatus != status)
+        {
+            _db.Notifications.Add(new Notification
+            {
+                Id = Guid.NewGuid(),
+                UserId = room.LandlordId,
+                Title = "Cập nhật trạng thái tin đăng phòng",
+                Message = $"Tin đăng '{room.Title}' đã được chuyển từ trạng thái {oldStatus} sang {status}.",
+                Type = "System",
+                LinkUrl = $"/rooms/{room.Id}",
+                CreatedAt = DateTime.UtcNow
+            });
+        }
+
         await _db.SaveChangesAsync();
 
         return Ok(new { message = $"Đã cập nhật trạng thái phòng thành: {status}" });

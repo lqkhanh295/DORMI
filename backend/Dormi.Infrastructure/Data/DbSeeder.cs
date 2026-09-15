@@ -30,7 +30,12 @@ public static class DbSeeder
             await db.Database.ExecuteSqlRawAsync("CREATE EXTENSION IF NOT EXISTS postgis;");
             await db.Database.ExecuteSqlRawAsync("ALTER TABLE \"Rooms\" ADD COLUMN IF NOT EXISTS \"Latitude\" double precision;");
             await db.Database.ExecuteSqlRawAsync("ALTER TABLE \"Rooms\" ADD COLUMN IF NOT EXISTS \"Longitude\" double precision;");
-            await db.Database.ExecuteSqlRawAsync("ALTER TABLE \"Rooms\" ADD COLUMN IF NOT EXISTS \"Location\" geometry(Point, 4326);");
+            await db.Database.ExecuteSqlRawAsync("ALTER TABLE \"Rooms\" ADD COLUMN IF NOT EXISTS \"Location\" geography(Point, 4326);");
+            try
+            {
+                await db.Database.ExecuteSqlRawAsync("ALTER TABLE \"Rooms\" ALTER COLUMN \"Location\" TYPE geography(Point, 4326) USING \"Location\"::geography;");
+            }
+            catch { }
             await db.Database.ExecuteSqlRawAsync(
                 "ALTER TABLE \"Users\" ADD COLUMN IF NOT EXISTS \"IsLookingForRoommate\" boolean NOT NULL DEFAULT false");
             await db.Database.ExecuteSqlRawAsync(

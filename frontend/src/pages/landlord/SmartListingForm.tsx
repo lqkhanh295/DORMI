@@ -7,7 +7,7 @@ import { useStore } from '../../store/useStore';
 
 export default function SmartListingForm() {
   const [step, setStep] = useState(1);
-  const [aiAnalyzing, setAiAnalyzing] = useState(false);
+  const [evaluating, setEvaluating] = useState(false);
   const [uploadingImage, setUploadingImage] = useState(false);
   
   // Form State
@@ -51,7 +51,7 @@ export default function SmartListingForm() {
   const [qualityResult, setQualityResult] = useState<QualityCheckResult | null>(null);
 
   const evaluateListingQuality = () => {
-    setAiAnalyzing(true);
+    setEvaluating(true);
     // ponytail: deterministic rule-based evaluation instead of fake AI setTimeout
     const pNum = parseFloat(price);
     const aNum = parseFloat(area);
@@ -132,7 +132,7 @@ export default function SmartListingForm() {
       recommendations: recs
     });
 
-    setAiAnalyzing(false);
+    setEvaluating(false);
     setStep(4);
   };
 
@@ -240,7 +240,7 @@ export default function SmartListingForm() {
             <p className="text-body text-[#64748B] mb-6 max-w-md mx-auto">
               Hệ thống kiểm tra tính hoàn thiện của tiêu đề, giá cả, địa chỉ và chất lượng ảnh trước khi đưa vào hàng đợi kiểm duyệt.
             </p>
-            {aiAnalyzing ? (
+            {evaluating ? (
               <div className="flex flex-col items-center gap-4">
                 <div className="w-8 h-8 border-4 border-[#00153D] border-t-transparent rounded-full animate-spin"></div>
                 <p className="text-[#00153D] font-semibold text-body">Đang phân tích dữ liệu tin đăng...</p>
@@ -249,7 +249,7 @@ export default function SmartListingForm() {
               <Button size="lg" onClick={evaluateListingQuality}>Bắt đầu chấm điểm chất lượng</Button>
             )}
             <div className="pt-8 flex justify-start">
-              <Button variant="ghost" onClick={() => setStep(2)} disabled={aiAnalyzing}>Quay lại</Button>
+              <Button variant="ghost" onClick={() => setStep(2)} disabled={evaluating}>Quay lại</Button>
             </div>
           </div>
         )}

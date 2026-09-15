@@ -28,7 +28,14 @@ export default function PricingCheckout() {
     if (!checkoutData?.transactionRef) return;
     try {
       setVerifying(true);
-      const res = await landlordApi.verifyPayment(checkoutData.transactionRef, paymentMethod);
+      const statusRes = await landlordApi.checkPaymentStatus(checkoutData.transactionRef);
+      if (statusRes.status === 'Completed') {
+        toast.success('Thanh toán thành công! Gói dịch vụ của bạn đã được kích hoạt.');
+        setCheckoutData(null);
+        return;
+      }
+
+      const res = await landlordApi.simulateGatewayPayment(checkoutData.transactionRef);
       toast.success(res.message || 'Thanh toán thành công! Gói dịch vụ của bạn đã được kích hoạt.');
       setCheckoutData(null);
     } catch (err: any) {
@@ -171,6 +178,17 @@ export default function PricingCheckout() {
                 <option value="BankTransfer">Chuyển khoản Ngân hàng (VietQR)</option>
               </select>
             </div>
+
+            {checkoutData.paymentUrl && (
+              <a
+                href={checkoutData.paymentUrl}
+                target="_blank"
+                rel="noreferrer"
+                className="block text-center text-xs font-medium text-[#2563EB] hover:underline"
+              >
+                Mở cổng thanh toán VNPay Sandbox trực tiếp &rarr;
+              </a>
+            )}
 
             <Button 
               variant="primary" 

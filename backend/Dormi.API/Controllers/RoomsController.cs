@@ -66,9 +66,9 @@ public class RoomsController : ControllerBase
             userPoint = new NetTopologySuite.Geometries.Point(filter.Longitude.Value, filter.Latitude.Value) { SRID = 4326 };
             if (filter.RadiusKm.HasValue && filter.RadiusKm.Value > 0)
             {
-                // In EPSG:4326 (degrees), 1 degree latitude is approx 111.32 km
-                double distanceDegrees = filter.RadiusKm.Value / 111.32;
-                query = query.Where(r => r.Location != null && r.Location.IsWithinDistance(userPoint, distanceDegrees));
+                // In PostGIS geography(Point, 4326), distance is measured accurately along the spheroid in meters
+                double distanceMeters = filter.RadiusKm.Value * 1000.0;
+                query = query.Where(r => r.Location != null && r.Location.IsWithinDistance(userPoint, distanceMeters));
             }
         }
 
@@ -141,7 +141,7 @@ public class RoomsController : ControllerBase
                 Address = r.Address,
                 Latitude = r.Latitude,
                 Longitude = r.Longitude,
-                DistanceKm = (userPoint != null && r.Location != null) ? Math.Round(r.Location.Distance(userPoint) * 111.32, 2) : null,
+                DistanceKm = (userPoint != null && r.Location != null) ? Math.Round(r.Location.Distance(userPoint) / 1000.0, 2) : null,
                 Virtual3DUrl = r.Virtual3DUrl,
                 Status = r.Status,
                 IsVerifiedLandlord = r.Landlord.IsVerified,
@@ -230,18 +230,44 @@ public class RoomsController : ControllerBase
             }
         }
 
-        // ponytail: Record real RoomView event for aggregate analytics
+        // ponytail: Record real RoomView event for aggregate analytics with 30-minute deduplication cooldown
         try
         {
-            _db.RoomViews.Add(new RoomView
+            var ip = HttpContext.Connection.RemoteIpAddress?.ToString() ?? "unknown";
+            var cooldown = DateTime.UtcNow.AddMinutes(-30);
+            bool alreadyViewed = false;
+
+            if (currentUserId != Guid.Empty)
             {
-                Id = Guid.NewGuid(),
-                RoomId = room.Id,
-                ViewerId = currentUserId != Guid.Empty ? currentUserId : null,
-                EventType = "View",
-                CreatedAt = DateTime.UtcNow
-            });
-            await _db.SaveChangesAsync();
+                alreadyViewed = await _db.RoomViews.AnyAsync(v =>
+                    v.RoomId == room.Id &&
+                    v.ViewerId == currentUserId &&
+                    v.EventType == "View" &&
+                    v.CreatedAt >= cooldown);
+            }
+            else
+            {
+                alreadyViewed = await _db.RoomViews.AnyAsync(v =>
+                    v.RoomId == room.Id &&
+                    v.ViewerId == null &&
+                    v.IpAddress == ip &&
+                    v.EventType == "View" &&
+                    v.CreatedAt >= cooldown);
+            }
+
+            if (!alreadyViewed)
+            {
+                _db.RoomViews.Add(new RoomView
+                {
+                    Id = Guid.NewGuid(),
+                    RoomId = room.Id,
+                    ViewerId = currentUserId != Guid.Empty ? currentUserId : null,
+                    EventType = "View",
+                    IpAddress = ip,
+                    CreatedAt = DateTime.UtcNow
+                });
+                await _db.SaveChangesAsync();
+            }
         }
         catch {}
 

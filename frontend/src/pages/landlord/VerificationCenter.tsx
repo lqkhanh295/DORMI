@@ -103,7 +103,7 @@ export default function VerificationCenter() {
           Trung tâm xác minh danh tính Chủ trọ
         </h1>
         <p className="text-body text-[#64748B] mt-1">
-          Chứng thực danh tính chính chủ bằng Căn cước công dân hoặc Hộ chiếu để nhận huy hiệu "Đã xác minh" và ưu tiên hiển thị phòng trọ.
+          Chứng thực danh tính chính chủ bằng Căn cước công dân, Hộ chiếu hoặc Giấy phép kinh doanh để nhận huy hiệu "Đã xác minh" và gia tăng độ tin cậy đối với người tìm phòng.
         </p>
       </div>
 
@@ -121,7 +121,7 @@ export default function VerificationCenter() {
             </div>
           </div>
           <p className="text-body text-[#16803C]">
-            Tất cả các tin đăng của bạn sẽ tự động hiển thị huy hiệu <strong>"Chủ trọ đã xác minh"</strong>, giúp tăng tỉ lệ khách đặt lịch xem phòng lên 80%.
+            Tất cả các tin đăng của bạn sẽ tự động hiển thị huy hiệu <strong>"Chủ trọ đã xác minh"</strong>, giúp nâng cao mức độ uy tín và tăng độ tin cậy với người tìm trọ.
           </p>
         </Card>
       )}
@@ -183,7 +183,7 @@ export default function VerificationCenter() {
               </div>
 
               <div>
-                <label className="block text-caption font-semibold text-[#0F172A] mb-1.5">Số CCCD / Mã định danh</label>
+                <label className="block text-caption font-semibold text-[#0F172A] mb-1.5">Số giấy tờ (CCCD / Hộ chiếu / GPKD)</label>
                 <Input 
                   placeholder="Ví dụ: 079090001234"
                   value={docNumber}

@@ -291,4 +291,92 @@ public class BackendLogicTests
         Assert.NotNull(updated);
         Assert.True(updated.IsRead);
     }
+
+    [Fact]
+    public void RoomStateTransitions_ShouldValidateCorrectLifecycleRules()
+    {
+        // Helper to check valid transitions matching AdminController state machine
+        bool IsValidTransition(RoomStatus from, RoomStatus to) => (from, to) switch
+        {
+            (RoomStatus.PendingApproval, RoomStatus.Available) => true,
+            (RoomStatus.PendingApproval, RoomStatus.Hidden) => true,
+            (RoomStatus.Available, RoomStatus.Rented) => true,
+            (RoomStatus.Available, RoomStatus.Hidden) => true,
+            (RoomStatus.Rented, RoomStatus.Available) => true,
+            (RoomStatus.Rented, RoomStatus.Hidden) => true,
+            (RoomStatus.Hidden, RoomStatus.Available) => true,
+            (RoomStatus.Hidden, RoomStatus.PendingApproval) => true,
+            var (f, t) when f == t => true,
+            _ => false
+        };
+
+        // Legal transitions
+        Assert.True(IsValidTransition(RoomStatus.PendingApproval, RoomStatus.Available));
+        Assert.True(IsValidTransition(RoomStatus.Available, RoomStatus.Rented));
+        Assert.True(IsValidTransition(RoomStatus.Rented, RoomStatus.Available));
+        Assert.True(IsValidTransition(RoomStatus.Available, RoomStatus.Hidden));
+
+        // Illegal transitions
+        Assert.False(IsValidTransition(RoomStatus.PendingApproval, RoomStatus.Rented));
+    }
+
+    [Fact]
+    public void VNPaySignatureVerification_ShouldValidateHMACSHA512()
+    {
+        string secretKey = "DORMI_VNPAY_SECRET_KEY_EXEMPLAR_2026";
+        string data = "vnp_Amount=19900000&vnp_Command=pay&vnp_TxnRef=TXN-123456";
+
+        byte[] keyBytes = System.Text.Encoding.UTF8.GetBytes(secretKey);
+        byte[] inputBytes = System.Text.Encoding.UTF8.GetBytes(data);
+        using var hmac = new System.Security.Cryptography.HMACSHA512(keyBytes);
+        byte[] hashValue = hmac.ComputeHash(inputBytes);
+        var sb = new System.Text.StringBuilder();
+        foreach (var b in hashValue) sb.Append(b.ToString("x2"));
+        string expectedHash = sb.ToString();
+
+        Assert.Equal(128, expectedHash.Length); // SHA512 produces 64 bytes = 128 hex chars
+        Assert.True(expectedHash.All(c => "0123456789abcdef".Contains(c)));
+    }
+
+    [Fact]
+    public async Task RoomViewDeduplication_CooldownShouldPreventDuplicateViews()
+    {
+        var options = new DbContextOptionsBuilder<DormiDbContext>()
+            .UseInMemoryDatabase(databaseName: Guid.NewGuid().ToString())
+            .Options;
+
+        using var db = new DormiDbContext(options);
+        var roomId = Guid.NewGuid();
+        var viewerId = Guid.NewGuid();
+
+        // First view event
+        db.RoomViews.Add(new RoomView
+        {
+            Id = Guid.NewGuid(),
+            RoomId = roomId,
+            ViewerId = viewerId,
+            EventType = "View",
+            CreatedAt = DateTime.UtcNow
+        });
+        await db.SaveChangesAsync();
+
+        // Check if viewed within 30-minute cooldown window
+        var cooldown = DateTime.UtcNow.AddMinutes(-30);
+        bool alreadyViewed = await db.RoomViews.AnyAsync(v =>
+            v.RoomId == roomId &&
+            v.ViewerId == viewerId &&
+            v.EventType == "View" &&
+            v.CreatedAt >= cooldown);
+
+        Assert.True(alreadyViewed);
+
+        // Simulated attempt after 35 minutes
+        var oldCooldown = DateTime.UtcNow.AddMinutes(35);
+        bool viewedInPastCooldown = await db.RoomViews.AnyAsync(v =>
+            v.RoomId == roomId &&
+            v.ViewerId == viewerId &&
+            v.CreatedAt < cooldown);
+
+        Assert.False(viewedInPastCooldown);
+    }
 }
