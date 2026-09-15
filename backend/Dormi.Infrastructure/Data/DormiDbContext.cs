@@ -33,10 +33,10 @@ public class DormiDbContext : DbContext
         // PostgreSQL PostGIS extension
         modelBuilder.HasPostgresExtension("postgis");
 
-        // Spatial Location Point on Room
+        // Spatial Location Point on Room (PostGIS geography for precise geodesic distance in meters)
         modelBuilder.Entity<Room>()
             .Property(r => r.Location)
-            .HasColumnType("geometry(Point, 4326)");
+            .HasColumnType("geography(Point, 4326)");
         
         // Landlord (User) - Rooms (One to Many)
         modelBuilder.Entity<User>()

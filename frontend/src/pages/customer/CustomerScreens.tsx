@@ -11,7 +11,7 @@ export function CustomerLayout() {
     { label: 'Phòng đã lưu', path: '/customer/saved' },
     { label: 'Lịch hẹn', path: '/customer/appointments' },
     { label: 'Tin nhắn', path: '/customer/messages' },
-    { label: 'AI Matcher', path: '/customer/matcher' },
+    { label: 'Đối soát Bạn cùng phòng', path: '/customer/matcher' },
     { label: 'Hồ sơ', path: '/customer/profile' },
   ];
 
@@ -62,8 +62,8 @@ export function CustomerMatcher() {
        <div className="flex items-center justify-center w-16 h-16 rounded-pill bg-gradient-to-br from-indigo-500 to-purple-500 text-white mb-6">
           <Sparkles className="w-8 h-8" />
        </div>
-       <h1 className="text-[40px] font-bold text-[#1d1d1f] mb-2">Dormi AI Matcher.</h1>
-       <p className="text-[17px] text-[#6e6e73] mb-12 text-center max-w-[500px]">Thuật toán ghép nối thông minh giúp bạn tìm được người bạn cùng phòng lý tưởng nhất.</p>
+       <h1 className="text-[40px] font-bold text-[#1d1d1f] mb-2">Dormi Lifestyle Matcher.</h1>
+       <p className="text-[17px] text-[#6e6e73] mb-12 text-center max-w-[500px]">Thuật toán đối soát độ tương thích lối sống giúp bạn tìm được người bạn cùng phòng lý tưởng nhất.</p>
        
        <BentoCard noPadding className="w-full max-w-[400px] h-[500px] bg-white relative shadow-2xl flex flex-col cursor-pointer transform transition-transform hover:scale-[1.02]">
          <div className="flex-1 bg-[#e8e8ed] relative">

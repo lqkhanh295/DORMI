@@ -78,10 +78,32 @@ public class TenantReviewsController : ControllerBase
             return BadRequest(new { message = "Điểm đánh giá phải từ 1 đến 5 sao." });
         }
 
+        // ponytail: Strictly verify that a LeaseContract exists between this Landlord and Tenant
+        var lease = await _db.LeaseContracts.FirstOrDefaultAsync(l =>
+            l.LandlordId == userId &&
+            l.TenantId == dto.TenantId &&
+            (!dto.LeaseId.HasValue || l.Id == dto.LeaseId.Value));
+
+        if (lease == null)
+        {
+            return BadRequest(new { message = "Bạn chỉ có thể đánh giá người thuê khi đã có hợp đồng thuê phòng (LeaseContract) với họ." });
+        }
+
+        // Prevent duplicate reviews for the same lease / tenant
+        bool alreadyReviewed = await _db.TenantReviews.AnyAsync(r =>
+            r.LandlordId == userId &&
+            r.TenantId == dto.TenantId &&
+            (dto.LeaseId.HasValue ? r.LeaseId == dto.LeaseId.Value : true));
+
+        if (alreadyReviewed)
+        {
+            return BadRequest(new { message = "Bạn đã gửi đánh giá cho hợp đồng này rồi." });
+        }
+
         var review = new TenantReview
         {
             Id = Guid.NewGuid(),
-            LeaseId = dto.LeaseId,
+            LeaseId = dto.LeaseId ?? lease.Id,
             LandlordId = userId,
             TenantId = dto.TenantId,
             Rating = dto.Rating,

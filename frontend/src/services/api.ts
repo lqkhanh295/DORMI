@@ -442,6 +442,17 @@ export const landlordApi = {
     });
   },
 
+  checkPaymentStatus: async (transactionRef: string) => {
+    return request<any>(`/landlord/payment/status/${transactionRef}`);
+  },
+
+  simulateGatewayPayment: async (transactionRef: string) => {
+    return request<any>('/landlord/payment/simulate-gateway', {
+      method: 'POST',
+      body: JSON.stringify({ transactionRef })
+    });
+  },
+
   discoverTenants: async () => {
     return request<any[]>('/landlord/discover-tenants');
   },

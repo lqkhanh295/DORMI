@@ -162,6 +162,9 @@ public class ReviewVerificationDto
 public class PaymentVerifyDto
 {
     public string TransactionRef { get; set; } = string.Empty;
+    public string? SecureHash { get; set; }
+    public string? ResponseCode { get; set; }
+    public string? PaymentMethod { get; set; }
     public bool Success { get; set; } = true;
 }
 
