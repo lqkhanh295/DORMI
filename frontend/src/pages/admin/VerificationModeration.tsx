@@ -33,8 +33,13 @@ export default function VerificationModeration() {
       setLoading(true);
       const res = await adminApi.getPendingVerifications();
       if (res && Array.isArray(res)) {
-        setQueue(res);
-        if (res.length > 0 && !selectedId) setSelectedId(res[0].id);
+        const mapped = res.map((item: any) => ({
+          ...item,
+          id: item.id || item.requestId,
+          userId: item.userId || item.landlordId
+        }));
+        setQueue(mapped);
+        if (mapped.length > 0 && !selectedId) setSelectedId(mapped[0].id);
       }
     } catch (err) {
       console.warn('Failed to load pending verifications:', err);

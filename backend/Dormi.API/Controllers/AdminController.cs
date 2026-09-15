@@ -88,7 +88,9 @@ public class AdminController : ControllerBase
             .OrderByDescending(v => v.SubmittedAt)
             .Select(v => new
             {
+                Id = v.Id,
                 RequestId = v.Id,
+                UserId = v.UserId,
                 LandlordId = v.UserId,
                 FullName = v.User.FullName,
                 Email = v.User.Email,
@@ -105,18 +107,36 @@ public class AdminController : ControllerBase
         return Ok(verifications);
     }
 
-    [HttpPatch("verifications/{landlordId}")]
-    public async Task<IActionResult> UpdateVerificationStatus(Guid landlordId, [FromBody] ReviewVerificationDto dto)
+    [HttpPatch("verifications/{id}")]
+    [HttpPatch("verifications/{id}/review")]
+    public async Task<IActionResult> UpdateVerificationStatus(Guid id, [FromBody] ReviewVerificationDto dto)
     {
-        var landlord = await _db.Users.FirstOrDefaultAsync(u => u.Id == landlordId && u.Role == UserRole.Landlord);
-        if (landlord == null) return NotFound(new { message = "Không tìm thấy thông tin chủ trọ." });
-
+        // Support finding by VerificationRequest Id or Landlord User Id
         var request = await _db.VerificationRequests
-            .Where(r => r.UserId == landlordId && r.Status == "Pending")
+            .Include(r => r.User)
+            .Where(r => (r.Id == id || r.UserId == id) && r.Status == "Pending")
             .OrderByDescending(r => r.SubmittedAt)
             .FirstOrDefaultAsync();
 
-        landlord.IsVerified = dto.Approved;
+        User? landlord = null;
+        if (request != null)
+        {
+            landlord = request.User ?? await _db.Users.FirstOrDefaultAsync(u => u.Id == request.UserId && u.Role == UserRole.Landlord);
+        }
+        else
+        {
+            landlord = await _db.Users.FirstOrDefaultAsync(u => u.Id == id && u.Role == UserRole.Landlord);
+        }
+
+        if (landlord == null && request == null)
+        {
+            return NotFound(new { message = "Không tìm thấy thông tin yêu cầu xác minh hoặc chủ trọ." });
+        }
+
+        if (landlord != null)
+        {
+            landlord.IsVerified = dto.Approved;
+        }
 
         if (request != null)
         {
@@ -124,6 +144,8 @@ public class AdminController : ControllerBase
             request.RejectReason = dto.Approved ? null : (dto.RejectReason ?? "Giấy tờ chưa hợp lệ hoặc mờ");
             request.ReviewedAt = DateTime.UtcNow;
         }
+
+        var landlordId = landlord?.Id ?? request!.UserId;
 
         _db.Notifications.Add(new Notification
         {

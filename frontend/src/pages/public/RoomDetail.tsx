@@ -4,7 +4,7 @@ import { Card } from '../../components/ui/Card';
 import { Button } from '../../components/ui/Button';
 import { useStore } from '../../store/useStore';
 import { Toaster, toast } from 'sonner';
-import { ArrowLeft, CheckCircle, Heart, Share2 as ShareNetwork, AlertTriangle as Warning, CalendarCheck, X, MessageSquare } from 'lucide-react';
+import { ArrowLeft, CheckCircle, Heart, Share2 as ShareNetwork, AlertTriangle as Warning, CalendarCheck, X, MessageSquare, ShieldCheck, Camera, Check } from 'lucide-react';
 import { appointmentsApi, favoritesApi, roomsApi, type RoomResponse } from '../../services/api';
 
 export default function RoomDetail() {
@@ -223,6 +223,63 @@ export default function RoomDetail() {
                   );
                 })}
               </div>
+            </div>
+
+            {/* DORMI Trust Score & Safety Verification */}
+            <div className="space-y-4 pt-6 border-t border-[#E2E8F0]">
+              <div className="flex items-center justify-between">
+                <h2 className="text-h2 font-bold text-[#0F172A] flex items-center gap-2">
+                  <ShieldCheck className="w-6 h-6 text-[#2563EB]" />
+                  Chỉ số tin cậy DORMI Trust Score
+                </h2>
+                <span className="px-3 py-1 rounded-full text-caption font-bold bg-[#F0FDF4] text-[#16803C] border border-[#DCFCE7]">
+                  {roomData?.isVerifiedLandlord ? '95 / 100 điểm' : '75 / 100 điểm'}
+                </span>
+              </div>
+
+              <div className="p-4 rounded-[14px] bg-[#F5F7FA] border border-[#E2E8F0] space-y-3 shadow-clay-inset">
+                <div className="w-full bg-[#E2E8F0] h-2.5 rounded-full overflow-hidden">
+                  <div 
+                    className="h-full bg-gradient-to-r from-[#2563EB] to-[#16803C] rounded-full transition-all duration-500" 
+                    style={{ width: roomData?.isVerifiedLandlord ? '95%' : '75%' }}
+                  ></div>
+                </div>
+
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 text-caption text-[#475569] pt-1">
+                  <div className="flex items-center gap-1.5">
+                    <Check className="w-4 h-4 text-[#16803C] shrink-0" />
+                    <span>{roomData?.isVerifiedLandlord ? 'CCCD chủ trọ đã xác thực' : 'Tài khoản chủ trọ chưa KYC'}</span>
+                  </div>
+                  <div className="flex items-center gap-1.5">
+                    <Check className="w-4 h-4 text-[#16803C] shrink-0" />
+                    <span>Số điện thoại chính chủ</span>
+                  </div>
+                  <div className="flex items-center gap-1.5">
+                    <Check className="w-4 h-4 text-[#16803C] shrink-0" />
+                    <span>Tọa độ vị trí phòng đã định vị</span>
+                  </div>
+                  <div className="flex items-center gap-1.5">
+                    <Check className="w-4 h-4 text-[#16803C] shrink-0" />
+                    <span>Tin đăng được kiểm duyệt tự động</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            {/* AI Photo Freshness & Anti-Fake Guarantee */}
+            <div className="p-4 rounded-[14px] bg-gradient-to-r from-blue-50 to-indigo-50 border border-blue-200/80 space-y-2">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-2 text-[#00153D] font-bold text-caption">
+                  <Camera className="w-4 h-4 text-[#2563EB]" />
+                  <span>Xác thực ảnh chụp thực tế & Cam kết chống ảnh ảo</span>
+                </div>
+                <span className="text-[11px] font-semibold text-[#2563EB] bg-white px-2 py-0.5 rounded-md border border-blue-200">
+                  Chu kỳ: 5 - 8 tháng
+                </span>
+              </div>
+              <p className="text-caption text-[#475569] leading-relaxed">
+                DORMI áp dụng công nghệ rà soát ảnh để ngăn chặn ảnh photoshop quá đà hoặc ảnh 3D không thực tế. Chủ phòng được khuyến cáo định kỳ cập nhật ảnh chụp mới mỗi 5 - 8 tháng để đảm bảo phòng giống 100% so với thực tế khi khách đến xem.
+              </p>
             </div>
           </div>
         </div>

@@ -22,10 +22,10 @@ export default function LeadAnalytics() {
   const totalViews = analytics?.totalViews ?? 0;
   const totalSaves = analytics?.totalSaves ?? 0;
   const totalContacts = analytics?.totalContacts ?? 0;
-  const conversionRateSave = analytics?.conversionRateSave ?? 0;
-  const conversionRateContact = analytics?.conversionRateContact ?? 0;
-  const dailyViews = analytics?.dailyViews || [];
-  const roomStats = analytics?.roomStats || [];
+  const conversionRateSave = analytics?.conversionRateSave ?? analytics?.saveRate ?? 0;
+  const conversionRateContact = analytics?.conversionRateContact ?? analytics?.contactRate ?? 0;
+  const dailyViews = analytics?.dailyViews ?? analytics?.dailyMetrics ?? [];
+  const roomStats = analytics?.roomStats ?? analytics?.topRooms ?? [];
 
   const maxDayViews = Math.max(...dailyViews.map((d: any) => d.views || 0), 1);
 

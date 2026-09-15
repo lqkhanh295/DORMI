@@ -196,6 +196,9 @@ public class RoomLeadPerformanceDto
     public Guid RoomId { get; set; }
     public string Title { get; set; } = string.Empty;
     public string Status { get; set; } = string.Empty;
+    public decimal Price { get; set; }
+    public string Address { get; set; } = string.Empty;
+    public string? ImageUrl { get; set; }
     public int Views { get; set; }
     public int Saves { get; set; }
     public int Contacts { get; set; }
@@ -210,6 +213,12 @@ public class RealLeadAnalyticsDto
     public double ContactRate { get; set; }
     public List<DailyLeadMetricDto> DailyMetrics { get; set; } = new();
     public List<RoomLeadPerformanceDto> TopRooms { get; set; } = new();
+
+    // Dual-compatible aliases for frontend
+    public List<DailyLeadMetricDto> DailyViews => DailyMetrics;
+    public List<RoomLeadPerformanceDto> RoomStats => TopRooms;
+    public double ConversionRateSave => SaveRate;
+    public double ConversionRateContact => ContactRate;
 }
 
 // Tenant Discovery DTOs
@@ -229,11 +238,15 @@ public class TenantDiscoveryDto
 public class CreateTenantReviewDto
 {
     public Guid? LeaseId { get; set; }
+    public Guid? LeaseContractId { get => LeaseId; set => LeaseId = value; }
     public Guid TenantId { get; set; }
     public int Rating { get; set; }
     public int PunctualityScore { get; set; } = 5;
+    public int Punctuality { get => PunctualityScore; set => PunctualityScore = value; }
     public int CleanlinessScore { get; set; } = 5;
+    public int Cleanliness { get => CleanlinessScore; set => CleanlinessScore = value; }
     public int RespectScore { get; set; } = 5;
+    public int Respectfulness { get => RespectScore; set => RespectScore = value; }
     public string Comment { get; set; } = string.Empty;
     public bool IsAnonymous { get; set; } = true;
 }

@@ -1,8 +1,13 @@
 import { useState, useEffect } from 'react';
 import { Card } from '../../components/ui/Card';
+import { Button } from '../../components/ui/Button';
 import { landlordApi } from '../../services/api';
+import { TenantRatingModal } from '../../components/landlord/TenantRatingModal';
+import { UserCheck, Plus } from 'lucide-react';
+import { Link } from 'react-router-dom';
 
 export default function LandlordDashboard() {
+  const [showRateModal, setShowRateModal] = useState(false);
   const [analytics, setAnalytics] = useState({
     totalListings: 0,
     activeListings: 0,
@@ -44,10 +49,29 @@ export default function LandlordDashboard() {
     <div className="space-y-8 pb-12 bg-[#F5F7FA]">
       <div className="bg-white p-6 md:p-8 rounded-[18px] shadow-clay-soft flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
         <div>
-          <h1 className="text-[32px] font-bold text-[#0F172A] tracking-tight leading-[1.1]">Tổng quan Chủ trọ (API Realtime)</h1>
+          <h1 className="text-[32px] font-bold text-[#0F172A] tracking-tight leading-[1.1]">Tổng quan Chủ trọ</h1>
           <p className="text-body text-[#64748B] mt-1">Quản lý tài sản và phân tích hiệu quả cho thuê từ Backend API.</p>
         </div>
+        <div className="flex items-center gap-3">
+          <Button 
+            onClick={() => setShowRateModal(true)} 
+            variant="secondary" 
+            className="flex items-center gap-2"
+          >
+            <UserCheck className="w-4 h-4 text-[#2563EB]" /> Đánh giá khách thuê
+          </Button>
+          <Link to="/landlord/listing/new">
+            <Button variant="primary" className="flex items-center gap-2">
+              <Plus className="w-4 h-4" /> Đăng phòng mới
+            </Button>
+          </Link>
+        </div>
       </div>
+
+      <TenantRatingModal 
+        isOpen={showRateModal} 
+        onClose={() => setShowRateModal(false)} 
+      />
 
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
         <Card className="p-6 bg-white rounded-[18px] shadow-clay-soft hover:-translate-y-[2px] transition-all">
