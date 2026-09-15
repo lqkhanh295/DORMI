@@ -75,6 +75,9 @@ export default function AppRoutes() {
           <Route index element={<LandlordDashboard />} />
           <Route path="analytics" element={<LeadAnalytics />} />
           <Route path="create" element={<SmartListingForm />} />
+          <Route path="listing/new" element={<SmartListingForm />} />
+          <Route path="create-room" element={<SmartListingForm />} />
+          <Route path="new" element={<SmartListingForm />} />
           <Route path="rooms" element={<RoomManagement />} />
           <Route path="discover" element={<TenantDiscovery />} />
           <Route path="pricing" element={<PricingCheckout />} />
@@ -82,6 +85,10 @@ export default function AppRoutes() {
           <Route path="verify" element={<VerificationCenter />} />
           <Route path="chat" element={<LandlordChatCenter />} />
           <Route path="settings" element={<LandlordSettings />} />
+          <Route path="dashboard" element={<Navigate to="/landlord" replace />} />
+          <Route path="appointments" element={<Navigate to="/landlord" replace />} />
+          <Route path="messages" element={<Navigate to="/landlord/chat" replace />} />
+          <Route path="kyc" element={<Navigate to="/landlord/verify" replace />} />
         </Route>
       </Route>
 

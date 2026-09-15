@@ -212,7 +212,10 @@ export const imagesApi = {
       body: formData
     });
 
-    if (!response.ok) throw new Error('Failed to upload image to Cloudinary');
+    if (!response.ok) {
+      const errorData = await response.json().catch(() => ({}));
+      throw new Error(errorData.message || 'Failed to upload image to Cloudinary');
+    }
     return response.json() as Promise<{ imageUrl: string }>;
   },
 
@@ -229,7 +232,10 @@ export const imagesApi = {
       body: formData
     });
 
-    if (!response.ok) throw new Error('Failed to upload room image');
+    if (!response.ok) {
+      const errorData = await response.json().catch(() => ({}));
+      throw new Error(errorData.message || 'Failed to upload room image');
+    }
     return response.json();
   }
 };
