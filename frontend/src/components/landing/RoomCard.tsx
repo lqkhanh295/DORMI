@@ -1,7 +1,9 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { CheckCircle, Heart } from 'lucide-react';
 import { toast } from 'sonner';
+import { favoritesApi } from '../../services/api';
+import { useStore } from '../../store/useStore';
 
 export interface RoomItem {
   id: string;
@@ -13,18 +15,47 @@ export interface RoomItem {
   verified?: boolean;
 }
 
-export function RoomCard({ room }: { room: RoomItem }) {
-  const [isSaved, setIsSaved] = useState(false);
+export function RoomCard({ 
+  room, 
+  initialSaved = false, 
+  onToggleSaved 
+}: { 
+  room: RoomItem; 
+  initialSaved?: boolean; 
+  onToggleSaved?: (isSaved: boolean) => void;
+}) {
+  const [isSaved, setIsSaved] = useState(initialSaved);
+  const { currentUser } = useStore();
 
-  const toggleFavorite = (e: React.MouseEvent) => {
+  useEffect(() => {
+    setIsSaved(initialSaved);
+  }, [initialSaved]);
+
+  const toggleFavorite = async (e: React.MouseEvent) => {
     e.preventDefault();
     e.stopPropagation();
-    const newState = !isSaved;
-    setIsSaved(newState);
-    if (newState) {
-      toast.success('Đã lưu phòng vào danh sách yêu thích!');
-    } else {
-      toast('Đã bỏ lưu phòng.');
+
+    if (!currentUser) {
+      toast.error('Vui lòng đăng nhập để lưu phòng vào danh sách yêu thích!');
+      return;
+    }
+
+    const nextState = !isSaved;
+    setIsSaved(nextState);
+    if (onToggleSaved) onToggleSaved(nextState);
+
+    try {
+      if (nextState) {
+        await favoritesApi.addFavorite(room.id);
+        toast.success('Đã lưu phòng vào danh sách yêu thích!');
+      } else {
+        await favoritesApi.removeFavorite(room.id);
+        toast('Đã bỏ lưu phòng.');
+      }
+    } catch (err: any) {
+      setIsSaved(!nextState);
+      if (onToggleSaved) onToggleSaved(!nextState);
+      toast.error(err?.message || 'Không thể cập nhật danh sách yêu thích.');
     }
   };
 

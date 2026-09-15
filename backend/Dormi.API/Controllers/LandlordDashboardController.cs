@@ -133,12 +133,15 @@ public class LandlordDashboardController : ControllerBase
             .Select(g => new { RoomId = g.Key, Count = g.Count() })
             .ToDictionaryAsync(g => g.RoomId, g => g.Count);
 
-        var rooms = await roomsQuery.ToListAsync();
+        var rooms = await roomsQuery.Include(r => r.Images).ToListAsync();
         var topRooms = rooms.Select(r => new RoomLeadPerformanceDto
         {
             RoomId = r.Id,
             Title = r.Title,
             Status = r.Status.ToString(),
+            Price = r.Price,
+            Address = r.Address,
+            ImageUrl = r.Images.FirstOrDefault()?.ImageUrl,
             Views = viewsByRoom.GetValueOrDefault(r.Id, 0),
             Saves = savesByRoom.GetValueOrDefault(r.Id, 0),
             Contacts = contactsByRoom.GetValueOrDefault(r.Id, 0)

@@ -501,16 +501,32 @@ export const tenantReviewsApi = {
 
   rateTenant: async (data: {
     tenantId: string;
-    leaseContractId: string;
+    leaseContractId?: string;
+    leaseId?: string;
     rating: number;
-    punctuality: number;
-    cleanliness: number;
-    respectfulness: number;
+    punctuality?: number;
+    cleanliness?: number;
+    respectfulness?: number;
+    punctualityScore?: number;
+    cleanlinessScore?: number;
+    respectScore?: number;
     comment: string;
+    isAnonymous?: boolean;
   }) => {
+    const payload = {
+      tenantId: data.tenantId,
+      leaseId: data.leaseId || data.leaseContractId,
+      leaseContractId: data.leaseContractId || data.leaseId,
+      rating: data.rating,
+      punctualityScore: data.punctualityScore ?? data.punctuality ?? 5,
+      cleanlinessScore: data.cleanlinessScore ?? data.cleanliness ?? 5,
+      respectScore: data.respectScore ?? data.respectfulness ?? 5,
+      comment: data.comment,
+      isAnonymous: data.isAnonymous ?? true
+    };
     return request<any>('/tenant-reviews', {
       method: 'POST',
-      body: JSON.stringify(data)
+      body: JSON.stringify(payload)
     });
   },
 

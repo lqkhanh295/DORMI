@@ -19,11 +19,27 @@ export default function SearchResults() {
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedDistrict, setSelectedDistrict] = useState<string | null>(null);
   const [selectedPrice, setSelectedPrice] = useState<string | null>(null);
+  const [selectedArea, setSelectedArea] = useState<string | null>(null);
+  const [selectedUtilities, setSelectedUtilities] = useState<string[]>([]);
   const [sortBy, setSortBy] = useState('relevant');
   const [showMap, setShowMap] = useState(true);
   const [showMobileFilter, setShowMobileFilter] = useState(false);
   const [isLoading] = useState(false);
   const [selectedRoomId, setSelectedRoomId] = useState<string | null>(null);
+
+  const priceLabels: Record<string, string> = {
+    under3m: 'Dưới 3 triệu',
+    '3mTo5m': '3 - 5 triệu',
+    '5mTo8m': '5 - 8 triệu',
+    above8m: 'Trên 8 triệu'
+  };
+
+  const areaLabels: Record<string, string> = {
+    under20: 'Dưới 20 m²',
+    '20to30': '20 - 30 m²',
+    '30to45': '30 - 45 m²',
+    above45: 'Trên 45 m²'
+  };
 
   // Active filters list
   const activeFilters = useMemo(() => {
@@ -38,10 +54,24 @@ export default function SearchResults() {
     if (selectedPrice) {
       filters.push({
         id: 'price',
-        label: selectedPrice,
+        label: priceLabels[selectedPrice] || selectedPrice,
         clear: () => setSelectedPrice(null)
       });
     }
+    if (selectedArea) {
+      filters.push({
+        id: 'area',
+        label: areaLabels[selectedArea] || selectedArea,
+        clear: () => setSelectedArea(null)
+      });
+    }
+    selectedUtilities.forEach(util => {
+      filters.push({
+        id: `util-${util}`,
+        label: util,
+        clear: () => setSelectedUtilities(prev => prev.filter(u => u !== util))
+      });
+    });
     if (searchQuery) {
       filters.push({
         id: 'query',
@@ -50,7 +80,7 @@ export default function SearchResults() {
       });
     }
     return filters;
-  }, [selectedDistrict, selectedPrice, searchQuery]);
+  }, [selectedDistrict, selectedPrice, selectedArea, selectedUtilities, searchQuery]);
 
   // Filtered and Sorted Listings
   const filteredListings = useMemo(() => {
@@ -59,7 +89,30 @@ export default function SearchResults() {
         room.title.toLowerCase().includes(searchQuery.toLowerCase()) || 
         room.address.toLowerCase().includes(searchQuery.toLowerCase());
       const matchDistrict = !selectedDistrict || room.address.toLowerCase().includes(selectedDistrict.toLowerCase());
-      return matchQuery && matchDistrict;
+
+      // Price range
+      let matchPrice = true;
+      if (selectedPrice === 'under3m') matchPrice = room.price < 3000000;
+      else if (selectedPrice === '3mTo5m') matchPrice = room.price >= 3000000 && room.price <= 5000000;
+      else if (selectedPrice === '5mTo8m') matchPrice = room.price >= 5000000 && room.price <= 8000000;
+      else if (selectedPrice === 'above8m') matchPrice = room.price > 8000000;
+
+      // Area range
+      let matchArea = true;
+      const roomArea = room.area || 25;
+      if (selectedArea === 'under20') matchArea = roomArea < 20;
+      else if (selectedArea === '20to30') matchArea = roomArea >= 20 && roomArea <= 30;
+      else if (selectedArea === '30to45') matchArea = roomArea >= 30 && roomArea <= 45;
+      else if (selectedArea === 'above45') matchArea = roomArea > 45;
+
+      // Utilities match
+      let matchUtilities = true;
+      if (selectedUtilities.length > 0) {
+        const roomUtils = (room.utilities || '').toLowerCase();
+        matchUtilities = selectedUtilities.every(u => roomUtils.includes(u.toLowerCase()));
+      }
+
+      return matchQuery && matchDistrict && matchPrice && matchArea && matchUtilities;
     });
 
     if (sortBy === 'price-low') {
@@ -71,12 +124,14 @@ export default function SearchResults() {
     }
 
     return result;
-  }, [listings, searchQuery, selectedDistrict, sortBy]);
+  }, [listings, searchQuery, selectedDistrict, selectedPrice, selectedArea, selectedUtilities, sortBy]);
 
   const clearAllFilters = () => {
     setSearchQuery('');
     setSelectedDistrict(null);
     setSelectedPrice(null);
+    setSelectedArea(null);
+    setSelectedUtilities([]);
   };
 
   // ponytail: SearchResults with Active Filter Pills, Sort Dropdown, Dynamic Filter CTA, Skeleton Loaders & Recovery Empty State
@@ -105,7 +160,7 @@ export default function SearchResults() {
             <button 
               type="button"
               onClick={() => setShowMobileFilter(true)}
-              className="h-11 px-4 bg-white hover:bg-[#F5F7FA] text-[#0F172A] border border-[#E2E8F0] rounded-[12px] shadow-clay-soft hidden sm:flex items-center gap-2 shrink-0 text-caption font-semibold whitespace-nowrap transition-all touch-target active:scale-95"
+              className="h-11 px-4 bg-white hover:bg-[#F5F7FA] text-[#0F172A] border border-[#E2E8F0] rounded-[12px] shadow-clay-soft flex items-center gap-2 shrink-0 text-caption font-semibold whitespace-nowrap transition-all touch-target active:scale-95"
             >
               <SlidersHorizontal className="w-4 h-4 text-[#00153D]" />
               <span>Bộ lọc</span>
@@ -274,18 +329,88 @@ export default function SearchResults() {
             </div>
             
             <div className="p-6 space-y-6 overflow-y-auto flex-1">
+              {/* Khu vực */}
               <div className="space-y-2">
                 <label className="text-caption font-semibold text-[#0F172A]">Khu vực</label>
-                <div className="grid grid-cols-2 gap-2">
-                  {['Quận 1', 'Quận 3', 'Quận 7', 'Quận 10'].map(d => (
+                <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
+                  {['Quận 1', 'Quận 3', 'Quận 5', 'Quận 7', 'Quận 10', 'Bình Thạnh', 'Tân Bình', 'Thủ Đức'].map(d => (
                     <button
                       key={d}
+                      type="button"
                       onClick={() => setSelectedDistrict(selectedDistrict === d ? null : d)}
-                      className={`py-2 rounded-[10px] text-caption font-semibold border ${selectedDistrict === d ? 'btn-clay-primary' : 'bg-[#F5F7FA] text-[#64748B] border-[#E2E8F0]'}`}
+                      className={`py-2 px-3 rounded-[10px] text-caption font-semibold border transition-all ${selectedDistrict === d ? 'btn-clay-primary' : 'bg-[#F5F7FA] text-[#64748B] border-[#E2E8F0] hover:text-[#0F172A]'}`}
                     >
                       {d}
                     </button>
                   ))}
+                </div>
+              </div>
+
+              {/* Khoảng giá */}
+              <div className="space-y-2">
+                <label className="text-caption font-semibold text-[#0F172A]">Khoảng giá thuê</label>
+                <div className="grid grid-cols-2 gap-2">
+                  {[
+                    { id: 'under3m', label: 'Dưới 3 triệu' },
+                    { id: '3mTo5m', label: '3 - 5 triệu' },
+                    { id: '5mTo8m', label: '5 - 8 triệu' },
+                    { id: 'above8m', label: 'Trên 8 triệu' }
+                  ].map(p => (
+                    <button
+                      key={p.id}
+                      type="button"
+                      onClick={() => setSelectedPrice(selectedPrice === p.id ? null : p.id)}
+                      className={`py-2 px-3 rounded-[10px] text-caption font-semibold border transition-all ${selectedPrice === p.id ? 'btn-clay-primary' : 'bg-[#F5F7FA] text-[#64748B] border-[#E2E8F0] hover:text-[#0F172A]'}`}
+                    >
+                      {p.label}
+                    </button>
+                  ))}
+                </div>
+              </div>
+
+              {/* Khoảng diện tích */}
+              <div className="space-y-2">
+                <label className="text-caption font-semibold text-[#0F172A]">Diện tích căn phòng</label>
+                <div className="grid grid-cols-2 gap-2">
+                  {[
+                    { id: 'under20', label: 'Dưới 20 m²' },
+                    { id: '20to30', label: '20 - 30 m²' },
+                    { id: '30to45', label: '30 - 45 m²' },
+                    { id: 'above45', label: 'Trên 45 m²' }
+                  ].map(a => (
+                    <button
+                      key={a.id}
+                      type="button"
+                      onClick={() => setSelectedArea(selectedArea === a.id ? null : a.id)}
+                      className={`py-2 px-3 rounded-[10px] text-caption font-semibold border transition-all ${selectedArea === a.id ? 'btn-clay-primary' : 'bg-[#F5F7FA] text-[#64748B] border-[#E2E8F0] hover:text-[#0F172A]'}`}
+                    >
+                      {a.label}
+                    </button>
+                  ))}
+                </div>
+              </div>
+
+              {/* Tiện ích */}
+              <div className="space-y-2">
+                <label className="text-caption font-semibold text-[#0F172A]">Tiện ích mong muốn (Chọn nhiều)</label>
+                <div className="flex flex-wrap gap-2">
+                  {['Wifi', 'Máy lạnh', 'Tủ lạnh', 'Máy giặt', 'Ban công', 'Bếp riêng', 'Thang máy', 'Giờ giấc tự do', 'Bãi giữ xe'].map(util => {
+                    const isSelected = selectedUtilities.includes(util);
+                    return (
+                      <button
+                        key={util}
+                        type="button"
+                        onClick={() => {
+                          setSelectedUtilities(prev => 
+                            isSelected ? prev.filter(u => u !== util) : [...prev, util]
+                          );
+                        }}
+                        className={`py-1.5 px-3 rounded-full text-caption font-semibold border transition-all ${isSelected ? 'bg-[#00153D] text-white border-[#00153D]' : 'bg-[#F5F7FA] text-[#64748B] border-[#E2E8F0] hover:text-[#0F172A]'}`}
+                      >
+                        {util}
+                      </button>
+                    );
+                  })}
                 </div>
               </div>
             </div>

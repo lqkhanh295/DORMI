@@ -3,7 +3,7 @@ import { Link } from 'react-router-dom';
 import { Card } from '../../components/ui/Card';
 import { Button } from '../../components/ui/Button';
 import { adminApi } from '../../services/api';
-import { Users, UserCheck, Home, AlertTriangle, ArrowRight } from 'lucide-react';
+import { Users, UserCheck, Home, AlertTriangle, ArrowRight, DollarSign } from 'lucide-react';
 import { toast } from 'sonner';
 
 export default function AdminDashboard() {
@@ -11,7 +11,8 @@ export default function AdminDashboard() {
     totalUsers: 0,
     pendingVerifications: 0,
     pendingRooms: 0,
-    openReports: 0
+    openReports: 0,
+    totalRevenue: 0
   });
 
   const [verifications, setVerifications] = useState<any[]>([]);
@@ -22,7 +23,7 @@ export default function AdminDashboard() {
     try {
       setLoading(true);
       const [sRes, vRes, rRes, repRes] = await Promise.all([
-        adminApi.getStats().catch(() => ({ totalUsers: 0 })),
+        adminApi.getStats().catch(() => ({ totalUsers: 0, totalRevenue: 0 })),
         adminApi.getPendingVerifications().catch(() => []),
         adminApi.getRoomsForModeration().catch(() => []),
         adminApi.getReports().catch(() => [])
@@ -35,7 +36,8 @@ export default function AdminDashboard() {
         totalUsers: sRes?.totalUsers || 0,
         pendingVerifications: Array.isArray(vRes) ? vRes.length : 0,
         pendingRooms: pendingRoomsList.length,
-        openReports: openReportsList.length
+        openReports: openReportsList.length,
+        totalRevenue: sRes?.totalRevenue || 0
       });
 
       setVerifications(Array.isArray(vRes) ? vRes : []);
@@ -79,8 +81,8 @@ export default function AdminDashboard() {
         </div>
       </div>
 
-      {/* 4 Real KPI Cards */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5">
+      {/* 5 Real KPI Cards */}
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-5">
         <Card className="p-5 bg-white rounded-2xl border border-slate-200 shadow-sm hover:shadow-md transition-all">
           <div className="flex items-center justify-between mb-3">
             <span className="text-xs font-bold text-slate-500 uppercase tracking-wider">Tổng người dùng</span>
@@ -129,6 +131,19 @@ export default function AdminDashboard() {
           <Link to="/admin/reports" className="text-xs font-semibold text-rose-700 hover:underline inline-flex items-center gap-1 mt-2">
             Xử lý vi phạm <ArrowRight className="w-3 h-3" />
           </Link>
+        </Card>
+
+        <Card className="p-5 bg-white rounded-2xl border border-slate-200 shadow-sm hover:shadow-md transition-all">
+          <div className="flex items-center justify-between mb-3">
+            <span className="text-xs font-bold text-emerald-600 uppercase tracking-wider">Doanh thu gói DV</span>
+            <div className="w-9 h-9 rounded-xl bg-emerald-50 text-emerald-600 flex items-center justify-center">
+              <DollarSign className="w-5 h-5" />
+            </div>
+          </div>
+          <p className="text-2xl font-extrabold text-emerald-600 truncate">
+            {loading ? '...' : `${Number(stats.totalRevenue).toLocaleString('vi-VN')} đ`}
+          </p>
+          <p className="text-xs text-slate-400 mt-2">Đã thanh toán thực tế</p>
         </Card>
       </div>
 

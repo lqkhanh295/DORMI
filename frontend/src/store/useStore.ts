@@ -17,6 +17,8 @@ export interface Listing {
   id: string;
   title: string;
   price: number;
+  area?: number;
+  utilities?: string;
   address: string;
   image: string;
   type: string;
@@ -131,6 +133,8 @@ export const useStore = create<AppState>()(
               landlordId: r.landlordId,
               status: statusMap[r.status] || 'Available',
               isVerifiedLandlord: r.isVerifiedLandlord ?? false,
+              area: Number(r.area || 25),
+              utilities: r.utilities || '',
               latitude: r.latitude,
               longitude: r.longitude,
               distanceKm: r.distanceKm
