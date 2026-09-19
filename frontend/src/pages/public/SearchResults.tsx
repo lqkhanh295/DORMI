@@ -13,7 +13,12 @@ export default function SearchResults() {
   const navigate = useNavigate();
 
   useEffect(() => {
-    fetchListings();
+    let mounted = true;
+    setIsLoading(true);
+    fetchListings().finally(() => {
+      if (mounted) setIsLoading(false);
+    });
+    return () => { mounted = false; };
   }, [fetchListings]);
   
   const [searchQuery, setSearchQuery] = useState('');
@@ -24,7 +29,7 @@ export default function SearchResults() {
   const [sortBy, setSortBy] = useState('relevant');
   const [showMap, setShowMap] = useState(true);
   const [showMobileFilter, setShowMobileFilter] = useState(false);
-  const [isLoading] = useState(false);
+  const [isLoading, setIsLoading] = useState(true);
   const [selectedRoomId, setSelectedRoomId] = useState<string | null>(null);
 
   const priceLabels: Record<string, string> = {
