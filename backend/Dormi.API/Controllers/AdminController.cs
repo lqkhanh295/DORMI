@@ -8,7 +8,9 @@ using Dormi.Domain.Enums;
 using Dormi.Infrastructure.Data;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.SignalR;
 using Microsoft.EntityFrameworkCore;
+using Dormi.API.Hubs;
 
 namespace Dormi.API.Controllers;
 
@@ -18,10 +20,12 @@ namespace Dormi.API.Controllers;
 public class AdminController : ControllerBase
 {
     private readonly DormiDbContext _db;
+    private readonly IHubContext<ChatHub> _hubContext;
 
-    public AdminController(DormiDbContext db)
+    public AdminController(DormiDbContext db, IHubContext<ChatHub> hubContext)
     {
         _db = db;
+        _hubContext = hubContext;
     }
 
     [HttpGet("stats")]
@@ -200,7 +204,7 @@ public class AdminController : ControllerBase
     [HttpPatch("rooms/{roomId}/status")]
     public async Task<IActionResult> UpdateRoomStatus(Guid roomId, [FromQuery] RoomStatus status)
     {
-        var room = await _db.Rooms.FindAsync(roomId);
+        var room = await _db.Rooms.Include(r => r.Landlord).FirstOrDefaultAsync(r => r.Id == roomId);
         if (room == null) return NotFound(new { message = "Không tìm thấy phòng trọ." });
 
         // ponytail: Enforce valid room lifecycle state transitions
@@ -232,8 +236,10 @@ public class AdminController : ControllerBase
             {
                 Id = Guid.NewGuid(),
                 UserId = room.LandlordId,
-                Title = "Cập nhật trạng thái tin đăng phòng",
-                Message = $"Tin đăng '{room.Title}' đã được chuyển từ trạng thái {oldStatus} sang {status}.",
+                Title = status == RoomStatus.Available 
+                    ? "Tin đăng phòng đã được phê duyệt" 
+                    : (status == RoomStatus.Hidden ? "Tin đăng phòng bị từ chối / ẩn" : "Cập nhật trạng thái tin đăng"),
+                Message = $"Tin đăng '{room.Title}' đã được quản trị viên duyệt thành trạng thái: {status}.",
                 Type = "System",
                 LinkUrl = $"/rooms/{room.Id}",
                 CreatedAt = DateTime.UtcNow
@@ -241,6 +247,38 @@ public class AdminController : ControllerBase
         }
 
         await _db.SaveChangesAsync();
+
+        // Broadcast real-time room moderation event via SignalR
+        try
+        {
+            var payload = new
+            {
+                roomId = room.Id.ToString(),
+                title = room.Title,
+                landlordId = room.LandlordId.ToString(),
+                landlordName = room.Landlord?.FullName ?? "Chủ trọ",
+                oldStatus = (int)oldStatus,
+                newStatus = (int)status,
+                statusName = status.ToString(),
+                updatedAt = DateTime.UtcNow.ToString("o")
+            };
+
+            // 1. Notify the Landlord who owns the room
+            await _hubContext.Clients.Group(room.LandlordId.ToString().ToLower())
+                .SendAsync("RoomStatusUpdated", payload);
+
+            // 2. Notify all Admins to refresh moderation tables and KPIs
+            await _hubContext.Clients.Group("admins")
+                .SendAsync("RoomModerated", payload);
+
+            // 3. Broadcast to all clients for live public sync
+            await _hubContext.Clients.All
+                .SendAsync("RoomStatusChanged", payload);
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"[SignalR Admin Room Approval Notice]: {ex.Message}");
+        }
 
         return Ok(new { message = $"Đã cập nhật trạng thái phòng thành: {status}" });
     }

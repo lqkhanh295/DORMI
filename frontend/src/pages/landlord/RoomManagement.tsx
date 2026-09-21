@@ -48,6 +48,18 @@ export default function RoomManagement() {
 
   useEffect(() => {
     loadRooms();
+
+    const handleRoomStatusUpdate = () => {
+      loadRooms();
+    };
+
+    window.addEventListener('room-status-updated', handleRoomStatusUpdate);
+    window.addEventListener('room-status-changed', handleRoomStatusUpdate);
+
+    return () => {
+      window.removeEventListener('room-status-updated', handleRoomStatusUpdate);
+      window.removeEventListener('room-status-changed', handleRoomStatusUpdate);
+    };
   }, []);
 
   const compressImage = (file: File): Promise<string> => {

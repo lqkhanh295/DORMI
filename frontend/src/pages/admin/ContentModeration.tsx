@@ -90,6 +90,20 @@ export default function ContentModeration() {
   useEffect(() => {
     loadRooms();
     loadRoommatePosts();
+
+    const handleRealtimeUpdate = () => {
+      loadRooms();
+    };
+
+    window.addEventListener('new-room-pending', handleRealtimeUpdate);
+    window.addEventListener('room-moderated', handleRealtimeUpdate);
+    window.addEventListener('room-status-changed', handleRealtimeUpdate);
+
+    return () => {
+      window.removeEventListener('new-room-pending', handleRealtimeUpdate);
+      window.removeEventListener('room-moderated', handleRealtimeUpdate);
+      window.removeEventListener('room-status-changed', handleRealtimeUpdate);
+    };
   }, []);
 
   const filteredRooms = filterStatus === 'all'
