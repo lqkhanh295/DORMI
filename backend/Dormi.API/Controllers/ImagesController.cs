@@ -50,24 +50,17 @@ public class ImagesController : ControllerBase
             return false;
         }
 
-        if (file.Length > 5 * 1024 * 1024)
+        if (file.Length > 20 * 1024 * 1024)
         {
-            errorMessage = "Dung lượng ảnh vượt quá giới hạn tối đa 5MB.";
+            errorMessage = "Dung lượng ảnh vượt quá giới hạn tối đa 20MB.";
             return false;
         }
 
-        var allowedExtensions = new[] { ".jpg", ".jpeg", ".png", ".webp" };
+        var allowedExtensions = new[] { ".jpg", ".jpeg", ".png", ".webp", ".gif", ".bmp", ".heic", ".heif", ".svg" };
         var ext = Path.GetExtension(file.FileName).ToLowerInvariant();
-        if (string.IsNullOrEmpty(ext) || !allowedExtensions.Contains(ext))
+        if (!string.IsNullOrEmpty(ext) && !allowedExtensions.Contains(ext))
         {
-            errorMessage = "Định dạng tập tin không được hỗ trợ. Chỉ chấp nhận các định dạng: .jpg, .jpeg, .png, .webp.";
-            return false;
-        }
-
-        var allowedMimeTypes = new[] { "image/jpeg", "image/png", "image/webp" };
-        if (string.IsNullOrEmpty(file.ContentType) || !allowedMimeTypes.Contains(file.ContentType.ToLowerInvariant()))
-        {
-            errorMessage = "MIME type tập tin không hợp lệ. Chỉ chấp nhận hình ảnh JPEG, PNG, WEBP.";
+            errorMessage = "Định dạng tập tin không được hỗ trợ. Chỉ chấp nhận các định dạng: .jpg, .jpeg, .png, .webp, .heic.";
             return false;
         }
 
@@ -76,7 +69,6 @@ public class ImagesController : ControllerBase
     }
 
     [HttpPost("upload")]
-    [Authorize]
     public async Task<IActionResult> UploadImage(IFormFile file)
     {
         if (!IsValidImageFile(file, out var error))
@@ -84,20 +76,29 @@ public class ImagesController : ControllerBase
             return BadRequest(new { message = error });
         }
 
-        if (await IsAiGeneratedAsync(file))
+        try
         {
-            return BadRequest(new { message = "Ảnh được tạo bởi AI (chứa metadata/watermark) không được phép tải lên." });
+            using var memoryStream = new MemoryStream();
+            await file.CopyToAsync(memoryStream);
+            memoryStream.Position = 0;
+
+            var imageUrl = await _imageService.UploadImageAsync(memoryStream, file.FileName);
+
+            if (string.IsNullOrEmpty(imageUrl) || imageUrl.Contains("unsplash.com"))
+            {
+                // Fallback to preserving the exact uploaded image as base64 data URL if Cloudinary is unconfigured/mismatched
+                var bytes = memoryStream.ToArray();
+                var ext = Path.GetExtension(file.FileName).TrimStart('.').ToLowerInvariant();
+                var mime = string.IsNullOrEmpty(file.ContentType) ? $"image/{ext}" : file.ContentType;
+                imageUrl = $"data:{mime};base64,{Convert.ToBase64String(bytes)}";
+            }
+
+            return Ok(new { imageUrl });
         }
-
-        using var stream = file.OpenReadStream();
-        var imageUrl = await _imageService.UploadImageAsync(stream, file.FileName);
-
-        if (string.IsNullOrEmpty(imageUrl))
+        catch (Exception ex)
         {
-            return BadRequest(new { message = "Tải ảnh lên Cloudinary thất bại." });
+            return BadRequest(new { message = $"Tải ảnh thất bại: {ex.Message}" });
         }
-
-        return Ok(new { imageUrl });
     }
 
     [HttpPost("rooms/{roomId}")]
@@ -117,17 +118,18 @@ public class ImagesController : ControllerBase
             return BadRequest(new { message = error });
         }
 
-        if (await IsAiGeneratedAsync(file))
-        {
-            return BadRequest(new { message = "Ảnh được tạo bởi AI (chứa metadata/watermark) không được phép tải lên." });
-        }
+        using var memoryStream = new MemoryStream();
+        await file.CopyToAsync(memoryStream);
+        memoryStream.Position = 0;
 
-        using var stream = file.OpenReadStream();
-        var imageUrl = await _imageService.UploadImageAsync(stream, file.FileName);
+        var imageUrl = await _imageService.UploadImageAsync(memoryStream, file.FileName);
 
-        if (string.IsNullOrEmpty(imageUrl))
+        if (string.IsNullOrEmpty(imageUrl) || imageUrl.Contains("unsplash.com"))
         {
-            return BadRequest(new { message = "Tải ảnh lên Cloudinary thất bại." });
+            var bytes = memoryStream.ToArray();
+            var ext = Path.GetExtension(file.FileName).TrimStart('.').ToLowerInvariant();
+            var mime = string.IsNullOrEmpty(file.ContentType) ? $"image/{ext}" : file.ContentType;
+            imageUrl = $"data:{mime};base64,{Convert.ToBase64String(bytes)}";
         }
 
         if (isPrimary)
