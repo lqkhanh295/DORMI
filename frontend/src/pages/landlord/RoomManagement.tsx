@@ -20,6 +20,9 @@ export default function RoomManagement() {
   // ponytail: track in-flight Cloudinary uploads so we await them before submit
   const pendingUploads = useRef<Promise<void>[]>([]);
   
+  const [customUtilityInput, setCustomUtilityInput] = useState('');
+  const [customUtilityEditInput, setCustomUtilityEditInput] = useState('');
+
   const [newRoom, setNewRoom] = useState({
     title: '',
     price: 0,
@@ -179,6 +182,31 @@ export default function RoomManagement() {
           utilities: exists ? prev.utilities.filter(u => u !== utility) : [...prev.utilities, utility]
         };
       });
+    }
+  };
+
+  const handleAddCustomUtility = (isEdit: boolean = false) => {
+    if (isEdit && editingRoom) {
+      const trimmed = customUtilityEditInput.trim();
+      if (!trimmed) return;
+      const currentUtils = editingRoom.utilities ? editingRoom.utilities.split(',').map(u => u.trim()) : [];
+      if (!currentUtils.includes(trimmed)) {
+        setEditingRoom({
+          ...editingRoom,
+          utilities: [...currentUtils, trimmed].join(', ')
+        });
+      }
+      setCustomUtilityEditInput('');
+    } else {
+      const trimmed = customUtilityInput.trim();
+      if (!trimmed) return;
+      if (!newRoom.utilities.includes(trimmed)) {
+        setNewRoom(prev => ({
+          ...prev,
+          utilities: [...prev.utilities, trimmed]
+        }));
+      }
+      setCustomUtilityInput('');
     }
   };
 
@@ -466,7 +494,9 @@ export default function RoomManagement() {
               </div>
 
               <div>
-                <label className="block text-caption font-semibold text-[#64748B] mb-2">Tiện ích chọn nhanh</label>
+                <label className="block text-caption font-semibold text-[#64748B] mb-2">
+                  Tiện ích phòng ({newRoom.utilities.length} đã chọn)
+                </label>
                 <div className="flex flex-wrap gap-2">
                   {UTILITY_OPTIONS.map(util => {
                     const active = newRoom.utilities.includes(util);
@@ -485,6 +515,43 @@ export default function RoomManagement() {
                       </button>
                     );
                   })}
+
+                  {newRoom.utilities
+                    .filter(u => !UTILITY_OPTIONS.includes(u))
+                    .map(customUtil => (
+                      <button
+                        key={customUtil}
+                        type="button"
+                        onClick={() => toggleUtility(customUtil)}
+                        className="px-3 py-1.5 rounded-[10px] text-caption font-semibold btn-clay-primary inline-flex items-center gap-1"
+                      >
+                        <Check className="w-3.5 h-3.5" /> {customUtil}
+                        <X className="w-3 h-3 hover:text-red-300 ml-0.5" />
+                      </button>
+                    ))}
+                </div>
+
+                <div className="flex gap-2 mt-2.5">
+                  <input
+                    type="text"
+                    value={customUtilityInput}
+                    onChange={e => setCustomUtilityInput(e.target.value)}
+                    onKeyDown={e => {
+                      if (e.key === 'Enter') {
+                        e.preventDefault();
+                        handleAddCustomUtility(false);
+                      }
+                    }}
+                    placeholder="Thêm tiện ích khác (ví dụ: Nuôi thú cưng, Sân phơi, Khóa vân tay...)"
+                    className="flex-1 bg-[#F5F7FA] shadow-clay-inset border border-[#E2E8F0] rounded-[10px] px-3.5 py-1.5 text-caption text-[#0F172A] focus:outline-none focus:bg-white"
+                  />
+                  <button
+                    type="button"
+                    onClick={() => handleAddCustomUtility(false)}
+                    className="px-3.5 py-1.5 bg-[#00153D] text-white rounded-[10px] text-caption font-semibold hover:bg-[#002266] transition-all inline-flex items-center gap-1"
+                  >
+                    <Plus className="w-3.5 h-3.5" /> Thêm
+                  </button>
                 </div>
               </div>
 
@@ -659,6 +726,43 @@ export default function RoomManagement() {
                       </button>
                     );
                   })}
+
+                  {(editingRoom.utilities ? editingRoom.utilities.split(',').map(u => u.trim()) : [])
+                    .filter(u => !UTILITY_OPTIONS.includes(u) && u.length > 0)
+                    .map(customUtil => (
+                      <button
+                        key={customUtil}
+                        type="button"
+                        onClick={() => toggleUtility(customUtil, true)}
+                        className="px-3 py-1.5 rounded-[10px] text-caption font-semibold btn-clay-primary inline-flex items-center gap-1"
+                      >
+                        <Check className="w-3.5 h-3.5" /> {customUtil}
+                        <X className="w-3 h-3 hover:text-red-300 ml-0.5" />
+                      </button>
+                    ))}
+                </div>
+
+                <div className="flex gap-2 mt-2.5">
+                  <input
+                    type="text"
+                    value={customUtilityEditInput}
+                    onChange={e => setCustomUtilityEditInput(e.target.value)}
+                    onKeyDown={e => {
+                      if (e.key === 'Enter') {
+                        e.preventDefault();
+                        handleAddCustomUtility(true);
+                      }
+                    }}
+                    placeholder="Thêm tiện ích khác..."
+                    className="flex-1 bg-[#F5F7FA] shadow-clay-inset border border-[#E2E8F0] rounded-[10px] px-3.5 py-1.5 text-caption text-[#0F172A] focus:outline-none focus:bg-white"
+                  />
+                  <button
+                    type="button"
+                    onClick={() => handleAddCustomUtility(true)}
+                    className="px-3.5 py-1.5 bg-[#00153D] text-white rounded-[10px] text-caption font-semibold hover:bg-[#002266] transition-all inline-flex items-center gap-1"
+                  >
+                    <Plus className="w-3.5 h-3.5" /> Thêm
+                  </button>
                 </div>
               </div>
 
