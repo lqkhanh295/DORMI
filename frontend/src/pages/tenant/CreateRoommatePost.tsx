@@ -4,7 +4,7 @@ import { Card } from '../../components/ui/Card';
 import { Button } from '../../components/ui/Button';
 import { roommatesApi } from '../../services/api';
 import { toast } from 'sonner';
-import { Sparkles, Calendar, DollarSign, MapPin, Users, Check } from 'lucide-react';
+import { Calendar, DollarSign, MapPin, Users, Check } from 'lucide-react';
 
 const COMMON_TRAITS = [
   'Không hút thuốc',
@@ -82,8 +82,7 @@ export default function CreateRoommatePost() {
   return (
     <div className="max-w-3xl mx-auto py-8 space-y-6 bg-[#F5F7FA]">
       <div className="space-y-2">
-        <h1 className="text-h2 font-bold text-[#0F172A] flex items-center gap-2">
-          <Sparkles className="w-7 h-7 text-[#2563EB]" />
+        <h1 className="text-h2 font-bold text-[#0F172A]">
           Tạo tin tìm bạn ở ghép
         </h1>
         <p className="text-body text-[#64748B]">

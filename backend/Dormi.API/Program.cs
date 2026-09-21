@@ -106,7 +106,11 @@ builder.Services.AddCors(options =>
                   try
                   {
                       var uri = new Uri(origin);
-                      return uri.Host == "localhost" || uri.Host == "127.0.0.1";
+                      return uri.Host == "localhost" || 
+                             uri.Host == "127.0.0.1" || 
+                             uri.Host.EndsWith(".vercel.app") || 
+                             uri.Host.EndsWith(".onrender.com") ||
+                             allowedOrigins.Contains(origin);
                   }
                   catch
                   {
@@ -122,16 +126,12 @@ builder.Services.AddCors(options =>
 var app = builder.Build();
 
 // Configure the HTTP request pipeline
-// ponytail: Swagger strictly confined to Development environment
-if (app.Environment.IsDevelopment())
+app.UseSwagger();
+app.UseSwaggerUI(c =>
 {
-    app.UseSwagger();
-    app.UseSwaggerUI(c =>
-    {
-        c.SwaggerEndpoint("/swagger/v1/swagger.json", "Dormi API v1");
-        c.RoutePrefix = "swagger";
-    });
-}
+    c.SwaggerEndpoint("/swagger/v1/swagger.json", "Dormi API v1");
+    c.RoutePrefix = "swagger";
+});
 
 app.UseCors("AllowDormiOrigins");
 
@@ -143,6 +143,7 @@ if (!app.Environment.IsDevelopment())
 app.UseAuthentication();
 app.UseAuthorization();
 
+app.MapGet("/", () => Results.Ok(new { status = "healthy", service = "Dormi API", timestamp = DateTime.UtcNow }));
 app.MapControllers();
 app.MapHub<Dormi.API.Hubs.ChatHub>("/hubs/chat");
 

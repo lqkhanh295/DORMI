@@ -3,7 +3,7 @@ import { Card } from '../../components/ui/Card';
 import { Button } from '../../components/ui/Button';
 import { landlordApi } from '../../services/api';
 import { toast } from 'sonner';
-import { X, CreditCard, ShieldCheck } from 'lucide-react';
+import { X, CreditCard, ShieldCheck, Check } from 'lucide-react';
 
 export default function PricingCheckout() {
   const [checkoutData, setCheckoutData] = useState<any>(null);
@@ -66,9 +66,9 @@ export default function PricingCheckout() {
               <span className="text-[36px] font-bold text-[#0F172A]">Miễn phí</span>
             </div>
             <ul className="space-y-2 text-caption text-[#64748B] pt-4 border-t border-[#E2E8F0]">
-              <li>✓ Đăng tối đa 2 tin phòng</li>
-              <li>✓ Nhận tin nhắn từ người thuê</li>
-              <li>✓ Xác minh giấy tờ cơ bản</li>
+              <li className="flex items-center gap-2"><Check className="w-4 h-4 text-emerald-600 shrink-0" /><span>Đăng tối đa 2 tin phòng</span></li>
+              <li className="flex items-center gap-2"><Check className="w-4 h-4 text-emerald-600 shrink-0" /><span>Nhận tin nhắn từ người thuê</span></li>
+              <li className="flex items-center gap-2"><Check className="w-4 h-4 text-emerald-600 shrink-0" /><span>Xác minh giấy tờ cơ bản</span></li>
             </ul>
           </div>
           <Button variant="secondary" fullWidth disabled>Đang sử dụng</Button>
@@ -86,10 +86,10 @@ export default function PricingCheckout() {
               <span className="text-caption text-[#64748B]"> / năm</span>
             </div>
             <ul className="space-y-2 text-caption text-[#0F172A] font-semibold pt-4 border-t border-[#E2E8F0]">
-              <li>✓ Đăng tối đa 10 tin phòng</li>
-              <li>✓ Huy hiệu Chủ trọ xác thực uy tín</li>
-              <li>✓ Ưu tiên hiển thị top kết quả tìm kiếm</li>
-              <li>✓ Báo cáo phễu chuyển đổi & khách tiềm năng</li>
+              <li className="flex items-center gap-2"><Check className="w-4 h-4 text-[#2563EB] shrink-0" /><span>Đăng tối đa 10 tin phòng</span></li>
+              <li className="flex items-center gap-2"><Check className="w-4 h-4 text-[#2563EB] shrink-0" /><span>Huy hiệu Chủ trọ xác thực uy tín</span></li>
+              <li className="flex items-center gap-2"><Check className="w-4 h-4 text-[#2563EB] shrink-0" /><span>Ưu tiên hiển thị top kết quả tìm kiếm</span></li>
+              <li className="flex items-center gap-2"><Check className="w-4 h-4 text-[#2563EB] shrink-0" /><span>Báo cáo phễu chuyển đổi & khách tiềm năng</span></li>
             </ul>
           </div>
           <Button 
@@ -111,10 +111,10 @@ export default function PricingCheckout() {
               <span className="text-caption text-[#64748B]"> / năm</span>
             </div>
             <ul className="space-y-2 text-caption text-[#64748B] pt-4 border-t border-[#E2E8F0]">
-              <li>✓ Không giới hạn số tin đăng</li>
-              <li>✓ Đẩy tin tự động hàng tuần</li>
-              <li>✓ Khám phá kho dữ liệu người tìm phòng</li>
-              <li>✓ Hỗ trợ CSKH 24/7 riêng biệt</li>
+              <li className="flex items-center gap-2"><Check className="w-4 h-4 text-emerald-600 shrink-0" /><span>Không giới hạn số tin đăng</span></li>
+              <li className="flex items-center gap-2"><Check className="w-4 h-4 text-emerald-600 shrink-0" /><span>Đẩy tin tự động hàng tuần</span></li>
+              <li className="flex items-center gap-2"><Check className="w-4 h-4 text-emerald-600 shrink-0" /><span>Khám phá kho dữ liệu người tìm phòng</span></li>
+              <li className="flex items-center gap-2"><Check className="w-4 h-4 text-emerald-600 shrink-0" /><span>Hỗ trợ CSKH 24/7 riêng biệt</span></li>
             </ul>
           </div>
           <Button 

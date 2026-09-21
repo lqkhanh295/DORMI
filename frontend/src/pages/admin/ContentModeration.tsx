@@ -3,7 +3,7 @@ import { Card } from '../../components/ui/Card';
 import { Button } from '../../components/ui/Button';
 import { adminApi } from '../../services/api';
 import { toast } from 'sonner';
-import { CheckCircle2, Clock, XCircle, ShieldCheck, Mail, Phone, UserCheck, ZoomIn, Check, Globe } from 'lucide-react';
+import { CheckCircle2, Clock, XCircle, ShieldCheck, Mail, Phone, UserCheck, ZoomIn, Check, Globe, X } from 'lucide-react';
 
 interface ModerationRoomItem {
   id: string;
@@ -563,9 +563,10 @@ export default function ContentModeration() {
           <div className="bg-white rounded-[24px] p-6 max-w-sm w-full flex flex-col items-center space-y-4 shadow-2xl relative" onClick={e => e.stopPropagation()}>
             <button 
               onClick={() => setPreviewAvatar(null)} 
-              className="absolute top-4 right-4 text-[#64748B] hover:text-[#0F172A] text-xl font-bold w-8 h-8 flex items-center justify-center rounded-full bg-[#F5F7FA]"
+              className="absolute top-4 right-4 text-[#64748B] hover:text-[#0F172A] w-8 h-8 flex items-center justify-center rounded-full bg-[#F5F7FA]"
+              aria-label="Đóng"
             >
-              ✕
+              <X className="w-5 h-5" />
             </button>
             <h3 className="font-bold text-h3 text-[#0F172A]">Chân dung Chủ trọ</h3>
             <div className="w-48 h-48 rounded-full overflow-hidden border-4 border-[#00153D] shadow-lg bg-[#F5F7FA]">

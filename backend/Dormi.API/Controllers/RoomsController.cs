@@ -127,8 +127,18 @@ public class RoomsController : ControllerBase
         var page = filter.Page < 1 ? 1 : filter.Page;
         var pageSize = filter.PageSize < 1 ? 10 : filter.PageSize;
 
+        query = filter.SortBy switch
+        {
+            "price-asc" or "price-low" => query.OrderBy(r => r.Price),
+            "price-desc" or "price-high" => query.OrderByDescending(r => r.Price),
+            "oldest" => query.OrderBy(r => r.CreatedAt),
+            "area-desc" => query.OrderByDescending(r => r.Area),
+            "area-asc" => query.OrderBy(r => r.Area),
+            "verified" => query.OrderByDescending(r => r.Landlord.IsVerified).ThenByDescending(r => r.CreatedAt),
+            _ => query.OrderByDescending(r => r.CreatedAt)
+        };
+
         var rooms = await query
-            .OrderByDescending(r => r.CreatedAt)
             .Skip((page - 1) * pageSize)
             .Take(pageSize)
             .Select(r => new RoomResponseDto

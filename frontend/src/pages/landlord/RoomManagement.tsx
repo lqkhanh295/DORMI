@@ -3,7 +3,7 @@ import { Card } from '../../components/ui/Card';
 import { Button } from '../../components/ui/Button';
 import { roomsApi, imagesApi, type RoomResponse } from '../../services/api';
 import { toast } from 'sonner';
-import { Pencil, Eye, EyeOff, Trash2, CheckCircle2, Clock, XCircle, Image as ImageIcon, Check, X } from 'lucide-react';
+import { Pencil, Eye, EyeOff, Trash2, CheckCircle2, Clock, XCircle, Image as ImageIcon, Check, X, Plus, Camera } from 'lucide-react';
 
 const UTILITY_OPTIONS = [
   'Wifi', 'Máy lạnh', 'Tủ lạnh', 'Máy giặt', 'Ban công', 
@@ -481,7 +481,7 @@ export default function RoomManagement() {
                             : 'bg-[#F5F7FA] text-[#64748B] border border-[#E2E8F0] hover:bg-white hover:text-[#0F172A]'
                         }`}
                       >
-                        {active ? <><Check className="w-3.5 h-3.5" /> {util}</> : <>+ {util}</>}
+                        {active ? <><Check className="w-3.5 h-3.5" /> {util}</> : <><Plus className="w-3.5 h-3.5" /> {util}</>}
                       </button>
                     );
                   })}
@@ -649,13 +649,13 @@ export default function RoomManagement() {
                         key={util}
                         type="button"
                         onClick={() => toggleUtility(util, true)}
-                        className={`px-3 py-1.5 rounded-[10px] text-caption font-semibold transition-all ${
+                        className={`px-3 py-1.5 rounded-[10px] text-caption font-semibold transition-all inline-flex items-center gap-1 ${
                           active 
                             ? 'btn-clay-primary' 
                             : 'bg-[#F5F7FA] text-[#64748B] border border-[#E2E8F0] hover:bg-white hover:text-[#0F172A]'
                         }`}
                       >
-                        {active ? `✓ ${util}` : `+ ${util}`}
+                        {active ? <><Check className="w-3.5 h-3.5" /> {util}</> : <><Plus className="w-3.5 h-3.5" /> {util}</>}
                       </button>
                     );
                   })}
@@ -682,8 +682,9 @@ export default function RoomManagement() {
                     className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
                     onChange={(e) => handleImageUpload(e, true)}
                   />
-                  <p className="text-body font-semibold text-[#00153D] mb-1">
-                    📷 Bấm để thêm ảnh phòng vào bài trọ này
+                  <p className="text-body font-semibold text-[#00153D] mb-1 inline-flex items-center justify-center gap-2">
+                    <Camera className="w-5 h-5 text-[#00153D]" />
+                    <span>Bấm để thêm ảnh phòng vào bài trọ này</span>
                   </p>
                 </div>
 
@@ -696,8 +697,9 @@ export default function RoomManagement() {
                           type="button"
                           onClick={() => removeImage(idx, true)}
                           className="absolute top-1 right-1 bg-red-600 text-white rounded-full w-6 h-6 flex items-center justify-center text-xs font-bold shadow-md hover:bg-red-700"
+                          aria-label="Xóa ảnh"
                         >
-                          ✕
+                          <X className="w-3.5 h-3.5" />
                         </button>
                       </div>
                     ))}

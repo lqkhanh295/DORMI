@@ -1,6 +1,7 @@
 import { Link, useLocation } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import React from 'react';
+import { LogOut } from 'lucide-react';
 
 export interface NavItem {
   name: string;
@@ -55,9 +56,7 @@ export function FloatingNav({ items, onLogout }: FloatingNavProps) {
               className="relative flex items-center justify-center w-[44px] h-[44px] rounded-full text-[#6B7280] hover:text-[#991B1B] hover:bg-[#FEE2E2] transition-colors"
               title="Đăng xuất"
             >
-              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
-              </svg>
+              <LogOut className="w-5 h-5" />
             </button>
           </>
         )}

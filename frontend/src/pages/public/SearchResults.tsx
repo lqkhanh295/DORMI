@@ -7,6 +7,26 @@ import { ArrowLeft, SlidersHorizontal, Map as MapTrifold, X, Sliders as FadersHo
 import { RoomCard } from '../../components/landing/RoomCard';
 import RoomMapView from '../../components/map/RoomMapView';
 
+const getCleanPrice = (price: any): number => {
+  if (typeof price === 'number' && !isNaN(price)) return price;
+  if (!price) return 0;
+  const cleaned = Number(String(price).replace(/[^\d.-]/g, ''));
+  return isNaN(cleaned) ? 0 : cleaned;
+};
+
+const getCleanArea = (area: any): number => {
+  if (typeof area === 'number' && !isNaN(area)) return area;
+  if (!area) return 0;
+  const cleaned = Number(String(area).replace(/[^\d.-]/g, ''));
+  return isNaN(cleaned) ? 0 : cleaned;
+};
+
+const getTimestamp = (val: any): number => {
+  if (!val) return 0;
+  const time = new Date(val).getTime();
+  return isNaN(time) ? 0 : time;
+};
+
 export default function SearchResults() {
   const listings = useStore(state => state.listings);
   const fetchListings = useStore(state => state.fetchListings);
@@ -120,15 +140,27 @@ export default function SearchResults() {
       return matchQuery && matchDistrict && matchPrice && matchArea && matchUtilities;
     });
 
+    const sorted = [...result];
     if (sortBy === 'price-low') {
-      result.sort((a, b) => a.price - b.price);
+      sorted.sort((a, b) => getCleanPrice(a.price) - getCleanPrice(b.price));
     } else if (sortBy === 'price-high') {
-      result.sort((a, b) => b.price - a.price);
-    } else {
-      result.sort((a, b) => (b.isVerifiedLandlord ? 1 : 0) - (a.isVerifiedLandlord ? 1 : 0));
+      sorted.sort((a, b) => getCleanPrice(b.price) - getCleanPrice(a.price));
+    } else if (sortBy === 'area-asc') {
+      sorted.sort((a, b) => getCleanArea(a.area) - getCleanArea(b.area));
+    } else if (sortBy === 'area-desc') {
+      sorted.sort((a, b) => getCleanArea(b.area) - getCleanArea(a.area));
+    } else if (sortBy === 'newest') {
+      sorted.sort((a, b) => (getTimestamp(b.createdAt) || 0) - (getTimestamp(a.createdAt) || 0));
+    } else { // 'relevant'
+      sorted.sort((a, b) => {
+        const vA = a.isVerifiedLandlord ? 1 : 0;
+        const vB = b.isVerifiedLandlord ? 1 : 0;
+        if (vB !== vA) return vB - vA;
+        return (getTimestamp(b.createdAt) || 0) - (getTimestamp(a.createdAt) || 0);
+      });
     }
 
-    return result;
+    return sorted;
   }, [listings, searchQuery, selectedDistrict, selectedPrice, selectedArea, selectedUtilities, sortBy]);
 
   const clearAllFilters = () => {
@@ -215,11 +247,14 @@ export default function SearchResults() {
               <select 
                 value={sortBy}
                 onChange={e => setSortBy(e.target.value)}
-                className="bg-white shadow-clay-soft border border-[#E2E8F0] rounded-[10px] px-3 py-1.5 text-caption font-semibold text-[#00153D] outline-none min-h-[44px]"
+                className="bg-white shadow-clay-soft border border-[#E2E8F0] rounded-[10px] px-3 py-1.5 text-caption font-semibold text-[#00153D] outline-none min-h-[44px] cursor-pointer"
               >
                 <option value="relevant">Phù hợp nhất</option>
-                <option value="price-low">Giá thấp → cao</option>
-                <option value="price-high">Giá cao → thấp</option>
+                <option value="newest">Mới nhất</option>
+                <option value="price-low">Giá: Thấp → Cao</option>
+                <option value="price-high">Giá: Cao → Thấp</option>
+                <option value="area-desc">Diện tích: Lớn → Nhỏ</option>
+                <option value="area-asc">Diện tích: Nhỏ → Lớn</option>
               </select>
             </div>
           </div>

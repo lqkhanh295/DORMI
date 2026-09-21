@@ -24,3 +24,8 @@ Rules:
 Not lazy about: input validation at trust boundaries, error handling that prevents data loss, security, accessibility, the calibration real hardware needs (the platform is never the spec ideal, a clock drifts, a sensor reads off), anything explicitly requested. Lazy code without its check is unfinished: non-trivial logic leaves ONE runnable check behind, the smallest thing that fails if the logic breaks (an assert-based demo/self-check or one small test file; no frameworks, no fixtures). Trivial one-liners need no test.
 
 (Yes, this file also applies to agents working on the ponytail repo itself. Especially to them.)
+
+## UI / Icon Rules
+- Tất cả icon trong dự án frontend BẮT BUỘC phải import từ `lucide-react`.
+- Luôn render icon dưới dạng thẻ JSX component (ví dụ: `<Check className="w-4 h-4" />`, `<Search className="w-5 h-5" />`).
+- TUYỆT ĐỐI KHÔNG để icon/emoji trực tiếp trong chuỗi text (ví dụ: không viết `<span>✅ Thành công</span>` hay `"🔥 Nổi bật"`, mà phải dùng component: `<Check className="..." /> <span>Thành công</span>`).

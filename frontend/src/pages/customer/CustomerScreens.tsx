@@ -3,7 +3,7 @@ import { GlobalNav } from '../../components/ui/GlobalNav';
 import { LocalNav } from '../../components/ui/LocalNav';
 import { BentoCard } from '../../components/ui/BentoCard';
 import { AppleButton } from '../../components/ui/AppleButton';
-import { User, Sparkles, MessageSquare, CalendarCheck, Heart } from 'lucide-react';
+import { User, Sparkles, MessageSquare, CalendarCheck, Heart, X } from 'lucide-react';
 
 export function CustomerLayout() {
   const items = [
@@ -80,8 +80,8 @@ export function CustomerMatcher() {
             </div>
          </div>
          <div className="h-[80px] flex items-center justify-center gap-6">
-           <button className="w-12 h-12 rounded-pill border-2 border-[#ff3b30] text-[#ff3b30] flex items-center justify-center hover:bg-[#ff3b30] hover:text-white transition-colors">
-              ✕
+           <button className="w-12 h-12 rounded-pill border-2 border-[#ff3b30] text-[#ff3b30] flex items-center justify-center hover:bg-[#ff3b30] hover:text-white transition-colors" aria-label="Bỏ qua">
+              <X className="w-6 h-6" />
            </button>
            <button className="w-12 h-12 rounded-pill border-2 border-[#34c759] text-[#34c759] flex items-center justify-center hover:bg-[#34c759] hover:text-white transition-colors">
               <Heart className="w-6 h-6"  />

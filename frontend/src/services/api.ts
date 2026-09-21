@@ -135,6 +135,7 @@ export const roomsApi = {
     radiusKm?: number;
     minPrice?: number; 
     maxPrice?: number; 
+    sortBy?: string;
     page?: number; 
     pageSize?: number;
   }) => {
@@ -147,6 +148,7 @@ export const roomsApi = {
     if (params?.radiusKm !== undefined) searchParams.append('radiusKm', params.radiusKm.toString());
     if (params?.minPrice !== undefined) searchParams.append('minPrice', params.minPrice.toString());
     if (params?.maxPrice !== undefined) searchParams.append('maxPrice', params.maxPrice.toString());
+    if (params?.sortBy) searchParams.append('sortBy', params.sortBy);
     if (params?.page) searchParams.append('page', params.page.toString());
     if (params?.pageSize) searchParams.append('pageSize', params.pageSize.toString());
 

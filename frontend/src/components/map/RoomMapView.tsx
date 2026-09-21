@@ -155,7 +155,10 @@ export default function RoomMapView({ rooms, selectedRoomId, onSelectRoom, class
         .addTo(map)
         .bindPopup(`
           <div style="font-family: inherit; padding: 6px 8px; text-align: center;">
-            <p style="font-weight: 700; color: #0F172A; font-size: 13px; margin: 0 0 2px 0;">📍 Vị trí của bạn</p>
+            <p style="font-weight: 700; color: #0F172A; font-size: 13px; margin: 0 0 2px 0; display: flex; align-items: center; justify-content: center; gap: 4px;">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#2563EB" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M20 10c0 4.993-5.539 10.193-7.399 11.799a1 1 0 0 1-1.202 0C9.539 20.193 4 14.993 4 10a8 8 0 0 1 16 0"/><circle cx="12" cy="10" r="3"/></svg>
+              <span>Vị trí của bạn</span>
+            </p>
             <p style="font-size: 11px; color: #64748B; margin: 0;">Đang định vị tại đây</p>
           </div>
         `, { closeButton: false });
@@ -238,13 +241,17 @@ export default function RoomMapView({ rooms, selectedRoomId, onSelectRoom, class
                 ${room.title}
               </h4>
             </a>
-            <p style="font-size: 11px; color: #64748B; margin: 0 0 6px 0; display: flex; align-items: center; gap: 3px;">
-              <span>📍</span>
+            <p style="font-size: 11px; color: #64748B; margin: 0 0 6px 0; display: flex; align-items: center; gap: 4px;">
+              <span style="display: inline-flex; align-items: center;">
+                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#64748B" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 10c0 4.993-5.539 10.193-7.399 11.799a1 1 0 0 1-1.202 0C9.539 20.193 4 14.993 4 10a8 8 0 0 1 16 0"/><circle cx="12" cy="10" r="3"/></svg>
+              </span>
               <span style="white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">${room.address}</span>
             </p>
             ${distance !== null ? `
               <div style="font-size: 11px; font-weight: 700; color: #16803C; margin-bottom: 10px; display: flex; align-items: center; gap: 4px;">
-                <span>🛵</span>
+                <span style="display: inline-flex; align-items: center;">
+                  <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#16803C" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="3 11 22 2 13 21 11 13 3 11"/></svg>
+                </span>
                 <span>Cách bạn: ${formatDistance(distance)}</span>
               </div>
             ` : '<div style="margin-bottom: 10px;"></div>'}
