@@ -110,6 +110,8 @@ builder.Services.AddCors(options =>
                              uri.Host == "127.0.0.1" || 
                              uri.Host.EndsWith(".vercel.app") || 
                              uri.Host.EndsWith(".onrender.com") ||
+                             uri.Host == "dormi.space" ||
+                             uri.Host.EndsWith(".dormi.space") ||
                              allowedOrigins.Contains(origin);
                   }
                   catch
