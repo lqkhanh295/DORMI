@@ -49,6 +49,20 @@ export default function AdminDashboard() {
 
   useEffect(() => {
     loadData();
+
+    const handleRealtimeUpdate = () => {
+      loadData();
+    };
+
+    window.addEventListener('new-room-pending', handleRealtimeUpdate);
+    window.addEventListener('room-moderated', handleRealtimeUpdate);
+    window.addEventListener('room-status-changed', handleRealtimeUpdate);
+
+    return () => {
+      window.removeEventListener('new-room-pending', handleRealtimeUpdate);
+      window.removeEventListener('room-moderated', handleRealtimeUpdate);
+      window.removeEventListener('room-status-changed', handleRealtimeUpdate);
+    };
   }, []);
 
   const handleReviewVerification = async (id: string, approve: boolean) => {

@@ -8,7 +8,9 @@ using Dormi.Domain.Enums;
 using Dormi.Infrastructure.Data;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.SignalR;
 using Microsoft.EntityFrameworkCore;
+using Dormi.API.Hubs;
 
 namespace Dormi.API.Controllers;
 
@@ -17,10 +19,12 @@ namespace Dormi.API.Controllers;
 public class RoomsController : ControllerBase
 {
     private readonly DormiDbContext _db;
+    private readonly IHubContext<ChatHub> _hubContext;
 
-    public RoomsController(DormiDbContext db)
+    public RoomsController(DormiDbContext db, IHubContext<ChatHub> hubContext)
     {
         _db = db;
+        _hubContext = hubContext;
     }
 
     /// <summary>
@@ -385,6 +389,25 @@ public class RoomsController : ControllerBase
         _db.Rooms.Add(room);
         await _db.SaveChangesAsync();
 
+        // SignalR: Notify Admins that a new room is pending approval
+        try
+        {
+            await _hubContext.Clients.Group("admins").SendAsync("NewRoomPendingApproval", new
+            {
+                roomId = room.Id.ToString(),
+                title = room.Title,
+                landlordId = user.Id.ToString(),
+                landlordName = user.FullName,
+                price = room.Price,
+                address = room.Address,
+                createdAt = room.CreatedAt.ToString("o")
+            });
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"[SignalR Room Creation Notice]: {ex.Message}");
+        }
+
         return CreatedAtAction(nameof(GetRoomById), new { id = room.Id }, new { id = room.Id, message = "Tạo thông tin phòng thành công." });
     }
 
@@ -489,6 +512,28 @@ public class RoomsController : ControllerBase
         }
 
         await _db.SaveChangesAsync();
+
+        if (room.Status == RoomStatus.PendingApproval)
+        {
+            try
+            {
+                await _hubContext.Clients.Group("admins").SendAsync("NewRoomPendingApproval", new
+                {
+                    roomId = room.Id.ToString(),
+                    title = room.Title,
+                    landlordId = room.LandlordId.ToString(),
+                    landlordName = "Chủ trọ",
+                    price = room.Price,
+                    address = room.Address,
+                    createdAt = DateTime.UtcNow.ToString("o")
+                });
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"[SignalR Room Re-moderation Notice]: {ex.Message}");
+            }
+        }
+
         return Ok(new { message = "Cập nhật phòng thành công." });
     }
 
