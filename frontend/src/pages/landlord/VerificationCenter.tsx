@@ -5,7 +5,7 @@ import { Input } from '../../components/ui/Input';
 import { landlordApi } from '../../services/api';
 import { useStore } from '../../store/useStore';
 import { toast } from 'sonner';
-import { ShieldCheck, Clock, AlertTriangle, UploadCloud } from 'lucide-react';
+import { ShieldCheck, Clock, AlertTriangle, UploadCloud, Check, X } from 'lucide-react';
 
 export default function VerificationCenter() {
   const { uploadImageToCloudinary } = useStore();
@@ -111,7 +111,7 @@ export default function VerificationCenter() {
         <Card className="bg-[#F0FDF4] border border-[#DCFCE7] rounded-[18px] p-6 space-y-3">
           <div className="flex items-center gap-3">
             <div className="w-10 h-10 rounded-full bg-[#16803C] flex items-center justify-center text-white font-bold">
-              ✓
+              <Check className="w-5 h-5" />
             </div>
             <div>
               <h3 className="text-h3 font-bold text-[#16803C]">Tài khoản đã được xác thực chính chủ</h3>
@@ -204,9 +204,10 @@ export default function VerificationCenter() {
                       <button
                         type="button"
                         onClick={() => setFrontImageUrl('')}
-                        className="absolute top-2 right-2 bg-[#DC2626] text-white p-1 rounded-full text-xs"
+                        className="absolute top-2 right-2 bg-[#DC2626] text-white p-1 rounded-full text-xs hover:bg-[#B91C1C] transition-colors"
+                        aria-label="Xóa ảnh mặt trước"
                       >
-                        ✕
+                        <X className="w-3.5 h-3.5" />
                       </button>
                     </div>
                   ) : (
@@ -236,9 +237,10 @@ export default function VerificationCenter() {
                       <button
                         type="button"
                         onClick={() => setBackImageUrl('')}
-                        className="absolute top-2 right-2 bg-[#DC2626] text-white p-1 rounded-full text-xs"
+                        className="absolute top-2 right-2 bg-[#DC2626] text-white p-1 rounded-full text-xs hover:bg-[#B91C1C] transition-colors"
+                        aria-label="Xóa ảnh mặt sau"
                       >
-                        ✕
+                        <X className="w-3.5 h-3.5" />
                       </button>
                     </div>
                   ) : (

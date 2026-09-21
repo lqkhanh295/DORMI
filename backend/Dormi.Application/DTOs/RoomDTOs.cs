@@ -76,6 +76,7 @@ public class RoomQueryFilterDto
     public double? Longitude { get; set; }
     public double? RadiusKm { get; set; }
     public RoomStatus? Status { get; set; }
+    public string? SortBy { get; set; }
     public int Page { get; set; } = 1;
     public int PageSize { get; set; } = 10;
 }

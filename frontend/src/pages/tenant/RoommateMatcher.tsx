@@ -76,7 +76,11 @@ export default function RoommateMatcher() {
         <div className="flex flex-col items-center justify-center h-full text-[#64748B] space-y-3 py-10">
           <Heart size={32} className="text-[#CBD5E1]" />
           <p className="text-body font-bold text-[#0F172A]">Chưa có ai trong danh sách</p>
-          <p className="text-caption text-[#64748B] text-center max-w-[20ch]">Bấm thích (❤️) để lưu hồ sơ người ở ghép</p>
+          <p className="text-caption text-[#64748B] text-center max-w-[24ch] inline-flex items-center justify-center gap-1">
+            <span>Bấm thích</span>
+            <Heart className="w-3.5 h-3.5 fill-red-500 text-red-500 inline-block" />
+            <span>để lưu hồ sơ người ở ghép</span>
+          </p>
         </div>
       ) : (
         activeLikedRoommates.map(r => (

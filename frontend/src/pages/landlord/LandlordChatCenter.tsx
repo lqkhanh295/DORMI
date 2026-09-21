@@ -3,7 +3,7 @@ import { useStore } from '../../store/useStore';
 import { Button } from '../../components/ui/Button';
 import { messagesApi, appointmentsApi } from '../../services/api';
 import { signalRService } from '../../services/signalr';
-import { Hand, Paperclip, CheckCircle2 } from 'lucide-react';
+import { Hand, Paperclip, CheckCircle2, Circle } from 'lucide-react';
 
 export default function LandlordChatCenter() {
   const { currentUser, messages, sendMessageWithApi } = useStore();
@@ -189,8 +189,9 @@ export default function LandlordChatCenter() {
                 </div>
                 <div>
                   <h3 className="font-bold text-[#0F172A]">{selectedContact.name}</h3>
-                  <p className="text-xs text-[#16803C] font-semibold flex items-center gap-1">
-                    ● Trực tuyến (API Connected)
+                  <p className="text-xs text-[#16803C] font-semibold flex items-center gap-1.5">
+                    <Circle className="w-2 h-2 fill-[#16803C] text-[#16803C]" />
+                    <span>Trực tuyến (API Connected)</span>
                   </p>
                 </div>
               </div>

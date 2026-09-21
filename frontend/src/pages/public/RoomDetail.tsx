@@ -427,8 +427,15 @@ export default function RoomDetail() {
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-[#0F172A]/40 p-4">
           <div className="bg-white rounded-[18px] shadow-clay-primary max-w-md w-full p-6 space-y-6 overflow-hidden">
             <div className="flex justify-between items-center border-b border-[#E2E8F0] pb-4">
-              <h3 className="text-h3 font-bold text-[#0F172A]">
-                {schedulerStep === 3 ? '✓ Đã đặt lịch xem phòng' : 'Đặt lịch xem phòng'}
+              <h3 className="text-h3 font-bold text-[#0F172A] flex items-center gap-2">
+                {schedulerStep === 3 ? (
+                  <>
+                    <Check className="w-5 h-5 text-emerald-600" />
+                    <span>Đã đặt lịch xem phòng</span>
+                  </>
+                ) : (
+                  <span>Đặt lịch xem phòng</span>
+                )}
               </h3>
               <button onClick={() => setShowScheduler(false)} className="text-[#64748B] hover:text-[#0F172A] p-1">
                 <X className="w-5 h-5" />

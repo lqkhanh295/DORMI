@@ -3,7 +3,7 @@ import { Card } from '../../components/ui/Card';
 import { Button } from '../../components/ui/Button';
 import { useNavigate } from 'react-router-dom';
 import { landlordApi } from '../../services/api';
-import { Users, MapPin, DollarSign, Star, MessageSquare } from 'lucide-react';
+import { Users, MapPin, DollarSign, Star, MessageSquare, Check } from 'lucide-react';
 
 export default function TenantDiscovery() {
   const navigate = useNavigate();
@@ -82,7 +82,10 @@ export default function TenantDiscovery() {
                       <h3 className="text-h3 font-bold text-[#0F172A] flex items-center gap-1.5">
                         {tenant.fullName}
                         {tenant.isVerified && (
-                          <span className="text-xs bg-emerald-100 text-emerald-700 px-1.5 py-0.5 rounded font-bold">✓ Đã xác minh</span>
+                          <span className="text-xs bg-emerald-100 text-emerald-700 px-1.5 py-0.5 rounded font-bold inline-flex items-center gap-1">
+                            <Check className="w-3 h-3" />
+                            <span>Đã xác minh</span>
+                          </span>
                         )}
                       </h3>
                       <p className="text-caption text-[#64748B] flex items-center gap-1 mt-0.5">

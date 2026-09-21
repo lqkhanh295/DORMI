@@ -17,11 +17,25 @@ public static class DbSeeder
     {
         try
         {
-            await db.Database.EnsureCreatedAsync();
+            await db.Database.ExecuteSqlRawAsync("CREATE EXTENSION IF NOT EXISTS postgis;");
         }
         catch
         {
-            // Fallback
+            // Ignore if DB not ready or not supported
+        }
+
+        try
+        {
+            var creator = db.Database.GetService<IDatabaseCreator>() as IRelationalDatabaseCreator;
+            if (creator != null)
+            {
+                await creator.CreateTablesAsync();
+            }
+        }
+        catch
+        {
+            // Fallback if already exists
+            try { await db.Database.EnsureCreatedAsync(); } catch { }
         }
 
         // ponytail: safe schema patch — EnsureCreated won't add new columns to existing tables
@@ -124,9 +138,34 @@ public static class DbSeeder
             Console.WriteLine($"[Schema Patch Notice]: {ex.Message}");
         }
 
-        if (await db.Users.AnyAsync()) return; // Already seeded, preserve all user modifications and created data
-
         var h = new PasswordHasher<User>();
+        if (await db.Users.AnyAsync())
+        {
+            // ponytail: Auto-heal any demo accounts that were seeded with placeholder dummy hashes
+            var demoAccounts = await db.Users.Where(u => u.Email.EndsWith("@dormi.vn")).ToListAsync();
+            bool modified = false;
+            foreach (var user in demoAccounts)
+            {
+                try
+                {
+                    if (h.VerifyHashedPassword(user, user.PasswordHash, "Password123!") == PasswordVerificationResult.Failed)
+                    {
+                        user.PasswordHash = h.HashPassword(user, "Password123!");
+                        modified = true;
+                    }
+                }
+                catch
+                {
+                    user.PasswordHash = h.HashPassword(user, "Password123!");
+                    modified = true;
+                }
+            }
+            if (modified)
+            {
+                await db.SaveChangesAsync();
+            }
+            return;
+        }
         var now = DateTime.UtcNow;
 
         // ============================================================

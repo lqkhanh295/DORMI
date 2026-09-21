@@ -4,6 +4,7 @@ import { Card } from '../../components/ui/Card';
 import { Button } from '../../components/ui/Button';
 import { Input } from '../../components/ui/Input';
 import { useStore } from '../../store/useStore';
+import { Check, X, AlertTriangle, CheckCircle2, XCircle } from 'lucide-react';
 
 export default function SmartListingForm() {
   const [step, setStep] = useState(1);
@@ -224,7 +225,10 @@ export default function SmartListingForm() {
 
             {imageUrl && (
               <div className="mt-4 flex flex-col items-center">
-                <p className="text-caption font-semibold text-[#16803C] mb-2">✓ Ảnh đã upload Cloudinary:</p>
+                <p className="text-caption font-semibold text-[#16803C] mb-2 flex items-center gap-1.5">
+                  <Check className="w-4 h-4 text-[#16803C]" />
+                  <span>Ảnh đã upload Cloudinary:</span>
+                </p>
                 <img src={imageUrl} alt="Room preview" className="w-48 h-32 object-cover rounded-lg shadow-sm" />
               </div>
             )}
@@ -265,12 +269,27 @@ export default function SmartListingForm() {
                   {qualityResult.score} <span className="text-sm font-normal text-[#64748B]">/ 100</span>
                 </div>
               </div>
-              <div className={`px-3 py-1.5 rounded-full text-xs font-bold ${
+              <div className={`px-3 py-1.5 rounded-full text-xs font-bold flex items-center gap-1.5 ${
                 qualityResult.score >= 80 ? 'bg-[#DCFCE7] text-[#16803C]' :
                 qualityResult.score >= 50 ? 'bg-[#FEF9C3] text-[#A16207]' :
                 'bg-[#FEE2E2] text-[#B91C1C]'
               }`}>
-                {qualityResult.score >= 80 ? '✓ Đạt chuẩn hiển thị cao' : qualityResult.score >= 50 ? '⚠️ Cần hoàn thiện thêm' : '❌ Chưa đủ điều kiện'}
+                {qualityResult.score >= 80 ? (
+                  <>
+                    <CheckCircle2 className="w-4 h-4" />
+                    <span>Đạt chuẩn hiển thị cao</span>
+                  </>
+                ) : qualityResult.score >= 50 ? (
+                  <>
+                    <AlertTriangle className="w-4 h-4" />
+                    <span>Cần hoàn thiện thêm</span>
+                  </>
+                ) : (
+                  <>
+                    <XCircle className="w-4 h-4" />
+                    <span>Chưa đủ điều kiện</span>
+                  </>
+                )}
               </div>
             </div>
 
@@ -278,8 +297,8 @@ export default function SmartListingForm() {
               <h3 className="text-sm font-bold text-[#0F172A]">Chi tiết tiêu chí kiểm tra:</h3>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-3 text-sm">
                 <div className="p-3 rounded-lg border bg-white flex items-start gap-2.5">
-                  <span className={qualityResult.titleCheck.pass ? "text-[#16803C] font-bold" : "text-[#E11D48] font-bold"}>
-                    {qualityResult.titleCheck.pass ? "✓" : "✗"}
+                  <span className={qualityResult.titleCheck.pass ? "text-[#16803C]" : "text-[#E11D48]"}>
+                    {qualityResult.titleCheck.pass ? <Check className="w-4 h-4" /> : <X className="w-4 h-4" />}
                   </span>
                   <div>
                     <span className="font-semibold text-gray-800">Tiêu đề:</span>
@@ -288,8 +307,8 @@ export default function SmartListingForm() {
                 </div>
 
                 <div className="p-3 rounded-lg border bg-white flex items-start gap-2.5">
-                  <span className={qualityResult.priceAreaCheck.pass ? "text-[#16803C] font-bold" : "text-[#E11D48] font-bold"}>
-                    {qualityResult.priceAreaCheck.pass ? "✓" : "✗"}
+                  <span className={qualityResult.priceAreaCheck.pass ? "text-[#16803C]" : "text-[#E11D48]"}>
+                    {qualityResult.priceAreaCheck.pass ? <Check className="w-4 h-4" /> : <X className="w-4 h-4" />}
                   </span>
                   <div>
                     <span className="font-semibold text-gray-800">Mức giá & Diện tích:</span>
@@ -298,8 +317,8 @@ export default function SmartListingForm() {
                 </div>
 
                 <div className="p-3 rounded-lg border bg-white flex items-start gap-2.5">
-                  <span className={qualityResult.addressCheck.pass ? "text-[#16803C] font-bold" : "text-[#E11D48] font-bold"}>
-                    {qualityResult.addressCheck.pass ? "✓" : "✗"}
+                  <span className={qualityResult.addressCheck.pass ? "text-[#16803C]" : "text-[#E11D48]"}>
+                    {qualityResult.addressCheck.pass ? <Check className="w-4 h-4" /> : <X className="w-4 h-4" />}
                   </span>
                   <div>
                     <span className="font-semibold text-gray-800">Địa chỉ & PostGIS:</span>
@@ -308,8 +327,8 @@ export default function SmartListingForm() {
                 </div>
 
                 <div className="p-3 rounded-lg border bg-white flex items-start gap-2.5">
-                  <span className={qualityResult.imageCheck.pass ? "text-[#16803C] font-bold" : "text-[#E11D48] font-bold"}>
-                    {qualityResult.imageCheck.pass ? "✓" : "✗"}
+                  <span className={qualityResult.imageCheck.pass ? "text-[#16803C]" : "text-[#E11D48]"}>
+                    {qualityResult.imageCheck.pass ? <Check className="w-4 h-4" /> : <X className="w-4 h-4" />}
                   </span>
                   <div>
                     <span className="font-semibold text-gray-800">Hình ảnh phòng:</span>

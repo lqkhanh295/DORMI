@@ -31,6 +31,8 @@ export interface Listing {
   latitude?: number;
   longitude?: number;
   distanceKm?: number;
+  virtual3DUrl?: string;
+  createdAt?: string;
 }
 
 export interface Message {
@@ -62,7 +64,7 @@ interface AppState {
   isLoadingApi: boolean;
   loginWithApi: (email: string, pass: string) => Promise<boolean>;
   logout: () => void;
-  fetchListings: () => Promise<void>;
+  fetchListings: (params?: Parameters<typeof roomsApi.getRooms>[0]) => Promise<void>;
   addListing: (listing: Omit<Listing, 'id' | 'landlordId'>) => void;
   createListingWithApi: (data: any) => Promise<boolean>;
   updateListing: (id: string, updates: Partial<Listing>) => void;
@@ -113,9 +115,9 @@ export const useStore = create<AppState>()(
         set({ currentUser: null, likedRoommates: [] });
       },
 
-      fetchListings: async () => {
+      fetchListings: async (params) => {
         try {
-          const res = await roomsApi.getRooms({ pageSize: 50 });
+          const res = await roomsApi.getRooms({ pageSize: 50, ...params });
           if (res?.data && Array.isArray(res.data) && res.data.length > 0) {
             const statusMap: Record<number, 'Available' | 'Rented' | 'PendingApproval' | 'Hidden'> = {
               0: 'Available',
@@ -137,7 +139,9 @@ export const useStore = create<AppState>()(
               utilities: r.utilities || '',
               latitude: r.latitude,
               longitude: r.longitude,
-              distanceKm: r.distanceKm
+              distanceKm: r.distanceKm,
+              virtual3DUrl: r.virtual3DUrl,
+              createdAt: r.createdAt
             }));
             set({ listings: apiListings });
           }
@@ -152,7 +156,8 @@ export const useStore = create<AppState>()(
           { 
             ...listing, 
             id: Math.random().toString(36).substr(2, 9),
-            landlordId: state.currentUser?.id || 'u2'
+            landlordId: state.currentUser?.id || 'u2',
+            createdAt: new Date().toISOString()
           }
         ]
       })),

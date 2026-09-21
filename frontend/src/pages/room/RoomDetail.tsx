@@ -1,7 +1,7 @@
 import { GlobalNav } from '../../components/ui/GlobalNav';
 import { AppleButton } from '../../components/ui/AppleButton';
 import { BentoCard } from '../../components/ui/BentoCard';
-import { MapPin, Info, LayoutGrid as Selection, Star, DollarSign as CurrencyCircleDollar } from 'lucide-react';
+import { MapPin, Info, LayoutGrid as Selection, Star, DollarSign as CurrencyCircleDollar, Check, X } from 'lucide-react';
 
 export function RoomDetail() {
   return (
@@ -67,14 +67,14 @@ export function RoomDetail() {
             
             <div>
                <h2 className="text-[28px] font-bold text-[#1d1d1f] mb-4">Tiện ích.</h2>
-               <div className="grid grid-cols-2 gap-y-4 text-[17px] text-[#1d1d1f]">
-                 <div className="flex items-center gap-2">✓ Máy lạnh</div>
-                 <div className="flex items-center gap-2">✓ Máy giặt riêng</div>
-                 <div className="flex items-center gap-2">✓ Tủ lạnh</div>
-                 <div className="flex items-center gap-2">✓ Bếp từ</div>
-                 <div className="flex items-center gap-2 text-[#6e6e73] line-through">✗ Thang máy</div>
-                 <div className="flex items-center gap-2 text-[#6e6e73] line-through">✗ Chỗ đậu ô tô</div>
-               </div>
+                <div className="grid grid-cols-2 gap-y-4 text-[17px] text-[#1d1d1f]">
+                  <div className="flex items-center gap-2"><Check className="w-5 h-5 text-[#34c759]" /><span>Máy lạnh</span></div>
+                  <div className="flex items-center gap-2"><Check className="w-5 h-5 text-[#34c759]" /><span>Máy giặt riêng</span></div>
+                  <div className="flex items-center gap-2"><Check className="w-5 h-5 text-[#34c759]" /><span>Tủ lạnh</span></div>
+                  <div className="flex items-center gap-2"><Check className="w-5 h-5 text-[#34c759]" /><span>Bếp từ</span></div>
+                  <div className="flex items-center gap-2 text-[#6e6e73] line-through"><X className="w-5 h-5 text-[#ff3b30]" /><span>Thang máy</span></div>
+                  <div className="flex items-center gap-2 text-[#6e6e73] line-through"><X className="w-5 h-5 text-[#ff3b30]" /><span>Chỗ đậu ô tô</span></div>
+                </div>
             </div>
           </div>
 

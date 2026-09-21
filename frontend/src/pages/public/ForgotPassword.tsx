@@ -4,6 +4,7 @@ import { Card } from '../../components/ui/Card';
 import { Button } from '../../components/ui/Button';
 import { Input } from '../../components/ui/Input';
 import { authApi } from '../../services/api';
+import { Lock } from 'lucide-react';
 
 export default function ForgotPassword() {
   const [email, setEmail] = useState('');
@@ -61,8 +62,8 @@ export default function ForgotPassword() {
     <div className="min-h-[calc(100vh-64px)] flex items-center justify-center bg-[#F8FAFC] px-4 py-12">
       <Card className="w-full max-w-md p-8 bg-white shadow-clay-soft rounded-[20px]">
         <div className="text-center mb-6">
-          <div className="w-16 h-16 bg-[#EEF2F6] rounded-full flex items-center justify-center mx-auto mb-4 text-2xl">
-            🔒
+          <div className="w-16 h-16 bg-[#EEF2F6] text-[#00153D] rounded-full flex items-center justify-center mx-auto mb-4">
+            <Lock className="w-7 h-7" />
           </div>
           <h2 className="text-2xl font-bold text-[#0F172A]">Đặt lại Mật khẩu</h2>
           <p className="text-[#64748B] text-sm mt-2">
