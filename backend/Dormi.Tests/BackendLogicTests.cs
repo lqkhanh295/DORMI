@@ -94,12 +94,12 @@ public class BackendLogicTests
         string userTraits = "clean, quiet, non-smoker, student";
         string candidateTraits = "clean, quiet, gamer";
 
-        double? score = Dormi.API.Controllers.RoommatesController.CalculateMatchScore(userTraits, candidateTraits);
+        double? score = Dormi.Infrastructure.Services.RoommateService.CalculateMatchScore(userTraits, candidateTraits);
         
         Assert.NotNull(score);
         Assert.True(score >= 60.0 && score <= 100.0);
 
-        double? emptyScore = Dormi.API.Controllers.RoommatesController.CalculateMatchScore("", "");
+        double? emptyScore = Dormi.Infrastructure.Services.RoommateService.CalculateMatchScore("", "");
         Assert.Null(emptyScore);
     }
 
@@ -378,5 +378,75 @@ public class BackendLogicTests
             v.CreatedAt < cooldown);
 
         Assert.False(viewedInPastCooldown);
+    }
+
+    [Fact]
+    public void ServiceResult_ShouldConstructSuccessAndFailCorrectly()
+    {
+        var okResult = Dormi.Application.Common.ServiceResult<string>.Ok("SuccessData");
+        Assert.True(okResult.Success);
+        Assert.Equal("SuccessData", okResult.Data);
+        Assert.Equal(200, okResult.StatusCode);
+
+        var notFoundResult = Dormi.Application.Common.ServiceResult<string>.NotFound("Not found item");
+        Assert.False(notFoundResult.Success);
+        Assert.Equal(404, notFoundResult.StatusCode);
+        Assert.Equal("Not found item", notFoundResult.ErrorMessage);
+    }
+
+    [Fact]
+    public async Task FavoriteService_ShouldAddAndRemoveFavoritesCorrectly()
+    {
+        var options = new DbContextOptionsBuilder<DormiDbContext>()
+            .UseInMemoryDatabase(databaseName: Guid.NewGuid().ToString())
+            .Options;
+
+        using var db = new DormiDbContext(options);
+        var customerId = Guid.NewGuid();
+        var landlordId = Guid.NewGuid();
+        var roomId = Guid.NewGuid();
+
+        db.Users.Add(new User
+        {
+            Id = customerId,
+            Email = "customer@dormi.vn",
+            FullName = "Khach Thue",
+            Role = UserRole.Customer
+        });
+
+        db.Users.Add(new User
+        {
+            Id = landlordId,
+            Email = "landlord@dormi.vn",
+            FullName = "Chu Tro",
+            Role = UserRole.Landlord
+        });
+
+        db.Rooms.Add(new Room
+        {
+            Id = roomId,
+            LandlordId = landlordId,
+            Title = "Phong Tro Dep",
+            Price = 3000000,
+            Area = 20,
+            RoomType = "Phòng trọ",
+            Address = "TP. Thủ Đức",
+            Status = RoomStatus.Available
+        });
+        await db.SaveChangesAsync();
+
+        var favService = new FavoriteService(db);
+        var addRes = await favService.AddFavoriteAsync(customerId, roomId);
+        Assert.True(addRes.Success);
+
+        var listRes = await favService.GetFavoritesAsync(customerId);
+        Assert.True(listRes.Success);
+        Assert.Single(listRes.Data!);
+
+        var removeRes = await favService.RemoveFavoriteAsync(customerId, roomId);
+        Assert.True(removeRes.Success);
+
+        var emptyList = await favService.GetFavoritesAsync(customerId);
+        Assert.Empty(emptyList.Data!);
     }
 }
