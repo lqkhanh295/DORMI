@@ -1,112 +1,38 @@
 using System;
-using System.Linq;
-using System.Security.Claims;
 using System.Threading.Tasks;
 using Dormi.Application.DTOs;
-using Dormi.Domain.Entities;
-using Dormi.Domain.Enums;
-using Dormi.Infrastructure.Data;
+using Dormi.Application.Interfaces;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.EntityFrameworkCore;
 
 namespace Dormi.API.Controllers;
 
 [ApiController]
-[Route("api/rooms/{roomId}/[controller]")]
-public class ReviewsController : ControllerBase
+[Route("api/rooms/{roomId:guid}/[controller]")]
+public class ReviewsController : BaseApiController
 {
-    private readonly DormiDbContext _db;
+    private readonly IReviewService _reviewService;
 
-    public ReviewsController(DormiDbContext db)
+    public ReviewsController(IReviewService reviewService)
     {
-        _db = db;
+        _reviewService = reviewService;
     }
 
     [HttpGet]
     public async Task<IActionResult> GetRoomReviews(Guid roomId)
     {
-        var roomExists = await _db.Rooms.AnyAsync(r => r.Id == roomId);
-        if (!roomExists) return NotFound(new { message = "Không tìm thấy phòng trọ." });
-
-        var reviews = await _db.RoomReviews
-            .Include(r => r.Customer)
-            .Where(r => r.RoomId == roomId)
-            .OrderByDescending(r => r.CreatedAt)
-            .Select(r => new ReviewResponseDto
-            {
-                Id = r.Id,
-                CustomerId = r.CustomerId,
-                CustomerName = r.Customer.FullName,
-                CustomerAvatar = r.Customer.AvatarUrl,
-                Rating = r.Rating,
-                Comment = r.Comment,
-                CreatedAt = r.CreatedAt
-            })
-            .ToListAsync();
-
-        double averageRating = reviews.Count > 0 ? Math.Round(reviews.Average(r => r.Rating), 1) : 0.0;
-
-        return Ok(new RoomReviewSummaryDto
-        {
-            AverageRating = averageRating,
-            TotalReviews = reviews.Count,
-            Reviews = reviews
-        });
+        var result = await _reviewService.GetRoomReviewsAsync(roomId);
+        return HandleResult(result);
     }
 
     [Authorize]
     [HttpPost]
     public async Task<IActionResult> AddReview(Guid roomId, [FromBody] CreateReviewDto dto)
     {
-        var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
-        if (!Guid.TryParse(userIdClaim, out var userId)) return Unauthorized();
+        var userId = GetCurrentUserId();
+        if (!userId.HasValue) return Unauthorized();
 
-        var user = await _db.Users.FindAsync(userId);
-        if (user == null || user.Role != UserRole.Customer)
-        {
-            return BadRequest(new { message = "Chỉ tài khoản Khách thuê mới có thể viết đánh giá." });
-        }
-
-        var room = await _db.Rooms.FindAsync(roomId);
-        if (room == null) return NotFound(new { message = "Không tìm thấy phòng trọ." });
-
-        if (dto.Rating < 1 || dto.Rating > 5)
-        {
-            return BadRequest(new { message = "Số điểm đánh giá phải từ 1 đến 5 sao." });
-        }
-
-        // ponytail: Prevent duplicate reviews for the same room by the same customer
-        var alreadyReviewed = await _db.RoomReviews.AnyAsync(r => r.RoomId == roomId && r.CustomerId == userId);
-        if (alreadyReviewed)
-        {
-            return BadRequest(new { message = "Bạn đã gửi đánh giá cho phòng trọ này rồi." });
-        }
-
-        // ponytail: Require at least one confirmed or completed appointment for this room
-        var hasValidAppointment = await _db.ViewingAppointments.AnyAsync(a =>
-            a.RoomId == roomId &&
-            a.CustomerId == userId &&
-            (a.Status == "Confirmed" || a.Status == "Completed"));
-
-        if (!hasValidAppointment)
-        {
-            return BadRequest(new { message = "Bạn chỉ có thể đánh giá sau khi đã có lịch hẹn xem phòng được xác nhận hoặc hoàn thành." });
-        }
-
-        var review = new RoomReview
-        {
-            Id = Guid.NewGuid(),
-            RoomId = roomId,
-            CustomerId = userId,
-            Rating = dto.Rating,
-            Comment = dto.Comment,
-            CreatedAt = DateTime.UtcNow
-        };
-
-        _db.RoomReviews.Add(review);
-        await _db.SaveChangesAsync();
-
-        return Ok(new { id = review.Id, message = "Đã gửi đánh giá thành công!" });
+        var result = await _reviewService.AddReviewAsync(roomId, userId.Value, dto);
+        return HandleResult(result);
     }
 }

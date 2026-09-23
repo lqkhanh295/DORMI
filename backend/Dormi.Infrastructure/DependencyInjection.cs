@@ -1,4 +1,6 @@
+using Dormi.Application.Interfaces;
 using Dormi.Infrastructure.Data;
+using Dormi.Infrastructure.Services;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
@@ -31,8 +33,23 @@ public static class DependencyInjection
             }
         });
 
-        services.AddScoped<Dormi.Application.Interfaces.IImageService, Dormi.Infrastructure.Services.CloudinaryService>();
-        services.AddScoped<Dormi.Application.Interfaces.IJwtTokenGenerator, Dormi.Infrastructure.Services.JwtTokenGenerator>();
+        // Register Core Infrastructure Services
+        services.AddScoped<IImageService, CloudinaryService>();
+        services.AddScoped<IJwtTokenGenerator, JwtTokenGenerator>();
+
+        // Register Application Business Services
+        services.AddScoped<IAuthService, AuthService>();
+        services.AddScoped<IRoomService, RoomService>();
+        services.AddScoped<IAdminService, AdminService>();
+        services.AddScoped<ILandlordDashboardService, LandlordDashboardService>();
+        services.AddScoped<IMessageService, MessageService>();
+        services.AddScoped<IProfileService, ProfileService>();
+        services.AddScoped<IRoommateService, RoommateService>();
+        services.AddScoped<IAppointmentService, AppointmentService>();
+        services.AddScoped<IFavoriteService, FavoriteService>();
+        services.AddScoped<IReviewService, ReviewService>();
+        services.AddScoped<ITenantReviewService, TenantReviewService>();
+        services.AddScoped<INotificationService, NotificationService>();
 
         return services;
     }
