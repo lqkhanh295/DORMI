@@ -3,4 +3,5 @@
   <Project Path="Dormi.Application/Dormi.Application.csproj" />
   <Project Path="Dormi.Domain/Dormi.Domain.csproj" />
   <Project Path="Dormi.Infrastructure/Dormi.Infrastructure.csproj" />
+  <Project Path="Dormi.Tests/Dormi.Tests.csproj" />
 </Solution>
