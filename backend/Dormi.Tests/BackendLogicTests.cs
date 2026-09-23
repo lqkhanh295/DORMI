@@ -22,7 +22,7 @@ public class BackendLogicTests
     {
         var inMemorySettings = new System.Collections.Generic.Dictionary<string, string?>
         {
-            { "JwtSettings:SecretKey", "DormiSuperSecretKeyForJWTAuthentication2026!#$" },
+            { "JwtSettings:SecretKey", "TestOnlyFakeKeyThatIsLongEnough1234!" },
             { "JwtSettings:Issuer", "DormiAPI" },
             { "JwtSettings:Audience", "DormiUsers" },
             { "JwtSettings:ExpiryMinutes", "60" }

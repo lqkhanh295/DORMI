@@ -7,6 +7,9 @@ using Microsoft.OpenApi;
 
 var builder = WebApplication.CreateBuilder(args);
 
+// ponytail: load optional local secrets file (gitignored)
+builder.Configuration.AddJsonFile("appsettings.Local.json", optional: true, reloadOnChange: false);
+
 // Configure 50MB max body length limit for uploading images
 builder.Services.Configure<FormOptions>(options =>
 {
@@ -28,7 +31,7 @@ builder.Services.AddSignalR();
 builder.Services.AddMemoryCache();
 
 // 3. Configure JWT Authentication
-var secretKey = builder.Configuration["JwtSettings:SecretKey"] ?? "DormiSuperSecretKeyForJWTAuthentication2026!#$";
+var secretKey = builder.Configuration["JwtSettings:SecretKey"] ?? throw new InvalidOperationException("JwtSettings:SecretKey is required");
 var issuer = builder.Configuration["JwtSettings:Issuer"] ?? "DormiAPI";
 var audience = builder.Configuration["JwtSettings:Audience"] ?? "DormiUsers";
 

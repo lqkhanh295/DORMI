@@ -21,7 +21,7 @@ public class JwtTokenGenerator : IJwtTokenGenerator
 
     public string GenerateToken(User user)
     {
-        var secretKey = _config["JwtSettings:SecretKey"] ?? "DormiSuperSecretKeyForJWTAuthentication2026!#$";
+        var secretKey = _config["JwtSettings:SecretKey"] ?? throw new InvalidOperationException("JwtSettings:SecretKey is required");
         var issuer = _config["JwtSettings:Issuer"] ?? "DormiAPI";
         var audience = _config["JwtSettings:Audience"] ?? "DormiUsers";
         var expiryMinutes = int.TryParse(_config["JwtSettings:ExpiryMinutes"], out var exp) ? exp : 1440;
