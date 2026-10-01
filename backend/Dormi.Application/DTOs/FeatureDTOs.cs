@@ -1,17 +1,25 @@
 using System;
+using System.ComponentModel.DataAnnotations;
 
 namespace Dormi.Application.DTOs;
 
 // Viewing Appointments DTOs
 public class CreateAppointmentDto
 {
+    [Required]
     public Guid RoomId { get; set; }
+
+    [Required]
     public DateTime AppointmentDate { get; set; }
+
+    [MaxLength(500)]
     public string? Notes { get; set; }
 }
 
 public class UpdateAppointmentStatusDto
 {
+    [Required]
+    [MaxLength(50)]
     public string Status { get; set; } = string.Empty; // Approved, Rejected, Cancelled, Completed
 }
 
@@ -32,7 +40,11 @@ public class AppointmentResponseDto
 // Messaging DTOs
 public class SendMessageDto
 {
+    [Required]
     public Guid ReceiverId { get; set; }
+
+    [Required]
+    [MaxLength(2000)]
     public string Content { get; set; } = string.Empty;
 }
 

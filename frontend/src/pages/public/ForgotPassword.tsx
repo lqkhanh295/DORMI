@@ -24,9 +24,6 @@ export default function ForgotPassword() {
     try {
       const res = await authApi.forgotPassword(email);
       setMessage(res.message);
-      if (res.resetToken) {
-        setToken(res.resetToken);
-      }
       setStep(2);
     } catch (err: any) {
       setError(err.message || 'Có lỗi xảy ra, vui lòng thử lại.');

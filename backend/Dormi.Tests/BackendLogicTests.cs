@@ -543,4 +543,136 @@ public class BackendLogicTests
         var rateLimitRes = await authService.LoginAsync(new LoginDto { Email = "random@dormi.vn", Password = "pass" }, testIp);
         Assert.Equal(429, rateLimitRes.StatusCode);
     }
+
+    [Fact]
+    public async Task ForgotPassword_ShouldNotLeakResetToken_AndPreventEmailEnumeration()
+    {
+        var options = new DbContextOptionsBuilder<DormiDbContext>()
+            .UseInMemoryDatabase(databaseName: Guid.NewGuid().ToString())
+            .Options;
+
+        using var db = new DormiDbContext(options);
+        var inMemorySettings = new System.Collections.Generic.Dictionary<string, string?>
+        {
+            { "JwtSettings:SecretKey", "TestOnlyFakeKeyThatIsLongEnough1234!" }
+        };
+        IConfiguration config = new ConfigurationBuilder().AddInMemoryCollection(inMemorySettings).Build();
+        var tokenGen = new JwtTokenGenerator(config);
+        var cache = new Microsoft.Extensions.Caching.Memory.MemoryCache(new Microsoft.Extensions.Caching.Memory.MemoryCacheOptions());
+        var logger = Microsoft.Extensions.Logging.Abstractions.NullLogger<AuthService>.Instance;
+
+        var authService = new AuthService(db, tokenGen, cache, logger);
+
+        // Seed user
+        var user = new User
+        {
+            Id = Guid.NewGuid(),
+            Email = "validuser@dormi.vn",
+            FullName = "User Test",
+            Role = UserRole.Customer
+        };
+        db.Users.Add(user);
+        await db.SaveChangesAsync();
+
+        // 1. Existing email
+        var resExisting = await authService.ForgotPasswordAsync(new ForgotPasswordDto { Email = "validuser@dormi.vn" });
+        Assert.True(resExisting.Success);
+        Assert.Equal(200, resExisting.StatusCode);
+
+        // Verify token is in cache
+        Assert.True(cache.TryGetValue("pwd_reset_validuser@dormi.vn", out string? cachedToken));
+        Assert.NotNull(cachedToken);
+        Assert.Equal(6, cachedToken.Length);
+
+        // 2. Non-existent email: must return same 200 message (anti-enumeration)
+        var resNonExisting = await authService.ForgotPasswordAsync(new ForgotPasswordDto { Email = "ghost@dormi.vn" });
+        Assert.True(resNonExisting.Success);
+        Assert.Equal(200, resNonExisting.StatusCode);
+        Assert.False(cache.TryGetValue("pwd_reset_ghost@dormi.vn", out _));
+    }
+
+    [Fact]
+    public async Task PaymentVerification_WithoutSecureHash_ShouldFailWithBadRequest()
+    {
+        var options = new DbContextOptionsBuilder<DormiDbContext>()
+            .UseInMemoryDatabase(databaseName: Guid.NewGuid().ToString())
+            .Options;
+
+        using var db = new DormiDbContext(options);
+        var config = new ConfigurationBuilder().Build();
+        var env = new TestWebHostEnvironment { EnvironmentName = "Development" };
+        var service = new LandlordDashboardService(db, config, env);
+
+        var res = await service.VerifyPaymentAsync(Guid.NewGuid(), new PaymentVerifyDto
+        {
+            TransactionRef = "TXN_123456",
+            SecureHash = "" // Empty hash
+        });
+
+        Assert.False(res.Success);
+        Assert.Equal(400, res.StatusCode);
+    }
+
+    [Fact]
+    public async Task RoommateService_GetById_InactivePostHiddenFromAnonymous()
+    {
+        var options = new DbContextOptionsBuilder<DormiDbContext>()
+            .UseInMemoryDatabase(databaseName: Guid.NewGuid().ToString())
+            .Options;
+
+        using var db = new DormiDbContext(options);
+        var ownerId = Guid.NewGuid();
+        var otherUserId = Guid.NewGuid();
+
+        var owner = new User
+        {
+            Id = ownerId,
+            Email = "owner@dormi.vn",
+            FullName = "Owner Test",
+            Role = UserRole.Customer
+        };
+        db.Users.Add(owner);
+
+        var inactivePost = new RoommatePost
+        {
+            Id = Guid.NewGuid(),
+            CustomerId = ownerId,
+            Customer = owner,
+            Title = "Tìm bạn ở ghép",
+            Description = "Phòng rộng",
+            Budget = 2000000,
+            Location = "Thủ Đức",
+            MoveInDate = DateTime.UtcNow.AddDays(7),
+            IsActive = false // INACTIVE
+        };
+        db.RoommatePosts.Add(inactivePost);
+        await db.SaveChangesAsync();
+
+        var service = new RoommateService(db);
+
+        // Anonymous user -> 404
+        var resAnon = await service.GetRoommatePostByIdAsync(inactivePost.Id, null);
+        Assert.False(resAnon.Success);
+        Assert.Equal(404, resAnon.StatusCode);
+
+        // Other non-admin user -> 404
+        var resOther = await service.GetRoommatePostByIdAsync(inactivePost.Id, otherUserId);
+        Assert.False(resOther.Success);
+        Assert.Equal(404, resOther.StatusCode);
+
+        // Owner -> 200
+        var resOwner = await service.GetRoommatePostByIdAsync(inactivePost.Id, ownerId);
+        Assert.True(resOwner.Success);
+        Assert.Equal(200, resOwner.StatusCode);
+    }
+
+    private class TestWebHostEnvironment : Microsoft.AspNetCore.Hosting.IWebHostEnvironment
+    {
+        public string WebRootPath { get; set; } = string.Empty;
+        public Microsoft.Extensions.FileProviders.IFileProvider WebRootFileProvider { get; set; } = null!;
+        public string EnvironmentName { get; set; } = "Development";
+        public string ApplicationName { get; set; } = "Dormi.Tests";
+        public string ContentRootPath { get; set; } = string.Empty;
+        public Microsoft.Extensions.FileProviders.IFileProvider ContentRootFileProvider { get; set; } = null!;
+    }
 }

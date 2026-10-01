@@ -88,12 +88,16 @@ public class RoommateService : IRoommateService
 
         if (post == null) return ServiceResult<RoommatePostResponseDto>.NotFound("Không tìm thấy bài đăng ở ghép.");
 
-        string userLifestyle = "";
-        if (currentUserId.HasValue)
+        var currentUser = currentUserId.HasValue ? await _db.Users.FindAsync(currentUserId.Value) : null;
+        var isAdmin = currentUser?.Role == UserRole.Admin;
+        var isOwner = currentUserId.HasValue && post.CustomerId == currentUserId.Value;
+
+        if (!post.IsActive && !isAdmin && !isOwner)
         {
-            var currentUser = await _db.Users.FindAsync(currentUserId.Value);
-            userLifestyle = currentUser?.Lifestyle?.ToLower() ?? "";
+            return ServiceResult<RoommatePostResponseDto>.NotFound("Bài đăng này không tồn tại hoặc đã tạm dừng hiển thị.");
         }
+
+        string userLifestyle = currentUser?.Lifestyle?.ToLower() ?? "";
 
         return ServiceResult<RoommatePostResponseDto>.Ok(new RoommatePostResponseDto
         {

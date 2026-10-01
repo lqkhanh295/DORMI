@@ -1,4 +1,5 @@
 using System;
+using System.Security.Cryptography;
 using System.Threading.Tasks;
 using Dormi.Application.Common;
 using Dormi.Application.DTOs;
@@ -204,16 +205,7 @@ public class AuthService : IAuthService
 
         if (verificationResult == PasswordVerificationResult.Failed)
         {
-            // Auto-heal demo accounts seeded with dummy hash from SQL scripts
-            if (dto.Password == "Password123!" && user.Email.ToLower().EndsWith("@dormi.vn"))
-            {
-                user.PasswordHash = _passwordHasher.HashPassword(user, "Password123!");
-                await _db.SaveChangesAsync();
-            }
-            else
-            {
-                return await HandleFailedAttemptAsync(normalizedEmail, clientIp, failedAttempts);
-            }
+            return await HandleFailedAttemptAsync(normalizedEmail, clientIp, failedAttempts);
         }
 
         // 5. Successful Password Verification -> Reset failed attempts
@@ -224,7 +216,7 @@ public class AuthService : IAuthService
         // High security accounts (Admin role or admin@ email) require MFA 6-digit OTP verification
         if (user.Role == UserRole.Admin || user.Email.ToLower().Contains("admin@"))
         {
-            var otp = Random.Shared.Next(100000, 999999).ToString();
+            var otp = RandomNumberGenerator.GetInt32(100000, 1000000).ToString();
             var mfaSessionToken = Guid.NewGuid().ToString("N");
 
             _cache.Set($"mfa_{mfaSessionToken}", new MfaSessionData
@@ -235,13 +227,13 @@ public class AuthService : IAuthService
                 Attempts = 0
             }, TimeSpan.FromMinutes(5));
 
-            _logger.LogInformation("[AUTH AUDIT] MFA_CHALLENGE_ISSUED: Email={Email}, Session={Session}, DemoOTP={OTP} (Valid for 5 mins)", user.Email, mfaSessionToken, otp);
+            _logger.LogInformation("[AUTH AUDIT] MFA_CHALLENGE_ISSUED: Email={Email}, Session={Session} (Valid for 5 mins)", user.Email, mfaSessionToken);
 
             return ServiceResult<AuthResponseDto>.Ok(new AuthResponseDto
             {
                 RequiresMfa = true,
                 MfaSessionToken = mfaSessionToken,
-                Message = $"Mã OTP xác thực 2 bước đã được tạo (Mã demo: {otp} - hiệu lực 5 phút)."
+                Message = "Mã xác thực OTP đã được gửi đến kênh bảo mật của bạn (hiệu lực trong 5 phút)."
             });
         }
 
@@ -399,19 +391,19 @@ public class AuthService : IAuthService
 
         var normalizedEmail = dto.Email.Trim().ToLower();
         var user = await _db.Users.FirstOrDefaultAsync(u => u.Email.ToLower() == normalizedEmail);
-        if (user == null)
+        
+        // Anti-enumeration: Return generic success message regardless of whether email exists
+        if (user != null)
         {
-            return ServiceResult<object>.NotFound("Không tìm thấy tài khoản với địa chỉ email này.");
+            // Generate a secure 6-digit OTP reset token with 15-minute expiration
+            var resetToken = RandomNumberGenerator.GetInt32(100000, 1000000).ToString();
+            _cache.Set($"pwd_reset_{normalizedEmail}", resetToken, TimeSpan.FromMinutes(15));
+            _logger.LogInformation("[AUTH AUDIT] PASSWORD_RESET_REQUESTED: Email={Email}", normalizedEmail);
         }
-
-        // Generate a secure 6-digit OTP reset token with 15-minute expiration
-        var resetToken = Random.Shared.Next(100000, 999999).ToString();
-        _cache.Set($"pwd_reset_{normalizedEmail}", resetToken, TimeSpan.FromMinutes(15));
 
         return ServiceResult<object>.Ok(new 
         { 
-            message = "Mã xác thực đặt lại mật khẩu đã được tạo (hiệu lực trong 15 phút).",
-            resetToken = resetToken 
+            message = "Nếu địa chỉ email tồn tại trên hệ thống, hướng dẫn đặt lại mật khẩu đã được gửi đến hộp thư của bạn."
         });
     }
 

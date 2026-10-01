@@ -1,37 +1,81 @@
 using System;
 using System.Collections.Generic;
+using System.ComponentModel.DataAnnotations;
 using Dormi.Domain.Enums;
 
 namespace Dormi.Application.DTOs;
 
 public class CreateRoomDto
 {
+    [Required]
+    [MaxLength(200)]
     public string Title { get; set; } = string.Empty;
+
+    [Required]
+    [MaxLength(5000)]
     public string Description { get; set; } = string.Empty;
+
+    [Range(0, 1_000_000_000)]
     public decimal Price { get; set; }
+
+    [Range(1, 10_000)]
     public double Area { get; set; }
+
+    [MaxLength(1000)]
     public string Utilities { get; set; } = string.Empty;
+
+    [MaxLength(100)]
     public string RoomType { get; set; } = string.Empty;
+
+    [Required]
+    [MaxLength(500)]
     public string Address { get; set; } = string.Empty;
+
     public double? Latitude { get; set; }
     public double? Longitude { get; set; }
+
+    [MaxLength(1000)]
     public string? Virtual3DUrl { get; set; }
+
+    [MaxLength(20)]
     public List<string>? ImageUrls { get; set; }
 }
 
 public class UpdateRoomDto
 {
+    [Required]
+    [MaxLength(200)]
     public string Title { get; set; } = string.Empty;
+
+    [Required]
+    [MaxLength(5000)]
     public string Description { get; set; } = string.Empty;
+
+    [Range(0, 1_000_000_000)]
     public decimal Price { get; set; }
+
+    [Range(1, 10_000)]
     public double Area { get; set; }
+
+    [MaxLength(1000)]
     public string Utilities { get; set; } = string.Empty;
+
+    [MaxLength(100)]
     public string RoomType { get; set; } = string.Empty;
+
+    [Required]
+    [MaxLength(500)]
     public string Address { get; set; } = string.Empty;
+
     public double? Latitude { get; set; }
     public double? Longitude { get; set; }
+
+    [MaxLength(1000)]
     public string? Virtual3DUrl { get; set; }
+
     public RoomStatus Status { get; set; }
+
+    [MaxLength(20)]
     public List<string>? ImageUrls { get; set; }
 }
 

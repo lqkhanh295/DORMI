@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.ComponentModel.DataAnnotations;
 using Dormi.Domain.Enums;
 
 namespace Dormi.Application.DTOs;
@@ -34,12 +35,28 @@ public class VerificationApprovalDto
 // Roommate Matcher DTOs
 public class CreateRoommatePostDto
 {
+    [Required]
+    [MaxLength(200)]
     public string Title { get; set; } = string.Empty;
+
+    [Required]
+    [MaxLength(3000)]
     public string Description { get; set; } = string.Empty;
+
+    [Range(0, 500_000_000)]
     public decimal Budget { get; set; }
+
+    [Required]
+    [MaxLength(300)]
     public string Location { get; set; } = string.Empty;
+
+    [Required]
     public DateTime MoveInDate { get; set; }
+
+    [MaxLength(50)]
     public string GenderPreference { get; set; } = "Any";
+
+    [MaxLength(500)]
     public string LifestyleTraits { get; set; } = string.Empty;
 }
 
@@ -64,7 +81,11 @@ public class RoommatePostResponseDto
 // Room Review DTOs
 public class CreateReviewDto
 {
+    [Range(1, 5)]
     public int Rating { get; set; } // 1 to 5
+
+    [Required]
+    [MaxLength(1000)]
     public string Comment { get; set; } = string.Empty;
 }
 
@@ -129,9 +150,19 @@ public class NotificationDto
 // Verification DTOs
 public class SubmitVerificationDto
 {
+    [Required]
+    [MaxLength(50)]
     public string DocumentType { get; set; } = "CCCD"; // CCCD, BusinessLicense
+
+    [Required]
+    [MaxLength(50)]
     public string DocumentNumber { get; set; } = string.Empty;
+
+    [Required]
+    [MaxLength(1000)]
     public string FrontImageUrl { get; set; } = string.Empty;
+
+    [MaxLength(1000)]
     public string BackImageUrl { get; set; } = string.Empty;
 }
 

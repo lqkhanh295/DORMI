@@ -19,6 +19,7 @@ public class ImagesController : BaseApiController
     }
 
     [HttpPost("upload")]
+    [Authorize]
     public async Task<IActionResult> UploadImage(IFormFile file)
     {
         var result = await _roomService.UploadGeneralImageAsync(file);
