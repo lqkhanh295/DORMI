@@ -44,16 +44,50 @@ public class RoomService : IRoomService
             return false;
         }
 
-        var allowedExtensions = new[] { ".jpg", ".jpeg", ".png", ".webp", ".gif", ".bmp", ".heic", ".heif", ".svg" };
+        var allowedExtensions = new[] { ".jpg", ".jpeg", ".png", ".webp", ".gif", ".bmp", ".heic", ".heif" };
         var ext = Path.GetExtension(file.FileName).ToLowerInvariant();
-        if (!string.IsNullOrEmpty(ext) && !allowedExtensions.Contains(ext))
+        if (string.IsNullOrEmpty(ext) || !allowedExtensions.Contains(ext))
         {
-            errorMessage = "Định dạng tập tin không được hỗ trợ. Chỉ chấp nhận các định dạng: .jpg, .jpeg, .png, .webp, .heic.";
+            errorMessage = "Định dạng tập tin không được hỗ trợ. Chỉ chấp nhận các định dạng ảnh: .jpg, .jpeg, .png, .webp, .heic.";
+            return false;
+        }
+
+        if (!ValidateImageSignature(file, ext))
+        {
+            errorMessage = "Nội dung tập tin không khớp với định dạng ảnh hợp lệ hoặc tập tin bị lỗi.";
             return false;
         }
 
         errorMessage = null;
         return true;
+    }
+
+    private static bool ValidateImageSignature(IFormFile file, string ext)
+    {
+        try
+        {
+            using var stream = file.OpenReadStream();
+            if (stream.Length < 12) return false;
+            var header = new byte[12];
+            var bytesRead = stream.Read(header, 0, 12);
+            if (bytesRead < 12) return false;
+
+            return ext switch
+            {
+                ".jpg" or ".jpeg" => header[0] == 0xFF && header[1] == 0xD8 && header[2] == 0xFF,
+                ".png" => header[0] == 0x89 && header[1] == 0x50 && header[2] == 0x4E && header[3] == 0x47,
+                ".gif" => header[0] == 0x47 && header[1] == 0x49 && header[2] == 0x46 && header[3] == 0x38,
+                ".bmp" => header[0] == 0x42 && header[1] == 0x4D,
+                ".webp" => header[0] == 0x52 && header[1] == 0x49 && header[2] == 0x46 && header[3] == 0x46 &&
+                           header[8] == 0x57 && header[9] == 0x45 && header[10] == 0x42 && header[11] == 0x50,
+                ".heic" or ".heif" => header[4] == 0x66 && header[5] == 0x74 && header[6] == 0x79 && header[7] == 0x70, // "ftyp"
+                _ => false
+            };
+        }
+        catch
+        {
+            return false;
+        }
     }
 
     public async Task<ServiceResult<object>> GetRoomsAsync(RoomQueryFilterDto filter, Guid? currentUserId, bool isAdmin, bool isLandlord)
@@ -606,12 +640,9 @@ public class RoomService : IRoomService
         memoryStream.Position = 0;
 
         var imageUrl = await _imageService.UploadImageAsync(memoryStream, file.FileName);
-        if (string.IsNullOrEmpty(imageUrl) || imageUrl.Contains("unsplash.com"))
+        if (string.IsNullOrEmpty(imageUrl))
         {
-            var bytes = memoryStream.ToArray();
-            var ext = Path.GetExtension(file.FileName).TrimStart('.').ToLowerInvariant();
-            var mime = string.IsNullOrEmpty(file.ContentType) ? $"image/{ext}" : file.ContentType;
-            imageUrl = $"data:{mime};base64,{Convert.ToBase64String(bytes)}";
+            return ServiceResult<RoomImageDto>.Fail("Tải ảnh lên máy chủ lưu trữ thất bại. Vui lòng thử lại sau.", 502);
         }
 
         if (isPrimary)
@@ -749,12 +780,9 @@ public class RoomService : IRoomService
             memoryStream.Position = 0;
 
             var imageUrl = await _imageService.UploadImageAsync(memoryStream, file.FileName);
-            if (string.IsNullOrEmpty(imageUrl) || imageUrl.Contains("unsplash.com"))
+            if (string.IsNullOrEmpty(imageUrl))
             {
-                var bytes = memoryStream.ToArray();
-                var ext = Path.GetExtension(file.FileName).TrimStart('.').ToLowerInvariant();
-                var mime = string.IsNullOrEmpty(file.ContentType) ? $"image/{ext}" : file.ContentType;
-                imageUrl = $"data:{mime};base64,{Convert.ToBase64String(bytes)}";
+                return ServiceResult<object>.Fail("Tải ảnh lên máy chủ lưu trữ thất bại. Vui lòng thử lại sau.", 502);
             }
 
             return ServiceResult<object>.Ok(new { imageUrl });

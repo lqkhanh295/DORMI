@@ -404,17 +404,19 @@ export default function AuthPage() {
               </Button>
             </form>
 
-            {/* Explicit Demo Quick Fill */}
-            <div className="mt-4 pt-4 border-t border-slate-100 flex items-center justify-between text-xs">
-              <span className="text-slate-500">Tài khoản demo:</span>
-              <button
-                type="button"
-                onClick={handleFillDemo}
-                className="text-[#2563EB] hover:text-blue-800 font-semibold flex items-center gap-1 hover:underline"
-              >
-                <Sparkles className="w-3.5 h-3.5" /> Điền nhanh tài khoản {role} mẫu
-              </button>
-            </div>
+            {/* Explicit Demo Quick Fill (Only available in development mode) */}
+            {import.meta.env.DEV && (
+              <div className="mt-4 pt-4 border-t border-slate-100 flex items-center justify-between text-xs">
+                <span className="text-slate-500">Tài khoản demo (Dev only):</span>
+                <button
+                  type="button"
+                  onClick={handleFillDemo}
+                  className="text-[#2563EB] hover:text-blue-800 font-semibold flex items-center gap-1 hover:underline"
+                >
+                  <Sparkles className="w-3.5 h-3.5" /> Điền nhanh tài khoản {role} mẫu
+                </button>
+              </div>
+            )}
 
             <div className="mt-6 text-center">
               <button 

@@ -96,7 +96,9 @@ var allowedOrigins = builder.Configuration.GetSection("Cors:AllowedOrigins").Get
     "http://localhost:5173",
     "http://localhost:3000",
     "http://127.0.0.1:5173",
-    "http://127.0.0.1:3000"
+    "http://127.0.0.1:3000",
+    "https://dormi.space",
+    "https://www.dormi.space"
 };
 
 builder.Services.AddCors(options =>
@@ -111,10 +113,8 @@ builder.Services.AddCors(options =>
                       var uri = new Uri(origin);
                       return uri.Host == "localhost" || 
                              uri.Host == "127.0.0.1" || 
-                             uri.Host.EndsWith(".vercel.app") || 
-                             uri.Host.EndsWith(".onrender.com") ||
                              uri.Host == "dormi.space" ||
-                             uri.Host.EndsWith(".dormi.space") ||
+                             uri.Host == "www.dormi.space" ||
                              allowedOrigins.Contains(origin);
                   }
                   catch
@@ -130,13 +130,22 @@ builder.Services.AddCors(options =>
 
 var app = builder.Build();
 
-// Configure the HTTP request pipeline
-app.UseSwagger();
-app.UseSwaggerUI(c =>
+// Forwarded Headers for reverse proxy
+app.UseForwardedHeaders(new ForwardedHeadersOptions
 {
-    c.SwaggerEndpoint("/swagger/v1/swagger.json", "Dormi API v1");
-    c.RoutePrefix = "swagger";
+    ForwardedHeaders = Microsoft.AspNetCore.HttpOverrides.ForwardedHeaders.XForwardedFor | Microsoft.AspNetCore.HttpOverrides.ForwardedHeaders.XForwardedProto
 });
+
+// Configure Swagger / OpenAPI (only in Development or when EnableSwagger=true)
+if (app.Environment.IsDevelopment() || builder.Configuration.GetValue<bool>("EnableSwagger"))
+{
+    app.UseSwagger();
+    app.UseSwaggerUI(c =>
+    {
+        c.SwaggerEndpoint("/swagger/v1/swagger.json", "Dormi API v1");
+        c.RoutePrefix = "swagger";
+    });
+}
 
 app.UseCors("AllowDormiOrigins");
 
@@ -152,16 +161,19 @@ app.MapGet("/", () => Results.Ok(new { status = "healthy", service = "Dormi API"
 app.MapControllers();
 app.MapHub<Dormi.API.Hubs.ChatHub>("/hubs/chat");
 
-// Seed initial database
-try
+// Seed initial database (only in Development or when SeedData=true explicitly configured)
+if (app.Environment.IsDevelopment() || app.Configuration.GetValue<bool>("SeedData"))
 {
-    using var scope = app.Services.CreateScope();
-    var db = scope.ServiceProvider.GetRequiredService<Dormi.Infrastructure.Data.DormiDbContext>();
-    await Dormi.Infrastructure.Data.DbSeeder.SeedAsync(db);
-}
-catch (Exception ex)
-{
-    Console.WriteLine($"[Database Seeding Notice]: {ex.Message}");
+    try
+    {
+        using var scope = app.Services.CreateScope();
+        var db = scope.ServiceProvider.GetRequiredService<Dormi.Infrastructure.Data.DormiDbContext>();
+        await Dormi.Infrastructure.Data.DbSeeder.SeedAsync(db);
+    }
+    catch (Exception ex)
+    {
+        Console.WriteLine($"[Database Seeding Notice]: {ex.Message}");
+    }
 }
 
 app.Run();

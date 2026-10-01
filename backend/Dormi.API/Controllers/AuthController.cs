@@ -35,9 +35,7 @@ public class AuthController : BaseApiController
     [HttpPost("login")]
     public async Task<IActionResult> Login([FromBody] LoginDto dto)
     {
-        var clientIp = HttpContext.Request.Headers["X-Forwarded-For"].FirstOrDefault() 
-                       ?? HttpContext.Connection.RemoteIpAddress?.ToString() 
-                       ?? "127.0.0.1";
+        var clientIp = HttpContext.Connection.RemoteIpAddress?.ToString() ?? "127.0.0.1";
         var result = await _authService.LoginAsync(dto, clientIp);
         return HandleResult(result);
     }
@@ -45,9 +43,7 @@ public class AuthController : BaseApiController
     [HttpPost("verify-mfa")]
     public async Task<IActionResult> VerifyMfa([FromBody] VerifyMfaDto dto)
     {
-        var clientIp = HttpContext.Request.Headers["X-Forwarded-For"].FirstOrDefault() 
-                       ?? HttpContext.Connection.RemoteIpAddress?.ToString() 
-                       ?? "127.0.0.1";
+        var clientIp = HttpContext.Connection.RemoteIpAddress?.ToString() ?? "127.0.0.1";
         var result = await _authService.VerifyMfaAsync(dto, clientIp);
         return HandleResult(result);
     }

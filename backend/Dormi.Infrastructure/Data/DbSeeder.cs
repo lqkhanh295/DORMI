@@ -138,34 +138,11 @@ public static class DbSeeder
             Console.WriteLine($"[Schema Patch Notice]: {ex.Message}");
         }
 
-        var h = new PasswordHasher<User>();
         if (await db.Users.AnyAsync())
         {
-            // ponytail: Auto-heal any demo accounts that were seeded with placeholder dummy hashes
-            var demoAccounts = await db.Users.Where(u => u.Email.EndsWith("@dormi.vn")).ToListAsync();
-            bool modified = false;
-            foreach (var user in demoAccounts)
-            {
-                try
-                {
-                    if (h.VerifyHashedPassword(user, user.PasswordHash, "Password123!") == PasswordVerificationResult.Failed)
-                    {
-                        user.PasswordHash = h.HashPassword(user, "Password123!");
-                        modified = true;
-                    }
-                }
-                catch
-                {
-                    user.PasswordHash = h.HashPassword(user, "Password123!");
-                    modified = true;
-                }
-            }
-            if (modified)
-            {
-                await db.SaveChangesAsync();
-            }
             return;
         }
+        var h = new PasswordHasher<User>();
         var now = DateTime.UtcNow;
 
         // ============================================================

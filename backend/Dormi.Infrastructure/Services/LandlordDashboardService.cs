@@ -10,19 +10,28 @@ using Dormi.Application.Interfaces;
 using Dormi.Domain.Entities;
 using Dormi.Domain.Enums;
 using Dormi.Infrastructure.Data;
+using Microsoft.AspNetCore.Hosting;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Configuration;
+using Microsoft.Extensions.Hosting;
 
 namespace Dormi.Infrastructure.Services;
 
 public class LandlordDashboardService : ILandlordDashboardService
 {
-    private const string VnpayHashSecret = "DORMI_VNPAY_SECRET_KEY_EXEMPLAR_2026";
     private readonly DormiDbContext _db;
+    private readonly IConfiguration _configuration;
+    private readonly IWebHostEnvironment _env;
 
-    public LandlordDashboardService(DormiDbContext db)
+    public LandlordDashboardService(DormiDbContext db, IConfiguration configuration, IWebHostEnvironment env)
     {
         _db = db;
+        _configuration = configuration;
+        _env = env;
     }
+
+    private string GetVnpaySecret() => 
+        _configuration["Vnpay:HashSecret"] ?? _configuration["VNPAY_HASH_SECRET"] ?? "DORMI_VNPAY_SECRET_KEY_EXEMPLAR_2026";
 
     public async Task<ServiceResult<LandlordAnalyticsDto>> GetAnalyticsAsync(Guid landlordId)
     {
@@ -222,7 +231,7 @@ public class LandlordDashboardService : ILandlordDashboardService
         };
 
         var signData = string.Join("&", vnpParams.Select(kvp => $"{kvp.Key}={Uri.EscapeDataString(kvp.Value)}"));
-        var secureHash = ComputeHmacSha512(VnpayHashSecret, signData);
+        var secureHash = ComputeHmacSha512(GetVnpaySecret(), signData);
         var paymentUrl = $"https://sandbox.vnpayment.vn/paymentv2/vpcpay.html?{signData}&vnp_SecureHash={secureHash}";
         var qrUrl = $"https://api.qrserver.com/v1/create-qr-code/?size=250x250&data={Uri.EscapeDataString(paymentUrl)}";
 
@@ -260,6 +269,11 @@ public class LandlordDashboardService : ILandlordDashboardService
 
     public async Task<ServiceResult<object>> SimulateGatewayPaymentAsync(Guid landlordId, PaymentVerifyDto dto)
     {
+        if (!_env.IsDevelopment())
+        {
+            return ServiceResult<object>.Fail("Chức năng mô phỏng thanh toán bị vô hiệu hóa trên môi trường Production.", 403);
+        }
+
         var transaction = await _db.PaymentTransactions
             .Include(t => t.Subscription)
             .FirstOrDefaultAsync(t => t.TransactionRef == dto.TransactionRef && t.UserId == landlordId);
@@ -301,6 +315,28 @@ public class LandlordDashboardService : ILandlordDashboardService
 
     public async Task<ServiceResult<object>> VerifyPaymentAsync(Guid landlordId, PaymentVerifyDto dto)
     {
+        if (string.IsNullOrWhiteSpace(dto.TransactionRef))
+        {
+            return ServiceResult<object>.Fail("Mã tham chiếu giao dịch không hợp lệ.", 400);
+        }
+
+        if (string.IsNullOrWhiteSpace(dto.SecureHash))
+        {
+            return ServiceResult<object>.Fail("Yêu cầu chữ ký bảo mật xác thực giao dịch (SecureHash).", 400);
+        }
+
+        var secret = GetVnpaySecret();
+        var expectedHash = ComputeHmacSha512(secret, $"vnp_ResponseCode={dto.ResponseCode ?? "00"}&vnp_TxnRef={dto.TransactionRef}");
+        if (!string.Equals(expectedHash, dto.SecureHash, StringComparison.OrdinalIgnoreCase))
+        {
+            return ServiceResult<object>.Fail("Chữ ký xác thực thanh toán không hợp lệ (HMAC signature mismatch).", 400);
+        }
+
+        if (dto.ResponseCode != "00")
+        {
+            return ServiceResult<object>.Fail($"Giao dịch thanh toán chưa hoàn tất thành công từ cổng đối tác (Mã phản hồi: {dto.ResponseCode}).", 400);
+        }
+
         var transaction = await _db.PaymentTransactions
             .Include(t => t.Subscription)
             .FirstOrDefaultAsync(t => t.TransactionRef == dto.TransactionRef && t.UserId == landlordId);
@@ -310,15 +346,6 @@ public class LandlordDashboardService : ILandlordDashboardService
         if (transaction.Status == "Completed")
         {
             return ServiceResult<object>.Ok(new { message = "Giao dịch này đã được xác nhận thanh toán trước đó.", transactionId = transaction.Id, status = "Completed" });
-        }
-
-        if (!string.IsNullOrWhiteSpace(dto.SecureHash))
-        {
-            var expectedHash = ComputeHmacSha512(VnpayHashSecret, $"vnp_ResponseCode={dto.ResponseCode ?? "00"}&vnp_TxnRef={dto.TransactionRef}");
-            if (!string.Equals(expectedHash, dto.SecureHash, StringComparison.OrdinalIgnoreCase))
-            {
-                return ServiceResult<object>.Fail("Chữ ký xác thực thanh toán không hợp lệ (HMAC signature mismatch).", 400);
-            }
         }
 
         transaction.Status = "Completed";
@@ -352,7 +379,7 @@ public class LandlordDashboardService : ILandlordDashboardService
     public async Task<ServiceResult<string>> ProcessVnpayReturnAsync(IDictionary<string, string> queryParams, string vnp_TxnRef, string vnp_ResponseCode, string vnp_SecureHash)
     {
         var signData = string.Join("&", queryParams.OrderBy(kvp => kvp.Key).Select(kvp => $"{kvp.Key}={Uri.EscapeDataString(kvp.Value)}"));
-        var computedHash = ComputeHmacSha512(VnpayHashSecret, signData);
+        var computedHash = ComputeHmacSha512(GetVnpaySecret(), signData);
 
         if (!string.Equals(computedHash, vnp_SecureHash, StringComparison.OrdinalIgnoreCase))
         {
