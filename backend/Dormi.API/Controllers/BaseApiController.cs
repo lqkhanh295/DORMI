@@ -34,6 +34,11 @@ public abstract class BaseApiController : ControllerBase
             return StatusCode(result.StatusCode, result.Data);
         }
 
+        if (result.Data != null)
+        {
+            return StatusCode(result.StatusCode, result.Data);
+        }
+
         return StatusCode(result.StatusCode, new { message = result.ErrorMessage });
     }
 

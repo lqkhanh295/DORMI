@@ -16,12 +16,35 @@ public class LoginDto
 {
     public string Email { get; set; } = string.Empty;
     public string Password { get; set; } = string.Empty;
+    public string? CaptchaToken { get; set; }
+    public string? CaptchaAnswer { get; set; }
+}
+
+public class VerifyMfaDto
+{
+    public string Email { get; set; } = string.Empty;
+    public string MfaSessionToken { get; set; } = string.Empty;
+    public string OtpCode { get; set; } = string.Empty;
+}
+
+public class CaptchaChallengeDto
+{
+    public string CaptchaToken { get; set; } = string.Empty;
+    public string Question { get; set; } = string.Empty;
 }
 
 public class AuthResponseDto
 {
     public string Token { get; set; } = string.Empty;
-    public UserDto User { get; set; } = null!;
+    public UserDto? User { get; set; }
+    public bool RequiresMfa { get; set; }
+    public string? MfaSessionToken { get; set; }
+    public bool RequiresCaptcha { get; set; }
+    public string? CaptchaToken { get; set; }
+    public string? CaptchaQuestion { get; set; }
+    public int? RemainingAttempts { get; set; }
+    public int? LockoutSeconds { get; set; }
+    public string? Message { get; set; }
 }
 
 public class UserDto

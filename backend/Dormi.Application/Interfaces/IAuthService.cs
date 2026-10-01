@@ -8,7 +8,9 @@ namespace Dormi.Application.Interfaces;
 public interface IAuthService
 {
     Task<ServiceResult<AuthResponseDto>> RegisterAsync(RegisterDto dto);
-    Task<ServiceResult<AuthResponseDto>> LoginAsync(LoginDto dto);
+    Task<ServiceResult<AuthResponseDto>> LoginAsync(LoginDto dto, string clientIp = "127.0.0.1");
+    Task<ServiceResult<AuthResponseDto>> VerifyMfaAsync(VerifyMfaDto dto, string clientIp = "127.0.0.1");
+    Task<ServiceResult<CaptchaChallengeDto>> GenerateCaptchaChallengeAsync();
     Task<ServiceResult<UserDto>> GetMeAsync(Guid userId);
     Task<ServiceResult<object>> ForgotPasswordAsync(ForgotPasswordDto dto);
     Task<ServiceResult<object>> ResetPasswordAsync(ResetPasswordDto dto);

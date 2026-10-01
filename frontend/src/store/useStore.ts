@@ -62,7 +62,9 @@ interface AppState {
   messages: Message[];
   likedRoommates: RoommateProfile[];
   isLoadingApi: boolean;
-  loginWithApi: (email: string, pass: string) => Promise<boolean>;
+  setCurrentUserFromApi: (user: any, token: string) => void;
+  loginWithApi: (email: string, pass: string, captchaToken?: string, captchaAnswer?: string) => Promise<any>;
+  verifyMfaWithApi: (email: string, mfaSessionToken: string, otpCode: string) => Promise<any>;
   logout: () => void;
   fetchListings: (params?: Parameters<typeof roomsApi.getRooms>[0]) => Promise<void>;
   addListing: (listing: Omit<Listing, 'id' | 'landlordId'>) => void;
@@ -86,27 +88,47 @@ export const useStore = create<AppState>()(
       likedRoommates: [],
       isLoadingApi: false,
 
-      loginWithApi: async (email, password) => {
+      setCurrentUserFromApi: (user: any, token: string) => {
+        const roleMap: Record<number, Role> = { 0: 'Tenant', 1: 'Landlord', 2: 'Admin' };
+        set({
+          currentUser: {
+            id: user.id,
+            name: user.fullName,
+            email: user.email,
+            role: roleMap[user.role] || (typeof user.role === 'string' ? user.role : 'Tenant'),
+            avatar: user.avatarUrl || 'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?auto=format&fit=crop&w=200&q=80',
+            token: token
+          }
+        });
+      },
+
+      loginWithApi: async (email, password, captchaToken, captchaAnswer) => {
         try {
           set({ isLoadingApi: true });
-          const res = await authApi.login(email, password);
-          const roleMap: Record<number, Role> = { 0: 'Tenant', 1: 'Landlord', 2: 'Admin' };
-          set({
-            currentUser: {
-              id: res.user.id,
-              name: res.user.fullName,
-              email: res.user.email,
-              role: roleMap[res.user.role] || 'Tenant',
-              avatar: res.user.avatarUrl || 'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?auto=format&fit=crop&w=200&q=80',
-              token: res.token
-            },
-            isLoadingApi: false
-          });
-          return true;
+          const res = await authApi.login(email, password, captchaToken, captchaAnswer);
+          if (res?.user && res?.token) {
+            get().setCurrentUserFromApi(res.user, res.token);
+          }
+          set({ isLoadingApi: false });
+          return res;
         } catch (err) {
           set({ isLoadingApi: false });
-          console.error('API Login failed:', err);
-          return false;
+          throw err;
+        }
+      },
+
+      verifyMfaWithApi: async (email, mfaSessionToken, otpCode) => {
+        try {
+          set({ isLoadingApi: true });
+          const res = await authApi.verifyMfa({ email, mfaSessionToken, otpCode });
+          if (res?.user && res?.token) {
+            get().setCurrentUserFromApi(res.user, res.token);
+          }
+          set({ isLoadingApi: false });
+          return res;
+        } catch (err) {
+          set({ isLoadingApi: false });
+          throw err;
         }
       },
 

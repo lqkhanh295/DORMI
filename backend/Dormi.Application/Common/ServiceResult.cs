@@ -14,11 +14,12 @@ public class ServiceResult<T>
         StatusCode = statusCode 
     };
 
-    public static ServiceResult<T> Fail(string error, int statusCode = 400) => new() 
+    public static ServiceResult<T> Fail(string error, int statusCode = 400, T? data = default) => new() 
     { 
         Success = false, 
         ErrorMessage = error, 
-        StatusCode = statusCode 
+        StatusCode = statusCode,
+        Data = data
     };
 
     public static ServiceResult<T> NotFound(string error = "Không tìm thấy dữ liệu.") => Fail(error, 404);
