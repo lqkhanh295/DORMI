@@ -75,7 +75,10 @@ async function request<T>(endpoint: string, options: RequestInit = {}): Promise<
 
   if (!response.ok) {
     const errorData = await response.json().catch(() => ({ message: 'API request failed' }));
-    throw new Error(errorData.message || `HTTP error! Status: ${response.status}`);
+    const error: any = new Error(errorData.message || `HTTP error! Status: ${response.status}`);
+    error.data = errorData;
+    error.status = response.status;
+    throw error;
   }
 
   return response.json();
@@ -92,13 +95,41 @@ export const authApi = {
     return res;
   },
 
-  login: async (email: string, password: string) => {
-    const res = await request<{ token: string; user: any }>('/auth/login', {
+  login: async (email: string, password: string, captchaToken?: string, captchaAnswer?: string) => {
+    const res = await request<{
+      token?: string;
+      user?: any;
+      requiresMfa?: boolean;
+      mfaSessionToken?: string;
+      requiresCaptcha?: boolean;
+      captchaToken?: string;
+      captchaQuestion?: string;
+      remainingAttempts?: number;
+      lockoutSeconds?: number;
+      message?: string;
+    }>('/auth/login', {
       method: 'POST',
-      body: JSON.stringify({ email, password })
+      body: JSON.stringify({ email, password, captchaToken, captchaAnswer })
     });
-    setAuthToken(res.token);
+    if (res.token) {
+      setAuthToken(res.token);
+    }
     return res;
+  },
+
+  verifyMfa: async (data: { email: string; mfaSessionToken: string; otpCode: string }) => {
+    const res = await request<{ token: string; user: any }>('/auth/verify-mfa', {
+      method: 'POST',
+      body: JSON.stringify(data)
+    });
+    if (res.token) {
+      setAuthToken(res.token);
+    }
+    return res;
+  },
+
+  getCaptcha: async () => {
+    return request<{ captchaToken: string; question: string }>('/auth/captcha');
   },
 
   getMe: async () => {

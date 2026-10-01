@@ -1,3 +1,4 @@
+using System.Linq;
 using System.Threading.Tasks;
 using Dormi.Application.DTOs;
 using Dormi.Application.Interfaces;
@@ -24,10 +25,30 @@ public class AuthController : BaseApiController
         return HandleResult(result);
     }
 
+    [HttpGet("captcha")]
+    public async Task<IActionResult> GetCaptcha()
+    {
+        var result = await _authService.GenerateCaptchaChallengeAsync();
+        return HandleResult(result);
+    }
+
     [HttpPost("login")]
     public async Task<IActionResult> Login([FromBody] LoginDto dto)
     {
-        var result = await _authService.LoginAsync(dto);
+        var clientIp = HttpContext.Request.Headers["X-Forwarded-For"].FirstOrDefault() 
+                       ?? HttpContext.Connection.RemoteIpAddress?.ToString() 
+                       ?? "127.0.0.1";
+        var result = await _authService.LoginAsync(dto, clientIp);
+        return HandleResult(result);
+    }
+
+    [HttpPost("verify-mfa")]
+    public async Task<IActionResult> VerifyMfa([FromBody] VerifyMfaDto dto)
+    {
+        var clientIp = HttpContext.Request.Headers["X-Forwarded-For"].FirstOrDefault() 
+                       ?? HttpContext.Connection.RemoteIpAddress?.ToString() 
+                       ?? "127.0.0.1";
+        var result = await _authService.VerifyMfaAsync(dto, clientIp);
         return HandleResult(result);
     }
 

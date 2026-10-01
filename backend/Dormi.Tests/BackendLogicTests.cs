@@ -449,4 +449,98 @@ public class BackendLogicTests
         var emptyList = await favService.GetFavoritesAsync(customerId);
         Assert.Empty(emptyList.Data!);
     }
+
+    [Fact]
+    public async Task LoginSecurityPipeline_RateLimit_Lockout_MFA_ShouldEnforceProtections()
+    {
+        var options = new DbContextOptionsBuilder<DormiDbContext>()
+            .UseInMemoryDatabase(databaseName: Guid.NewGuid().ToString())
+            .Options;
+
+        using var db = new DormiDbContext(options);
+        var inMemorySettings = new System.Collections.Generic.Dictionary<string, string?>
+        {
+            { "JwtSettings:SecretKey", "TestOnlyFakeKeyThatIsLongEnough1234!" },
+            { "JwtSettings:Issuer", "DormiAPI" },
+            { "JwtSettings:Audience", "DormiUsers" },
+            { "JwtSettings:ExpiryMinutes", "60" }
+        };
+        IConfiguration config = new ConfigurationBuilder().AddInMemoryCollection(inMemorySettings).Build();
+        var tokenGen = new JwtTokenGenerator(config);
+        var cache = new Microsoft.Extensions.Caching.Memory.MemoryCache(new Microsoft.Extensions.Caching.Memory.MemoryCacheOptions());
+        var logger = Microsoft.Extensions.Logging.Abstractions.NullLogger<AuthService>.Instance;
+
+        var authService = new AuthService(db, tokenGen, cache, logger);
+
+        // 1. Seed regular user and admin user
+        var hasher = new PasswordHasher<User>();
+        var regularUser = new User
+        {
+            Id = Guid.NewGuid(),
+            Email = "student@dormi.vn",
+            FullName = "Sinh Vien",
+            Role = UserRole.Customer
+        };
+        regularUser.PasswordHash = hasher.HashPassword(regularUser, "CorrectPass123!");
+        db.Users.Add(regularUser);
+
+        var adminUser = new User
+        {
+            Id = Guid.NewGuid(),
+            Email = "admin@dormi.vn",
+            FullName = "Admin Quản Trị",
+            Role = UserRole.Admin
+        };
+        adminUser.PasswordHash = hasher.HashPassword(adminUser, "AdminPass123!");
+        db.Users.Add(adminUser);
+        await db.SaveChangesAsync();
+
+        // 2. Test Attempt limit & Progressive delay & Captcha trigger
+        var wrongPassDto = new LoginDto { Email = "student@dormi.vn", Password = "WrongPassword!" };
+        var res1 = await authService.LoginAsync(wrongPassDto, "1.2.3.4");
+        Assert.False(res1.Success);
+        Assert.Equal(401, res1.StatusCode);
+        Assert.Equal(4, res1.Data?.RemainingAttempts);
+
+        var res2 = await authService.LoginAsync(wrongPassDto, "1.2.3.4");
+        Assert.False(res2.Success);
+        Assert.Equal(3, res2.Data?.RemainingAttempts);
+        Assert.True(res2.Data?.RequiresCaptcha);
+
+        // 3. Test Lockout after 5 failed attempts (passing valid captcha answer)
+        for (int i = 0; i < 3; i++)
+        {
+            var challenge = await authService.GenerateCaptchaChallengeAsync();
+            cache.TryGetValue<string>($"captcha_{challenge.Data!.CaptchaToken}", out var answer);
+
+            var failRes = await authService.LoginAsync(new LoginDto 
+            { 
+                Email = "student@dormi.vn", 
+                Password = "WrongPassword!", 
+                CaptchaToken = challenge.Data!.CaptchaToken, 
+                CaptchaAnswer = answer 
+            }, "1.2.3.4");
+
+            if (i == 2) // 5th total attempt
+            {
+                Assert.Equal(423, failRes.StatusCode);
+                Assert.NotNull(failRes.Data?.LockoutSeconds);
+            }
+        }
+
+        // 4. Test MFA for Admin
+        var adminLoginRes = await authService.LoginAsync(new LoginDto { Email = "admin@dormi.vn", Password = "AdminPass123!" }, "5.6.7.8");
+        Assert.True(adminLoginRes.Success);
+        Assert.True(adminLoginRes.Data?.RequiresMfa);
+        Assert.False(string.IsNullOrEmpty(adminLoginRes.Data?.MfaSessionToken));
+
+        // 5. Test Rate Limiting (11th request from single IP should return 429)
+        var testIp = "9.9.9.9";
+        for (int i = 0; i < 10; i++)
+        {
+            await authService.LoginAsync(new LoginDto { Email = "random@dormi.vn", Password = "pass" }, testIp);
+        }
+        var rateLimitRes = await authService.LoginAsync(new LoginDto { Email = "random@dormi.vn", Password = "pass" }, testIp);
+        Assert.Equal(429, rateLimitRes.StatusCode);
+    }
 }
