@@ -95,16 +95,6 @@ export default function TenantChatCenter() {
     }
   });
 
-  // Default seed landlord fallback
-  if (!contactsMap.has('b0000000-0000-0000-0000-000000000001')) {
-    contactsMap.set('b0000000-0000-0000-0000-000000000001', {
-      id: 'b0000000-0000-0000-0000-000000000001',
-      name: 'Trần Minh Tuấn (Chủ trọ)',
-      role: 'Landlord',
-      online: true,
-      avatar: ''
-    });
-  }
 
   // Liked Roommates (Real DB profiles only)
   (likedRoommates || [])
@@ -314,7 +304,13 @@ export default function TenantChatCenter() {
               />
             </div>
             <div className="flex-1 overflow-y-auto">
-              {contacts.map(contact => {
+              {contacts.length === 0 ? (
+                <div className="p-6 text-center text-[#64748B] text-caption space-y-2">
+                  <MessageCircle size={24} className="mx-auto text-[#94A3B8]" />
+                  <p>Chưa có cuộc trò chuyện nào</p>
+                </div>
+              ) : (
+                contacts.map(contact => {
                 const isSelected = contact.id === selectedContactId;
                 const contactMessages = messages.filter(m => 
                   (m.senderId === currentUser?.id && m.receiverId === contact.id) ||
@@ -352,8 +348,9 @@ export default function TenantChatCenter() {
                     </div>
                   </div>
                 );
-              })}
-            </div>
+              })
+            )}
+          </div>
           </div>
 
           {/* Main Chat Area */}
@@ -442,8 +439,16 @@ export default function TenantChatCenter() {
                 </div>
               </>
             ) : (
-              <div className="flex-1 flex items-center justify-center text-[#64748B]">
-                Chọn một cuộc hội thoại để bắt đầu
+              <div className="flex-1 flex flex-col items-center justify-center text-[#64748B] p-6 space-y-3">
+                <div className="w-16 h-16 bg-[#F5F7FA] rounded-full flex items-center justify-center text-[#94A3B8]">
+                  <MessageCircle size={32} />
+                </div>
+                <h3 className="font-bold text-[#0F172A] text-h3">Chưa có hội thoại</h3>
+                <p className="text-body text-center max-w-sm">
+                  {contacts.length === 0
+                    ? 'Bạn chưa có cuộc trò chuyện nào. Hãy kết nối với bạn ở ghép hoặc liên hệ chủ phòng trọ để bắt đầu trao đổi.'
+                    : 'Chọn một cuộc hội thoại từ danh sách bên trái để bắt đầu trò chuyện.'}
+                </p>
               </div>
             )}
           </div>

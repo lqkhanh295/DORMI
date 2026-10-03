@@ -27,6 +27,14 @@ export interface RoomResponse {
   images: RoomImage[];
 }
 
+export const RoomStatus = {
+  Available: 0,
+  Rented: 1,
+  PendingApproval: 2,
+  Hidden: 3
+} as const;
+export type RoomStatus = typeof RoomStatus[keyof typeof RoomStatus];
+
 export const getAuthToken = (): string | null => {
   const directToken = localStorage.getItem('dormi_jwt_token');
   if (directToken) return directToken;
@@ -570,6 +578,6 @@ export const tenantReviewsApi = {
   },
 
   getTenantReputation: async (tenantId: string) => {
-    return request<any>(`/tenant-reviews/tenants/${tenantId}/reputation`);
+    return request<any>(`/TenantReviews/tenant/${tenantId}`);
   }
 };

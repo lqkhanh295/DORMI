@@ -24,10 +24,19 @@ export default function TenantProfile() {
   ]);
 
   useEffect(() => {
+    const parseName = (rawName: string) => {
+      const parts = rawName.trim().split(/\s+/).filter(Boolean);
+      if (parts.length <= 1) {
+        setLastName('');
+        setFirstName(parts[0] || '');
+      } else {
+        setLastName(parts.slice(0, -1).join(' '));
+        setFirstName(parts[parts.length - 1]);
+      }
+    };
+
     if (currentUser?.name) {
-      const parts = currentUser.name.split(' ');
-      setFirstName(parts[0] || '');
-      setLastName(parts.slice(1).join(' ') || '');
+      parseName(currentUser.name);
     }
 
     let isMounted = true;
@@ -35,9 +44,7 @@ export default function TenantProfile() {
       .then(res => {
         if (!isMounted) return;
         if (res?.fullName) {
-          const parts = res.fullName.split(' ');
-          setFirstName(parts[0] || '');
-          setLastName(parts.slice(1).join(' ') || '');
+          parseName(res.fullName);
         }
         if (res?.phoneNumber) {
           setPhoneNumber(res.phoneNumber);
@@ -76,7 +83,7 @@ export default function TenantProfile() {
   };
 
   const handleSave = async () => {
-    const fullName = `${firstName} ${lastName}`.trim();
+    const fullName = [lastName, firstName].filter(Boolean).join(' ').trim();
     const lifestyle = tags.filter(t => t.active).map(t => t.name).join(', ');
 
     updateUser({ name: fullName });
@@ -115,7 +122,7 @@ export default function TenantProfile() {
             </div>
           </div>
           <div>
-            <h3 className="text-h3 text-[#0F172A]">{`${firstName} ${lastName}`.trim() || currentUser?.name || 'Nguyễn Văn A'}</h3>
+            <h3 className="text-h3 text-[#0F172A]">{[lastName, firstName].filter(Boolean).join(' ') || currentUser?.name || 'Nguyễn Văn An'}</h3>
             <p className="text-caption text-[#64748B]">Người thuê trọ</p>
           </div>
           <div className="w-full pt-4 border-t border-[#E2E8F0]">
@@ -130,8 +137,8 @@ export default function TenantProfile() {
           <div>
             <h3 className="text-h3 text-[#0F172A] mb-4">Thông tin cơ bản</h3>
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-              <Input label="Tên" value={firstName} onChange={e => setFirstName(e.target.value)} />
-              <Input label="Họ & Tên đệm" value={lastName} onChange={e => setLastName(e.target.value)} />
+              <Input label="Họ & Tên đệm" value={lastName} onChange={e => setLastName(e.target.value)} placeholder="Nguyễn Văn" />
+              <Input label="Tên" value={firstName} onChange={e => setFirstName(e.target.value)} placeholder="An" />
               <Input label="Email" type="email" value={currentUser?.email || "tenant@dormi.vn"} disabled />
               <Input label="Số điện thoại" value={phoneNumber} onChange={e => setPhoneNumber(e.target.value)} placeholder="0901234567" />
             </div>

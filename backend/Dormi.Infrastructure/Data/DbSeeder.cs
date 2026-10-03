@@ -148,6 +148,7 @@ public static class DbSeeder
         // ============================================================
         // 1. USERS (1 Admin + 5 Landlords + 14 Customers = 20)
         // ============================================================
+        var adminSeedPass = Environment.GetEnvironmentVariable("ADMIN_SEED_PASSWORD") ?? "Password123!";
         User u(Guid id, string email, string name, UserRole role, bool verified = false,
                string? phone = null, string? avatar = null, string? pref = null, string? life = null, bool looking = false)
         {
@@ -157,7 +158,7 @@ public static class DbSeeder
                 PhoneNumber = phone, AvatarUrl = avatar, Preferences = pref, Lifestyle = life,
                 IsLookingForRoommate = looking, CreatedAt = now.AddDays(-Random.Shared.Next(1, 90))
             };
-            user.PasswordHash = h.HashPassword(user, "Password123!");
+            user.PasswordHash = h.HashPassword(user, role == UserRole.Admin ? adminSeedPass : "Password123!");
             return user;
         }
 

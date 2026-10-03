@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { Card } from '../../components/ui/Card';
 import { Button } from '../../components/ui/Button';
-import { adminApi } from '../../services/api';
+import { adminApi, RoomStatus } from '../../services/api';
 import { Users, UserCheck, Home, AlertTriangle, ArrowRight, DollarSign } from 'lucide-react';
 import { toast } from 'sonner';
 
@@ -29,7 +29,9 @@ export default function AdminDashboard() {
         adminApi.getReports().catch(() => [])
       ]);
 
-      const pendingRoomsList = Array.isArray(rRes) ? rRes.filter((r: any) => r.status === 2) : [];
+      const pendingRoomsList = Array.isArray(rRes) 
+        ? rRes.filter((r: any) => r.status === RoomStatus.PendingApproval || r.status === 'PendingApproval') 
+        : [];
       const openReportsList = Array.isArray(repRes) ? repRes.filter((r: any) => r.status === 'Pending') : [];
 
       setStats({

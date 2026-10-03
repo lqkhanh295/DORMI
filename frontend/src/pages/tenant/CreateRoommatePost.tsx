@@ -160,6 +160,7 @@ export default function CreateRoommatePost() {
               </label>
               <input
                 type="date"
+                min={new Date().toISOString().split('T')[0]}
                 value={moveInDate}
                 onChange={e => setMoveInDate(e.target.value)}
                 required

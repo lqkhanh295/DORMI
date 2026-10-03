@@ -29,7 +29,7 @@ export default function RoommateMatcher() {
             id: r.id,
             customerId: r.customerId,
             name: r.customerName || 'Người ở ghép',
-            age: 22,
+            age: r.age || (r.customerDateOfBirth ? Math.floor((Date.now() - new Date(r.customerDateOfBirth).getTime()) / (365.25 * 24 * 3600 * 1000)) : undefined),
             major: r.title || 'Sinh viên',
             image: r.customerAvatar || 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=400&q=80',
             matchScore: r.matchScore != null ? Math.round(r.matchScore) : null,
@@ -184,7 +184,7 @@ export default function RoommateMatcher() {
               
               <div className="p-6 space-y-4 bg-white">
                 <div>
-                  <h3 className="text-h3 font-bold text-[#0F172A]">{profile.name}, {profile.age}</h3>
+                  <h3 className="text-h3 font-bold text-[#0F172A]">{profile.name}{profile.age ? `, ${profile.age} tuổi` : ''}</h3>
                   <p className="text-caption text-[#64748B] font-semibold">{profile.major} · Ngân sách {profile.budget}</p>
                   <p className="text-body text-[#64748B] mt-2">{profile.bio}</p>
                 </div>

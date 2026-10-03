@@ -2,7 +2,7 @@ import { useState, useMemo, useEffect } from 'react';
 import { Button } from '../../components/ui/Button';
 import { Input } from '../../components/ui/Input';
 import { useStore } from '../../store/useStore';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useSearchParams } from 'react-router-dom';
 import { ArrowLeft, SlidersHorizontal, Map as MapTrifold, X, Sliders as FadersHorizontal } from 'lucide-react';
 import { RoomCard } from '../../components/landing/RoomCard';
 import RoomMapView from '../../components/map/RoomMapView';
@@ -32,6 +32,8 @@ export default function SearchResults() {
   const fetchListings = useStore(state => state.fetchListings);
   const navigate = useNavigate();
 
+  const [searchParams] = useSearchParams();
+
   useEffect(() => {
     let mounted = true;
     setIsLoading(true);
@@ -40,6 +42,18 @@ export default function SearchResults() {
     });
     return () => { mounted = false; };
   }, [fetchListings]);
+
+  useEffect(() => {
+    const q = searchParams.get('query') || searchParams.get('q');
+    const district = searchParams.get('district');
+    const price = searchParams.get('price');
+    const area = searchParams.get('area');
+
+    if (q) setSearchQuery(q);
+    if (district) setSelectedDistrict(district);
+    if (price) setSelectedPrice(price);
+    if (area) setSelectedArea(area);
+  }, [searchParams]);
   
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedDistrict, setSelectedDistrict] = useState<string | null>(null);

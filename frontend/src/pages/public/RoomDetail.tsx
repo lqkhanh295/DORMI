@@ -13,6 +13,8 @@ export default function RoomDetail() {
   const { currentUser } = useStore();
   
   const [roomData, setRoomData] = useState<RoomResponse | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [notFound, setNotFound] = useState(false);
   const [showGallery, setShowGallery] = useState(false);
   const [showVerificationModal, setShowVerificationModal] = useState(false);
   const [showScheduler, setShowScheduler] = useState(false);
@@ -30,13 +32,22 @@ export default function RoomDetail() {
 
   useEffect(() => {
     if (id) {
+      setLoading(true);
+      setNotFound(false);
       roomsApi.getRoomById(id)
         .then(res => {
           if (res && res.id) {
             setRoomData(res);
+          } else {
+            setNotFound(true);
           }
         })
-        .catch(() => {});
+        .catch(() => {
+          setNotFound(true);
+        })
+        .finally(() => {
+          setLoading(false);
+        });
 
       if (currentUser) {
         favoritesApi.getFavorites()
@@ -47,6 +58,9 @@ export default function RoomDetail() {
           })
           .catch(() => {});
       }
+    } else {
+      setNotFound(true);
+      setLoading(false);
     }
   }, [id, currentUser]);
 
@@ -117,6 +131,39 @@ export default function RoomDetail() {
       toast.error(err.message || 'Đặt lịch hẹn xem phòng thất bại. Vui lòng kiểm tra lại thời gian hoặc đăng nhập.');
     }
   };
+
+  if (loading) {
+    return (
+      <div className="container-dormi py-24 flex flex-col items-center justify-center min-h-[50vh] text-[#64748B] space-y-4">
+        <div className="w-10 h-10 border-4 border-[#00153D]/20 border-t-[#00153D] rounded-full animate-spin"></div>
+        <p className="text-body font-medium">Đang tải thông tin phòng trọ...</p>
+      </div>
+    );
+  }
+
+  if (notFound || !roomData) {
+    return (
+      <div className="container-dormi py-24 flex flex-col items-center justify-center min-h-[50vh] text-center space-y-6">
+        <div className="w-20 h-20 bg-rose-50 text-rose-500 rounded-full flex items-center justify-center mx-auto shadow-clay-soft">
+          <Warning className="w-10 h-10" />
+        </div>
+        <div className="space-y-2 max-w-md mx-auto">
+          <h1 className="text-h2 font-bold text-[#0F172A]">Không tìm thấy phòng trọ</h1>
+          <p className="text-body text-[#64748B]">
+            Phòng trọ này không tồn tại hoặc đã được chủ phòng gỡ xuống khỏi hệ thống.
+          </p>
+        </div>
+        <div className="flex gap-4">
+          <Button variant="secondary" onClick={() => navigate(-1)}>
+            <ArrowLeft className="w-4 h-4 mr-2" /> Quay lại
+          </Button>
+          <Button onClick={() => navigate('/search')}>
+            Khám phá phòng khác
+          </Button>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="container-dormi pt-6 pb-28 md:py-10 space-y-8 relative bg-[#F5F7FA]">
