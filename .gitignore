@@ -8,6 +8,10 @@
 
 # Local secrets (never commit)
 appsettings.Local.json
+/*_jira*.js
+/*_dor_*.js
+/*qa*.js
+/jira_*.csv
 
 # User-specific files
 *.rsuser
