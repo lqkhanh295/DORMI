@@ -4,7 +4,7 @@ import { Card } from '../../components/ui/Card';
 import { Button } from '../../components/ui/Button';
 import { Input } from '../../components/ui/Input';
 import { authApi } from '../../services/api';
-import { Lock } from 'lucide-react';
+import { Lock, ArrowLeft } from 'lucide-react';
 
 export default function ForgotPassword() {
   const [email, setEmail] = useState('');
@@ -127,8 +127,8 @@ export default function ForgotPassword() {
         )}
 
         <div className="mt-8 text-center">
-          <Link to="/auth" className="text-sm font-medium text-[#00153D] hover:underline transition-all flex items-center justify-center gap-1">
-            <span>←</span> Quay lại Đăng nhập
+          <Link to="/auth" className="text-sm font-medium text-[#00153D] hover:underline transition-all flex items-center justify-center gap-1.5">
+            <ArrowLeft className="w-4 h-4" /> Quay lại Đăng nhập
           </Link>
         </div>
       </Card>

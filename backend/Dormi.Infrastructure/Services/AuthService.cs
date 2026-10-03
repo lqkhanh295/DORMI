@@ -30,6 +30,12 @@ public class AuthService : IAuthService
         public int Attempts { get; set; }
     }
 
+    private static bool IsDevelopment()
+    {
+        var env = Environment.GetEnvironmentVariable("ASPNETCORE_ENVIRONMENT");
+        return string.IsNullOrEmpty(env) || string.Equals(env, "Development", StringComparison.OrdinalIgnoreCase);
+    }
+
     public AuthService(
         DormiDbContext db, 
         IJwtTokenGenerator tokenGenerator, 
@@ -227,13 +233,23 @@ public class AuthService : IAuthService
                 Attempts = 0
             }, TimeSpan.FromMinutes(5));
 
-            _logger.LogInformation("[AUTH AUDIT] MFA_CHALLENGE_ISSUED: Email={Email}, Session={Session} (Valid for 5 mins)", user.Email, mfaSessionToken);
+            var isDev = IsDevelopment();
+            if (isDev)
+            {
+                _logger.LogInformation("[DEV MODE] MFA OTP sinh cho {Email}: {Otp} (Hoặc nhập mã test: 123456)", user.Email, otp);
+            }
+            else
+            {
+                _logger.LogInformation("[AUTH AUDIT] MFA_CHALLENGE_ISSUED: Email={Email}, Session={Session} (Valid for 5 mins)", user.Email, mfaSessionToken);
+            }
 
             return ServiceResult<AuthResponseDto>.Ok(new AuthResponseDto
             {
                 RequiresMfa = true,
                 MfaSessionToken = mfaSessionToken,
-                Message = "Mã xác thực OTP đã được gửi đến kênh bảo mật của bạn (hiệu lực trong 5 phút)."
+                Message = isDev
+                    ? "Mã xác thực OTP đã được gửi đến kênh bảo mật của bạn. [DEV: Nhập mã test 123456]"
+                    : "Mã xác thực OTP đã được gửi đến kênh bảo mật của bạn (hiệu lực trong 5 phút)."
             });
         }
 
@@ -328,7 +344,10 @@ public class AuthService : IAuthService
             return ServiceResult<AuthResponseDto>.Fail("Bạn đã nhập sai mã OTP quá 3 lần. Vui lòng đăng nhập lại từ đầu.", 400);
         }
 
-        if (session.OtpCode.Trim() != dto.OtpCode.Trim())
+        var isDev = IsDevelopment();
+        var isTestOtp = isDev && dto.OtpCode.Trim() == "123456";
+
+        if (!isTestOtp && session.OtpCode.Trim() != dto.OtpCode.Trim())
         {
             session.Attempts++;
             var remaining = 3 - session.Attempts;

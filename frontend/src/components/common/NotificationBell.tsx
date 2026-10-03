@@ -25,10 +25,9 @@ export function NotificationBell() {
     if (!currentUser) return;
     try {
       setLoading(true);
-      const res = await notificationsApi.getNotifications();
-      if (Array.isArray(res)) {
-        setNotifications(res);
-      }
+      const res: any = await notificationsApi.getNotifications();
+      const items = Array.isArray(res) ? res : (Array.isArray(res?.notifications) ? res.notifications : []);
+      setNotifications(items);
     } catch (err) {
       console.warn('Failed to load notifications:', err);
     } finally {

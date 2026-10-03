@@ -65,40 +65,6 @@ export default function SmartListingForm() {
   const createListingWithApi = useStore(state => state.createListingWithApi);
   const uploadImageToCloudinary = useStore(state => state.uploadImageToCloudinary);
 
-  const compressImage = (file: File): Promise<string> => {
-    return new Promise((resolve) => {
-      const img = new Image();
-      const url = URL.createObjectURL(file);
-      img.onload = () => {
-        const canvas = document.createElement('canvas');
-        let { width, height } = img;
-        const MAX = 1200;
-        if (width > height && width > MAX) {
-          height = Math.round((height * MAX) / width);
-          width = MAX;
-        } else if (height > MAX) {
-          width = Math.round((width * MAX) / height);
-          height = MAX;
-        }
-        canvas.width = width;
-        canvas.height = height;
-        const ctx = canvas.getContext('2d');
-        if (ctx) {
-          ctx.fillStyle = '#FFFFFF';
-          ctx.fillRect(0, 0, width, height);
-          ctx.drawImage(img, 0, 0, width, height);
-        }
-        const dataUrl = canvas.toDataURL('image/jpeg', 0.85);
-        URL.revokeObjectURL(url);
-        resolve(dataUrl);
-      };
-      img.onerror = () => {
-        URL.revokeObjectURL(url);
-        resolve('https://images.unsplash.com/photo-1522708323590-d24dbb6b0267?auto=format&fit=crop&w=800&q=80');
-      };
-      img.src = url;
-    });
-  };
 
   const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const files = Array.from(e.target.files || []);
@@ -107,18 +73,16 @@ export default function SmartListingForm() {
     setUploadingImage(true);
     try {
       for (const file of files) {
-        // 1. Instant client-side compression -> User sees real photo immediately
-        const compressedUrl = await compressImage(file);
-        setImageUrls(prev => [...prev, compressedUrl]);
-
-        // 2. Background sync with backend
-        uploadImageToCloudinary(file).then(uploadedUrl => {
-          if (uploadedUrl && !uploadedUrl.includes('unsplash.com')) {
-            setImageUrls(prev => prev.map(u => u === compressedUrl ? uploadedUrl : u));
+        try {
+          const uploadedUrl = await uploadImageToCloudinary(file);
+          if (uploadedUrl && !uploadedUrl.startsWith('data:')) {
+            setImageUrls(prev => [...prev, uploadedUrl]);
+          } else {
+            alert(`Tải ảnh "${file.name}" thất bại. Vui lòng thử lại.`);
           }
-        }).catch(() => {
-          // Gracefully keep the high quality compressed image
-        });
+        } catch {
+          alert(`Lỗi khi tải ảnh "${file.name}". Vui lòng thử lại.`);
+        }
       }
     } catch {
       alert('Không thể đọc tập tin ảnh.');
@@ -293,8 +257,8 @@ export default function SmartListingForm() {
       utilities: selectedUtilities.join(', '),
       roomType,
       address: address.trim() || '123 Nguyễn Đình Chiểu, Quận 3, TP.HCM',
-      imageUrls: imageUrls.length > 0 
-        ? imageUrls 
+      imageUrls: imageUrls.filter(u => !u.startsWith('data:')).length > 0 
+        ? imageUrls.filter(u => !u.startsWith('data:')) 
         : ['https://images.unsplash.com/photo-1522708323590-d24dbb6b0267?auto=format&fit=crop&w=800&q=80']
     });
 

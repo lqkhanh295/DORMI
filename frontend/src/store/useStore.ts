@@ -47,7 +47,7 @@ export interface RoommateProfile {
   id: string;
   customerId?: string;
   name: string;
-  age: number;
+  age?: number;
   major: string;
   image: string;
   matchScore?: number | null;
@@ -140,7 +140,7 @@ export const useStore = create<AppState>()(
       fetchListings: async (params) => {
         try {
           const res = await roomsApi.getRooms({ pageSize: 50, ...params });
-          if (res?.data && Array.isArray(res.data) && res.data.length > 0) {
+          if (res?.data && Array.isArray(res.data)) {
             const statusMap: Record<number, 'Available' | 'Rented' | 'PendingApproval' | 'Hidden'> = {
               0: 'Available',
               1: 'Rented',

@@ -35,9 +35,13 @@ export default function PricingCheckout() {
         return;
       }
 
-      const res = await landlordApi.simulateGatewayPayment(checkoutData.transactionRef);
-      toast.success(res.message || 'Thanh toán thành công! Gói dịch vụ của bạn đã được kích hoạt.');
-      setCheckoutData(null);
+      if (import.meta.env.DEV) {
+        const res = await landlordApi.simulateGatewayPayment(checkoutData.transactionRef);
+        toast.success(res.message || 'Thanh toán mô phỏng (DEV) thành công! Gói dịch vụ của bạn đã được kích hoạt.');
+        setCheckoutData(null);
+      } else {
+        toast.info('Hệ thống đang chờ tín hiệu thanh toán từ cổng ngân hàng. Vui lòng hoàn tất quét mã QR.');
+      }
     } catch (err: any) {
       toast.error(err?.message || 'Xác nhận thanh toán chưa thành công. Vui lòng kiểm tra lại giao dịch.');
     } finally {
