@@ -68,6 +68,7 @@ public class ConversationDto
     public string LastMessage { get; set; } = string.Empty;
     public DateTime LastMessageTime { get; set; }
     public int UnreadCount { get; set; }
+    public bool IsOnline { get; set; }
 }
 
 // Profiles DTOs

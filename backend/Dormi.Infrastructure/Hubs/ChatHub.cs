@@ -2,17 +2,33 @@ using System;
 using System.Security.Claims;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.SignalR;
+using Microsoft.Extensions.Caching.Distributed;
 
 namespace Dormi.Infrastructure.Hubs;
 
 public class ChatHub : Hub
 {
+    private readonly IDistributedCache? _cache;
+
+    public ChatHub(IDistributedCache? cache = null)
+    {
+        _cache = cache;
+    }
+
     public override async Task OnConnectedAsync()
     {
         var userId = Context.User?.FindFirst(ClaimTypes.NameIdentifier)?.Value;
         if (!string.IsNullOrEmpty(userId))
         {
-            await Groups.AddToGroupAsync(Context.ConnectionId, userId.ToLower());
+            var normalizedUserId = userId.ToLower();
+            await Groups.AddToGroupAsync(Context.ConnectionId, normalizedUserId);
+            if (_cache != null)
+            {
+                await _cache.SetStringAsync($"presence:{normalizedUserId}", "online", new DistributedCacheEntryOptions
+                {
+                    AbsoluteExpirationRelativeToNow = TimeSpan.FromMinutes(2)
+                });
+            }
         }
 
         var role = Context.User?.FindFirst(ClaimTypes.Role)?.Value;
@@ -29,7 +45,12 @@ public class ChatHub : Hub
         var userId = Context.User?.FindFirst(ClaimTypes.NameIdentifier)?.Value;
         if (!string.IsNullOrEmpty(userId))
         {
-            await Groups.RemoveFromGroupAsync(Context.ConnectionId, userId.ToLower());
+            var normalizedUserId = userId.ToLower();
+            await Groups.RemoveFromGroupAsync(Context.ConnectionId, normalizedUserId);
+            if (_cache != null)
+            {
+                await _cache.RemoveAsync($"presence:{normalizedUserId}");
+            }
         }
 
         var role = Context.User?.FindFirst(ClaimTypes.Role)?.Value;
@@ -39,6 +60,18 @@ public class ChatHub : Hub
         }
 
         await base.OnDisconnectedAsync(exception);
+    }
+
+    public async Task Heartbeat()
+    {
+        var userId = Context.User?.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+        if (!string.IsNullOrEmpty(userId) && _cache != null)
+        {
+            await _cache.SetStringAsync($"presence:{userId.ToLower()}", "online", new DistributedCacheEntryOptions
+            {
+                AbsoluteExpirationRelativeToNow = TimeSpan.FromMinutes(2)
+            });
+        }
     }
 
     public async Task JoinUserGroup(string userId)

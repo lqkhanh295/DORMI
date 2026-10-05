@@ -9,20 +9,38 @@ using Dormi.Domain.Entities;
 using Dormi.Domain.Enums;
 using Dormi.Infrastructure.Data;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Caching.Distributed;
 
 namespace Dormi.Infrastructure.Services;
 
 public class AppointmentService : IAppointmentService
 {
     private readonly DormiDbContext _db;
+    private readonly IDistributedCache? _cache;
 
-    public AppointmentService(DormiDbContext db)
+    public AppointmentService(DormiDbContext db, IDistributedCache? cache = null)
     {
         _db = db;
+        _cache = cache;
     }
 
     public async Task<ServiceResult<object>> CreateAppointmentAsync(Guid userId, CreateAppointmentDto dto)
     {
+        if (_cache != null)
+        {
+            var lockKey = $"lock:appointment:{dto.RoomId}:{userId}";
+            var isLocked = await _cache.GetStringAsync(lockKey);
+            if (!string.IsNullOrEmpty(isLocked))
+            {
+                return ServiceResult<object>.Fail("Yêu cầu đặt lịch hẹn của bạn đang được xử lý, vui lòng không thao tác lặp lại.", 429);
+            }
+
+            await _cache.SetStringAsync(lockKey, "1", new DistributedCacheEntryOptions
+            {
+                AbsoluteExpirationRelativeToNow = TimeSpan.FromSeconds(10)
+            });
+        }
+
         var user = await _db.Users.FindAsync(userId);
         if (user == null || user.Role != UserRole.Customer)
         {

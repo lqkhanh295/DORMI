@@ -12,8 +12,10 @@ using Dormi.Domain.Enums;
 using Dormi.Infrastructure.Data;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Caching.Distributed;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Hosting;
+using System.Text.Json;
 
 namespace Dormi.Infrastructure.Services;
 
@@ -22,12 +24,18 @@ public class LandlordDashboardService : ILandlordDashboardService
     private readonly DormiDbContext _db;
     private readonly IConfiguration _configuration;
     private readonly IWebHostEnvironment _env;
+    private readonly IDistributedCache? _cache;
 
-    public LandlordDashboardService(DormiDbContext db, IConfiguration configuration, IWebHostEnvironment env)
+    public LandlordDashboardService(
+        DormiDbContext db, 
+        IConfiguration configuration, 
+        IWebHostEnvironment env,
+        IDistributedCache? cache = null)
     {
         _db = db;
         _configuration = configuration;
         _env = env;
+        _cache = cache;
     }
 
     private string GetVnpaySecret() => 
@@ -35,6 +43,21 @@ public class LandlordDashboardService : ILandlordDashboardService
 
     public async Task<ServiceResult<LandlordAnalyticsDto>> GetAnalyticsAsync(Guid landlordId)
     {
+        var cacheKey = $"landlord_analytics:{landlordId}";
+        if (_cache != null)
+        {
+            var cached = await _cache.GetStringAsync(cacheKey);
+            if (!string.IsNullOrEmpty(cached))
+            {
+                try
+                {
+                    var cachedDto = JsonSerializer.Deserialize<LandlordAnalyticsDto>(cached);
+                    if (cachedDto != null) return ServiceResult<LandlordAnalyticsDto>.Ok(cachedDto);
+                }
+                catch { }
+            }
+        }
+
         var totalListings = await _db.Rooms.CountAsync(r => r.LandlordId == landlordId);
         var activeListings = await _db.Rooms.CountAsync(r => r.LandlordId == landlordId && r.Status == RoomStatus.Available);
         var totalAppointments = await _db.ViewingAppointments.CountAsync(a => a.Room.LandlordId == landlordId);
@@ -53,11 +76,38 @@ public class LandlordDashboardService : ILandlordDashboardService
             ConversionRate = conversionRate
         };
 
+        if (_cache != null)
+        {
+            try
+            {
+                await _cache.SetStringAsync(cacheKey, JsonSerializer.Serialize(analytics), new DistributedCacheEntryOptions
+                {
+                    AbsoluteExpirationRelativeToNow = TimeSpan.FromMinutes(5)
+                });
+            }
+            catch { }
+        }
+
         return ServiceResult<LandlordAnalyticsDto>.Ok(analytics);
     }
 
     public async Task<ServiceResult<RealLeadAnalyticsDto>> GetLeadAnalyticsAsync(Guid landlordId, Guid? roomId)
     {
+        var cacheKey = $"landlord_leads:{landlordId}:{(roomId.HasValue && roomId.Value != Guid.Empty ? roomId.Value.ToString() : "all")}";
+        if (_cache != null)
+        {
+            var cached = await _cache.GetStringAsync(cacheKey);
+            if (!string.IsNullOrEmpty(cached))
+            {
+                try
+                {
+                    var cachedDto = JsonSerializer.Deserialize<RealLeadAnalyticsDto>(cached);
+                    if (cachedDto != null) return ServiceResult<RealLeadAnalyticsDto>.Ok(cachedDto);
+                }
+                catch { }
+            }
+        }
+
         var roomsQuery = _db.Rooms.Where(r => r.LandlordId == landlordId);
         if (roomId.HasValue && roomId.Value != Guid.Empty)
         {
@@ -141,7 +191,7 @@ public class LandlordDashboardService : ILandlordDashboardService
             Contacts = contactsByRoom.GetValueOrDefault(r.Id, 0)
         }).ToList();
 
-        return ServiceResult<RealLeadAnalyticsDto>.Ok(new RealLeadAnalyticsDto
+        var resultDto = new RealLeadAnalyticsDto
         {
             TotalViews = totalViews,
             TotalSaves = totalSaves,
@@ -150,7 +200,21 @@ public class LandlordDashboardService : ILandlordDashboardService
             ContactRate = contactRate,
             DailyMetrics = dailyMetrics,
             TopRooms = topRooms
-        });
+        };
+
+        if (_cache != null)
+        {
+            try
+            {
+                await _cache.SetStringAsync(cacheKey, JsonSerializer.Serialize(resultDto), new DistributedCacheEntryOptions
+                {
+                    AbsoluteExpirationRelativeToNow = TimeSpan.FromMinutes(5)
+                });
+            }
+            catch { }
+        }
+
+        return ServiceResult<RealLeadAnalyticsDto>.Ok(resultDto);
     }
 
     public async Task<ServiceResult<List<PaymentTransactionDto>>> GetBillingHistoryAsync(Guid landlordId)

@@ -14,6 +14,7 @@ using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.SignalR;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Caching.Distributed;
+using System.Text.Json;
 using NetTopologySuite.Geometries;
 
 namespace Dormi.Infrastructure.Services;
@@ -240,8 +241,38 @@ public class RoomService : IRoomService
         });
     }
 
+    private async Task InvalidateFeaturedRoomsCacheAsync()
+    {
+        try
+        {
+            await _cache.RemoveAsync("featured_rooms_6");
+            await _cache.RemoveAsync("featured_rooms_8");
+            await _cache.RemoveAsync("featured_rooms_10");
+            await _cache.RemoveAsync("featured_rooms_12");
+        }
+        catch { }
+    }
+
     public async Task<ServiceResult<List<RoomResponseDto>>> GetFeaturedRoomsAsync(int limit = 6)
     {
+        var cacheKey = $"featured_rooms_{limit}";
+        var cached = await _cache.GetStringAsync(cacheKey);
+        if (!string.IsNullOrEmpty(cached))
+        {
+            try
+            {
+                var cachedList = JsonSerializer.Deserialize<List<RoomResponseDto>>(cached);
+                if (cachedList != null)
+                {
+                    return ServiceResult<List<RoomResponseDto>>.Ok(cachedList);
+                }
+            }
+            catch
+            {
+                // Fallback to database query if deserialization fails
+            }
+        }
+
         var featured = await _db.Rooms
             .Include(r => r.Landlord)
             .Include(r => r.Images)
@@ -277,6 +308,15 @@ public class RoomService : IRoomService
                 }).ToList()
             })
             .ToListAsync();
+
+        try
+        {
+            await _cache.SetStringAsync(cacheKey, JsonSerializer.Serialize(featured), new DistributedCacheEntryOptions
+            {
+                AbsoluteExpirationRelativeToNow = TimeSpan.FromMinutes(5)
+            });
+        }
+        catch { }
 
         return ServiceResult<List<RoomResponseDto>>.Ok(featured);
     }
@@ -457,6 +497,7 @@ public class RoomService : IRoomService
             }).ToList()
         };
 
+        await InvalidateFeaturedRoomsCacheAsync();
         return ServiceResult<RoomResponseDto>.Ok(responseDto, 201);
     }
 
@@ -596,6 +637,7 @@ public class RoomService : IRoomService
             }).ToList()
         };
 
+        await InvalidateFeaturedRoomsCacheAsync();
         return ServiceResult<RoomResponseDto>.Ok(responseDto);
     }
 
@@ -612,6 +654,7 @@ public class RoomService : IRoomService
         _db.Rooms.Remove(room);
         await _db.SaveChangesAsync();
 
+        await InvalidateFeaturedRoomsCacheAsync();
         return ServiceResult<object>.Ok(new { message = "Đã xoá phòng trọ thành công." });
     }
 

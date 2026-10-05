@@ -10,6 +10,7 @@ using Dormi.Infrastructure.Data;
 using Dormi.Infrastructure.Hubs;
 using Microsoft.AspNetCore.SignalR;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Caching.Distributed;
 
 namespace Dormi.Infrastructure.Services;
 
@@ -17,11 +18,13 @@ public class MessageService : IMessageService
 {
     private readonly DormiDbContext _db;
     private readonly IHubContext<ChatHub> _hubContext;
+    private readonly IDistributedCache? _cache;
 
-    public MessageService(DormiDbContext db, IHubContext<ChatHub> hubContext)
+    public MessageService(DormiDbContext db, IHubContext<ChatHub> hubContext, IDistributedCache? cache = null)
     {
         _db = db;
         _hubContext = hubContext;
+        _cache = cache;
     }
 
     public async Task<ServiceResult<object>> SendMessageAsync(Guid senderId, SendMessageDto dto)
@@ -140,6 +143,15 @@ public class MessageService : IMessageService
                 };
             })
             .ToList();
+
+        if (_cache != null)
+        {
+            foreach (var conv in conversationGroups)
+            {
+                var presence = await _cache.GetStringAsync($"presence:{conv.OtherUserId.ToString().ToLower()}");
+                conv.IsOnline = !string.IsNullOrEmpty(presence);
+            }
+        }
 
         return ServiceResult<List<ConversationDto>>.Ok(conversationGroups);
     }
