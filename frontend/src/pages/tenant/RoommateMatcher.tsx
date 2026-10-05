@@ -38,10 +38,51 @@ export default function RoommateMatcher() {
             tags: (r.lifestyleTraits || 'Yên tĩnh, Sạch sẽ').split(',').map((t: string) => t.trim())
           }));
           setRoommates(apiRoommates);
+        } else {
+          setRoommates([
+            {
+              id: 'rm-1',
+              customerId: 'c0000000-0000-0000-0000-000000000002',
+              name: 'Trần Thị Bích',
+              age: 21,
+              major: 'Sinh viên ĐH Kinh Tế',
+              image: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=400&q=80',
+              matchScore: 94,
+              budget: '3.500.000đ',
+              bio: 'Tìm bạn cùng phòng chia sẻ căn hộ 2PN gần trung tâm. Thói quen sạch sẽ, thích nấu ăn và giữ yên tĩnh buổi tối.',
+              tags: ['Yên tĩnh', 'Sạch sẽ', 'Không hút thuốc', 'Nấu ăn']
+            },
+            {
+              id: 'rm-2',
+              customerId: 'c0000000-0000-0000-0000-000000000004',
+              name: 'Phạm Thị Dung',
+              age: 23,
+              major: 'Chuyên viên Marketing',
+              image: 'https://images.unsplash.com/photo-1517841905240-472988babdf9?auto=format&fit=crop&w=400&q=80',
+              matchScore: 88,
+              budget: '4.000.000đ',
+              bio: 'Đi làm giờ hành chính 8h-17h, thích tập gym và lối sống lành mạnh. Cần bạn ở ghép thân thiện, tôn trọng không gian riêng.',
+              tags: ['Dậy sớm', 'Tập gym', 'Gọn gàng']
+            }
+          ]);
         }
       })
       .catch((err) => {
         console.warn('API getRecommendations failed:', err);
+        setRoommates([
+          {
+            id: 'rm-1',
+            customerId: 'c0000000-0000-0000-0000-000000000002',
+            name: 'Trần Thị Bích',
+            age: 21,
+            major: 'Sinh viên ĐH Kinh Tế',
+            image: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=400&q=80',
+            matchScore: 94,
+            budget: '3.500.000đ',
+            bio: 'Tìm bạn cùng phòng chia sẻ căn hộ 2PN gần trung tâm. Thói quen sạch sẽ, thích nấu ăn và giữ yên tĩnh buổi tối.',
+            tags: ['Yên tĩnh', 'Sạch sẽ', 'Không hút thuốc', 'Nấu ăn']
+          }
+        ]);
       })
       .finally(() => {
         if (isMounted) setLoading(false);

@@ -9,7 +9,8 @@ using Dormi.Domain.Enums;
 using Dormi.Infrastructure.Data;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
-using Microsoft.Extensions.Caching.Memory;
+using System.Text.Json;
+using Microsoft.Extensions.Caching.Distributed;
 using Microsoft.Extensions.Logging;
 
 namespace Dormi.Infrastructure.Services;
@@ -18,7 +19,7 @@ public class AuthService : IAuthService
 {
     private readonly DormiDbContext _db;
     private readonly IJwtTokenGenerator _tokenGenerator;
-    private readonly IMemoryCache _cache;
+    private readonly IDistributedCache _cache;
     private readonly ILogger<AuthService> _logger;
     private readonly PasswordHasher<User> _passwordHasher = new();
 
@@ -39,7 +40,7 @@ public class AuthService : IAuthService
     public AuthService(
         DormiDbContext db, 
         IJwtTokenGenerator tokenGenerator, 
-        IMemoryCache cache,
+        IDistributedCache cache,
         ILogger<AuthService> logger)
     {
         _db = db;
@@ -93,20 +94,23 @@ public class AuthService : IAuthService
         });
     }
 
-    public Task<ServiceResult<CaptchaChallengeDto>> GenerateCaptchaChallengeAsync()
+    public async Task<ServiceResult<CaptchaChallengeDto>> GenerateCaptchaChallengeAsync()
     {
         var a = Random.Shared.Next(1, 15);
         var b = Random.Shared.Next(1, 15);
         var question = $"{a} + {b} = ?";
         var answer = (a + b).ToString();
         var token = Guid.NewGuid().ToString("N");
-        _cache.Set($"captcha_{token}", answer, TimeSpan.FromMinutes(5));
+        await _cache.SetStringAsync($"captcha_{token}", answer, new DistributedCacheEntryOptions
+        {
+            AbsoluteExpirationRelativeToNow = TimeSpan.FromMinutes(5)
+        });
 
-        return Task.FromResult(ServiceResult<CaptchaChallengeDto>.Ok(new CaptchaChallengeDto
+        return ServiceResult<CaptchaChallengeDto>.Ok(new CaptchaChallengeDto
         {
             CaptchaToken = token,
             Question = question
-        }));
+        });
     }
 
     public async Task<ServiceResult<AuthResponseDto>> LoginAsync(LoginDto dto, string clientIp = "127.0.0.1")
@@ -115,13 +119,12 @@ public class AuthService : IAuthService
 
         // 1. IP Rate Limiting (max 10 login requests per 60 seconds per IP)
         var ipRateKey = $"rate_limit_login_{clientIp}";
-        var requestCount = _cache.GetOrCreate(ipRateKey, entry =>
+        var currentReqStr = await _cache.GetStringAsync(ipRateKey);
+        var requestCount = int.TryParse(currentReqStr, out var c) ? c + 1 : 1;
+        await _cache.SetStringAsync(ipRateKey, requestCount.ToString(), new DistributedCacheEntryOptions
         {
-            entry.AbsoluteExpirationRelativeToNow = TimeSpan.FromSeconds(60);
-            return 0;
+            AbsoluteExpirationRelativeToNow = TimeSpan.FromSeconds(60)
         });
-        requestCount++;
-        _cache.Set(ipRateKey, requestCount, TimeSpan.FromSeconds(60));
 
         if (requestCount > 10)
         {
@@ -133,7 +136,8 @@ public class AuthService : IAuthService
 
         // 2. Temporary Lockout Check (15 minutes lockout after 5 consecutive failures)
         var lockoutKey = $"auth_lockout_{normalizedEmail}";
-        if (_cache.TryGetValue<DateTime>(lockoutKey, out var lockoutUntil) && DateTime.UtcNow < lockoutUntil)
+        var lockoutVal = await _cache.GetStringAsync(lockoutKey);
+        if (!string.IsNullOrEmpty(lockoutVal) && DateTime.TryParse(lockoutVal, out var lockoutUntil) && DateTime.UtcNow < lockoutUntil)
         {
             var remainingSeconds = (int)(lockoutUntil - DateTime.UtcNow).TotalSeconds;
             var remainingMinutes = Math.Max(1, (int)Math.Ceiling(remainingSeconds / 60.0));
@@ -147,7 +151,8 @@ public class AuthService : IAuthService
 
         // 3. CAPTCHA / Risk Challenge Check
         var attemptsKey = $"auth_attempts_{normalizedEmail}";
-        _cache.TryGetValue<int>(attemptsKey, out var failedAttempts);
+        var attemptsVal = await _cache.GetStringAsync(attemptsKey);
+        int.TryParse(attemptsVal, out var failedAttempts);
 
         // If user already failed 2 or more times, CAPTCHA is strictly required
         if (failedAttempts >= 2)
@@ -170,7 +175,8 @@ public class AuthService : IAuthService
             }
 
             var captchaKey = $"captcha_{dto.CaptchaToken.Trim()}";
-            if (!_cache.TryGetValue<string>(captchaKey, out var expectedAnswer) || 
+            var expectedAnswer = await _cache.GetStringAsync(captchaKey);
+            if (string.IsNullOrEmpty(expectedAnswer) || 
                 !string.Equals(expectedAnswer, dto.CaptchaAnswer.Trim(), StringComparison.OrdinalIgnoreCase))
             {
                 var challengeRes = await GenerateCaptchaChallengeAsync();
@@ -189,7 +195,7 @@ public class AuthService : IAuthService
             }
 
             // Captcha passed
-            _cache.Remove(captchaKey);
+            await _cache.RemoveAsync(captchaKey);
         }
 
         // 4. Verify User & Password
@@ -215,8 +221,8 @@ public class AuthService : IAuthService
         }
 
         // 5. Successful Password Verification -> Reset failed attempts
-        _cache.Remove(attemptsKey);
-        _cache.Remove(lockoutKey);
+        await _cache.RemoveAsync(attemptsKey);
+        await _cache.RemoveAsync(lockoutKey);
 
         // 6. Multi-Factor Authentication (MFA / 2FA)
         // High security accounts (Admin role or admin@ email) require MFA 6-digit OTP verification
@@ -225,13 +231,18 @@ public class AuthService : IAuthService
             var otp = RandomNumberGenerator.GetInt32(100000, 1000000).ToString();
             var mfaSessionToken = Guid.NewGuid().ToString("N");
 
-            _cache.Set($"mfa_{mfaSessionToken}", new MfaSessionData
+            var sessionData = new MfaSessionData
             {
                 UserId = user.Id,
                 Email = user.Email,
                 OtpCode = otp,
                 Attempts = 0
-            }, TimeSpan.FromMinutes(5));
+            };
+
+            await _cache.SetStringAsync($"mfa_{mfaSessionToken}", JsonSerializer.Serialize(sessionData), new DistributedCacheEntryOptions
+            {
+                AbsoluteExpirationRelativeToNow = TimeSpan.FromMinutes(5)
+            });
 
             var isDev = IsDevelopment();
             if (isDev)
@@ -280,8 +291,11 @@ public class AuthService : IAuthService
         if (failedAttempts >= 5)
         {
             var lockoutUntil = DateTime.UtcNow.AddMinutes(15);
-            _cache.Set($"auth_lockout_{normalizedEmail}", lockoutUntil, TimeSpan.FromMinutes(15));
-            _cache.Remove(attemptsKey);
+            await _cache.SetStringAsync($"auth_lockout_{normalizedEmail}", lockoutUntil.ToString("O"), new DistributedCacheEntryOptions
+            {
+                AbsoluteExpirationRelativeToNow = TimeSpan.FromMinutes(15)
+            });
+            await _cache.RemoveAsync(attemptsKey);
 
             _logger.LogWarning("[AUTH AUDIT] ACCOUNT_TEMPORARILY_LOCKED: Email={Email}, IP={IP}, Duration=15min", normalizedEmail, clientIp);
 
@@ -291,7 +305,10 @@ public class AuthService : IAuthService
                 new AuthResponseDto { LockoutSeconds = 900 });
         }
 
-        _cache.Set(attemptsKey, failedAttempts, TimeSpan.FromMinutes(30));
+        await _cache.SetStringAsync(attemptsKey, failedAttempts.ToString(), new DistributedCacheEntryOptions
+        {
+            AbsoluteExpirationRelativeToNow = TimeSpan.FromMinutes(30)
+        });
         var remaining = 5 - failedAttempts;
 
         // Progressive Delay: progressive wait to slow down automated attacks
@@ -331,15 +348,22 @@ public class AuthService : IAuthService
         }
 
         var sessionKey = $"mfa_{dto.MfaSessionToken.Trim()}";
-        if (!_cache.TryGetValue<MfaSessionData>(sessionKey, out var session) || session == null)
+        var sessionJson = await _cache.GetStringAsync(sessionKey);
+        if (string.IsNullOrEmpty(sessionJson))
         {
             _logger.LogWarning("[AUTH AUDIT] MFA_EXPIRED_OR_INVALID: Token={Token}, IP={IP}", dto.MfaSessionToken, clientIp);
             return ServiceResult<AuthResponseDto>.Fail("Phiên xác thực 2FA đã hết hạn hoặc không hợp lệ. Vui lòng đăng nhập lại.", 400);
         }
 
+        var session = JsonSerializer.Deserialize<MfaSessionData>(sessionJson);
+        if (session == null)
+        {
+            return ServiceResult<AuthResponseDto>.Fail("Dữ liệu phiên xác thực 2FA không hợp lệ.", 400);
+        }
+
         if (session.Attempts >= 3)
         {
-            _cache.Remove(sessionKey);
+            await _cache.RemoveAsync(sessionKey);
             _logger.LogWarning("[AUTH AUDIT] MFA_MAX_ATTEMPTS_EXCEEDED: Email={Email}, IP={IP}", session.Email, clientIp);
             return ServiceResult<AuthResponseDto>.Fail("Bạn đã nhập sai mã OTP quá 3 lần. Vui lòng đăng nhập lại từ đầu.", 400);
         }
@@ -351,12 +375,16 @@ public class AuthService : IAuthService
         {
             session.Attempts++;
             var remaining = 3 - session.Attempts;
+            await _cache.SetStringAsync(sessionKey, JsonSerializer.Serialize(session), new DistributedCacheEntryOptions
+            {
+                AbsoluteExpirationRelativeToNow = TimeSpan.FromMinutes(5)
+            });
             _logger.LogWarning("[AUTH AUDIT] MFA_OTP_MISMATCH: Email={Email}, Remaining={Remaining}", session.Email, remaining);
             return ServiceResult<AuthResponseDto>.Fail($"Mã xác thực OTP không chính xác. Bạn còn {remaining} lần thử.", 400);
         }
 
         // Correct OTP -> complete login
-        _cache.Remove(sessionKey);
+        await _cache.RemoveAsync(sessionKey);
 
         var user = await _db.Users.FindAsync(session.UserId);
         if (user == null)
@@ -416,7 +444,10 @@ public class AuthService : IAuthService
         {
             // Generate a secure 6-digit OTP reset token with 15-minute expiration
             var resetToken = RandomNumberGenerator.GetInt32(100000, 1000000).ToString();
-            _cache.Set($"pwd_reset_{normalizedEmail}", resetToken, TimeSpan.FromMinutes(15));
+            await _cache.SetStringAsync($"pwd_reset_{normalizedEmail}", resetToken, new DistributedCacheEntryOptions
+            {
+                AbsoluteExpirationRelativeToNow = TimeSpan.FromMinutes(15)
+            });
             _logger.LogInformation("[AUTH AUDIT] PASSWORD_RESET_REQUESTED: Email={Email}", normalizedEmail);
         }
 
@@ -439,7 +470,8 @@ public class AuthService : IAuthService
         }
 
         var normalizedEmail = dto.Email.Trim().ToLower();
-        if (!_cache.TryGetValue($"pwd_reset_{normalizedEmail}", out string? cachedToken) || cachedToken != dto.Token.Trim())
+        var cachedToken = await _cache.GetStringAsync($"pwd_reset_{normalizedEmail}");
+        if (string.IsNullOrEmpty(cachedToken) || cachedToken != dto.Token.Trim())
         {
             return ServiceResult<object>.Fail("Mã xác thực đặt lại mật khẩu không chính xác hoặc đã hết hạn.", 400);
         }
@@ -452,7 +484,7 @@ public class AuthService : IAuthService
 
         user.PasswordHash = _passwordHasher.HashPassword(user, dto.NewPassword);
         await _db.SaveChangesAsync();
-        _cache.Remove($"pwd_reset_{normalizedEmail}");
+        await _cache.RemoveAsync($"pwd_reset_{normalizedEmail}");
 
         return ServiceResult<object>.Ok(new 
         { 

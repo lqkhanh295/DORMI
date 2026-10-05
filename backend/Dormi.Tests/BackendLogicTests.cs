@@ -10,7 +10,9 @@ using Dormi.Infrastructure.Data;
 using Dormi.Infrastructure.Services;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Caching.Distributed;
 using Microsoft.Extensions.Configuration;
+using Microsoft.Extensions.DependencyInjection;
 using Xunit;
 
 namespace Dormi.Tests;
@@ -467,7 +469,7 @@ public class BackendLogicTests
         };
         IConfiguration config = new ConfigurationBuilder().AddInMemoryCollection(inMemorySettings).Build();
         var tokenGen = new JwtTokenGenerator(config);
-        var cache = new Microsoft.Extensions.Caching.Memory.MemoryCache(new Microsoft.Extensions.Caching.Memory.MemoryCacheOptions());
+        var cache = new ServiceCollection().AddDistributedMemoryCache().BuildServiceProvider().GetRequiredService<IDistributedCache>();
         var logger = Microsoft.Extensions.Logging.Abstractions.NullLogger<AuthService>.Instance;
 
         var authService = new AuthService(db, tokenGen, cache, logger);
@@ -511,7 +513,7 @@ public class BackendLogicTests
         for (int i = 0; i < 3; i++)
         {
             var challenge = await authService.GenerateCaptchaChallengeAsync();
-            cache.TryGetValue<string>($"captcha_{challenge.Data!.CaptchaToken}", out var answer);
+            var answer = cache.GetString($"captcha_{challenge.Data!.CaptchaToken}");
 
             var failRes = await authService.LoginAsync(new LoginDto 
             { 
@@ -558,7 +560,7 @@ public class BackendLogicTests
         };
         IConfiguration config = new ConfigurationBuilder().AddInMemoryCollection(inMemorySettings).Build();
         var tokenGen = new JwtTokenGenerator(config);
-        var cache = new Microsoft.Extensions.Caching.Memory.MemoryCache(new Microsoft.Extensions.Caching.Memory.MemoryCacheOptions());
+        var cache = new ServiceCollection().AddDistributedMemoryCache().BuildServiceProvider().GetRequiredService<IDistributedCache>();
         var logger = Microsoft.Extensions.Logging.Abstractions.NullLogger<AuthService>.Instance;
 
         var authService = new AuthService(db, tokenGen, cache, logger);
@@ -580,7 +582,7 @@ public class BackendLogicTests
         Assert.Equal(200, resExisting.StatusCode);
 
         // Verify token is in cache
-        Assert.True(cache.TryGetValue("pwd_reset_validuser@dormi.vn", out string? cachedToken));
+        var cachedToken = cache.GetString("pwd_reset_validuser@dormi.vn");
         Assert.NotNull(cachedToken);
         Assert.Equal(6, cachedToken.Length);
 
@@ -588,7 +590,7 @@ public class BackendLogicTests
         var resNonExisting = await authService.ForgotPasswordAsync(new ForgotPasswordDto { Email = "ghost@dormi.vn" });
         Assert.True(resNonExisting.Success);
         Assert.Equal(200, resNonExisting.StatusCode);
-        Assert.False(cache.TryGetValue("pwd_reset_ghost@dormi.vn", out _));
+        Assert.Null(cache.GetString("pwd_reset_ghost@dormi.vn"));
     }
 
     [Fact]

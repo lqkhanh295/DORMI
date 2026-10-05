@@ -13,6 +13,7 @@ using Dormi.Infrastructure.Hubs;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.SignalR;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Caching.Distributed;
 using NetTopologySuite.Geometries;
 
 namespace Dormi.Infrastructure.Services;
@@ -22,12 +23,18 @@ public class RoomService : IRoomService
     private readonly DormiDbContext _db;
     private readonly IImageService _imageService;
     private readonly IHubContext<ChatHub> _hubContext;
+    private readonly IDistributedCache _cache;
 
-    public RoomService(DormiDbContext db, IImageService imageService, IHubContext<ChatHub> hubContext)
+    public RoomService(
+        DormiDbContext db, 
+        IImageService imageService, 
+        IHubContext<ChatHub> hubContext,
+        IDistributedCache cache)
     {
         _db = db;
         _imageService = imageService;
         _hubContext = hubContext;
+        _cache = cache;
     }
 
     private static bool IsValidImageFile(IFormFile file, out string? errorMessage)
@@ -294,16 +301,18 @@ public class RoomService : IRoomService
         try
         {
             var ip = clientIp ?? "unknown";
-            var cooldownThreshold = DateTime.UtcNow.AddMinutes(-30);
-            var isDuplicateView = await _db.RoomViews.AnyAsync(v =>
-                v.RoomId == id &&
-                v.EventType == "DetailView" &&
-                v.CreatedAt >= cooldownThreshold &&
-                ((currentUserId.HasValue && v.ViewerId == currentUserId.Value) || (!currentUserId.HasValue && v.IpAddress == ip))
-            );
+            var viewerKey = currentUserId.HasValue ? currentUserId.Value.ToString() : ip;
+            var viewLockKey = $"room_view_lock:{id}:{viewerKey}";
 
-            if (!isDuplicateView)
+            // ponytail: Redis check avoids heavy database scanning on RoomViews
+            var alreadyViewed = await _cache.GetStringAsync(viewLockKey);
+            if (string.IsNullOrEmpty(alreadyViewed))
             {
+                await _cache.SetStringAsync(viewLockKey, "1", new DistributedCacheEntryOptions
+                {
+                    AbsoluteExpirationRelativeToNow = TimeSpan.FromMinutes(30)
+                });
+
                 _db.RoomViews.Add(new RoomView
                 {
                     Id = Guid.NewGuid(),
@@ -316,9 +325,10 @@ public class RoomService : IRoomService
                 await _db.SaveChangesAsync();
             }
         }
-        catch
+        catch (Exception ex)
         {
             // Suppress analytics failure
+            Console.WriteLine($"[View Tracking Notice]: {ex.Message}");
         }
 
         var dto = new RoomResponseDto

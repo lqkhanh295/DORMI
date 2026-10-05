@@ -33,6 +33,21 @@ public static class DependencyInjection
             }
         });
 
+        // Register Distributed Cache (Redis with in-memory fallback for local resilience)
+        var redisConn = configuration.GetConnectionString("Redis");
+        if (!string.IsNullOrEmpty(redisConn))
+        {
+            services.AddStackExchangeRedisCache(options =>
+            {
+                options.Configuration = redisConn;
+                options.InstanceName = "Dormi_";
+            });
+        }
+        else
+        {
+            services.AddDistributedMemoryCache();
+        }
+
         // Register Core Infrastructure Services
         services.AddScoped<IImageService, CloudinaryService>();
         services.AddScoped<IJwtTokenGenerator, JwtTokenGenerator>();

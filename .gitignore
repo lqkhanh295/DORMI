@@ -493,4 +493,8 @@ scratch/
 **/scratch/
 .agents/
 
+# Screenshot directories
+screenshots*/
+**/screenshots*/
+
 
