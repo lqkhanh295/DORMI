@@ -1,7 +1,7 @@
 import { Outlet, Link, useNavigate, useLocation } from 'react-router-dom';
 import { useStore } from '../store/useStore';
 import { FloatingNav, type NavItem } from '../components/shared/FloatingNav';
-import { LayoutDashboard, Home, BarChart3, MessageCircle } from 'lucide-react';
+import { LayoutDashboard, Home, BarChart3, MessageCircle, FileText, Calendar, FileCheck } from 'lucide-react';
 import { NotificationBell } from '../components/common/NotificationBell';
 
 export default function LandlordLayout() {
@@ -16,6 +16,9 @@ export default function LandlordLayout() {
 
   const navItems: NavItem[] = [
     { name: 'Tổng quan', path: '/landlord', icon: <LayoutDashboard size={20} strokeWidth={2} /> },
+    { name: 'Hồ sơ thuê', path: '/landlord/applications', icon: <FileText size={20} strokeWidth={2} /> },
+    { name: 'Lịch xem', path: '/landlord/viewings', icon: <Calendar size={20} strokeWidth={2} /> },
+    { name: 'Hợp đồng', path: '/landlord/leases', icon: <FileCheck size={20} strokeWidth={2} /> },
     { name: 'Phòng của tôi', path: '/landlord/rooms', icon: <Home size={20} strokeWidth={2} /> },
     { name: 'Phân tích', path: '/landlord/analytics', icon: <BarChart3 size={20} strokeWidth={2} /> },
     { name: 'Tin nhắn', path: '/landlord/chat', icon: <MessageCircle size={20} strokeWidth={2} /> }

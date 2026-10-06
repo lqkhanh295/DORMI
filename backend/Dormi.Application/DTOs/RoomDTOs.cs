@@ -106,6 +106,9 @@ public class RoomResponseDto
     public RoomStatus Status { get; set; }
     public bool IsVerifiedLandlord { get; set; }
     public DateTime CreatedAt { get; set; }
+    public bool IsBoosted { get; set; }
+    public DateTime? BoostExpiresAt { get; set; }
+    public string? BoostType { get; set; }
     public List<RoomImageDto> Images { get; set; } = new();
 }
 

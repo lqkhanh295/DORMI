@@ -131,6 +131,128 @@ public static class DbSeeder
                     ""Comment"" text NOT NULL,
                     ""IsAnonymous"" boolean NOT NULL DEFAULT true,
                     ""CreatedAt"" timestamp with time zone NOT NULL DEFAULT CURRENT_TIMESTAMP
+                );
+                CREATE TABLE IF NOT EXISTS ""RentalApplications"" (
+                    ""Id"" uuid PRIMARY KEY,
+                    ""RoomId"" uuid NOT NULL REFERENCES ""Rooms""(""Id"") ON DELETE CASCADE,
+                    ""TenantId"" uuid NOT NULL REFERENCES ""Users""(""Id"") ON DELETE RESTRICT,
+                    ""Status"" integer NOT NULL DEFAULT 1,
+                    ""MonthlyIncome"" numeric NOT NULL DEFAULT 0,
+                    ""Occupation"" varchar(255) NOT NULL,
+                    ""EmployerName"" varchar(255),
+                    ""OccupantsCount"" integer NOT NULL DEFAULT 1,
+                    ""DesiredMoveInDate"" timestamp with time zone NOT NULL,
+                    ""LeaseDurationMonths"" integer NOT NULL DEFAULT 12,
+                    ""NoteToLandlord"" text,
+                    ""RejectionReason"" text,
+                    ""LandlordNotes"" text,
+                    ""CreatedAt"" timestamp with time zone NOT NULL DEFAULT CURRENT_TIMESTAMP,
+                    ""ReviewedAt"" timestamp with time zone
+                );
+                CREATE TABLE IF NOT EXISTS ""ApplicationDocuments"" (
+                    ""Id"" uuid PRIMARY KEY,
+                    ""RentalApplicationId"" uuid NOT NULL REFERENCES ""RentalApplications""(""Id"") ON DELETE CASCADE,
+                    ""DocumentType"" varchar(50) NOT NULL DEFAULT 'ID_CARD',
+                    ""FileUrl"" text NOT NULL,
+                    ""UploadedAt"" timestamp with time zone NOT NULL DEFAULT CURRENT_TIMESTAMP
+                );
+                ALTER TABLE ""ViewingAppointments"" ADD COLUMN IF NOT EXISTS ""RescheduledDate"" timestamp with time zone;
+                ALTER TABLE ""ViewingAppointments"" ADD COLUMN IF NOT EXISTS ""RejectionReason"" text;
+                ALTER TABLE ""ViewingAppointments"" ADD COLUMN IF NOT EXISTS ""CompletedAt"" timestamp with time zone;
+                ALTER TABLE ""LeaseContracts"" ADD COLUMN IF NOT EXISTS ""RentalApplicationId"" uuid REFERENCES ""RentalApplications""(""Id"") ON DELETE SET NULL;
+                ALTER TABLE ""LeaseContracts"" ADD COLUMN IF NOT EXISTS ""UtilitiesDescription"" text;
+                ALTER TABLE ""LeaseContracts"" ADD COLUMN IF NOT EXISTS ""TermsAndConditions"" text;
+                ALTER TABLE ""LeaseContracts"" ADD COLUMN IF NOT EXISTS ""PaymentCycleMonths"" integer NOT NULL DEFAULT 1;
+                ALTER TABLE ""LeaseContracts"" ADD COLUMN IF NOT EXISTS ""LandlordSigned"" boolean NOT NULL DEFAULT true;
+                ALTER TABLE ""LeaseContracts"" ADD COLUMN IF NOT EXISTS ""LandlordSignedAt"" timestamp with time zone;
+                ALTER TABLE ""LeaseContracts"" ADD COLUMN IF NOT EXISTS ""TenantSigned"" boolean NOT NULL DEFAULT false;
+                ALTER TABLE ""LeaseContracts"" ADD COLUMN IF NOT EXISTS ""TenantSignedAt"" timestamp with time zone;
+                ALTER TABLE ""LeaseContracts"" ADD COLUMN IF NOT EXISTS ""TenantSignatureData"" text;
+                ALTER TABLE ""LeaseContracts"" ADD COLUMN IF NOT EXISTS ""ContractDocumentUrl"" text;
+                ALTER TABLE ""LeaseContracts"" ADD COLUMN IF NOT EXISTS ""ActivatedAt"" timestamp with time zone;
+                ALTER TABLE ""LeaseContracts"" ADD COLUMN IF NOT EXISTS ""TerminatedAt"" timestamp with time zone;
+                ALTER TABLE ""LeaseContracts"" ADD COLUMN IF NOT EXISTS ""TerminationReason"" text;
+                ALTER TABLE ""LeaseContracts"" ADD COLUMN IF NOT EXISTS ""MoveOutRequestedAt"" timestamp with time zone;
+                ALTER TABLE ""LeaseContracts"" ADD COLUMN IF NOT EXISTS ""MoveOutDate"" timestamp with time zone;
+                ALTER TABLE ""LeaseContracts"" ADD COLUMN IF NOT EXISTS ""MoveOutReason"" text;
+                ALTER TABLE ""LeaseContracts"" ADD COLUMN IF NOT EXISTS ""MoveOutInspectionNotes"" text;
+                ALTER TABLE ""LeaseContracts"" ADD COLUMN IF NOT EXISTS ""MoveOutDeductions"" numeric;
+                ALTER TABLE ""LeaseContracts"" ADD COLUMN IF NOT EXISTS ""MoveOutDeductionReason"" text;
+                ALTER TABLE ""LeaseContracts"" ADD COLUMN IF NOT EXISTS ""MoveOutSettledDeposit"" numeric;
+                ALTER TABLE ""LeaseContracts"" ADD COLUMN IF NOT EXISTS ""MoveOutSettledAt"" timestamp with time zone;
+                ALTER TABLE ""LeaseContracts"" ADD COLUMN IF NOT EXISTS ""RenewalRequestedAt"" timestamp with time zone;
+                ALTER TABLE ""LeaseContracts"" ADD COLUMN IF NOT EXISTS ""RenewalProposedEndDate"" timestamp with time zone;
+                ALTER TABLE ""LeaseContracts"" ADD COLUMN IF NOT EXISTS ""RenewalStatus"" varchar(50);
+                CREATE TABLE IF NOT EXISTS ""LeaseDocuments"" (
+                    ""Id"" uuid PRIMARY KEY,
+                    ""LeaseContractId"" uuid NOT NULL REFERENCES ""LeaseContracts""(""Id"") ON DELETE CASCADE,
+                    ""DocumentType"" varchar(50) NOT NULL DEFAULT 'CONTRACT_PDF',
+                    ""FileUrl"" text NOT NULL,
+                    ""Title"" varchar(255),
+                    ""UploadedAt"" timestamp with time zone NOT NULL DEFAULT CURRENT_TIMESTAMP
+                );
+                CREATE TABLE IF NOT EXISTS ""RentalPaymentSchedules"" (
+                    ""Id"" uuid PRIMARY KEY,
+                    ""LeaseContractId"" uuid NOT NULL REFERENCES ""LeaseContracts""(""Id"") ON DELETE CASCADE,
+                    ""Type"" varchar(50) NOT NULL DEFAULT 'Rent',
+                    ""Title"" varchar(255) NOT NULL,
+                    ""Amount"" numeric NOT NULL,
+                    ""DueDate"" timestamp with time zone NOT NULL,
+                    ""Status"" varchar(50) NOT NULL DEFAULT 'Pending',
+                    ""PaidAt"" timestamp with time zone,
+                    ""PaymentReference"" varchar(255),
+                    ""PaymentMethod"" varchar(50),
+                    ""LandlordNotes"" text,
+                    ""CreatedAt"" timestamp with time zone NOT NULL DEFAULT CURRENT_TIMESTAMP
+                );
+                CREATE TABLE IF NOT EXISTS ""MaintenanceRequests"" (
+                    ""Id"" uuid PRIMARY KEY,
+                    ""LeaseContractId"" uuid NOT NULL REFERENCES ""LeaseContracts""(""Id"") ON DELETE CASCADE,
+                    ""TenantId"" uuid NOT NULL REFERENCES ""Users""(""Id"") ON DELETE RESTRICT,
+                    ""LandlordId"" uuid NOT NULL REFERENCES ""Users""(""Id"") ON DELETE RESTRICT,
+                    ""RoomId"" uuid NOT NULL REFERENCES ""Rooms""(""Id"") ON DELETE CASCADE,
+                    ""Title"" varchar(255) NOT NULL,
+                    ""Description"" text NOT NULL,
+                    ""Category"" varchar(50) NOT NULL DEFAULT 'General',
+                    ""Priority"" varchar(50) NOT NULL DEFAULT 'Medium',
+                    ""Status"" varchar(50) NOT NULL DEFAULT 'OPEN',
+                    ""ImageUrls"" text,
+                    ""AssignedTo"" varchar(255),
+                    ""ResolutionNotes"" text,
+                    ""EstimatedCost"" numeric,
+                    ""ActualCost"" numeric,
+                    ""TenantConfirmed"" boolean NOT NULL DEFAULT false,
+                    ""TenantFeedback"" text,
+                    ""TenantRating"" integer,
+                    ""CreatedAt"" timestamp with time zone NOT NULL DEFAULT CURRENT_TIMESTAMP,
+                    ""ResolvedAt"" timestamp with time zone,
+                    ""ClosedAt"" timestamp with time zone
+                );
+                ALTER TABLE ""Rooms"" ADD COLUMN IF NOT EXISTS ""IsBoosted"" boolean NOT NULL DEFAULT false;
+                ALTER TABLE ""Rooms"" ADD COLUMN IF NOT EXISTS ""BoostExpiresAt"" timestamp with time zone;
+                ALTER TABLE ""Rooms"" ADD COLUMN IF NOT EXISTS ""BoostType"" varchar(50);
+                ALTER TABLE ""Rooms"" ADD COLUMN IF NOT EXISTS ""IsPropertyVerified"" boolean NOT NULL DEFAULT false;
+                ALTER TABLE ""Rooms"" ADD COLUMN IF NOT EXISTS ""PropertyVerifiedAt"" timestamp with time zone;
+                ALTER TABLE ""PaymentTransactions"" ADD COLUMN IF NOT EXISTS ""RoomId"" uuid REFERENCES ""Rooms""(""Id"") ON DELETE SET NULL;
+                ALTER TABLE ""VerificationRequests"" ADD COLUMN IF NOT EXISTS ""RoomId"" uuid REFERENCES ""Rooms""(""Id"") ON DELETE SET NULL;
+                ALTER TABLE ""VerificationRequests"" ADD COLUMN IF NOT EXISTS ""PropertyAddress"" text;
+                ALTER TABLE ""RoomReports"" ADD COLUMN IF NOT EXISTS ""RiskLevel"" varchar(50) NOT NULL DEFAULT 'Medium';
+                ALTER TABLE ""RoomReports"" ADD COLUMN IF NOT EXISTS ""EvidenceUrls"" text;
+                ALTER TABLE ""RoomReports"" ADD COLUMN IF NOT EXISTS ""ModeratorNotes"" text;
+                ALTER TABLE ""RoomReports"" ADD COLUMN IF NOT EXISTS ""ActionTaken"" varchar(50);
+                ALTER TABLE ""RoomReports"" ADD COLUMN IF NOT EXISTS ""ModeratorId"" uuid REFERENCES ""Users""(""Id"") ON DELETE SET NULL;
+                ALTER TABLE ""RoomReports"" ADD COLUMN IF NOT EXISTS ""ResolvedAt"" timestamp with time zone;
+                ALTER TABLE ""RoommatePosts"" ADD COLUMN IF NOT EXISTS ""RoomId"" uuid REFERENCES ""Rooms""(""Id"") ON DELETE SET NULL;
+                CREATE TABLE IF NOT EXISTS ""AuditLogs"" (
+                    ""Id"" uuid PRIMARY KEY,
+                    ""ActorId"" uuid,
+                    ""ActorEmail"" varchar(255) NOT NULL DEFAULT '',
+                    ""Action"" varchar(100) NOT NULL,
+                    ""EntityType"" varchar(50) NOT NULL,
+                    ""EntityId"" varchar(255) NOT NULL,
+                    ""Details"" text NOT NULL,
+                    ""IpAddress"" varchar(100),
+                    ""CreatedAt"" timestamp with time zone NOT NULL DEFAULT CURRENT_TIMESTAMP
                 );");
         }
         catch (Exception ex)

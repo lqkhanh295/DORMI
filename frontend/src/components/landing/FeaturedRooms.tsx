@@ -1,8 +1,10 @@
 import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { ArrowRight } from 'lucide-react';
+import { motion, AnimatePresence } from 'framer-motion';
 import { RoomCard, type RoomItem } from './RoomCard';
 import { roomsApi } from '../../services/api';
+import { staggerListContainer, staggerListItem } from '../../utils/motion';
 
 export function FeaturedRooms() {
   const [rooms, setRooms] = useState<RoomItem[]>([]);
@@ -21,7 +23,9 @@ export function FeaturedRooms() {
             location: r.address,
             area: `${r.area || 25}m²`,
             image: r.images?.[0]?.imageUrl || 'https://images.unsplash.com/photo-1502672260266-1c1de2d96674?auto=format&fit=crop&w=600&q=80',
-            verified: r.isVerifiedLandlord ?? true
+            verified: r.isVerifiedLandlord ?? true,
+            isBoosted: !!r.isBoosted,
+            boostType: r.boostType
           }));
           setRooms(apiItems);
         }
@@ -50,33 +54,54 @@ export function FeaturedRooms() {
           </div>
           <Link 
             to="/search" 
-            className="text-body font-semibold text-[#00153D] hover:underline flex items-center gap-1 min-h-[44px]"
+            className="text-body font-semibold text-[#00153D] hover:underline flex items-center gap-1 min-h-[44px] transition-colors"
           >
             Xem tất cả <ArrowRight className="w-4 h-4" />
           </Link>
         </div>
 
-        {loading ? (
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8">
-            {[1, 2, 3].map(n => (
-              <div key={n} className="bg-[#F8FAFC] rounded-[18px] border border-[#E2E8F0] p-4 space-y-4 animate-pulse">
-                <div className="h-48 bg-[#E2E8F0] rounded-[12px]"></div>
-                <div className="h-5 bg-[#E2E8F0] rounded w-3/4"></div>
-                <div className="h-4 bg-[#E2E8F0] rounded w-1/2"></div>
-              </div>
-            ))}
-          </div>
-        ) : rooms.length === 0 ? (
-          <div className="py-12 text-center text-[#64748B] bg-[#F8FAFC] rounded-[18px] border border-dashed border-[#CBD5E1]">
-            Chưa có phòng nổi bật nào.
-          </div>
-        ) : (
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8">
-            {rooms.map(room => (
-              <RoomCard key={room.id} room={room} />
-            ))}
-          </div>
-        )}
+        <AnimatePresence mode="wait">
+          {loading ? (
+            <motion.div 
+              key="skeletons"
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0, transition: { duration: 0.15 } }}
+              className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8"
+            >
+              {[1, 2, 3].map(n => (
+                <div key={n} className="bg-white rounded-[18px] border border-[#E2E8F0] shadow-clay-soft p-3 space-y-3">
+                  <div className="aspect-[4/3] rounded-[14px] skeleton-shimmer"></div>
+                  <div className="h-6 bg-[#EEF2F6] skeleton-shimmer rounded-md w-3/4"></div>
+                  <div className="h-4 bg-[#EEF2F6] skeleton-shimmer rounded-md w-1/2"></div>
+                </div>
+              ))}
+            </motion.div>
+          ) : rooms.length === 0 ? (
+            <motion.div 
+              key="empty"
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              className="py-12 text-center text-[#64748B] bg-[#F8FAFC] rounded-[18px] border border-dashed border-[#CBD5E1]"
+            >
+              Chưa có phòng nổi bật nào.
+            </motion.div>
+          ) : (
+            <motion.div 
+              key="cards"
+              variants={staggerListContainer}
+              initial="hidden"
+              animate="visible"
+              className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8"
+            >
+              {rooms.map(room => (
+                <motion.div key={room.id} variants={staggerListItem}>
+                  <RoomCard room={room} />
+                </motion.div>
+              ))}
+            </motion.div>
+          )}
+        </AnimatePresence>
       </div>
     </section>
   );

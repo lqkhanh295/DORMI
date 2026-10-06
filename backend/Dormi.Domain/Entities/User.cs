@@ -22,6 +22,7 @@ public class User
     // Navigations
     public ICollection<Room> Rooms { get; set; } = new List<Room>();
     public ICollection<FavoriteRoom> FavoriteRooms { get; set; } = new List<FavoriteRoom>();
+    public ICollection<RentalApplication> RentalApplications { get; set; } = new List<RentalApplication>();
     public ICollection<Message> SentMessages { get; set; } = new List<Message>();
     public ICollection<Message> ReceivedMessages { get; set; } = new List<Message>();
 }

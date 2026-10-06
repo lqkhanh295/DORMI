@@ -23,6 +23,11 @@ export interface RoomResponse {
   virtual3DUrl?: string;
   status: number;
   isVerifiedLandlord?: boolean;
+  isBoosted?: boolean;
+  boostType?: string;
+  boostExpiresAt?: string;
+  isPropertyVerified?: boolean;
+  propertyVerifiedAt?: string;
   createdAt: string;
   images: RoomImage[];
 }
@@ -308,10 +313,111 @@ export const appointmentsApi = {
     return request<any[]>('/appointments');
   },
 
-  updateStatus: async (id: string, status: string) => {
+  updateStatus: async (id: string, status: string, reason?: string) => {
     return request<any>(`/appointments/${id}/status`, {
       method: 'PATCH',
-      body: JSON.stringify({ status })
+      body: JSON.stringify({ status, reason })
+    });
+  },
+
+  rescheduleAppointment: async (id: string, newAppointmentDate: string, reason?: string) => {
+    return request<any>(`/appointments/${id}/reschedule`, {
+      method: 'POST',
+      body: JSON.stringify({ newAppointmentDate, reason })
+    });
+  }
+};
+
+// 4.1 APPLICATIONS API (Transaction Spine)
+export interface ApplicationDocument {
+  id?: string;
+  documentType: string;
+  fileUrl: string;
+}
+
+export interface RentalApplicationResponse {
+  id: string;
+  roomId: string;
+  roomTitle: string;
+  roomAddress: string;
+  roomPrice: number;
+  roomImageUrl?: string;
+  tenantId: string;
+  tenantName: string;
+  tenantEmail: string;
+  tenantPhone?: string;
+  tenantAvatar?: string;
+  isTenantVerified: boolean;
+  landlordId: string;
+  landlordName: string;
+  status: number;
+  statusText: string;
+  monthlyIncome: number;
+  occupation: string;
+  employerName?: string;
+  occupantsCount: number;
+  desiredMoveInDate: string;
+  leaseDurationMonths: number;
+  noteToLandlord?: string;
+  rejectionReason?: string;
+  landlordNotes?: string;
+  createdAt: string;
+  reviewedAt?: string;
+  documents: ApplicationDocument[];
+}
+
+export const ApplicationStatus = {
+  Draft: 0,
+  Submitted: 1,
+  UnderReview: 2,
+  MoreInfoRequested: 3,
+  Approved: 4,
+  Rejected: 5,
+  Withdrawn: 6,
+  Expired: 7
+} as const;
+
+export const applicationsApi = {
+  createApplication: async (data: {
+    roomId: string;
+    monthlyIncome: number;
+    occupation: string;
+    employerName?: string;
+    occupantsCount: number;
+    desiredMoveInDate: string;
+    leaseDurationMonths: number;
+    noteToLandlord?: string;
+    documents?: { documentType: string; fileUrl: string }[];
+  }) => {
+    return request<RentalApplicationResponse>('/applications', {
+      method: 'POST',
+      body: JSON.stringify(data)
+    });
+  },
+
+  getMyApplications: async () => {
+    return request<RentalApplicationResponse[]>('/applications/my');
+  },
+
+  getLandlordApplications: async (status?: number) => {
+    const query = status !== undefined ? `?status=${status}` : '';
+    return request<RentalApplicationResponse[]>(`/applications/landlord${query}`);
+  },
+
+  getApplicationById: async (id: string) => {
+    return request<RentalApplicationResponse>(`/applications/${id}`);
+  },
+
+  reviewApplication: async (id: string, status: number, reason?: string, landlordNotes?: string) => {
+    return request<any>(`/applications/${id}/review`, {
+      method: 'PATCH',
+      body: JSON.stringify({ status, reason, landlordNotes })
+    });
+  },
+
+  withdrawApplication: async (id: string) => {
+    return request<any>(`/applications/${id}/withdraw`, {
+      method: 'POST'
     });
   }
 };
@@ -378,6 +484,28 @@ export const profilesApi = {
   }
 };
 
+export interface RoommatePostResponse {
+  id: string;
+  customerId: string;
+  customerName: string;
+  customerAvatar?: string;
+  title: string;
+  description: string;
+  budget: number;
+  location: string;
+  moveInDate: string;
+  genderPreference: string;
+  lifestyleTraits: string;
+  isActive: boolean;
+  matchScore?: number;
+  createdAt: string;
+  roomId?: string;
+  roomTitle?: string;
+  roomAddress?: string;
+  roomPrice?: number;
+  roomImageUrl?: string;
+}
+
 // 8. ROOMMATES API
 export const roommatesApi = {
   getPosts: async (location?: string, maxBudget?: number, genderPreference?: string) => {
@@ -386,7 +514,11 @@ export const roommatesApi = {
     if (maxBudget) params.append('maxBudget', maxBudget.toString());
     if (genderPreference) params.append('genderPreference', genderPreference);
 
-    return request<any[]>(`/roommates?${params.toString()}`);
+    return request<RoommatePostResponse[]>(`/roommates?${params.toString()}`);
+  },
+
+  getPostById: async (id: string) => {
+    return request<RoommatePostResponse>(`/roommates/${id}`);
   },
 
   createPost: async (data: {
@@ -397,6 +529,7 @@ export const roommatesApi = {
     moveInDate: string;
     genderPreference?: string;
     lifestyleTraits?: string;
+    roomId?: string;
   }) => {
     return request<any>('/roommates', {
       method: 'POST',
@@ -405,7 +538,7 @@ export const roommatesApi = {
   },
 
   getRecommendations: async () => {
-    return request<any[]>('/roommates/recommendations');
+    return request<RoommatePostResponse[]>('/roommates/recommendations');
   }
 };
 
@@ -475,6 +608,20 @@ export const adminApi = {
   }
 };
 
+export interface TenantDiscoveryCandidate {
+  id: string;
+  fullName: string;
+  phoneNumber?: string;
+  avatarUrl?: string;
+  preferences?: string;
+  lifestyle?: string;
+  matchScore: number;
+  budgetRange?: string;
+  isVerified: boolean;
+  reputationRating: number;
+  preferredLocation?: string;
+}
+
 // 11. LANDLORD DASHBOARD API
 export const landlordApi = {
   getAnalytics: async () => {
@@ -515,7 +662,18 @@ export const landlordApi = {
   },
 
   discoverTenants: async () => {
-    return request<any[]>('/landlord/discover-tenants');
+    return request<TenantDiscoveryCandidate[]>('/landlord/discover-tenants');
+  },
+
+  inviteTenantToRoom: async (data: {
+    tenantId: string;
+    roomId: string;
+    message?: string;
+  }) => {
+    return request<any>('/landlord/invite-tenant', {
+      method: 'POST',
+      body: JSON.stringify(data)
+    });
   },
 
   submitVerification: async (data: {
@@ -532,6 +690,13 @@ export const landlordApi = {
 
   getVerificationStatus: async () => {
     return request<any>('/profiles/landlord/verification');
+  },
+
+  boostRoom: async (roomId: string, data: { boostType: string; paymentMethod?: string }) => {
+    return request<any>(`/landlord/rooms/${roomId}/boost`, {
+      method: 'POST',
+      body: JSON.stringify(data)
+    });
   }
 };
 
@@ -595,3 +760,401 @@ export const tenantReviewsApi = {
     return request<any>(`/TenantReviews/tenant/${tenantId}`);
   }
 };
+
+// 14. LEASES API (Rental Transaction Spine)
+export interface LeaseDocumentResponse {
+  id: string;
+  documentType: string;
+  fileUrl: string;
+  title?: string;
+  uploadedAt: string;
+}
+
+export interface LeaseContractResponse {
+  id: string;
+  rentalApplicationId?: string;
+  roomId: string;
+  roomTitle: string;
+  roomAddress: string;
+  roomImageUrl?: string;
+  landlordId: string;
+  landlordName: string;
+  landlordPhone?: string;
+  landlordEmail: string;
+  tenantId: string;
+  tenantName: string;
+  tenantPhone?: string;
+  tenantEmail: string;
+  startDate: string;
+  endDate: string;
+  monthlyRent: number;
+  deposit: number;
+  utilitiesDescription?: string;
+  termsAndConditions?: string;
+  paymentCycleMonths: number;
+  status: string; // 'Draft' | 'PendingSignature' | 'Active' | 'Expired' | 'Terminated' | 'Renewed'
+  landlordSigned: boolean;
+  landlordSignedAt?: string;
+  tenantSigned: boolean;
+  tenantSignedAt?: string;
+  tenantSignatureData?: string;
+  contractDocumentUrl?: string;
+  createdAt: string;
+  activatedAt?: string;
+  terminatedAt?: string;
+  terminationReason?: string;
+  moveOutRequestedAt?: string;
+  moveOutDate?: string;
+  moveOutReason?: string;
+  moveOutInspectionNotes?: string;
+  moveOutDeductions?: number;
+  moveOutDeductionReason?: string;
+  moveOutSettledDeposit?: number;
+  moveOutSettledAt?: string;
+  renewalRequestedAt?: string;
+  renewalProposedEndDate?: string;
+  renewalStatus?: string;
+  documents: LeaseDocumentResponse[];
+}
+
+export interface CreateLeasePayload {
+  rentalApplicationId?: string;
+  roomId: string;
+  tenantId: string;
+  startDate: string;
+  endDate: string;
+  monthlyRent: number;
+  deposit: number;
+  utilitiesDescription?: string;
+  termsAndConditions?: string;
+  paymentCycleMonths?: number;
+  contractDocumentUrl?: string;
+  documents?: { documentType: string; fileUrl: string; title?: string }[];
+}
+
+export interface SignLeasePayload {
+  signatureData: string;
+  agreedToTerms: boolean;
+}
+
+export interface TerminateLeasePayload {
+  reason: string;
+}
+
+export const leasesApi = {
+  createLease: async (data: CreateLeasePayload) => {
+    return request<LeaseContractResponse>('/leases', {
+      method: 'POST',
+      body: JSON.stringify(data)
+    });
+  },
+
+  getMyLeases: async () => {
+    return request<LeaseContractResponse[]>('/leases/my');
+  },
+
+  getLeaseById: async (id: string) => {
+    return request<LeaseContractResponse>(`/leases/${id}`);
+  },
+
+  signLease: async (id: string, data: SignLeasePayload) => {
+    return request<LeaseContractResponse>(`/leases/${id}/sign`, {
+      method: 'POST',
+      body: JSON.stringify(data)
+    });
+  },
+
+  terminateLease: async (id: string, data: TerminateLeasePayload) => {
+    return request<any>(`/leases/${id}/terminate`, {
+      method: 'POST',
+      body: JSON.stringify(data)
+    });
+  }
+};
+
+// 12. POST-RENTAL LIFECYCLE (RAIL A PAYMENTS, MAINTENANCE, RENEWAL, MOVE-OUT)
+export interface RentalPaymentScheduleResponse {
+  id: string;
+  leaseContractId: string;
+  type: string;
+  title: string;
+  amount: number;
+  dueDate: string;
+  status: string;
+  paidAt?: string;
+  paymentReference?: string;
+  paymentMethod?: string;
+  landlordNotes?: string;
+  createdAt: string;
+}
+
+export interface MaintenanceRequestResponse {
+  id: string;
+  leaseContractId: string;
+  tenantId: string;
+  tenantName: string;
+  landlordId: string;
+  landlordName: string;
+  roomId: string;
+  roomTitle: string;
+  title: string;
+  description: string;
+  category: string;
+  priority: string;
+  status: string;
+  imageUrls?: string;
+  assignedTo?: string;
+  resolutionNotes?: string;
+  estimatedCost?: number;
+  actualCost?: number;
+  tenantConfirmed: boolean;
+  tenantFeedback?: string;
+  tenantRating?: number;
+  createdAt: string;
+  resolvedAt?: string;
+  closedAt?: string;
+}
+
+export interface PostRentalSummaryResponse {
+  leaseId: string;
+  leaseStatus: string;
+  startDate: string;
+  endDate: string;
+  monthlyRent: number;
+  deposit: number;
+  nextPaymentAmount?: number;
+  nextPaymentDueDate?: string;
+  pendingPaymentsCount: number;
+  activeMaintenanceCount: number;
+  isRenewalRequested: boolean;
+  isMoveOutRequested: boolean;
+}
+
+export const postRentalApi = {
+  getSummary: async (leaseId: string) => {
+    return request<PostRentalSummaryResponse>(`/postrental/leases/${leaseId}/summary`);
+  },
+
+  getPayments: async (leaseId: string) => {
+    return request<RentalPaymentScheduleResponse[]>(`/postrental/leases/${leaseId}/payments`);
+  },
+
+  createPayment: async (leaseId: string, data: {
+    type: string;
+    title: string;
+    amount: number;
+    dueDate: string;
+    landlordNotes?: string;
+  }) => {
+    return request<RentalPaymentScheduleResponse>(`/postrental/leases/${leaseId}/payments`, {
+      method: 'POST',
+      body: JSON.stringify(data)
+    });
+  },
+
+  recordPayment: async (scheduleId: string, data: {
+    paymentMethod?: string;
+    paymentReference?: string;
+    landlordNotes?: string;
+    markAsPaid?: boolean;
+  }) => {
+    return request<RentalPaymentScheduleResponse>(`/postrental/payments/${scheduleId}/record`, {
+      method: 'POST',
+      body: JSON.stringify(data)
+    });
+  },
+
+  getMaintenance: async (params?: { leaseId?: string; isLandlord?: boolean }) => {
+    const sp = new URLSearchParams();
+    if (params?.leaseId) sp.append('leaseId', params.leaseId);
+    if (params?.isLandlord !== undefined) sp.append('isLandlord', String(params.isLandlord));
+    const qs = sp.toString() ? `?${sp.toString()}` : '';
+    return request<MaintenanceRequestResponse[]>(`/postrental/maintenance${qs}`);
+  },
+
+  getMaintenanceById: async (id: string) => {
+    return request<MaintenanceRequestResponse>(`/postrental/maintenance/${id}`);
+  },
+
+  createMaintenance: async (data: {
+    leaseContractId: string;
+    title: string;
+    description: string;
+    category?: string;
+    priority?: string;
+    imageUrls?: string;
+  }) => {
+    return request<MaintenanceRequestResponse>('/postrental/maintenance', {
+      method: 'POST',
+      body: JSON.stringify(data)
+    });
+  },
+
+  updateMaintenanceStatus: async (id: string, data: {
+    status: string;
+    assignedTo?: string;
+    resolutionNotes?: string;
+    estimatedCost?: number;
+    actualCost?: number;
+  }) => {
+    return request<MaintenanceRequestResponse>(`/postrental/maintenance/${id}/status`, {
+      method: 'PUT',
+      body: JSON.stringify(data)
+    });
+  },
+
+  confirmMaintenance: async (id: string, data: {
+    tenantFeedback?: string;
+    tenantRating?: number;
+  }) => {
+    return request<MaintenanceRequestResponse>(`/postrental/maintenance/${id}/confirm`, {
+      method: 'POST',
+      body: JSON.stringify(data)
+    });
+  },
+
+  requestRenewal: async (leaseId: string, data: {
+    proposedEndDate: string;
+    notes?: string;
+  }) => {
+    return request<LeaseContractResponse>(`/postrental/leases/${leaseId}/renewal/request`, {
+      method: 'POST',
+      body: JSON.stringify(data)
+    });
+  },
+
+  respondRenewal: async (leaseId: string, data: {
+    accepted: boolean;
+    counterEndDate?: string;
+    reason?: string;
+  }) => {
+    return request<LeaseContractResponse>(`/postrental/leases/${leaseId}/renewal/respond`, {
+      method: 'POST',
+      body: JSON.stringify(data)
+    });
+  },
+
+  requestMoveOut: async (leaseId: string, data: {
+    proposedMoveOutDate: string;
+    reason: string;
+  }) => {
+    return request<LeaseContractResponse>(`/postrental/leases/${leaseId}/moveout/request`, {
+      method: 'POST',
+      body: JSON.stringify(data)
+    });
+  },
+
+  completeMoveOutInspection: async (leaseId: string, data: {
+    inspectionNotes: string;
+    deductionsAmount: number;
+    deductionReason?: string;
+    confirmCheckout?: boolean;
+  }) => {
+    return request<LeaseContractResponse>(`/postrental/leases/${leaseId}/moveout/inspection`, {
+      method: 'POST',
+      body: JSON.stringify(data)
+    });
+  }
+};
+
+// 13. TRUST & SAFETY API
+export interface TrustFactorItem {
+  key: string;
+  label: string;
+  points: number;
+  maxPoints: number;
+  passed: boolean;
+  explanation: string;
+}
+
+export interface TrustScoreBreakdown {
+  totalScore: number;
+  ratingLevel: string;
+  identityPoints: number;
+  propertyPoints: number;
+  addressAndDetailsPoints: number;
+  photosPoints: number;
+  historyPoints: number;
+  reviewsPoints: number;
+  reportsDeduction: number;
+  factors: TrustFactorItem[];
+}
+
+export interface ModerationReport {
+  id: string;
+  roomId: string;
+  roomTitle: string;
+  roomAddress: string;
+  landlordId: string;
+  landlordName: string;
+  reporterId: string;
+  reporterName: string;
+  reporterEmail: string;
+  reason: string;
+  details: string;
+  status: string;
+  riskLevel: string;
+  evidenceUrls?: string;
+  moderatorNotes?: string;
+  actionTaken?: string;
+  moderatorId?: string;
+  resolvedAt?: string;
+  createdAt: string;
+}
+
+export interface AuditLogItem {
+  id: string;
+  actorId?: string;
+  actorEmail: string;
+  action: string;
+  entityType: string;
+  entityId: string;
+  details: string;
+  ipAddress?: string;
+  createdAt: string;
+}
+
+export const trustSafetyApi = {
+  getRoomTrustScore: async (roomId: string) => {
+    return request<TrustScoreBreakdown>(`/trustsafety/rooms/${roomId}/score`);
+  },
+
+  submitPropertyVerification: async (data: {
+    roomId?: string;
+    documentType?: string;
+    documentNumber: string;
+    propertyAddress: string;
+    frontImageUrl: string;
+    backImageUrl: string;
+  }) => {
+    return request<any>('/trustsafety/property-verification', {
+      method: 'POST',
+      body: JSON.stringify(data)
+    });
+  },
+
+  getModerationQueue: async (params?: { status?: string; riskLevel?: string }) => {
+    const sp = new URLSearchParams();
+    if (params?.status) sp.append('status', params.status);
+    if (params?.riskLevel) sp.append('riskLevel', params.riskLevel);
+    const qs = sp.toString() ? `?${sp.toString()}` : '';
+    return request<ModerationReport[]>(`/trustsafety/moderation/reports${qs}`);
+  },
+
+  resolveReport: async (id: string, data: {
+    status: string;
+    actionTaken: string;
+    moderatorNotes: string;
+  }) => {
+    return request<any>(`/trustsafety/moderation/reports/${id}/resolve`, {
+      method: 'POST',
+      body: JSON.stringify(data)
+    });
+  },
+
+  getAuditLogs: async (limit: number = 50) => {
+    return request<AuditLogItem[]>(`/trustsafety/moderation/audit-logs?limit=${limit}`);
+  }
+};
+
+

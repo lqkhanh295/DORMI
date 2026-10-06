@@ -4,6 +4,9 @@ import { tenantReviewsApi } from '../../services/api';
 import { toast } from 'sonner';
 import { Star, X, UserCheck, AlertCircle } from 'lucide-react';
 
+import { motion, AnimatePresence } from 'framer-motion';
+import { modalBackdropVariants, modalContentVariants } from '../../utils/motion';
+
 interface TenantRatingModalProps {
   isOpen: boolean;
   onClose: () => void;
@@ -49,8 +52,6 @@ export function TenantRatingModal({
       });
   }, [isOpen, initialLeaseId]);
 
-  if (!isOpen) return null;
-
   const currentLease = leases.find(l => l.id === selectedLeaseId) || leases[0];
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -89,82 +90,100 @@ export function TenantRatingModal({
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-[#0F172A]/50 p-4 backdrop-blur-xs">
-      <div className="bg-white rounded-[20px] shadow-clay-primary max-w-lg w-full p-6 space-y-6 overflow-hidden max-h-[90vh] flex flex-col">
-        {/* Header */}
-        <div className="flex justify-between items-center pb-4 border-b border-[#E2E8F0]">
-          <div>
-            <h3 className="text-h3 font-bold text-[#0F172A] flex items-center gap-2">
-              <UserCheck className="w-6 h-6 text-[#2563EB]" />
-              Đánh giá uy tín khách thuê
-            </h3>
-            <p className="text-caption text-[#64748B] mt-0.5">
-              Góp phần xây dựng cộng đồng thuê trọ minh bạch và an toàn.
-            </p>
-          </div>
-          <button 
-            type="button" 
-            onClick={onClose} 
-            className="text-[#64748B] hover:text-[#0F172A] p-1.5 rounded-full hover:bg-slate-100 transition-colors"
+    <AnimatePresence>
+      {isOpen && (
+        <motion.div
+          key="tenant-rating-backdrop"
+          variants={modalBackdropVariants}
+          initial="hidden"
+          animate="visible"
+          exit="exit"
+          onClick={onClose}
+          className="fixed inset-0 z-50 flex items-center justify-center bg-[#0F172A]/50 p-4 backdrop-blur-xs"
+        >
+          <motion.div
+            key="tenant-rating-content"
+            variants={modalContentVariants}
+            initial="hidden"
+            animate="visible"
+            exit="exit"
+            onClick={(e) => e.stopPropagation()}
+            className="bg-white rounded-[20px] shadow-clay-primary max-w-lg w-full p-6 space-y-6 overflow-hidden max-h-[90vh] flex flex-col motion-gpu"
           >
-            <X className="w-5 h-5" />
-          </button>
-        </div>
-
-        {/* Content */}
-        <form onSubmit={handleSubmit} className="space-y-5 overflow-y-auto flex-1 pr-1">
-          {loadingLeases ? (
-            <div className="py-8 text-center text-caption text-[#64748B]">Đang tải danh sách hợp đồng thuê...</div>
-          ) : leases.length === 0 ? (
-            <div className="p-4 bg-amber-50 rounded-[12px] border border-amber-200 text-caption text-amber-800 flex items-start gap-2">
-              <AlertCircle className="w-5 h-5 text-amber-600 shrink-0 mt-0.5" />
+            {/* Header */}
+            <div className="flex justify-between items-center pb-4 border-b border-[#E2E8F0]">
               <div>
-                <p className="font-bold">Chưa có hợp đồng thuê phòng</p>
-                <p className="mt-1">
-                  Chỉ có thể đánh giá người thuê khi hai bên đã có hợp đồng thuê phòng (LeaseContract) được ký kết trên hệ thống DORMI.
+                <h3 className="text-h3 font-bold text-[#0F172A] flex items-center gap-2">
+                  <UserCheck className="w-6 h-6 text-[#2563EB]" />
+                  Đánh giá uy tín khách thuê
+                </h3>
+                <p className="text-caption text-[#64748B] mt-0.5">
+                  Góp phần xây dựng cộng đồng thuê trọ minh bạch và an toàn.
                 </p>
               </div>
+              <button 
+                type="button" 
+                onClick={onClose} 
+                className="text-[#64748B] hover:text-[#0F172A] p-1.5 rounded-full hover:bg-slate-100 transition-colors"
+              >
+                <X className="w-5 h-5" />
+              </button>
             </div>
-          ) : (
-            <>
-              {/* Lease Select */}
-              <div className="space-y-1.5">
-                <label className="text-caption font-semibold text-[#0F172A] block">
-                  Chọn khách thuê / Hợp đồng
-                </label>
-                <select
-                  value={selectedLeaseId}
-                  onChange={e => setSelectedLeaseId(e.target.value)}
-                  className="w-full bg-[#F5F7FA] shadow-clay-inset border border-[#E2E8F0] rounded-[12px] px-3.5 py-2.5 text-body text-[#0F172A] focus:outline-none focus:ring-1 focus:ring-[#00153D] focus:bg-white"
-                >
-                  {leases.map(l => (
-                    <option key={l.id} value={l.id}>
-                      {l.tenantName} - {l.roomTitle} ({new Date(l.startDate).toLocaleDateString('vi-VN')} - {new Date(l.endDate).toLocaleDateString('vi-VN')})
-                    </option>
-                  ))}
-                </select>
-              </div>
 
-              {/* Overall Rating (Stars) */}
-              <div className="space-y-1.5">
-                <label className="text-caption font-semibold text-[#0F172A] block">
-                  Đánh giá tổng quan ({rating}/5 sao)
-                </label>
-                <div className="flex items-center gap-2">
-                  {[1, 2, 3, 4, 5].map(star => (
-                    <button
-                      key={star}
-                      type="button"
-                      onClick={() => setRating(star)}
-                      className="p-1 text-amber-400 hover:scale-110 transition-transform"
-                    >
-                      <Star 
-                        className={`w-7 h-7 ${star <= rating ? 'fill-amber-400 text-amber-400' : 'text-slate-300'}`} 
-                      />
-                    </button>
-                  ))}
+            {/* Content */}
+            <form onSubmit={handleSubmit} className="space-y-5 overflow-y-auto flex-1 pr-1">
+              {loadingLeases ? (
+                <div className="py-8 text-center text-caption text-[#64748B]">Đang tải danh sách hợp đồng thuê...</div>
+              ) : leases.length === 0 ? (
+                <div className="p-4 bg-amber-50 rounded-[12px] border border-amber-200 text-caption text-amber-800 flex items-start gap-2">
+                  <AlertCircle className="w-5 h-5 text-amber-600 shrink-0 mt-0.5" />
+                  <div>
+                    <p className="font-bold">Chưa có hợp đồng thuê phòng</p>
+                    <p className="mt-1">
+                      Chỉ có thể đánh giá người thuê khi hai bên đã có hợp đồng thuê phòng (LeaseContract) được ký kết trên hệ thống DORMI.
+                    </p>
+                  </div>
                 </div>
-              </div>
+              ) : (
+                <>
+                  {/* Lease Select */}
+                  <div className="space-y-1.5">
+                    <label className="text-caption font-semibold text-[#0F172A] block">
+                      Chọn khách thuê / Hợp đồng
+                    </label>
+                    <select
+                      value={selectedLeaseId}
+                      onChange={e => setSelectedLeaseId(e.target.value)}
+                      className="w-full bg-[#F5F7FA] shadow-clay-inset border border-[#E2E8F0] rounded-[12px] px-3.5 py-2.5 text-body text-[#0F172A] focus:outline-none focus:ring-1 focus:ring-[#00153D] focus:bg-white"
+                    >
+                      {leases.map(l => (
+                        <option key={l.id} value={l.id}>
+                          {l.tenantName} - {l.roomTitle} ({new Date(l.startDate).toLocaleDateString('vi-VN')} - {new Date(l.endDate).toLocaleDateString('vi-VN')})
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+
+                  {/* Overall Rating (Stars) */}
+                  <div className="space-y-1.5">
+                    <label className="text-caption font-semibold text-[#0F172A] block">
+                      Đánh giá tổng quan ({rating}/5 sao)
+                    </label>
+                    <div className="flex items-center gap-2">
+                      {[1, 2, 3, 4, 5].map(star => (
+                        <button
+                          key={star}
+                          type="button"
+                          onClick={() => setRating(star)}
+                          className="p-1 text-amber-400 hover:scale-105 active:scale-95 transition-transform duration-150"
+                        >
+                          <Star 
+                            className={`w-7 h-7 ${star <= rating ? 'fill-amber-400 text-amber-400' : 'text-slate-300'}`} 
+                          />
+                        </button>
+                      ))}
+                    </div>
+                  </div>
 
               {/* Detailed Metrics */}
               <div className="space-y-3 pt-2 border-t border-[#E2E8F0]">
@@ -277,7 +296,9 @@ export function TenantRatingModal({
             )}
           </div>
         </form>
-      </div>
-    </div>
+          </motion.div>
+        </motion.div>
+      )}
+    </AnimatePresence>
   );
 }

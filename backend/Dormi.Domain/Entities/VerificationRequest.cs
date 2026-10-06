@@ -8,7 +8,11 @@ public class VerificationRequest
     public Guid UserId { get; set; }
     public User User { get; set; } = null!;
 
-    public string DocumentType { get; set; } = "CCCD"; // CCCD, BusinessLicense
+    public Guid? RoomId { get; set; }
+    public Room? Room { get; set; }
+    public string? PropertyAddress { get; set; }
+
+    public string DocumentType { get; set; } = "CCCD"; // CCCD, PropertyCertificate, BusinessLicense
     public string DocumentNumber { get; set; } = string.Empty;
     public string FrontImageUrl { get; set; } = string.Empty;
     public string BackImageUrl { get; set; } = string.Empty;

@@ -118,10 +118,22 @@ public class LandlordDashboardService : ILandlordDashboardService
 
         var totalViews = await _db.RoomViews.CountAsync(v => landlordRoomIds.Contains(v.RoomId) && v.EventType == "View");
         var totalSaves = await _db.FavoriteRooms.CountAsync(f => landlordRoomIds.Contains(f.RoomId));
-        var totalContacts = await _db.ViewingAppointments.CountAsync(a => landlordRoomIds.Contains(a.RoomId));
+        var totalViewings = await _db.ViewingAppointments.CountAsync(a => landlordRoomIds.Contains(a.RoomId));
+        var totalApplications = await _db.RentalApplications.CountAsync(app => landlordRoomIds.Contains(app.RoomId));
+        var totalApproved = await _db.RentalApplications.CountAsync(app => landlordRoomIds.Contains(app.RoomId) && app.Status == ApplicationStatus.Approved);
+        var totalLeases = await _db.LeaseContracts.CountAsync(l => landlordRoomIds.Contains(l.RoomId) && (l.Status == "Active" || l.Status == "Renewed" || l.Status == "Terminated"));
+
+        var totalContacts = totalViewings;
+        var totalInquiries = totalSaves;
 
         double saveRate = totalViews > 0 ? Math.Round((double)totalSaves / totalViews * 100.0, 1) : 0.0;
-        double contactRate = totalViews > 0 ? Math.Round((double)totalContacts / totalViews * 100.0, 1) : 0.0;
+        double contactRate = totalViews > 0 ? Math.Round((double)totalViewings / totalViews * 100.0, 1) : 0.0;
+        double viewToLeadRate = totalViews > 0 ? Math.Round((double)totalSaves / totalViews * 100.0, 1) : 0.0;
+        double leadToViewingRate = totalSaves > 0 ? Math.Round((double)totalViewings / totalSaves * 100.0, 1) : 0.0;
+        double viewingToAppRate = totalViewings > 0 ? Math.Round((double)totalApplications / totalViewings * 100.0, 1) : 0.0;
+        double appToApproveRate = totalApplications > 0 ? Math.Round((double)totalApproved / totalApplications * 100.0, 1) : 0.0;
+        double approveToLeaseRate = totalApproved > 0 ? Math.Round((double)totalLeases / totalApproved * 100.0, 1) : 0.0;
+        double overallConversionRate = totalViews > 0 ? Math.Round((double)totalLeases / totalViews * 100.0, 2) : 0.0;
 
         var now = DateTime.UtcNow;
         var startDate = now.Date.AddDays(-27);
@@ -171,9 +183,21 @@ public class LandlordDashboardService : ILandlordDashboardService
             .Select(g => new { RoomId = g.Key, Count = g.Count() })
             .ToDictionaryAsync(g => g.RoomId, g => g.Count);
 
-        var contactsByRoom = await _db.ViewingAppointments
+        var viewingsByRoom = await _db.ViewingAppointments
             .Where(a => landlordRoomIds.Contains(a.RoomId))
             .GroupBy(a => a.RoomId)
+            .Select(g => new { RoomId = g.Key, Count = g.Count() })
+            .ToDictionaryAsync(g => g.RoomId, g => g.Count);
+
+        var appsByRoom = await _db.RentalApplications
+            .Where(app => landlordRoomIds.Contains(app.RoomId))
+            .GroupBy(app => app.RoomId)
+            .Select(g => new { RoomId = g.Key, Count = g.Count() })
+            .ToDictionaryAsync(g => g.RoomId, g => g.Count);
+
+        var leasesByRoom = await _db.LeaseContracts
+            .Where(l => landlordRoomIds.Contains(l.RoomId) && (l.Status == "Active" || l.Status == "Renewed"))
+            .GroupBy(l => l.RoomId)
             .Select(g => new { RoomId = g.Key, Count = g.Count() })
             .ToDictionaryAsync(g => g.RoomId, g => g.Count);
 
@@ -188,7 +212,13 @@ public class LandlordDashboardService : ILandlordDashboardService
             ImageUrl = r.Images.FirstOrDefault()?.ImageUrl,
             Views = viewsByRoom.GetValueOrDefault(r.Id, 0),
             Saves = savesByRoom.GetValueOrDefault(r.Id, 0),
-            Contacts = contactsByRoom.GetValueOrDefault(r.Id, 0)
+            Contacts = viewingsByRoom.GetValueOrDefault(r.Id, 0),
+            Viewings = viewingsByRoom.GetValueOrDefault(r.Id, 0),
+            Applications = appsByRoom.GetValueOrDefault(r.Id, 0),
+            Leases = leasesByRoom.GetValueOrDefault(r.Id, 0),
+            IsBoosted = r.IsBoosted && r.BoostExpiresAt > now,
+            BoostType = r.BoostType,
+            BoostExpiresAt = r.BoostExpiresAt
         }).ToList();
 
         var resultDto = new RealLeadAnalyticsDto
@@ -196,8 +226,19 @@ public class LandlordDashboardService : ILandlordDashboardService
             TotalViews = totalViews,
             TotalSaves = totalSaves,
             TotalContacts = totalContacts,
+            TotalInquiries = totalInquiries,
+            TotalViewings = totalViewings,
+            TotalApplications = totalApplications,
+            TotalApproved = totalApproved,
+            TotalLeases = totalLeases,
             SaveRate = saveRate,
             ContactRate = contactRate,
+            ViewToLeadRate = viewToLeadRate,
+            LeadToViewingRate = leadToViewingRate,
+            ViewingToAppRate = viewingToAppRate,
+            AppToApproveRate = appToApproveRate,
+            ApproveToLeaseRate = approveToLeaseRate,
+            OverallConversionRate = overallConversionRate,
             DailyMetrics = dailyMetrics,
             TopRooms = topRooms
         };
@@ -362,19 +403,32 @@ public class LandlordDashboardService : ILandlordDashboardService
             transaction.Subscription.IsActive = true;
         }
 
+        if (transaction.RoomId.HasValue)
+        {
+            var room = await _db.Rooms.FindAsync(transaction.RoomId.Value);
+            if (room != null)
+            {
+                var durationDays = transaction.Description.Contains("7days") ? 7 : (transaction.Description.Contains("3days") ? 3 : 1);
+                var boostType = transaction.Description.Contains("7days") ? "7days" : (transaction.Description.Contains("3days") ? "3days" : "24h");
+                room.IsBoosted = true;
+                room.BoostType = boostType;
+                room.BoostExpiresAt = DateTime.UtcNow.AddDays(durationDays);
+            }
+        }
+
         _db.Notifications.Add(new Notification
         {
             Id = Guid.NewGuid(),
             UserId = landlordId,
             Title = "Thanh toán thành công",
-            Message = $"Giao dịch {transaction.TransactionRef} ({transaction.Amount:N0}đ) đã hoàn tất. Gói {transaction.Subscription?.PlanName} đã được kích hoạt.",
+            Message = $"Giao dịch {transaction.TransactionRef} ({transaction.Amount:N0}đ) đã hoàn tất. {transaction.Description} đã được kích hoạt.",
             Type = "System",
-            LinkUrl = "/landlord/billing",
+            LinkUrl = transaction.RoomId.HasValue ? "/landlord/rooms" : "/landlord/billing",
             CreatedAt = DateTime.UtcNow
         });
 
         await _db.SaveChangesAsync();
-        return ServiceResult<object>.Ok(new { message = "Xác nhận thanh toán thành công! Gói dịch vụ của bạn đã được kích hoạt.", status = "Completed" });
+        return ServiceResult<object>.Ok(new { message = "Xác nhận thanh toán thành công! Dịch vụ của bạn đã được kích hoạt.", status = "Completed" });
     }
 
     public async Task<ServiceResult<object>> VerifyPaymentAsync(Guid landlordId, PaymentVerifyDto dto)
@@ -425,19 +479,32 @@ public class LandlordDashboardService : ILandlordDashboardService
             transaction.Subscription.IsActive = true;
         }
 
+        if (transaction.RoomId.HasValue)
+        {
+            var room = await _db.Rooms.FindAsync(transaction.RoomId.Value);
+            if (room != null)
+            {
+                var durationDays = transaction.Description.Contains("7days") ? 7 : (transaction.Description.Contains("3days") ? 3 : 1);
+                var boostType = transaction.Description.Contains("7days") ? "7days" : (transaction.Description.Contains("3days") ? "3days" : "24h");
+                room.IsBoosted = true;
+                room.BoostType = boostType;
+                room.BoostExpiresAt = DateTime.UtcNow.AddDays(durationDays);
+            }
+        }
+
         _db.Notifications.Add(new Notification
         {
             Id = Guid.NewGuid(),
             UserId = landlordId,
             Title = "Thanh toán thành công",
-            Message = $"Giao dịch {transaction.TransactionRef} ({transaction.Amount:N0}đ) đã hoàn tất. Gói {transaction.Subscription?.PlanName} đã được kích hoạt.",
+            Message = $"Giao dịch {transaction.TransactionRef} ({transaction.Amount:N0}đ) đã hoàn tất. {transaction.Description} đã được kích hoạt.",
             Type = "System",
-            LinkUrl = "/landlord/billing",
+            LinkUrl = transaction.RoomId.HasValue ? "/landlord/rooms" : "/landlord/billing",
             CreatedAt = DateTime.UtcNow
         });
 
         await _db.SaveChangesAsync();
-        return ServiceResult<object>.Ok(new { message = "Xác nhận thanh toán thành công! Gói dịch vụ của bạn đã được kích hoạt.", status = "Completed" });
+        return ServiceResult<object>.Ok(new { message = "Xác nhận thanh toán thành công! Dịch vụ của bạn đã được kích hoạt.", status = "Completed" });
     }
 
     public async Task<ServiceResult<string>> ProcessVnpayReturnAsync(IDictionary<string, string> queryParams, string vnp_TxnRef, string vnp_ResponseCode, string vnp_SecureHash)
@@ -557,11 +624,132 @@ public class LandlordDashboardService : ILandlordDashboardService
                 Preferences = !string.IsNullOrWhiteSpace(c.Preferences) ? c.Preferences : "Tìm phòng sạch sẽ, an ninh, giờ giấc tự do",
                 Lifestyle = !string.IsNullOrWhiteSpace(c.Lifestyle) ? c.Lifestyle : "Yên tĩnh, Sạch sẽ, Không hút thuốc",
                 MatchScore = finalScore,
-                BudgetRange = avgPrice <= 3500000 ? "2.5 - 3.5 triệu/tháng" : (avgPrice <= 5500000 ? "3.5 - 5.5 triệu/tháng" : "5.5 - 8.0 triệu/tháng")
+                BudgetRange = avgPrice <= 3500000 ? "2.5 - 3.5 triệu/tháng" : (avgPrice <= 5500000 ? "3.5 - 5.5 triệu/tháng" : "5.5 - 8.0 triệu/tháng"),
+                IsVerified = c.IsVerified,
+                ReputationRating = reviewsByTenant.TryGetValue(c.Id, out var rRating) ? Math.Round(rRating, 1) : (c.IsVerified ? 4.8 : 4.0),
+                PreferredLocation = !string.IsNullOrWhiteSpace(c.Preferences) && c.Preferences.Contains("Quận") ? c.Preferences : "TP. Hồ Chí Minh"
             };
         }).OrderByDescending(t => t.MatchScore).ToList();
 
         return ServiceResult<List<TenantDiscoveryDto>>.Ok(result);
+    }
+
+    public async Task<ServiceResult<object>> InviteTenantToRoomAsync(Guid landlordId, InviteTenantDto dto)
+    {
+        var landlord = await _db.Users.FindAsync(landlordId);
+        if (landlord == null) return ServiceResult<object>.Unauthorized();
+
+        var room = await _db.Rooms.FirstOrDefaultAsync(r => r.Id == dto.RoomId && r.LandlordId == landlordId);
+        if (room == null)
+        {
+            return ServiceResult<object>.NotFound("Không tìm thấy phòng trọ hoặc bạn không có quyền quản lý phòng này.");
+        }
+
+        var tenant = await _db.Users.FindAsync(dto.TenantId);
+        if (tenant == null)
+        {
+            return ServiceResult<object>.NotFound("Không tìm thấy thông tin khách thuê.");
+        }
+
+        // Add notification
+        _db.Notifications.Add(new Notification
+        {
+            Id = Guid.NewGuid(),
+            UserId = dto.TenantId,
+            Title = "Lời mời xem phòng từ Chủ trọ",
+            Message = $"Chủ trọ {landlord.FullName} mời bạn tham khảo căn phòng '{room.Title}' ({room.Address}). Giá thuê: {room.Price:N0}đ/tháng.",
+            Type = "System",
+            LinkUrl = $"/room/{room.Id}",
+            CreatedAt = DateTime.UtcNow
+        });
+
+        // Add message in chat
+        var customNote = string.IsNullOrWhiteSpace(dto.Message)
+            ? "Mình thấy tiêu chí tìm phòng của bạn rất phù hợp với căn phòng này. Bạn có thể xem chi tiết và liên hệ hẹn lịch xem phòng nhé!"
+            : dto.Message.Trim();
+
+        var messageContent = $"[Lời mời thuê phòng] Chào {tenant.FullName}, mình là chủ phòng '{room.Title}'. Mình gửi bạn thông tin căn phòng tại {room.Address} (Giá thuê: {room.Price:N0}đ/tháng). Chi tiết phòng: /room/{room.Id}\n\nLời nhắn: {customNote}";
+
+        _db.Messages.Add(new Message
+        {
+            Id = Guid.NewGuid(),
+            SenderId = landlordId,
+            ReceiverId = dto.TenantId,
+            Content = messageContent,
+            IsRead = false,
+            SentAt = DateTime.UtcNow
+        });
+
+        await _db.SaveChangesAsync();
+        return ServiceResult<object>.Ok(new { message = "Đã gửi lời mời thuê phòng đến khách thuê thành công!", roomId = room.Id, tenantId = dto.TenantId });
+    }
+
+    public async Task<ServiceResult<object>> BoostRoomAsync(Guid landlordId, Guid roomId, BoostRoomDto dto, string clientIp)
+    {
+        var room = await _db.Rooms.FirstOrDefaultAsync(r => r.Id == roomId && r.LandlordId == landlordId);
+        if (room == null)
+        {
+            return ServiceResult<object>.NotFound("Không tìm thấy phòng trọ hoặc bạn không có quyền quản lý phòng này.");
+        }
+
+        decimal price = dto.BoostType switch
+        {
+            "24h" => 50000m,
+            "3days" => 120000m,
+            "7days" => 250000m,
+            _ => 50000m
+        };
+
+        var transaction = new PaymentTransaction
+        {
+            Id = Guid.NewGuid(),
+            UserId = landlordId,
+            RoomId = roomId,
+            Amount = price,
+            PaymentMethod = string.IsNullOrWhiteSpace(dto.PaymentMethod) ? "VNPay" : dto.PaymentMethod,
+            TransactionRef = $"BOOST-{DateTime.UtcNow:yyyyMMddHHmmss}-{Random.Shared.Next(1000, 9999)}",
+            Description = $"Đẩy tin nổi bật ({dto.BoostType}) phòng '{room.Title}'",
+            Status = "Pending",
+            CreatedAt = DateTime.UtcNow
+        };
+
+        _db.PaymentTransactions.Add(transaction);
+        await _db.SaveChangesAsync();
+
+        var vnpParams = new SortedDictionary<string, string>
+        {
+            { "vnp_Amount", ((long)(price * 100)).ToString() },
+            { "vnp_Command", "pay" },
+            { "vnp_CreateDate", DateTime.UtcNow.ToString("yyyyMMddHHmmss") },
+            { "vnp_CurrCode", "VND" },
+            { "vnp_IpAddr", string.IsNullOrWhiteSpace(clientIp) ? "127.0.0.1" : clientIp },
+            { "vnp_Locale", "vn" },
+            { "vnp_OrderInfo", $"Thanh toan day tin {dto.BoostType} phong {room.Title}" },
+            { "vnp_OrderType", "other" },
+            { "vnp_ReturnUrl", "http://localhost:5173/landlord/billing" },
+            { "vnp_TmnCode", "DORMI01" },
+            { "vnp_TxnRef", transaction.TransactionRef },
+            { "vnp_Version", "2.1.0" }
+        };
+
+        var signData = string.Join("&", vnpParams.Select(kvp => $"{kvp.Key}={Uri.EscapeDataString(kvp.Value)}"));
+        var secureHash = ComputeHmacSha512(GetVnpaySecret(), signData);
+        var paymentUrl = $"https://sandbox.vnpayment.vn/paymentv2/vpcpay.html?{signData}&vnp_SecureHash={secureHash}";
+        var qrUrl = $"https://api.qrserver.com/v1/create-qr-code/?size=250x250&data={Uri.EscapeDataString(paymentUrl)}";
+
+        return ServiceResult<object>.Ok(new
+        {
+            roomId = room.Id,
+            roomTitle = room.Title,
+            boostType = dto.BoostType,
+            transactionRef = transaction.TransactionRef,
+            amount = transaction.Amount,
+            paymentMethod = transaction.PaymentMethod,
+            status = "PendingPayment",
+            paymentUrl = paymentUrl,
+            qrUrl = qrUrl,
+            message = $"Khởi tạo thanh toán đẩy tin nổi bật ({dto.BoostType}) thành công. Vui lòng quét mã để kích hoạt."
+        });
     }
 
     private static string ComputeHmacSha512(string key, string inputData)

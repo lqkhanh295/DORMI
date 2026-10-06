@@ -81,10 +81,15 @@ public static class DependencyInjection
         services.AddScoped<IProfileService, ProfileService>();
         services.AddScoped<IRoommateService, RoommateService>();
         services.AddScoped<IAppointmentService, AppointmentService>();
+        services.AddScoped<IRentalApplicationService, RentalApplicationService>();
+        services.AddScoped<ILeaseService, LeaseService>();
+        services.AddScoped<IPostRentalService, PostRentalService>();
         services.AddScoped<IFavoriteService, FavoriteService>();
         services.AddScoped<IReviewService, ReviewService>();
         services.AddScoped<ITenantReviewService, TenantReviewService>();
         services.AddScoped<INotificationService, NotificationService>();
+        services.AddScoped<ITrustSafetyService, TrustSafetyService>();
+        services.AddScoped<IDistributedLockService, DistributedLockService>();
 
         // Register Apache Kafka Messaging (Event streaming & Notification Consumer)
         services.Configure<Dormi.Infrastructure.Kafka.KafkaOptions>(configuration.GetSection(Dormi.Infrastructure.Kafka.KafkaOptions.SectionName));

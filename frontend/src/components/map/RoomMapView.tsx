@@ -201,13 +201,14 @@ export default function RoomMapView({ rooms, selectedRoomId, onSelectRoom, class
             border-radius: 20px;
             font-weight: 700;
             font-size: 12px;
-            box-shadow: 0 3px 10px rgba(0,21,61,0.25);
+            box-shadow: 0 3px 10px rgba(0,21,61,0.18);
             white-space: nowrap;
             cursor: pointer;
-            transition: transform 0.2s cubic-bezier(0.4, 0, 0.2, 1), background 0.2s, color 0.2s;
+            transition: transform 0.22s cubic-bezier(0.22, 1, 0.36, 1), background-color 0.2s, color 0.2s, box-shadow 0.22s cubic-bezier(0.22, 1, 0.36, 1);
             display: inline-flex;
             align-items: center;
             user-select: none;
+            will-change: transform;
           "
         >
           <span>${priceText}</span>
@@ -303,13 +304,15 @@ export default function RoomMapView({ rooms, selectedRoomId, onSelectRoom, class
           el.style.background = '#00153D';
           el.style.color = '#FFFFFF';
           el.style.borderColor = '#00153D';
-          el.style.transform = 'scale(1.2)';
+          el.style.transform = 'scale(1.08)';
+          el.style.boxShadow = '0 6px 20px rgba(0,21,61,0.32)';
           el.style.zIndex = '999';
         } else {
           el.style.background = '#FFFFFF';
           el.style.color = '#00153D';
           el.style.borderColor = '#CBD5E1';
           el.style.transform = 'scale(1)';
+          el.style.boxShadow = '0 3px 10px rgba(0,21,61,0.18)';
           el.style.zIndex = '1';
         }
       }
@@ -370,7 +373,7 @@ export default function RoomMapView({ rooms, selectedRoomId, onSelectRoom, class
       {/* Top Banner Status (GPS Notification) */}
       <div className="absolute top-4 left-4 z-10 flex flex-col gap-2 max-w-sm pointer-events-none">
         <div className="bg-white/95 backdrop-blur-md px-3.5 py-2 rounded-xl shadow-clay-soft border border-[#E2E8F0] flex items-center gap-2.5 pointer-events-auto">
-          <div className="w-2.5 h-2.5 rounded-full bg-emerald-500 animate-pulse"></div>
+          <div className="w-2.5 h-2.5 rounded-full bg-emerald-500 shadow-xs"></div>
           <p className="text-caption font-semibold text-[#0F172A]">
             Bản đồ phòng trọ ({rooms.length} phòng)
           </p>

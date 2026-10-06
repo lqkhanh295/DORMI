@@ -1,9 +1,10 @@
 import { useState, useEffect, useRef } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { Card } from '../../components/ui/Card';
 import { Button } from '../../components/ui/Button';
 import { roomsApi, imagesApi, type RoomResponse } from '../../services/api';
 import { toast } from 'sonner';
-import { Pencil, Eye, EyeOff, Trash2, CheckCircle2, Clock, XCircle, Image as ImageIcon, Check, X, Plus, Camera } from 'lucide-react';
+import { Pencil, Eye, EyeOff, Trash2, CheckCircle2, Clock, XCircle, Image as ImageIcon, Check, X, Plus, Camera, Flame } from 'lucide-react';
 
 const UTILITY_OPTIONS = [
   'Wifi', 'Máy lạnh', 'Tủ lạnh', 'Máy giặt', 'Ban công', 
@@ -12,6 +13,7 @@ const UTILITY_OPTIONS = [
 ];
 
 export default function RoomManagement() {
+  const navigate = useNavigate();
   const [myRooms, setMyRooms] = useState<RoomResponse[]>([]);
   const [loading, setLoading] = useState(true);
   const [editingRoom, setEditingRoom] = useState<RoomResponse | null>(null);
@@ -371,10 +373,17 @@ export default function RoomManagement() {
                 <div className="flex-1 space-y-2">
                   <div className="flex items-start justify-between">
                     <h3 className="font-bold text-h3 text-[#0F172A]">{room.title}</h3>
-                    {room.status === 0 && <span className="px-3 py-1 text-caption font-bold rounded-full border bg-[#F0FDF4] text-[#16803C] border-[#DCFCE7] inline-flex items-center gap-1"><CheckCircle2 className="w-3.5 h-3.5" /> Đã duyệt (Còn trống)</span>}
-                    {room.status === 2 && <span className="px-3 py-1 text-caption font-bold rounded-full border bg-[#FEF3C7] text-[#D97706] border-[#FDE68A] inline-flex items-center gap-1"><Clock className="w-3.5 h-3.5" /> Chờ phê duyệt</span>}
-                    {room.status === 3 && <span className="px-3 py-1 text-caption font-bold rounded-full border bg-[#FEF2F2] text-[#C62828] border-[#FECACA] inline-flex items-center gap-1"><XCircle className="w-3.5 h-3.5" /> Bị từ chối / Ẩn</span>}
-                    {room.status === 1 && <span className="px-3 py-1 text-caption font-bold rounded-full border bg-[#F1F5F9] text-[#475569] border-[#E2E8F0]">Đã thuê</span>}
+                    <div className="flex flex-wrap items-center gap-2">
+                      {room.isBoosted && (
+                        <span className="px-3 py-1 text-caption font-bold rounded-full border bg-amber-50 text-amber-700 border-amber-200 inline-flex items-center gap-1 shadow-xs">
+                          <Flame className="w-3.5 h-3.5 fill-amber-500 text-amber-500" /> Đang đẩy tin ({room.boostType || 'VIP'})
+                        </span>
+                      )}
+                      {room.status === 0 && <span className="px-3 py-1 text-caption font-bold rounded-full border bg-[#F0FDF4] text-[#16803C] border-[#DCFCE7] inline-flex items-center gap-1"><CheckCircle2 className="w-3.5 h-3.5" /> Đã duyệt (Còn trống)</span>}
+                      {room.status === 2 && <span className="px-3 py-1 text-caption font-bold rounded-full border bg-[#FEF3C7] text-[#D97706] border-[#FDE68A] inline-flex items-center gap-1"><Clock className="w-3.5 h-3.5" /> Chờ phê duyệt</span>}
+                      {room.status === 3 && <span className="px-3 py-1 text-caption font-bold rounded-full border bg-[#FEF2F2] text-[#C62828] border-[#FECACA] inline-flex items-center gap-1"><XCircle className="w-3.5 h-3.5" /> Bị từ chối / Ẩn</span>}
+                      {room.status === 1 && <span className="px-3 py-1 text-caption font-bold rounded-full border bg-[#F1F5F9] text-[#475569] border-[#E2E8F0]">Đã thuê</span>}
+                    </div>
                   </div>
                   <p className="text-[#64748B] text-caption">{room.address}</p>
                   <div className="flex flex-wrap gap-4 text-caption pt-1">
@@ -385,6 +394,19 @@ export default function RoomManagement() {
                   </div>
                 </div>
                 <div className="flex md:flex-col gap-2 shrink-0 w-full md:w-auto mt-4 md:mt-0">
+                  <Button 
+                    variant="secondary" 
+                    size="sm" 
+                    className={`w-full inline-flex items-center justify-center gap-1 ${
+                      room.isBoosted 
+                        ? 'bg-amber-50 text-amber-800 border-amber-200 hover:bg-amber-100 font-semibold' 
+                        : 'bg-indigo-50 text-indigo-700 border-indigo-200 hover:bg-indigo-100'
+                    }`}
+                    onClick={() => navigate(`/landlord/pricing?tab=boost&roomId=${room.id}`)}
+                  >
+                    <Flame className="w-3.5 h-3.5 text-amber-500" />
+                    {room.isBoosted ? 'Gia hạn đẩy tin' : 'Đẩy tin nổi bật'}
+                  </Button>
                   <Button variant="secondary" size="sm" className="w-full inline-flex items-center justify-center gap-1" onClick={() => setEditingRoom(room)}>
                     <Pencil className="w-3.5 h-3.5" /> Chỉnh sửa
                   </Button>

@@ -92,7 +92,7 @@ public class AppointmentService : IAppointmentService
             await _kafkaProducer.PublishNotificationAsync(new NotificationEvent
             {
                 Id = Guid.NewGuid(),
-                EventType = "AppointmentCreated",
+                EventType = "ViewingRequested",
                 UserId = room.LandlordId,
                 Title = "Lịch hẹn xem phòng mới",
                 Message = $"Khách hàng vừa đặt lịch hẹn xem phòng '{room.Title}' vào lúc {appointment.AppointmentDate:dd/MM/yyyy HH:mm}.",
@@ -119,20 +119,32 @@ public class AppointmentService : IAppointmentService
         var appointments = await _db.ViewingAppointments
             .Include(a => a.Customer)
             .Include(a => a.Room)
+                .ThenInclude(r => r.Images)
+            .Include(a => a.Room)
+                .ThenInclude(r => r.Landlord)
             .Where(a => a.CustomerId == userId || a.Room.LandlordId == userId)
             .OrderByDescending(a => a.AppointmentDate)
             .Select(a => new AppointmentResponseDto
             {
                 Id = a.Id,
                 CustomerId = a.CustomerId,
-                CustomerName = a.Customer.FullName,
+                CustomerName = !string.IsNullOrEmpty(a.Customer.FullName) ? a.Customer.FullName : (!string.IsNullOrEmpty(a.Customer.Email) ? a.Customer.Email : "Khách xem phòng"),
+                CustomerPhone = a.Customer.PhoneNumber,
+                CustomerAvatar = a.Customer.AvatarUrl,
                 RoomId = a.RoomId,
                 RoomTitle = a.Room.Title,
                 RoomAddress = a.Room.Address,
+                RoomPrice = a.Room.Price,
+                RoomImageUrl = a.Room.Images.OrderByDescending(i => i.IsPrimary).Select(i => i.ImageUrl).FirstOrDefault(),
+                LandlordId = a.Room.LandlordId,
+                LandlordName = !string.IsNullOrEmpty(a.Room.Landlord.FullName) ? a.Room.Landlord.FullName : (!string.IsNullOrEmpty(a.Room.Landlord.Email) ? a.Room.Landlord.Email : "Chủ trọ"),
                 AppointmentDate = a.AppointmentDate,
                 Status = a.Status,
                 Notes = a.Notes,
-                CreatedAt = a.CreatedAt
+                RescheduledDate = a.RescheduledDate,
+                RejectionReason = a.RejectionReason,
+                CreatedAt = a.CreatedAt,
+                CompletedAt = a.CompletedAt
             })
             .ToListAsync();
 
@@ -141,10 +153,10 @@ public class AppointmentService : IAppointmentService
 
     public async Task<ServiceResult<object>> UpdateStatusAsync(Guid id, Guid userId, bool isAdmin, UpdateAppointmentStatusDto dto)
     {
-        var validStatuses = new[] { "Pending", "Confirmed", "Cancelled", "Completed" };
+        var validStatuses = new[] { "Requested", "Pending", "Confirmed", "Rescheduled", "Completed", "Cancelled", "Rejected", "NoShow" };
         if (string.IsNullOrWhiteSpace(dto.Status) || !validStatuses.Contains(dto.Status))
         {
-            return ServiceResult<object>.Fail("Trạng thái lịch hẹn không hợp lệ. Các trạng thái được hỗ trợ: Pending, Confirmed, Cancelled, Completed.", 400);
+            return ServiceResult<object>.Fail("Trạng thái lịch hẹn không hợp lệ. Các trạng thái được hỗ trợ: Requested, Confirmed, Rescheduled, Completed, Cancelled, Rejected, NoShow.", 400);
         }
 
         var appointment = await _db.ViewingAppointments
@@ -158,22 +170,26 @@ public class AppointmentService : IAppointmentService
             return ServiceResult<object>.Forbidden();
         }
 
-        if (appointment.Status == "Cancelled" || appointment.Status == "Completed")
+        if (appointment.Status == "Cancelled" || appointment.Status == "Completed" || appointment.Status == "Rejected" || appointment.Status == "NoShow")
         {
             return ServiceResult<object>.Fail($"Lịch hẹn đã ở trạng thái kết thúc ({appointment.Status}), không thể thay đổi thêm.", 400);
-        }
-
-        if (appointment.Status == "Pending" && dto.Status == "Completed")
-        {
-            return ServiceResult<object>.Fail("Lịch hẹn cần được xác nhận (Confirmed) trước khi chuyển sang hoàn thành (Completed).", 400);
         }
 
         if (appointment.CustomerId == userId && appointment.Room.LandlordId != userId)
         {
             if (dto.Status != "Cancelled")
             {
-                return ServiceResult<object>.Fail("Khách thuê chỉ có thể hủy lịch hẹn (Cancelled).", 400);
+                return ServiceResult<object>.Fail("Khách thuê chỉ có quyền hủy lịch hẹn (Cancelled).", 400);
             }
+        }
+
+        if (dto.Status == "Completed")
+        {
+            appointment.CompletedAt = DateTime.UtcNow;
+        }
+        else if (dto.Status == "Rejected" && !string.IsNullOrWhiteSpace(dto.Reason))
+        {
+            appointment.RejectionReason = dto.Reason;
         }
 
         appointment.Status = dto.Status;
@@ -184,12 +200,14 @@ public class AppointmentService : IAppointmentService
             var recipientId = (appointment.CustomerId == userId) ? appointment.Room.LandlordId : appointment.CustomerId;
             var roomTitle = appointment.Room?.Title ?? "phòng trọ";
 
+            var eventType = (dto.Status == "Confirmed" || dto.Status == "Approved") ? "ViewingConfirmed" : "AppointmentStatusUpdated";
+
             await _kafkaProducer.PublishNotificationAsync(new NotificationEvent
             {
                 Id = Guid.NewGuid(),
-                EventType = "AppointmentStatusUpdated",
+                EventType = eventType,
                 UserId = recipientId,
-                Title = "Cập nhật trạng thái lịch hẹn",
+                Title = "Cập nhật trạng thái lịch hẹn xem phòng",
                 Message = $"Lịch hẹn xem '{roomTitle}' đã được cập nhật thành: {dto.Status}.",
                 Type = "Appointment",
                 LinkUrl = "/appointments",
@@ -205,5 +223,59 @@ public class AppointmentService : IAppointmentService
         }
 
         return ServiceResult<object>.Ok(new { message = "Cập nhật trạng thái lịch hẹn thành công." });
+    }
+
+    public async Task<ServiceResult<object>> RescheduleAsync(Guid id, Guid userId, RescheduleAppointmentDto dto)
+    {
+        if (dto.NewAppointmentDate <= DateTime.UtcNow)
+        {
+            return ServiceResult<object>.Fail("Thời gian hẹn mới phải ở tương lai.", 400);
+        }
+
+        var appointment = await _db.ViewingAppointments
+            .Include(a => a.Room)
+            .FirstOrDefaultAsync(a => a.Id == id);
+
+        if (appointment == null) return ServiceResult<object>.NotFound("Không tìm thấy lịch hẹn.");
+
+        if (appointment.CustomerId != userId && appointment.Room.LandlordId != userId)
+        {
+            return ServiceResult<object>.Forbidden();
+        }
+
+        if (appointment.Status == "Cancelled" || appointment.Status == "Completed" || appointment.Status == "Rejected")
+        {
+            return ServiceResult<object>.Fail($"Lịch hẹn đã kết thúc ({appointment.Status}), không thể đổi lịch.", 400);
+        }
+
+        appointment.Status = "Rescheduled";
+        appointment.RescheduledDate = dto.NewAppointmentDate;
+        appointment.AppointmentDate = dto.NewAppointmentDate;
+        if (!string.IsNullOrWhiteSpace(dto.Reason))
+        {
+            appointment.Notes = string.IsNullOrWhiteSpace(appointment.Notes) 
+                ? $"Đổi lịch: {dto.Reason}" 
+                : $"{appointment.Notes} | Đổi lịch: {dto.Reason}";
+        }
+
+        await _db.SaveChangesAsync();
+
+        if (_kafkaProducer != null)
+        {
+            var recipientId = (appointment.CustomerId == userId) ? appointment.Room.LandlordId : appointment.CustomerId;
+            await _kafkaProducer.PublishNotificationAsync(new NotificationEvent
+            {
+                Id = Guid.NewGuid(),
+                EventType = "AppointmentRescheduled",
+                UserId = recipientId,
+                Title = "Lịch hẹn xem phòng đã được đổi giờ",
+                Message = $"Lịch hẹn xem '{appointment.Room.Title}' đã được dời sang {dto.NewAppointmentDate:dd/MM/yyyy HH:mm}.",
+                Type = "Appointment",
+                LinkUrl = "/appointments",
+                CreatedAt = DateTime.UtcNow
+            });
+        }
+
+        return ServiceResult<object>.Ok(new { message = "Đổi lịch xem phòng thành công!" });
     }
 }

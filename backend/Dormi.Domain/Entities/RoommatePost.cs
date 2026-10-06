@@ -18,4 +18,7 @@ public class RoommatePost
     public string LifestyleTraits { get; set; } = string.Empty;
     public bool IsActive { get; set; } = true;
     public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
+
+    public Guid? RoomId { get; set; }
+    public Room? Room { get; set; }
 }

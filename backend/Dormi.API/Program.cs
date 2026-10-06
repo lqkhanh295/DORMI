@@ -2,6 +2,7 @@ using System.Text;
 using Dormi.Infrastructure;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Http.Features;
+using Microsoft.Extensions.Caching.Distributed;
 using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi;
 
@@ -130,6 +131,29 @@ builder.Services.AddCors(options =>
 
 var app = builder.Build();
 
+// Global Exception Handling to shield client from raw stack traces
+app.UseExceptionHandler(exceptionHandlerApp =>
+{
+    exceptionHandlerApp.Run(async context =>
+    {
+        context.Response.StatusCode = StatusCodes.Status500InternalServerError;
+        context.Response.ContentType = "application/json";
+
+        var exceptionHandlerPathFeature = context.Features.Get<Microsoft.AspNetCore.Diagnostics.IExceptionHandlerPathFeature>();
+        var ex = exceptionHandlerPathFeature?.Error;
+
+        var logger = context.RequestServices.GetRequiredService<ILogger<Program>>();
+        logger.LogError(ex, "[GLOBAL EXCEPTION] Unhandled error at {Path}", context.Request.Path);
+
+        await context.Response.WriteAsJsonAsync(new
+        {
+            success = false,
+            message = "Đã xảy ra lỗi không mong muốn trên hệ thống. Vui lòng thử lại sau.",
+            statusCode = 500
+        });
+    });
+});
+
 // Forwarded Headers for reverse proxy
 app.UseForwardedHeaders(new ForwardedHeadersOptions
 {
@@ -158,6 +182,42 @@ app.UseAuthentication();
 app.UseAuthorization();
 
 app.MapGet("/", () => Results.Ok(new { status = "healthy", service = "Dormi API", timestamp = DateTime.UtcNow }));
+
+app.MapGet("/health", async (Dormi.Infrastructure.Data.DormiDbContext db, Microsoft.Extensions.Caching.Distributed.IDistributedCache cache) =>
+{
+    var dbHealthy = false;
+    var redisHealthy = false;
+
+    try
+    {
+        dbHealthy = await db.Database.CanConnectAsync();
+    }
+    catch { }
+
+    try
+    {
+        await cache.SetStringAsync("health_check_probe", "ok", new Microsoft.Extensions.Caching.Distributed.DistributedCacheEntryOptions
+        {
+            AbsoluteExpirationRelativeToNow = TimeSpan.FromSeconds(10)
+        });
+        redisHealthy = (await cache.GetStringAsync("health_check_probe")) == "ok";
+    }
+    catch { }
+
+    var overallHealthy = dbHealthy; // DB is essential; Redis memory fallback is resilient
+
+    return Results.Json(new
+    {
+        status = overallHealthy ? "healthy" : "degraded",
+        timestamp = DateTime.UtcNow,
+        service = "Dormi API",
+        components = new
+        {
+            database = dbHealthy ? "connected" : "unreachable",
+            cache = redisHealthy ? "active" : "fallback_memory"
+        }
+    }, statusCode: overallHealthy ? 200 : 503);
+});
 app.MapControllers();
 app.MapHub<Dormi.API.Hubs.ChatHub>("/hubs/chat");
 

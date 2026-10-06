@@ -118,4 +118,25 @@ public class LandlordDashboardController : BaseApiController
         var result = await _dashboardService.DiscoverTenantsAsync(userId.Value);
         return HandleResult(result);
     }
+
+    [HttpPost("rooms/{roomId:guid}/boost")]
+    public async Task<IActionResult> BoostRoom(Guid roomId, [FromBody] BoostRoomDto dto)
+    {
+        var userId = GetCurrentUserId();
+        if (!userId.HasValue) return Unauthorized();
+
+        var clientIp = HttpContext.Connection.RemoteIpAddress?.ToString() ?? "127.0.0.1";
+        var result = await _dashboardService.BoostRoomAsync(userId.Value, roomId, dto, clientIp);
+        return HandleResult(result);
+    }
+
+    [HttpPost("invite-tenant")]
+    public async Task<IActionResult> InviteTenant([FromBody] InviteTenantDto dto)
+    {
+        var userId = GetCurrentUserId();
+        if (!userId.HasValue) return Unauthorized();
+
+        var result = await _dashboardService.InviteTenantToRoomAsync(userId.Value, dto);
+        return HandleResult(result);
+    }
 }

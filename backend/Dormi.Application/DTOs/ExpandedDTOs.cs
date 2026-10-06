@@ -58,6 +58,8 @@ public class CreateRoommatePostDto
 
     [MaxLength(500)]
     public string LifestyleTraits { get; set; } = string.Empty;
+
+    public Guid? RoomId { get; set; }
 }
 
 public class RoommatePostResponseDto
@@ -76,6 +78,12 @@ public class RoommatePostResponseDto
     public bool IsActive { get; set; }
     public double? MatchScore { get; set; } // AI match score (0-100%) or null if missing traits
     public DateTime CreatedAt { get; set; }
+
+    public Guid? RoomId { get; set; }
+    public string? RoomTitle { get; set; }
+    public string? RoomAddress { get; set; }
+    public decimal? RoomPrice { get; set; }
+    public string? RoomImageUrl { get; set; }
 }
 
 // Room Review DTOs
@@ -233,6 +241,12 @@ public class RoomLeadPerformanceDto
     public int Views { get; set; }
     public int Saves { get; set; }
     public int Contacts { get; set; }
+    public int Viewings { get; set; }
+    public int Applications { get; set; }
+    public int Leases { get; set; }
+    public bool IsBoosted { get; set; }
+    public string? BoostType { get; set; }
+    public DateTime? BoostExpiresAt { get; set; }
 }
 
 public class RealLeadAnalyticsDto
@@ -240,8 +254,21 @@ public class RealLeadAnalyticsDto
     public int TotalViews { get; set; }
     public int TotalSaves { get; set; }
     public int TotalContacts { get; set; }
+    public int TotalInquiries { get; set; }
+    public int TotalViewings { get; set; }
+    public int TotalApplications { get; set; }
+    public int TotalApproved { get; set; }
+    public int TotalLeases { get; set; }
+
     public double SaveRate { get; set; }
     public double ContactRate { get; set; }
+    public double ViewToLeadRate { get; set; }
+    public double LeadToViewingRate { get; set; }
+    public double ViewingToAppRate { get; set; }
+    public double AppToApproveRate { get; set; }
+    public double ApproveToLeaseRate { get; set; }
+    public double OverallConversionRate { get; set; }
+
     public List<DailyLeadMetricDto> DailyMetrics { get; set; } = new();
     public List<RoomLeadPerformanceDto> TopRooms { get; set; } = new();
 
@@ -250,6 +277,13 @@ public class RealLeadAnalyticsDto
     public List<RoomLeadPerformanceDto> RoomStats => TopRooms;
     public double ConversionRateSave => SaveRate;
     public double ConversionRateContact => ContactRate;
+}
+
+public class BoostRoomDto
+{
+    [Required]
+    public string BoostType { get; set; } = "24h"; // "24h", "3days", "7days"
+    public string PaymentMethod { get; set; } = "VNPay";
 }
 
 // Tenant Discovery DTOs
@@ -263,6 +297,18 @@ public class TenantDiscoveryDto
     public string? Lifestyle { get; set; }
     public double MatchScore { get; set; }
     public string? BudgetRange { get; set; }
+    public bool IsVerified { get; set; }
+    public double ReputationRating { get; set; }
+    public string? PreferredLocation { get; set; }
+}
+
+public class InviteTenantDto
+{
+    [Required]
+    public Guid TenantId { get; set; }
+    [Required]
+    public Guid RoomId { get; set; }
+    public string? Message { get; set; }
 }
 
 // Tenant Review & Lease DTOs

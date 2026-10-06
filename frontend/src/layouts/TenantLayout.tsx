@@ -1,7 +1,7 @@
 import { Outlet, Link, useNavigate, useLocation } from 'react-router-dom';
 import { useStore } from '../store/useStore';
 import { FloatingNav, type NavItem } from '../components/shared/FloatingNav';
-import { Search, MapPin, Users, MessageCircle, User } from 'lucide-react';
+import { Search, Users, MessageCircle, User, FileText, Calendar, FileCheck } from 'lucide-react';
 import { NotificationBell } from '../components/common/NotificationBell';
 
 export default function TenantLayout() {
@@ -16,9 +16,11 @@ export default function TenantLayout() {
 
   const navItems: NavItem[] = [
     { name: 'Tìm phòng', path: '/tenant', icon: <Search size={20} strokeWidth={2} /> },
-    { name: 'Bản đồ', path: '/search', icon: <MapPin size={20} strokeWidth={2} /> },
-    { name: 'Bạn cùng phòng', path: '/tenant/match', icon: <Users size={20} strokeWidth={2} /> },
+    { name: 'Hồ sơ thuê', path: '/tenant/applications', icon: <FileText size={20} strokeWidth={2} /> },
+    { name: 'Lịch xem', path: '/tenant/viewings', icon: <Calendar size={20} strokeWidth={2} /> },
+    { name: 'Hợp đồng', path: '/tenant/leases', icon: <FileCheck size={20} strokeWidth={2} /> },
     { name: 'Tin nhắn', path: '/tenant/chat', icon: <MessageCircle size={20} strokeWidth={2} /> },
+    { name: 'Bạn cùng phòng', path: '/tenant/match', icon: <Users size={20} strokeWidth={2} /> },
     { name: 'Hồ sơ', path: '/tenant/profile', icon: <User size={20} strokeWidth={2} /> }
   ];
 

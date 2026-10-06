@@ -13,6 +13,8 @@ interface VerificationRequestItem {
   phoneNumber?: string;
   documentType: string;
   documentNumber?: string;
+  propertyAddress?: string;
+  roomId?: string;
   frontImageUrl: string;
   backImageUrl: string;
   status: string;
@@ -199,6 +201,12 @@ export default function VerificationModeration() {
                       {selectedItem.documentType}: <span className="text-indigo-600 font-mono">{selectedItem.documentNumber || 'Chưa nhập'}</span>
                     </p>
                   </div>
+                  {selectedItem.propertyAddress && (
+                    <div className="col-span-2 pt-2 border-t border-slate-200">
+                      <p className="text-xs text-[#64748B]">Bất động sản / Phòng đăng ký chứng thực</p>
+                      <p className="font-bold text-[#0F172A] text-sm">{selectedItem.propertyAddress}</p>
+                    </div>
+                  )}
                 </div>
               </div>
 

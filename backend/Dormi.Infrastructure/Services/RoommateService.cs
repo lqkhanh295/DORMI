@@ -29,6 +29,8 @@ public class RoommateService : IRoommateService
     {
         var query = _db.RoommatePosts
             .Include(r => r.Customer)
+            .Include(r => r.Room)
+                .ThenInclude(rm => rm!.Images)
             .Where(r => r.IsActive)
             .AsQueryable();
 
@@ -74,7 +76,12 @@ public class RoommateService : IRoommateService
             LifestyleTraits = r.LifestyleTraits,
             IsActive = r.IsActive,
             MatchScore = CalculateMatchScore(userLifestyle, r.LifestyleTraits),
-            CreatedAt = r.CreatedAt
+            CreatedAt = r.CreatedAt,
+            RoomId = r.RoomId,
+            RoomTitle = r.Room?.Title,
+            RoomAddress = r.Room?.Address,
+            RoomPrice = r.Room?.Price,
+            RoomImageUrl = r.Room?.Images.FirstOrDefault()?.ImageUrl
         }).ToList();
 
         return ServiceResult<List<RoommatePostResponseDto>>.Ok(posts);
@@ -84,6 +91,8 @@ public class RoommateService : IRoommateService
     {
         var post = await _db.RoommatePosts
             .Include(r => r.Customer)
+            .Include(r => r.Room)
+                .ThenInclude(rm => rm!.Images)
             .FirstOrDefaultAsync(r => r.Id == id);
 
         if (post == null) return ServiceResult<RoommatePostResponseDto>.NotFound("Không tìm thấy bài đăng ở ghép.");
@@ -114,7 +123,12 @@ public class RoommateService : IRoommateService
             LifestyleTraits = post.LifestyleTraits,
             IsActive = post.IsActive,
             MatchScore = CalculateMatchScore(userLifestyle, post.LifestyleTraits),
-            CreatedAt = post.CreatedAt
+            CreatedAt = post.CreatedAt,
+            RoomId = post.RoomId,
+            RoomTitle = post.Room?.Title,
+            RoomAddress = post.Room?.Address,
+            RoomPrice = post.Room?.Price,
+            RoomImageUrl = post.Room?.Images.FirstOrDefault()?.ImageUrl
         });
     }
 
@@ -138,7 +152,8 @@ public class RoommateService : IRoommateService
             GenderPreference = dto.GenderPreference,
             LifestyleTraits = dto.LifestyleTraits,
             IsActive = true,
-            CreatedAt = DateTime.UtcNow
+            CreatedAt = DateTime.UtcNow,
+            RoomId = dto.RoomId
         };
 
         user.IsLookingForRoommate = true;
@@ -162,6 +177,7 @@ public class RoommateService : IRoommateService
         post.MoveInDate = dto.MoveInDate;
         post.GenderPreference = dto.GenderPreference;
         post.LifestyleTraits = dto.LifestyleTraits;
+        post.RoomId = dto.RoomId;
 
         await _db.SaveChangesAsync();
         return ServiceResult<object>.Ok(new { message = "Cập nhật bài ở ghép thành công." });
@@ -187,12 +203,20 @@ public class RoommateService : IRoommateService
 
         var posts = await _db.RoommatePosts
             .Include(r => r.Customer)
+            .Include(r => r.Room)
+                .ThenInclude(rm => rm!.Images)
             .Where(r => r.IsActive && r.CustomerId != userId)
             .ToListAsync();
 
         var recommendations = posts.Select(post =>
         {
             double? matchScore = CalculateMatchScore(userLifestyle, post.LifestyleTraits);
+            if (matchScore.HasValue && post.RoomId.HasValue)
+            {
+                // Boost match score for posts that have a concrete room ready to move in
+                matchScore = Math.Min(99.0, matchScore.Value + 5.0);
+            }
+
             return new RoommatePostResponseDto
             {
                 Id = post.Id,
@@ -208,7 +232,12 @@ public class RoommateService : IRoommateService
                 LifestyleTraits = post.LifestyleTraits,
                 IsActive = post.IsActive,
                 MatchScore = matchScore,
-                CreatedAt = post.CreatedAt
+                CreatedAt = post.CreatedAt,
+                RoomId = post.RoomId,
+                RoomTitle = post.Room?.Title,
+                RoomAddress = post.Room?.Address,
+                RoomPrice = post.Room?.Price,
+                RoomImageUrl = post.Room?.Images.FirstOrDefault()?.ImageUrl
             };
         })
         .OrderByDescending(r => r.MatchScore ?? 0)

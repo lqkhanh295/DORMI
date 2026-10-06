@@ -129,13 +129,17 @@ public class MessageService : IMessageService
             {
                 var otherUserId = g.Key;
                 var lastMsg = g.First();
-                var otherUser = lastMsg.SenderId == userId ? lastMsg.Receiver : lastMsg.Sender;
+                var otherUser = g.Select(m => m.SenderId == userId ? m.Receiver : m.Sender).FirstOrDefault(u => u != null);
                 var unread = g.Count(m => m.ReceiverId == userId && !m.IsRead);
+
+                var userName = !string.IsNullOrWhiteSpace(otherUser?.FullName)
+                    ? otherUser.FullName
+                    : (!string.IsNullOrWhiteSpace(otherUser?.Email) ? otherUser.Email : "Người dùng");
 
                 return new ConversationDto
                 {
                     OtherUserId = otherUserId,
-                    OtherUserName = otherUser?.FullName ?? "Người dùng",
+                    OtherUserName = userName,
                     OtherUserAvatar = otherUser?.AvatarUrl,
                     LastMessage = lastMsg.Content,
                     LastMessageTime = lastMsg.SentAt,
@@ -143,6 +147,36 @@ public class MessageService : IMessageService
                 };
             })
             .ToList();
+
+        // Fallback: If any conversation has fallback "Người dùng", resolve directly from Users table
+        var missingUserIds = conversationGroups
+            .Where(c => c.OtherUserName == "Người dùng")
+            .Select(c => c.OtherUserId)
+            .Distinct()
+            .ToList();
+
+        if (missingUserIds.Count > 0)
+        {
+            var usersMap = await _db.Users
+                .Where(u => missingUserIds.Contains(u.Id))
+                .ToDictionaryAsync(u => u.Id, u => new
+                {
+                    Name = !string.IsNullOrWhiteSpace(u.FullName) ? u.FullName : (!string.IsNullOrWhiteSpace(u.Email) ? u.Email : "Người dùng"),
+                    Avatar = u.AvatarUrl
+                });
+
+            foreach (var conv in conversationGroups)
+            {
+                if (usersMap.TryGetValue(conv.OtherUserId, out var resolvedUser))
+                {
+                    conv.OtherUserName = resolvedUser.Name;
+                    if (string.IsNullOrEmpty(conv.OtherUserAvatar))
+                    {
+                        conv.OtherUserAvatar = resolvedUser.Avatar;
+                    }
+                }
+            }
+        }
 
         if (_cache != null)
         {

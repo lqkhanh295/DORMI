@@ -27,7 +27,17 @@ public class Room
     public RoomStatus Status { get; set; } = RoomStatus.Available;
     public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
 
+    // Landlord Monetization: Listing Promotion & Boosts
+    public bool IsBoosted { get; set; } = false;
+    public DateTime? BoostExpiresAt { get; set; }
+    public string? BoostType { get; set; } // "24h", "3days", "7days"
+
+    // Trust & Safety: Property ownership validation
+    public bool IsPropertyVerified { get; set; } = false;
+    public DateTime? PropertyVerifiedAt { get; set; }
+
     public ICollection<RoomImage> Images { get; set; } = new List<RoomImage>();
     public ICollection<ViewingAppointment> Appointments { get; set; } = new List<ViewingAppointment>();
     public ICollection<FavoriteRoom> FavoritedBy { get; set; } = new List<FavoriteRoom>();
+    public ICollection<RentalApplication> Applications { get; set; } = new List<RentalApplication>();
 }

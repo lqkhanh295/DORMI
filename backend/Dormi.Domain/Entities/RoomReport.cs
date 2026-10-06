@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 
 namespace Dormi.Domain.Entities;
 
@@ -14,6 +14,12 @@ public class RoomReport
 
     public string Reason { get; set; } = string.Empty;
     public string Details { get; set; } = string.Empty;
-    public string Status { get; set; } = "Pending";
+    public string Status { get; set; } = "Pending"; // Pending, Reviewing, Resolved, Dismissed
+    public string RiskLevel { get; set; } = "Medium"; // Low, Medium, High, Critical
+    public string? EvidenceUrls { get; set; }
+    public string? ModeratorNotes { get; set; }
+    public string? ActionTaken { get; set; } // None, WarningIssued, RoomHidden, LandlordBanned, Dismissed
+    public Guid? ModeratorId { get; set; }
+    public DateTime? ResolvedAt { get; set; }
     public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
 }

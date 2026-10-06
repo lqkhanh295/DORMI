@@ -1,7 +1,9 @@
 import { useState, useEffect, useRef } from 'react';
+import { motion, AnimatePresence } from 'framer-motion';
 import { Bell, CheckCheck, Info, ShieldAlert, Sparkles } from 'lucide-react';
 import { notificationsApi } from '../../services/api';
 import { useStore } from '../../store/useStore';
+import { dropdownVariants } from '../../utils/motion';
 
 interface NotificationItem {
   id: string;
@@ -106,70 +108,84 @@ export function NotificationBell() {
       >
         <Bell className="w-5 h-5" />
         {unreadCount > 0 && (
-          <span className="absolute top-1 right-1 w-4 h-4 bg-[#E11D48] text-white text-[10px] font-bold rounded-full flex items-center justify-center ring-2 ring-white">
+          <motion.span 
+            key={unreadCount}
+            initial={{ scale: 0.6, opacity: 0 }}
+            animate={{ scale: 1, opacity: 1 }}
+            transition={{ type: 'spring', stiffness: 500, damping: 25 }}
+            className="absolute top-1 right-1 w-4 h-4 bg-[#E11D48] text-white text-[10px] font-bold rounded-full flex items-center justify-center ring-2 ring-white select-none"
+          >
             {unreadCount > 9 ? '9+' : unreadCount}
-          </span>
+          </motion.span>
         )}
       </button>
 
-      {isOpen && (
-        <div className="absolute right-0 mt-2 w-80 sm:w-96 bg-white rounded-2xl shadow-xl border border-gray-100 py-2 z-50 animate-in fade-in slide-in-from-top-2 duration-150">
-          <div className="px-4 py-2.5 border-b border-gray-100 flex items-center justify-between">
-            <div className="flex items-center gap-2">
-              <span className="font-bold text-gray-900 text-sm">Thông báo</span>
+      <AnimatePresence>
+        {isOpen && (
+          <motion.div 
+            variants={dropdownVariants}
+            initial="hidden"
+            animate="visible"
+            exit="exit"
+            className="absolute right-0 mt-2 w-80 sm:w-96 bg-white rounded-2xl shadow-clay-primary border border-gray-100 py-2 z-50 origin-top-right motion-gpu"
+          >
+            <div className="px-4 py-2.5 border-b border-gray-100 flex items-center justify-between">
+              <div className="flex items-center gap-2">
+                <span className="font-bold text-gray-900 text-sm">Thông báo</span>
+                {unreadCount > 0 && (
+                  <span className="bg-rose-50 text-rose-600 text-xs font-semibold px-2 py-0.5 rounded-full">
+                    {unreadCount} mới
+                  </span>
+                )}
+              </div>
               {unreadCount > 0 && (
-                <span className="bg-rose-50 text-rose-600 text-xs font-semibold px-2 py-0.5 rounded-full">
-                  {unreadCount} mới
-                </span>
+                <button
+                  onClick={handleMarkAllRead}
+                  className="text-xs text-[#00153D] hover:underline flex items-center gap-1 font-medium"
+                >
+                  <CheckCheck className="w-3.5 h-3.5" /> Đọc tất cả
+                </button>
               )}
             </div>
-            {unreadCount > 0 && (
-              <button
-                onClick={handleMarkAllRead}
-                className="text-xs text-[#00153D] hover:underline flex items-center gap-1 font-medium"
-              >
-                <CheckCheck className="w-3.5 h-3.5" /> Đọc tất cả
-              </button>
-            )}
-          </div>
 
-          <div className="max-h-[380px] overflow-y-auto divide-y divide-gray-50">
-            {loading && notifications.length === 0 ? (
-              <div className="py-8 text-center text-xs text-gray-400">Đang tải thông báo...</div>
-            ) : notifications.length === 0 ? (
-              <div className="py-8 text-center text-xs text-gray-400">Không có thông báo mới</div>
-            ) : (
-              notifications.map(item => (
-                <div
-                  key={item.id}
-                  onClick={() => !item.isRead && handleMarkAsRead(item.id)}
-                  className={`p-3.5 flex gap-3 hover:bg-gray-50 cursor-pointer transition-colors ${!item.isRead ? 'bg-blue-50/40' : ''}`}
-                >
-                  <div className="mt-0.5 w-8 h-8 rounded-full bg-white shadow-xs border border-gray-100 flex items-center justify-center shrink-0">
-                    {getTypeIcon(item.type)}
-                  </div>
-                  <div className="flex-1 min-w-0">
-                    <div className="flex items-start justify-between gap-1">
-                      <p className={`text-xs font-semibold truncate ${!item.isRead ? 'text-gray-900 font-bold' : 'text-gray-700'}`}>
-                        {item.title}
-                      </p>
-                      {!item.isRead && (
-                        <span className="w-2 h-2 rounded-full bg-blue-600 shrink-0 mt-1" />
-                      )}
+            <div className="max-h-[380px] overflow-y-auto divide-y divide-gray-50">
+              {loading && notifications.length === 0 ? (
+                <div className="py-8 text-center text-xs text-gray-400">Đang tải thông báo...</div>
+              ) : notifications.length === 0 ? (
+                <div className="py-8 text-center text-xs text-gray-400">Không có thông báo mới</div>
+              ) : (
+                notifications.map(item => (
+                  <div
+                    key={item.id}
+                    onClick={() => !item.isRead && handleMarkAsRead(item.id)}
+                    className={`p-3.5 flex gap-3 hover:bg-gray-50 cursor-pointer transition-colors ${!item.isRead ? 'bg-blue-50/40' : ''}`}
+                  >
+                    <div className="mt-0.5 w-8 h-8 rounded-full bg-white shadow-xs border border-gray-100 flex items-center justify-center shrink-0">
+                      {getTypeIcon(item.type)}
                     </div>
-                    <p className="text-xs text-gray-500 line-clamp-2 mt-0.5 leading-relaxed">
-                      {item.message}
-                    </p>
-                    <span className="text-[10px] text-gray-400 mt-1 block">
-                      {formatTime(item.createdAt)}
-                    </span>
+                    <div className="flex-1 min-w-0">
+                      <div className="flex items-start justify-between gap-1">
+                        <p className={`text-xs font-semibold truncate ${!item.isRead ? 'text-gray-900 font-bold' : 'text-gray-700'}`}>
+                          {item.title}
+                        </p>
+                        {!item.isRead && (
+                          <span className="w-2 h-2 rounded-full bg-blue-600 shrink-0 mt-1" />
+                        )}
+                      </div>
+                      <p className="text-xs text-gray-500 line-clamp-2 mt-0.5 leading-relaxed">
+                        {item.message}
+                      </p>
+                      <span className="text-[10px] text-gray-400 mt-1 block">
+                        {formatTime(item.createdAt)}
+                      </span>
+                    </div>
                   </div>
-                </div>
-              ))
-            )}
-          </div>
-        </div>
-      )}
+                ))
+              )}
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
     </div>
   );
 }

@@ -4,6 +4,7 @@ using System.Linq;
 using System.Security.Claims;
 using System.Threading.Tasks;
 using Dormi.Application.DTOs;
+using Dormi.Application.Interfaces;
 using Dormi.Domain.Entities;
 using Dormi.Domain.Enums;
 using Dormi.Infrastructure.Data;
@@ -1131,6 +1132,948 @@ public class BackendLogicTests
         Assert.False(reuseRes.Success);
         Assert.Equal(400, reuseRes.StatusCode);
         Assert.Contains("hết hạn", reuseRes.ErrorMessage);
+    }
+
+    [Fact]
+    public async Task RentalApplication_Lifecycle_Submit_Review_Withdraw_Succeeds()
+    {
+        var options = new DbContextOptionsBuilder<DormiDbContext>()
+            .UseInMemoryDatabase(databaseName: $"RentalAppDb_{Guid.NewGuid()}")
+            .Options;
+
+        using var db = new DormiDbContext(options);
+
+        var landlordId = Guid.NewGuid();
+        var landlord = new User { Id = landlordId, Email = "landlord@dormi.vn", FullName = "Chu Tro A", Role = UserRole.Landlord };
+
+        var tenantId = Guid.NewGuid();
+        var tenant = new User { Id = tenantId, Email = "tenant@dormi.vn", FullName = "Khach Thue B", Role = UserRole.Customer };
+
+        var room = new Room
+        {
+            Id = Guid.NewGuid(),
+            LandlordId = landlordId,
+            Title = "Phòng trọ cao cấp Q1",
+            Address = "123 Nguyen Thi Minh Khai",
+            Price = 5000000,
+            Status = RoomStatus.Available
+        };
+
+        db.Users.AddRange(landlord, tenant);
+        db.Rooms.Add(room);
+        await db.SaveChangesAsync();
+
+        var service = new RentalApplicationService(db);
+
+        // 1. Submit Application
+        var submitResult = await service.CreateApplicationAsync(tenantId, new CreateApplicationDto
+        {
+            RoomId = room.Id,
+            MonthlyIncome = 15000000,
+            Occupation = "Software Engineer",
+            EmployerName = "Tech Corp",
+            OccupantsCount = 1,
+            DesiredMoveInDate = DateTime.UtcNow.AddDays(7),
+            LeaseDurationMonths = 12,
+            NoteToLandlord = "Tôi muốn thuê phòng lâu dài."
+        });
+
+        Assert.True(submitResult.Success);
+        Assert.NotNull(submitResult.Data);
+        Assert.Equal(ApplicationStatus.Submitted, submitResult.Data.Status);
+        var appId = submitResult.Data.Id;
+
+        // 2. Prevent duplicate active application for same room
+        var duplicateResult = await service.CreateApplicationAsync(tenantId, new CreateApplicationDto
+        {
+            RoomId = room.Id,
+            MonthlyIncome = 15000000,
+            Occupation = "Software Engineer",
+            DesiredMoveInDate = DateTime.UtcNow.AddDays(7)
+        });
+        Assert.False(duplicateResult.Success);
+        Assert.Equal(400, duplicateResult.StatusCode);
+
+        // 3. Landlord reviews - More info requested
+        var moreInfoResult = await service.ReviewApplicationAsync(appId, landlordId, new ReviewApplicationDto
+        {
+            Status = ApplicationStatus.MoreInfoRequested,
+            Reason = "Vui lòng bổ sung CCCD"
+        });
+        Assert.True(moreInfoResult.Success);
+
+        var appInDb = await db.RentalApplications.FindAsync(appId);
+        Assert.NotNull(appInDb);
+        Assert.Equal(ApplicationStatus.MoreInfoRequested, appInDb.Status);
+        Assert.Equal("Vui lòng bổ sung CCCD", appInDb.RejectionReason);
+
+        // 4. Landlord approves application
+        var approveResult = await service.ReviewApplicationAsync(appId, landlordId, new ReviewApplicationDto
+        {
+            Status = ApplicationStatus.Approved,
+            LandlordNotes = "Hồ sơ chuẩn"
+        });
+        Assert.True(approveResult.Success);
+
+        appInDb = await db.RentalApplications.FindAsync(appId);
+        Assert.NotNull(appInDb);
+        Assert.Equal(ApplicationStatus.Approved, appInDb.Status);
+        Assert.Equal("Hồ sơ chuẩn", appInDb.LandlordNotes);
+    }
+
+    [Fact]
+    public async Task ViewingAppointment_Reschedule_And_Complete_Succeeds()
+    {
+        var options = new DbContextOptionsBuilder<DormiDbContext>()
+            .UseInMemoryDatabase(databaseName: $"ViewingAppDb_{Guid.NewGuid()}")
+            .Options;
+
+        using var db = new DormiDbContext(options);
+
+        var landlordId = Guid.NewGuid();
+        var landlord = new User { Id = landlordId, Email = "landlord2@dormi.vn", FullName = "Chu Tro B", Role = UserRole.Landlord };
+
+        var tenantId = Guid.NewGuid();
+        var tenant = new User { Id = tenantId, Email = "tenant2@dormi.vn", FullName = "Khach Thue C", Role = UserRole.Customer };
+
+        var room = new Room
+        {
+            Id = Guid.NewGuid(),
+            LandlordId = landlordId,
+            Title = "Phòng Studio Thu Duc",
+            Address = "456 Vo Van Ngan",
+            Price = 4000000,
+            Status = RoomStatus.Available
+        };
+
+        var appointment = new ViewingAppointment
+        {
+            Id = Guid.NewGuid(),
+            CustomerId = tenantId,
+            RoomId = room.Id,
+            AppointmentDate = DateTime.UtcNow.AddDays(2),
+            Status = "Pending"
+        };
+
+        db.Users.AddRange(landlord, tenant);
+        db.Rooms.Add(room);
+        db.ViewingAppointments.Add(appointment);
+        await db.SaveChangesAsync();
+
+        var appointmentService = new AppointmentService(db);
+
+        // 1. Reschedule
+        var newDate = DateTime.UtcNow.AddDays(4);
+        var rescheduleRes = await appointmentService.RescheduleAsync(appointment.Id, tenantId, new RescheduleAppointmentDto
+        {
+            NewAppointmentDate = newDate,
+            Reason = "Bận lịch thi"
+        });
+        Assert.True(rescheduleRes.Success);
+
+        var updatedApp = await db.ViewingAppointments.FindAsync(appointment.Id);
+        Assert.NotNull(updatedApp);
+        Assert.Equal("Rescheduled", updatedApp.Status);
+        Assert.Equal(newDate, updatedApp.AppointmentDate);
+        Assert.Contains("Bận lịch thi", updatedApp.Notes);
+
+        // 2. Complete viewing
+        var completeRes = await appointmentService.UpdateStatusAsync(appointment.Id, landlordId, false, new UpdateAppointmentStatusDto
+        {
+            Status = "Completed"
+        });
+        Assert.True(completeRes.Success);
+
+        updatedApp = await db.ViewingAppointments.FindAsync(appointment.Id);
+        Assert.NotNull(updatedApp);
+        Assert.Equal("Completed", updatedApp.Status);
+        Assert.NotNull(updatedApp.CompletedAt);
+    }
+
+    [Fact]
+    public async Task LeaseService_FullLifecycle_ShouldManageStatusAndSyncRoom()
+    {
+        var options = new DbContextOptionsBuilder<DormiDbContext>()
+            .UseInMemoryDatabase(databaseName: "LeaseLifecycleTestDb_" + Guid.NewGuid())
+            .Options;
+
+        using var db = new DormiDbContext(options);
+
+        var landlordId = Guid.NewGuid();
+        var landlord = new User { Id = landlordId, Email = "landlord_lease@dormi.vn", FullName = "Chu Tro D", Role = UserRole.Landlord };
+
+        var tenantId = Guid.NewGuid();
+        var tenant = new User { Id = tenantId, Email = "tenant_lease@dormi.vn", FullName = "Khach Thue E", Role = UserRole.Customer };
+
+        var room = new Room
+        {
+            Id = Guid.NewGuid(),
+            LandlordId = landlordId,
+            Title = "Phòng Master Bình Thạnh",
+            Address = "123 Xo Viet Nghe Tinh",
+            Price = 5000000,
+            Status = RoomStatus.Available
+        };
+
+        db.Users.AddRange(landlord, tenant);
+        db.Rooms.Add(room);
+        await db.SaveChangesAsync();
+
+        var leaseService = new LeaseService(db);
+
+        // 1. Landlord creates lease
+        var createDto = new CreateLeaseDto
+        {
+            RoomId = room.Id,
+            TenantId = tenantId,
+            StartDate = DateTime.UtcNow,
+            EndDate = DateTime.UtcNow.AddMonths(12),
+            MonthlyRent = 5000000,
+            Deposit = 5000000,
+            UtilitiesDescription = "Điện 3.5k, Nước 100k",
+            TermsAndConditions = "Giữ gìn vệ sinh chung",
+            PaymentCycleMonths = 1
+        };
+
+        var createRes = await leaseService.CreateLeaseAsync(landlordId, createDto);
+        Assert.True(createRes.Success);
+        Assert.NotNull(createRes.Data);
+        var leaseId = createRes.Data.Id;
+        Assert.Equal("PendingSignature", createRes.Data.Status);
+        Assert.True(createRes.Data.LandlordSigned);
+
+        // Room is still Available while pending tenant signature
+        var roomCheck = await db.Rooms.FindAsync(room.Id);
+        Assert.Equal(RoomStatus.Available, roomCheck!.Status);
+
+        // 2. Tenant signs lease
+        var signRes = await leaseService.SignLeaseByTenantAsync(leaseId, tenantId, new SignLeaseDto
+        {
+            SignatureData = "Khach Thue E",
+            AgreedToTerms = true
+        });
+        Assert.True(signRes.Success);
+        Assert.Equal("Active", signRes.Data!.Status);
+        Assert.True(signRes.Data.TenantSigned);
+        Assert.Equal("Khach Thue E", signRes.Data.TenantSignatureData);
+
+        // Room is now Rented
+        roomCheck = await db.Rooms.FindAsync(room.Id);
+        Assert.Equal(RoomStatus.Rented, roomCheck!.Status);
+
+        // 3. Terminate lease
+        var termRes = await leaseService.TerminateLeaseAsync(leaseId, landlordId, false, new TerminateLeaseDto
+        {
+            Reason = "Khách chuyển công tác và bàn giao phòng đúng thỏa thuận"
+        });
+        Assert.True(termRes.Success);
+        Assert.Equal("Terminated", termRes.Data!.Status);
+        Assert.Equal("Khách chuyển công tác và bàn giao phòng đúng thỏa thuận", termRes.Data.TerminationReason);
+
+        // Room reverts to Available
+        roomCheck = await db.Rooms.FindAsync(room.Id);
+        Assert.Equal(RoomStatus.Available, roomCheck!.Status);
+    }
+
+    [Fact]
+    public async Task LandlordDashboardService_FunnelAndBoost_ShouldCalculateAndActivate()
+    {
+        var options = new DbContextOptionsBuilder<DormiDbContext>()
+            .UseInMemoryDatabase(databaseName: "FunnelAndBoostDb_" + Guid.NewGuid())
+            .Options;
+
+        using var db = new DormiDbContext(options);
+
+        var landlordId = Guid.NewGuid();
+        var landlord = new User { Id = landlordId, Email = "landlord_crm@dormi.vn", FullName = "Chu Tro CRM", Role = UserRole.Landlord };
+        var tenantId = Guid.NewGuid();
+        var tenant = new User { Id = tenantId, Email = "tenant_crm@dormi.vn", FullName = "Khach CRM", Role = UserRole.Customer };
+
+        var room = new Room
+        {
+            Id = Guid.NewGuid(),
+            LandlordId = landlordId,
+            Title = "Phòng Cao Cấp Phú Nhuận",
+            Address = "12 Phan Xich Long",
+            Price = 6000000,
+            Status = RoomStatus.Available
+        };
+
+        db.Users.AddRange(landlord, tenant);
+        db.Rooms.Add(room);
+
+        // Add 10 views, 3 saves, 2 appointments, 2 applications (1 approved), 1 lease
+        for (int i = 0; i < 10; i++)
+        {
+            db.RoomViews.Add(new RoomView { Id = Guid.NewGuid(), RoomId = room.Id, EventType = "View", CreatedAt = DateTime.UtcNow });
+        }
+        db.FavoriteRooms.Add(new FavoriteRoom { RoomId = room.Id, CustomerId = tenantId, SavedAt = DateTime.UtcNow });
+        for (int i = 0; i < 2; i++)
+        {
+            db.ViewingAppointments.Add(new ViewingAppointment { Id = Guid.NewGuid(), RoomId = room.Id, CustomerId = tenantId, AppointmentDate = DateTime.UtcNow.AddDays(1), Status = "Confirmed" });
+        }
+        db.RentalApplications.Add(new RentalApplication
+        {
+            Id = Guid.NewGuid(),
+            RoomId = room.Id,
+            TenantId = tenantId,
+            Status = ApplicationStatus.Approved,
+            DesiredMoveInDate = DateTime.UtcNow.AddDays(3),
+            Occupation = "Engineer",
+            MonthlyIncome = 25000000
+        });
+        db.RentalApplications.Add(new RentalApplication
+        {
+            Id = Guid.NewGuid(),
+            RoomId = room.Id,
+            TenantId = tenantId,
+            Status = ApplicationStatus.Submitted,
+            DesiredMoveInDate = DateTime.UtcNow.AddDays(5),
+            Occupation = "Designer",
+            MonthlyIncome = 20000000
+        });
+        db.LeaseContracts.Add(new LeaseContract
+        {
+            Id = Guid.NewGuid(),
+            RoomId = room.Id,
+            LandlordId = landlordId,
+            TenantId = tenantId,
+            Status = "Active",
+            StartDate = DateTime.UtcNow,
+            EndDate = DateTime.UtcNow.AddMonths(12),
+            MonthlyRent = 6000000,
+            Deposit = 6000000
+        });
+
+        await db.SaveChangesAsync();
+
+        var config = new ConfigurationBuilder().Build();
+        var env = new TestWebHostEnvironment();
+        var service = new LandlordDashboardService(db, config, env, null);
+
+        // 1. Check Full Funnel
+        var analyticsRes = await service.GetLeadAnalyticsAsync(landlordId, null);
+        Assert.True(analyticsRes.Success);
+        var dto = analyticsRes.Data!;
+        Assert.Equal(10, dto.TotalViews);
+        Assert.Equal(1, dto.TotalSaves);
+        Assert.Equal(2, dto.TotalViewings);
+        Assert.Equal(2, dto.TotalApplications);
+        Assert.Equal(1, dto.TotalApproved);
+        Assert.Equal(1, dto.TotalLeases);
+        Assert.Equal(10.0, dto.OverallConversionRate); // 1 / 10 = 10%
+        Assert.Single(dto.TopRooms);
+        Assert.Equal(1, dto.TopRooms[0].Leases);
+
+        // 2. Room Boost creation and simulated payment
+        var boostRes = await service.BoostRoomAsync(landlordId, room.Id, new BoostRoomDto { BoostType = "3days", PaymentMethod = "VNPay" }, "127.0.0.1");
+        Assert.True(boostRes.Success);
+
+        // Get created transaction reference from database
+        var txn = await db.PaymentTransactions.FirstOrDefaultAsync(t => t.RoomId == room.Id);
+        Assert.NotNull(txn);
+        Assert.Equal(120000m, txn.Amount);
+        Assert.Equal("Pending", txn.Status);
+
+        // Simulate payment completion
+        var simRes = await service.SimulateGatewayPaymentAsync(landlordId, new PaymentVerifyDto { TransactionRef = txn.TransactionRef });
+        Assert.True(simRes.Success);
+
+        var updatedRoom = await db.Rooms.FindAsync(room.Id);
+        Assert.NotNull(updatedRoom);
+        Assert.True(updatedRoom.IsBoosted);
+        Assert.Equal("3days", updatedRoom.BoostType);
+        Assert.NotNull(updatedRoom.BoostExpiresAt);
+        Assert.True(updatedRoom.BoostExpiresAt > DateTime.UtcNow);
+    }
+
+    [Fact]
+    public async Task PostRentalService_CompletePostRentalLifecycle_ShouldTrackPaymentsMaintenanceRenewalAndMoveOut()
+    {
+        var options = new DbContextOptionsBuilder<DormiDbContext>()
+            .UseInMemoryDatabase(databaseName: "PostRentalDb_" + Guid.NewGuid())
+            .Options;
+        using var db = new DormiDbContext(options);
+
+        var landlordId = Guid.NewGuid();
+        var tenantId = Guid.NewGuid();
+
+        var landlord = new User
+        {
+            Id = landlordId,
+            Email = "landlord.post@dormi.vn",
+            FullName = "Chủ trọ Post Rental",
+            Role = UserRole.Landlord
+        };
+        var tenant = new User
+        {
+            Id = tenantId,
+            Email = "tenant.post@dormi.vn",
+            FullName = "Khách thuê Post Rental",
+            Role = UserRole.Customer
+        };
+        var room = new Room
+        {
+            Id = Guid.NewGuid(),
+            LandlordId = landlordId,
+            Title = "Phòng Master Ban Công Post-Rental",
+            Price = 4500000m,
+            Address = "123 Quận 1, TP.HCM",
+            Status = RoomStatus.Rented
+        };
+        var lease = new LeaseContract
+        {
+            Id = Guid.NewGuid(),
+            RoomId = room.Id,
+            LandlordId = landlordId,
+            TenantId = tenantId,
+            StartDate = DateTime.UtcNow.Date,
+            EndDate = DateTime.UtcNow.Date.AddMonths(12),
+            MonthlyRent = 4500000m,
+            Deposit = 4500000m,
+            Status = "Active",
+            LandlordSigned = true,
+            TenantSigned = true
+        };
+
+        db.Users.AddRange(landlord, tenant);
+        db.Rooms.Add(room);
+        db.LeaseContracts.Add(lease);
+        await db.SaveChangesAsync();
+
+        var service = new PostRentalService(db, null);
+
+        // 1. Payment Schedule (Rail A)
+        var createBillRes = await service.CreatePaymentScheduleAsync(new CreatePaymentScheduleDto
+        {
+            LeaseContractId = lease.Id,
+            Type = "Utilities",
+            Title = "Tiền điện nước tháng 10",
+            Amount = 350000m,
+            DueDate = DateTime.UtcNow.AddDays(5),
+            LandlordNotes = "Điện 80 số, nước 15 khối"
+        }, landlordId);
+        Assert.True(createBillRes.Success);
+        var bill = createBillRes.Data!;
+        Assert.Equal("Pending", bill.Status);
+
+        var recordRes = await service.RecordPaymentAsync(bill.Id, new RecordPaymentDto
+        {
+            PaymentMethod = "BankTransfer",
+            PaymentReference = "MB123456",
+            MarkAsPaid = true
+        }, tenantId);
+        Assert.True(recordRes.Success);
+        Assert.Equal("Paid", recordRes.Data!.Status);
+
+        // 2. Maintenance Ticketing Lifecycle (OPEN -> ASSIGNED -> RESOLVED -> CLOSED)
+        var ticketRes = await service.CreateMaintenanceRequestAsync(new CreateMaintenanceRequestDto
+        {
+            LeaseContractId = lease.Id,
+            Title = "Máy lạnh không lạnh sâu",
+            Description = "Bật 18 độ nhưng chỉ ra gió, có tiếng kêu nhỏ",
+            Category = "AirConditioner",
+            Priority = "High"
+        }, tenantId);
+        Assert.True(ticketRes.Success);
+        var ticket = ticketRes.Data!;
+        Assert.Equal("OPEN", ticket.Status);
+
+        var assignRes = await service.UpdateMaintenanceStatusAsync(ticket.Id, new UpdateMaintenanceStatusDto
+        {
+            Status = "ASSIGNED",
+            AssignedTo = "Thợ kỹ thuật Nguyễn Văn Nam"
+        }, landlordId);
+        Assert.True(assignRes.Success);
+        Assert.Equal("ASSIGNED", assignRes.Data!.Status);
+
+        var resolveRes = await service.UpdateMaintenanceStatusAsync(ticket.Id, new UpdateMaintenanceStatusDto
+        {
+            Status = "RESOLVED",
+            ResolutionNotes = "Đã bơm gas và vệ sinh lưới lọc",
+            ActualCost = 250000m
+        }, landlordId);
+        Assert.True(resolveRes.Success);
+        Assert.Equal("RESOLVED", resolveRes.Data!.Status);
+
+        var confirmRes = await service.ConfirmMaintenanceResolutionAsync(ticket.Id, new ConfirmMaintenanceResolutionDto
+        {
+            TenantFeedback = "Máy đã mát sâu, cảm ơn chủ nhà!",
+            TenantRating = 5
+        }, tenantId);
+        Assert.True(confirmRes.Success);
+        Assert.Equal("CLOSED", confirmRes.Data!.Status);
+        Assert.True(confirmRes.Data!.TenantConfirmed);
+
+        // 3. Lease Renewal Request & Accept
+        var renewRes = await service.RequestRenewalAsync(lease.Id, new RequestRenewalDto
+        {
+            ProposedEndDate = DateTime.UtcNow.Date.AddMonths(24),
+            Notes = "Muốn gia hạn thêm 1 năm nữa"
+        }, tenantId);
+        Assert.True(renewRes.Success);
+        Assert.Equal("Requested", renewRes.Data!.RenewalStatus);
+
+        var acceptRenewRes = await service.RespondRenewalAsync(lease.Id, new RespondRenewalDto
+        {
+            Accepted = true
+        }, landlordId);
+        Assert.True(acceptRenewRes.Success);
+        Assert.Equal("Accepted", acceptRenewRes.Data!.RenewalStatus);
+
+        // 4. Move-out Inspection, Deposit Settlement & Room Inventory Sync
+        var inspectRes = await service.CompleteMoveOutInspectionAsync(lease.Id, new MoveOutInspectionDto
+        {
+            InspectionNotes = "Phòng sạch sẽ, trừ 200k phí vệ sinh sofa",
+            DeductionsAmount = 200000m,
+            DeductionReason = "Giặt đệm sofa",
+            ConfirmCheckout = true
+        }, landlordId);
+        Assert.True(inspectRes.Success);
+        Assert.Equal("Terminated", inspectRes.Data!.Status);
+        Assert.Equal(4300000m, inspectRes.Data!.MoveOutSettledDeposit); // 4.5m - 200k = 4.3m
+
+        // Verify room inventory has returned to Available (0)
+        var updatedRoom = await db.Rooms.FindAsync(room.Id);
+        Assert.NotNull(updatedRoom);
+        Assert.Equal(RoomStatus.Available, updatedRoom.Status);
+    }
+
+    [Fact]
+    public async Task TrustSafetyService_CalculateBreakdownAndResolveReport_ShouldProvideExplainableScoreAndAuditLog()
+    {
+        var options = new DbContextOptionsBuilder<DormiDbContext>()
+            .UseInMemoryDatabase(databaseName: "TrustSafetyDb_" + Guid.NewGuid())
+            .Options;
+        using var db = new DormiDbContext(options);
+
+        var landlordId = Guid.NewGuid();
+        var landlord = new User
+        {
+            Id = landlordId,
+            Email = "landlord.trust@dormi.vn",
+            FullName = "Chủ trọ Trust",
+            Role = UserRole.Landlord,
+            IsVerified = true // +20 points
+        };
+        var room = new Room
+        {
+            Id = Guid.NewGuid(),
+            LandlordId = landlordId,
+            Title = "Phòng Studio Tin Cậy 100",
+            Address = "12 Nguyễn Thị Minh Khai, Q1",
+            Latitude = 10.776,
+            Longitude = 106.700,
+            Virtual3DUrl = "https://my.matterport.com/show/?m=example",
+            IsPropertyVerified = true, // +20 points
+            Status = RoomStatus.Available
+        };
+        room.Images.Add(new RoomImage { Id = Guid.NewGuid(), RoomId = room.Id, ImageUrl = "https://img1.com", IsPrimary = true });
+        room.Images.Add(new RoomImage { Id = Guid.NewGuid(), RoomId = room.Id, ImageUrl = "https://img2.com" });
+        room.Images.Add(new RoomImage { Id = Guid.NewGuid(), RoomId = room.Id, ImageUrl = "https://img3.com" });
+
+        var reporter = new User
+        {
+            Id = Guid.NewGuid(),
+            Email = "reporter@dormi.vn",
+            FullName = "Người báo cáo",
+            Role = UserRole.Customer
+        };
+
+        var report = new RoomReport
+        {
+            Id = Guid.NewGuid(),
+            RoomId = room.Id,
+            ReporterId = reporter.Id,
+            Reason = "Ảnh phòng có vẻ sai thực tế",
+            Details = "Cần kiểm tra lại",
+            RiskLevel = "Medium",
+            Status = "Pending"
+        };
+
+        db.Users.AddRange(landlord, reporter);
+        db.Rooms.Add(room);
+        db.RoomReports.Add(report);
+        await db.SaveChangesAsync();
+
+        var service = new TrustSafetyService(db, null);
+
+        // 1. Calculate Trust Score
+        var scoreRes = await service.CalculateTrustScoreAsync(room.Id);
+        Assert.True(scoreRes.Success);
+        var breakdown = scoreRes.Data!;
+        Assert.Equal(20, breakdown.IdentityPoints);
+        Assert.Equal(20, breakdown.PropertyPoints);
+        Assert.Equal(15, breakdown.AddressAndDetailsPoints); // Lat/lng + 3D
+        Assert.Equal(15, breakdown.PhotosPoints); // 3 images
+        Assert.Equal(15, breakdown.ReportsDeduction); // 1 pending report = -15
+        Assert.True(breakdown.TotalScore >= 50);
+        Assert.NotEmpty(breakdown.Factors);
+
+        // 2. Resolve Report with Moderation Action
+        var adminId = Guid.NewGuid();
+        var resolveRes = await service.ResolveReportAsync(report.Id, adminId, "admin@dormi.vn", new ResolveReportDto
+        {
+            Status = "Resolved",
+            ActionTaken = "RoomHidden",
+            ModeratorNotes = "Tạm ẩn phòng để chủ nhà xác thực lại ảnh"
+        });
+        Assert.True(resolveRes.Success);
+
+        // Verify room hidden
+        var updatedRoom = await db.Rooms.FindAsync(room.Id);
+        Assert.Equal(RoomStatus.Hidden, updatedRoom!.Status);
+
+        // Verify Audit Log
+        var auditLogs = await service.GetAuditLogsAsync(10);
+        Assert.True(auditLogs.Success);
+        Assert.Single(auditLogs.Data!);
+        Assert.Equal("ResolveReport", auditLogs.Data![0].Action);
+        Assert.Equal("admin@dormi.vn", auditLogs.Data![0].ActorEmail);
+    }
+
+    [Fact]
+    public async Task RoommateService_CreatePostWithRoom_ShouldLinkRoomAndBoostMatchScore()
+    {
+        var options = new DbContextOptionsBuilder<DormiDbContext>()
+            .UseInMemoryDatabase(databaseName: Guid.NewGuid().ToString())
+            .Options;
+
+        using var db = new DormiDbContext(options);
+        var roommateService = new RoommateService(db);
+
+        var tenantId = Guid.NewGuid();
+        var tenant = new User
+        {
+            Id = tenantId,
+            Email = "tenant1@dormi.vn",
+            FullName = "Nguyễn Văn A",
+            Role = UserRole.Customer,
+            Lifestyle = "Sạch sẽ, Không hút thuốc, Yên tĩnh"
+        };
+        db.Users.Add(tenant);
+
+        var otherTenantId = Guid.NewGuid();
+        var otherTenant = new User
+        {
+            Id = otherTenantId,
+            Email = "tenant2@dormi.vn",
+            FullName = "Trần Thị B",
+            Role = UserRole.Customer,
+            Lifestyle = "Sạch sẽ, Thân thiện"
+        };
+        db.Users.Add(otherTenant);
+
+        var roomId = Guid.NewGuid();
+        var room = new Room
+        {
+            Id = roomId,
+            Title = "Studio Q10 Ban công thoáng",
+            Address = "3/2, Quận 10, TP.HCM",
+            Price = 4500000m,
+            Area = 30,
+            LandlordId = Guid.NewGuid(),
+            Status = RoomStatus.Available,
+            Images = new List<RoomImage>
+            {
+                new RoomImage { Id = Guid.NewGuid(), ImageUrl = "https://image.test/room.jpg", IsPrimary = true }
+            }
+        };
+        db.Rooms.Add(room);
+        await db.SaveChangesAsync();
+
+        // 1. Create roommate post with linked room
+        var createDto = new CreateRoommatePostDto
+        {
+            Title = "Tìm 1 bạn nữ ở ghép phòng Studio Q10",
+            Description = "Phòng rộng 30m2, đầy đủ tiện nghi, chia đôi tiền phòng",
+            Budget = 2250000m,
+            Location = "Quận 10",
+            MoveInDate = DateTime.UtcNow.AddDays(5),
+            GenderPreference = "Female",
+            LifestyleTraits = "Sạch sẽ, Không hút thuốc",
+            RoomId = roomId
+        };
+
+        var createRes = await roommateService.CreateRoommatePostAsync(tenantId, createDto);
+        Assert.True(createRes.Success);
+
+        // 2. Query posts
+        var postsRes = await roommateService.GetRoommatePostsAsync("Quận 10", null, null, otherTenantId);
+        Assert.True(postsRes.Success);
+        Assert.Single(postsRes.Data!);
+        var post = postsRes.Data![0];
+        Assert.Equal(roomId, post.RoomId);
+        Assert.Equal(room.Title, post.RoomTitle);
+        Assert.Equal(room.Address, post.RoomAddress);
+        Assert.Equal(room.Price, post.RoomPrice);
+        Assert.Equal("https://image.test/room.jpg", post.RoomImageUrl);
+
+        // 3. Get recommendations for other tenant
+        var recsRes = await roommateService.GetRecommendationsAsync(otherTenantId);
+        Assert.True(recsRes.Success);
+        Assert.NotEmpty(recsRes.Data!);
+        Assert.NotNull(recsRes.Data![0].MatchScore);
+        Assert.True(recsRes.Data![0].MatchScore >= 60.0);
+    }
+
+    [Fact]
+    public async Task LandlordDashboardService_InviteTenantToRoom_ShouldCreateNotificationAndChatMessage()
+    {
+        var options = new DbContextOptionsBuilder<DormiDbContext>()
+            .UseInMemoryDatabase(databaseName: Guid.NewGuid().ToString())
+            .Options;
+
+        using var db = new DormiDbContext(options);
+        var inMemorySettings = new System.Collections.Generic.Dictionary<string, string?>();
+        IConfiguration config = new ConfigurationBuilder().AddInMemoryCollection(inMemorySettings).Build();
+        var memoryCache = new ServiceCollection().AddDistributedMemoryCache().BuildServiceProvider().GetRequiredService<IDistributedCache>();
+        var env = new TestWebHostEnvironment();
+        var landlordService = new LandlordDashboardService(db, config, env, memoryCache);
+
+        var landlordId = Guid.NewGuid();
+        var landlord = new User
+        {
+            Id = landlordId,
+            FullName = "Chủ trọ Phan Minh",
+            Email = "landlord@dormi.vn",
+            Role = UserRole.Landlord
+        };
+        db.Users.Add(landlord);
+
+        var tenantId = Guid.NewGuid();
+        var tenant = new User
+        {
+            Id = tenantId,
+            FullName = "Lê Thị Thảo",
+            Email = "thao@dormi.vn",
+            Role = UserRole.Customer,
+            IsLookingForRoommate = true,
+            Preferences = "Quận 7, gần trường RMIT",
+            Lifestyle = "Yên tĩnh, Sạch sẽ"
+        };
+        db.Users.Add(tenant);
+
+        var roomId = Guid.NewGuid();
+        var room = new Room
+        {
+            Id = roomId,
+            Title = "Căn hộ dịch vụ cao cấp Quận 7",
+            Address = "Nguyễn Thị Thập, Quận 7",
+            Price = 5000000m,
+            Area = 35,
+            LandlordId = landlordId,
+            Status = RoomStatus.Available
+        };
+        db.Rooms.Add(room);
+        await db.SaveChangesAsync();
+
+        // 1. Discover tenants
+        var discoverRes = await landlordService.DiscoverTenantsAsync(landlordId);
+        Assert.True(discoverRes.Success);
+        Assert.Single(discoverRes.Data!);
+        Assert.Equal(tenant.FullName, discoverRes.Data![0].FullName);
+        Assert.True(discoverRes.Data![0].MatchScore >= 50);
+
+        // 2. Invite tenant to view room
+        var inviteDto = new InviteTenantDto
+        {
+            TenantId = tenantId,
+            RoomId = roomId,
+            Message = "Phòng mình rất gần RMIT, mời bạn qua xem phòng chiều nay!"
+        };
+
+        var inviteRes = await landlordService.InviteTenantToRoomAsync(landlordId, inviteDto);
+        Assert.True(inviteRes.Success);
+
+        // Verify notification created
+        var notif = await db.Notifications.FirstOrDefaultAsync(n => n.UserId == tenantId);
+        Assert.NotNull(notif);
+        Assert.Contains(room.Title, notif.Message);
+        Assert.Equal($"/room/{roomId}", notif.LinkUrl);
+
+        // Verify chat message created
+        var chatMsg = await db.Messages.FirstOrDefaultAsync(m => m.SenderId == landlordId && m.ReceiverId == tenantId);
+        Assert.NotNull(chatMsg);
+        Assert.Contains(room.Title, chatMsg.Content);
+        Assert.Contains(inviteDto.Message, chatMsg.Content);
+    }
+
+    [Fact]
+    public async Task DistributedLockService_TryAcquireAndRelease_ShouldEnforceMutualExclusion()
+    {
+        var cache = new ServiceCollection().AddDistributedMemoryCache().BuildServiceProvider().GetRequiredService<IDistributedCache>();
+        var logger = new Microsoft.Extensions.Logging.Abstractions.NullLogger<DistributedLockService>();
+        var lockService = new DistributedLockService(cache, logger);
+
+        var key = "test_resource_mutex";
+        var acquired1 = await lockService.TryAcquireLockAsync(key, TimeSpan.FromMinutes(1));
+        Assert.True(acquired1);
+
+        // Second acquire on the same key must fail
+        var acquired2 = await lockService.TryAcquireLockAsync(key, TimeSpan.FromMinutes(1));
+        Assert.False(acquired2);
+
+        // After release, key can be acquired again
+        await lockService.ReleaseLockAsync(key);
+        var acquired3 = await lockService.TryAcquireLockAsync(key, TimeSpan.FromMinutes(1));
+        Assert.True(acquired3);
+    }
+
+    [Fact]
+    public async Task LeaseService_SignLease_WhenConcurrentLockActive_ShouldReturn409Conflict()
+    {
+        var options = new DbContextOptionsBuilder<DormiDbContext>()
+            .UseInMemoryDatabase(databaseName: Guid.NewGuid().ToString())
+            .Options;
+
+        using var db = new DormiDbContext(options);
+        var cache = new ServiceCollection().AddDistributedMemoryCache().BuildServiceProvider().GetRequiredService<IDistributedCache>();
+        var lockService = new DistributedLockService(cache, new Microsoft.Extensions.Logging.Abstractions.NullLogger<DistributedLockService>());
+        var kafkaProducer = new TestKafkaProducer();
+        var leaseService = new LeaseService(db, kafkaProducer, lockService);
+
+        var landlord = new User { Id = Guid.NewGuid(), FullName = "Landlord A", Role = UserRole.Landlord };
+        var tenant = new User { Id = Guid.NewGuid(), FullName = "Tenant B", Role = UserRole.Customer };
+        var room = new Room { Id = Guid.NewGuid(), Title = "Phòng Trọ 101", LandlordId = landlord.Id, Status = RoomStatus.Available, Price = 3000000 };
+        db.Users.AddRange(landlord, tenant);
+        db.Rooms.Add(room);
+
+        var lease = new LeaseContract
+        {
+            Id = Guid.NewGuid(),
+            RoomId = room.Id,
+            LandlordId = landlord.Id,
+            TenantId = tenant.Id,
+            StartDate = DateTime.UtcNow.AddDays(1),
+            EndDate = DateTime.UtcNow.AddMonths(6),
+            MonthlyRent = 3000000,
+            Deposit = 3000000,
+            Status = "PendingSignature"
+        };
+        db.LeaseContracts.Add(lease);
+        await db.SaveChangesAsync();
+
+        // Simulate concurrent lock already held on this room
+        var lockKey = $"lease_signing:{room.Id}";
+        await lockService.TryAcquireLockAsync(lockKey, TimeSpan.FromMinutes(1));
+
+        var signRes = await leaseService.SignLeaseByTenantAsync(lease.Id, tenant.Id, new SignLeaseDto { AgreedToTerms = true, SignatureData = "sig_data" });
+        Assert.False(signRes.Success);
+        Assert.Equal(409, signRes.StatusCode);
+        Assert.Contains("xử lý", signRes.ErrorMessage);
+    }
+
+    [Fact]
+    public async Task PostRentalService_ConfirmPayment_ShouldPublishPaymentCompletedEvent()
+    {
+        var options = new DbContextOptionsBuilder<DormiDbContext>()
+            .UseInMemoryDatabase(databaseName: Guid.NewGuid().ToString())
+            .Options;
+
+        using var db = new DormiDbContext(options);
+        var cache = new ServiceCollection().AddDistributedMemoryCache().BuildServiceProvider().GetRequiredService<IDistributedCache>();
+        var lockService = new DistributedLockService(cache, new Microsoft.Extensions.Logging.Abstractions.NullLogger<DistributedLockService>());
+        var kafkaProducer = new TestKafkaProducer();
+        var postRentalService = new PostRentalService(db, kafkaProducer, lockService);
+
+        var landlord = new User { Id = Guid.NewGuid(), FullName = "Landlord A", Role = UserRole.Landlord };
+        var tenant = new User { Id = Guid.NewGuid(), FullName = "Tenant B", Role = UserRole.Customer };
+        var room = new Room { Id = Guid.NewGuid(), Title = "Phòng Trọ VIP", LandlordId = landlord.Id, Status = RoomStatus.Rented, Price = 4000000 };
+        db.Users.AddRange(landlord, tenant);
+        db.Rooms.Add(room);
+
+        var lease = new LeaseContract
+        {
+            Id = Guid.NewGuid(),
+            RoomId = room.Id,
+            LandlordId = landlord.Id,
+            TenantId = tenant.Id,
+            StartDate = DateTime.UtcNow,
+            EndDate = DateTime.UtcNow.AddMonths(12),
+            MonthlyRent = 4000000,
+            Deposit = 4000000,
+            Status = "Active"
+        };
+        db.LeaseContracts.Add(lease);
+
+        var schedule = new RentalPaymentSchedule
+        {
+            Id = Guid.NewGuid(),
+            LeaseContractId = lease.Id,
+            Type = "Rent",
+            Title = "Tiền phòng tháng 10",
+            Amount = 4000000,
+            DueDate = DateTime.UtcNow,
+            Status = "Pending"
+        };
+        db.RentalPaymentSchedules.Add(schedule);
+        await db.SaveChangesAsync();
+
+        var res = await postRentalService.RecordPaymentAsync(schedule.Id, new RecordPaymentDto { MarkAsPaid = true, PaymentMethod = "BankTransfer" }, landlord.Id);
+        Assert.True(res.Success);
+        Assert.Equal("Paid", res.Data?.Status);
+
+        // Verify Kafka event published
+        var evt = kafkaProducer.PublishedEvents.FirstOrDefault(e => e.EventType == "PaymentCompleted");
+        Assert.NotNull(evt);
+        Assert.Equal(tenant.Id, evt.UserId);
+        Assert.Equal("Payment", evt.Type);
+    }
+
+    [Fact]
+    public async Task ReviewService_AddReview_ShouldPublishReviewCreatedEvent()
+    {
+        var options = new DbContextOptionsBuilder<DormiDbContext>()
+            .UseInMemoryDatabase(databaseName: Guid.NewGuid().ToString())
+            .Options;
+
+        using var db = new DormiDbContext(options);
+        var kafkaProducer = new TestKafkaProducer();
+        var reviewService = new ReviewService(db, kafkaProducer);
+
+        var landlord = new User { Id = Guid.NewGuid(), FullName = "Landlord L", Role = UserRole.Landlord };
+        var tenant = new User { Id = Guid.NewGuid(), FullName = "Tenant T", Role = UserRole.Customer };
+        var room = new Room { Id = Guid.NewGuid(), Title = "Phòng Review Test", LandlordId = landlord.Id, Status = RoomStatus.Available, Price = 3500000 };
+        db.Users.AddRange(landlord, tenant);
+        db.Rooms.Add(room);
+
+        // Add confirmed appointment so tenant can review
+        var appt = new ViewingAppointment
+        {
+            Id = Guid.NewGuid(),
+            CustomerId = tenant.Id,
+            RoomId = room.Id,
+            AppointmentDate = DateTime.UtcNow.AddDays(-1),
+            Status = "Completed"
+        };
+        db.ViewingAppointments.Add(appt);
+        await db.SaveChangesAsync();
+
+        var reviewRes = await reviewService.AddReviewAsync(room.Id, tenant.Id, new CreateReviewDto { Rating = 5, Comment = "Phòng rất thoáng mát và sạch sẽ!" });
+        Assert.True(reviewRes.Success);
+
+        // Verify ReviewCreated Kafka event
+        var evt = kafkaProducer.PublishedEvents.FirstOrDefault(e => e.EventType == "ReviewCreated");
+        Assert.NotNull(evt);
+        Assert.Equal(landlord.Id, evt.UserId);
+        Assert.Equal("Review", evt.Type);
+    }
+
+    private class TestKafkaProducer : IKafkaProducer
+    {
+        public System.Collections.Generic.List<NotificationEvent> PublishedEvents { get; } = new();
+
+        public Task ProduceAsync<T>(string topic, string key, T message, System.Threading.CancellationToken cancellationToken = default)
+        {
+            return Task.CompletedTask;
+        }
+
+        public Task PublishNotificationAsync(NotificationEvent notification, System.Threading.CancellationToken cancellationToken = default)
+        {
+            PublishedEvents.Add(notification);
+            return Task.CompletedTask;
+        }
     }
 
     private class TestWebHostEnvironment : Microsoft.AspNetCore.Hosting.IWebHostEnvironment

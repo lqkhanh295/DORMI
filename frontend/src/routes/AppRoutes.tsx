@@ -17,6 +17,9 @@ import NotFound from '../pages/public/NotFound';
 
 // Tenant Pages
 import TenantDashboard from '../pages/tenant/TenantDashboard';
+import TenantApplications from '../pages/tenant/TenantApplications';
+import TenantViewings from '../pages/tenant/TenantViewings';
+import TenantLeases from '../pages/tenant/TenantLeases';
 import RoommateMatcher from '../pages/tenant/RoommateMatcher';
 import CreateRoommatePost from '../pages/tenant/CreateRoommatePost';
 import TenantChatCenter from '../pages/tenant/TenantChatCenter';
@@ -25,6 +28,9 @@ import TenantSettings from '../pages/tenant/TenantSettings';
 
 // Landlord Pages
 import LandlordDashboard from '../pages/landlord/LandlordDashboard';
+import LandlordApplications from '../pages/landlord/LandlordApplications';
+import LandlordViewings from '../pages/landlord/LandlordViewings';
+import LandlordLeases from '../pages/landlord/LandlordLeases';
 import LeadAnalytics from '../pages/landlord/LeadAnalytics';
 import SmartListingForm from '../pages/landlord/SmartListingForm';
 import RoomManagement from '../pages/landlord/RoomManagement';
@@ -61,6 +67,10 @@ export default function AppRoutes() {
       <Route element={<ProtectedRoute allowedRoles={['Tenant']} />}>
         <Route path="/tenant" element={<TenantLayout />}>
           <Route index element={<TenantDashboard />} />
+          <Route path="applications" element={<TenantApplications />} />
+          <Route path="viewings" element={<TenantViewings />} />
+          <Route path="leases" element={<TenantLeases />} />
+          <Route path="appointments" element={<Navigate to="/tenant/viewings" replace />} />
           <Route path="match" element={<RoommateMatcher />} />
           <Route path="post" element={<CreateRoommatePost />} />
           <Route path="chat" element={<TenantChatCenter />} />
@@ -73,6 +83,10 @@ export default function AppRoutes() {
       <Route element={<ProtectedRoute allowedRoles={['Landlord']} />}>
         <Route path="/landlord" element={<LandlordLayout />}>
           <Route index element={<LandlordDashboard />} />
+          <Route path="applications" element={<LandlordApplications />} />
+          <Route path="viewings" element={<LandlordViewings />} />
+          <Route path="leases" element={<LandlordLeases />} />
+          <Route path="appointments" element={<Navigate to="/landlord/viewings" replace />} />
           <Route path="analytics" element={<LeadAnalytics />} />
           <Route path="create" element={<SmartListingForm />} />
           <Route path="listing/new" element={<SmartListingForm />} />
@@ -86,7 +100,6 @@ export default function AppRoutes() {
           <Route path="chat" element={<LandlordChatCenter />} />
           <Route path="settings" element={<LandlordSettings />} />
           <Route path="dashboard" element={<Navigate to="/landlord" replace />} />
-          <Route path="appointments" element={<Navigate to="/landlord" replace />} />
           <Route path="messages" element={<Navigate to="/landlord/chat" replace />} />
           <Route path="kyc" element={<Navigate to="/landlord/verify" replace />} />
         </Route>

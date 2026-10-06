@@ -103,6 +103,24 @@ public class RoomService : IRoomService
 
     public async Task<ServiceResult<object>> GetRoomsAsync(RoomQueryFilterDto filter, Guid? currentUserId, bool isAdmin, bool isLandlord)
     {
+        string? cacheKey = null;
+        var isPublicQuery = !isAdmin && (!isLandlord || !currentUserId.HasValue);
+        if (isPublicQuery)
+        {
+            try
+            {
+                var version = await _cache.GetStringAsync("rooms_cache_version") ?? "1";
+                cacheKey = $"rooms_search:{version}:{filter.Query}:{filter.RoomType}:{filter.MinPrice}:{filter.MaxPrice}:{filter.District}:{filter.SortBy}:{filter.Page}:{filter.PageSize}";
+                var cached = await _cache.GetStringAsync(cacheKey);
+                if (!string.IsNullOrEmpty(cached))
+                {
+                    var cachedObj = JsonSerializer.Deserialize<JsonElement>(cached);
+                    return ServiceResult<object>.Ok(cachedObj);
+                }
+            }
+            catch { }
+        }
+
         var query = _db.Rooms
             .Include(r => r.Landlord)
             .Include(r => r.Images)
@@ -191,6 +209,7 @@ public class RoomService : IRoomService
         var page = filter.Page < 1 ? 1 : filter.Page;
         var pageSize = filter.PageSize < 1 ? 10 : filter.PageSize;
 
+        var now = DateTime.UtcNow;
         query = filter.SortBy switch
         {
             "price-asc" or "price-low" => query.OrderBy(r => r.Price),
@@ -199,7 +218,7 @@ public class RoomService : IRoomService
             "area-desc" => query.OrderByDescending(r => r.Area),
             "area-asc" => query.OrderBy(r => r.Area),
             "verified" => query.OrderByDescending(r => r.Landlord.IsVerified).ThenByDescending(r => r.CreatedAt),
-            _ => query.OrderByDescending(r => r.CreatedAt)
+            _ => query.OrderByDescending(r => r.IsBoosted && r.BoostExpiresAt > now).ThenByDescending(r => r.CreatedAt)
         };
 
         var rooms = await query
@@ -225,6 +244,9 @@ public class RoomService : IRoomService
                 Status = r.Status,
                 IsVerifiedLandlord = r.Landlord.IsVerified,
                 CreatedAt = r.CreatedAt,
+                IsBoosted = r.IsBoosted && r.BoostExpiresAt > now,
+                BoostExpiresAt = r.BoostExpiresAt,
+                BoostType = r.BoostType,
                 Images = r.Images.Select(img => new RoomImageDto
                 {
                     Id = img.Id,
@@ -234,27 +256,51 @@ public class RoomService : IRoomService
             })
             .ToListAsync();
 
-        return ServiceResult<object>.Ok(new
+        var responsePayload = new
         {
             TotalItems = totalItems,
             Page = page,
             PageSize = pageSize,
             TotalPages = (int)Math.Ceiling((double)totalItems / pageSize),
             Data = rooms
-        });
+        };
+
+        if (cacheKey != null)
+        {
+            try
+            {
+                await _cache.SetStringAsync(cacheKey, JsonSerializer.Serialize(responsePayload), new DistributedCacheEntryOptions
+                {
+                    AbsoluteExpirationRelativeToNow = TimeSpan.FromSeconds(60)
+                });
+            }
+            catch { }
+        }
+
+        return ServiceResult<object>.Ok(responsePayload);
     }
 
-    private async Task InvalidateFeaturedRoomsCacheAsync()
+    private async Task InvalidateRoomsCacheAsync(Guid? roomId = null)
     {
         try
         {
+            await _cache.SetStringAsync("rooms_cache_version", Guid.NewGuid().ToString("N"), new DistributedCacheEntryOptions
+            {
+                AbsoluteExpirationRelativeToNow = TimeSpan.FromHours(24)
+            });
             await _cache.RemoveAsync("featured_rooms_6");
             await _cache.RemoveAsync("featured_rooms_8");
             await _cache.RemoveAsync("featured_rooms_10");
             await _cache.RemoveAsync("featured_rooms_12");
+            if (roomId.HasValue)
+            {
+                await _cache.RemoveAsync($"room_detail:{roomId.Value}");
+            }
         }
         catch { }
     }
+
+    private Task InvalidateFeaturedRoomsCacheAsync() => InvalidateRoomsCacheAsync(null);
 
     public async Task<ServiceResult<List<RoomResponseDto>>> GetFeaturedRoomsAsync(int limit = 6)
     {
@@ -276,11 +322,13 @@ public class RoomService : IRoomService
             }
         }
 
+        var now = DateTime.UtcNow;
         var featured = await _db.Rooms
             .Include(r => r.Landlord)
             .Include(r => r.Images)
             .Where(r => r.Status == RoomStatus.Available)
-            .OrderByDescending(r => r.Landlord.IsVerified)
+            .OrderByDescending(r => r.IsBoosted && r.BoostExpiresAt > now)
+            .ThenByDescending(r => r.Landlord.IsVerified)
             .ThenByDescending(r => r.CreatedAt)
             .Take(limit)
             .Select(r => new RoomResponseDto
@@ -303,6 +351,9 @@ public class RoomService : IRoomService
                 Status = r.Status,
                 IsVerifiedLandlord = r.Landlord.IsVerified,
                 CreatedAt = r.CreatedAt,
+                IsBoosted = r.IsBoosted && r.BoostExpiresAt > now,
+                BoostExpiresAt = r.BoostExpiresAt,
+                BoostType = r.BoostType,
                 Images = r.Images.Select(img => new RoomImageDto
                 {
                     Id = img.Id,
@@ -394,6 +445,9 @@ public class RoomService : IRoomService
             Status = room.Status,
             IsVerifiedLandlord = room.Landlord?.IsVerified ?? false,
             CreatedAt = room.CreatedAt,
+            IsBoosted = room.IsBoosted && room.BoostExpiresAt > DateTime.UtcNow,
+            BoostExpiresAt = room.BoostExpiresAt,
+            BoostType = room.BoostType,
             Images = room.Images.Select(img => new RoomImageDto
             {
                 Id = img.Id,
@@ -665,7 +719,7 @@ public class RoomService : IRoomService
             }).ToList()
         };
 
-        await InvalidateFeaturedRoomsCacheAsync();
+        await InvalidateRoomsCacheAsync(id);
         return ServiceResult<RoomResponseDto>.Ok(responseDto);
     }
 
@@ -682,7 +736,7 @@ public class RoomService : IRoomService
         _db.Rooms.Remove(room);
         await _db.SaveChangesAsync();
 
-        await InvalidateFeaturedRoomsCacheAsync();
+        await InvalidateRoomsCacheAsync(id);
         return ServiceResult<object>.Ok(new { message = "Đã xoá phòng trọ thành công." });
     }
 

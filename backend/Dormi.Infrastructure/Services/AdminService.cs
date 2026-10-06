@@ -11,6 +11,7 @@ using Dormi.Infrastructure.Data;
 using Dormi.Infrastructure.Hubs;
 using Microsoft.AspNetCore.SignalR;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Caching.Distributed;
 
 namespace Dormi.Infrastructure.Services;
 
@@ -19,12 +20,18 @@ public class AdminService : IAdminService
     private readonly DormiDbContext _db;
     private readonly IHubContext<ChatHub> _hubContext;
     private readonly IKafkaProducer? _kafkaProducer;
+    private readonly Microsoft.Extensions.Caching.Distributed.IDistributedCache? _cache;
 
-    public AdminService(DormiDbContext db, IHubContext<ChatHub> hubContext, IKafkaProducer? kafkaProducer = null)
+    public AdminService(
+        DormiDbContext db, 
+        IHubContext<ChatHub> hubContext, 
+        IKafkaProducer? kafkaProducer = null,
+        Microsoft.Extensions.Caching.Distributed.IDistributedCache? cache = null)
     {
         _db = db;
         _hubContext = hubContext;
         _kafkaProducer = kafkaProducer;
+        _cache = cache;
     }
 
     public async Task<ServiceResult<AdminStatsDto>> GetStatsAsync()
@@ -139,6 +146,16 @@ public class AdminService : IAdminService
             request.Status = dto.Approved ? "Approved" : "Rejected";
             request.RejectReason = dto.Approved ? null : (dto.RejectReason ?? "Giấy tờ chưa hợp lệ hoặc mờ");
             request.ReviewedAt = DateTime.UtcNow;
+
+            if (dto.Approved && request.DocumentType == "PropertyCertificate" && request.RoomId.HasValue)
+            {
+                var room = await _db.Rooms.FindAsync(request.RoomId.Value);
+                if (room != null)
+                {
+                    room.IsPropertyVerified = true;
+                    room.PropertyVerifiedAt = DateTime.UtcNow;
+                }
+            }
         }
 
         var landlordId = landlord?.Id ?? request!.UserId;
@@ -147,12 +164,22 @@ public class AdminService : IAdminService
         {
             Id = Guid.NewGuid(),
             UserId = landlordId,
-            Title = dto.Approved ? "Xác minh danh tính thành công" : "Yêu cầu xác minh bị từ chối",
+            Title = dto.Approved ? "Xác minh hồ sơ thành công" : "Yêu cầu xác minh bị từ chối",
             Message = dto.Approved
-                ? "Hồ sơ xác minh CCCD của bạn đã được phê duyệt. Bạn đã nhận huy hiệu Chủ trọ xác thực và có thể đăng tin phòng."
+                ? $"Hồ sơ xác minh ({request?.DocumentType ?? "CCCD"}) của bạn đã được phê duyệt thành công."
                 : $"Hồ sơ xác minh bị từ chối với lý do: {dto.RejectReason ?? "Thông tin không khớp hoặc ảnh không rõ"}. Vui lòng cập nhật lại.",
             Type = "Verification",
             LinkUrl = "/landlord/verify",
+            CreatedAt = DateTime.UtcNow
+        });
+
+        _db.AuditLogs.Add(new AuditLog
+        {
+            Id = Guid.NewGuid(),
+            Action = dto.Approved ? "ApproveVerification" : "RejectVerification",
+            EntityType = "VerificationRequest",
+            EntityId = (request?.Id ?? id).ToString(),
+            Details = $"Duyệt xác minh ({request?.DocumentType ?? "CCCD"}) cho tài khoản {landlord?.Email ?? landlordId.ToString()}. Kết quả: {(dto.Approved ? "Chấp thuận" : "Từ chối")}",
             CreatedAt = DateTime.UtcNow
         });
 
@@ -240,6 +267,20 @@ public class AdminService : IAdminService
         }
 
         await _db.SaveChangesAsync();
+
+        if (_cache != null && oldStatus != status)
+        {
+            try
+            {
+                await _cache.SetStringAsync("rooms_cache_version", Guid.NewGuid().ToString("N"));
+                await _cache.RemoveAsync($"room_detail:{roomId}");
+                await _cache.RemoveAsync("featured_rooms_6");
+                await _cache.RemoveAsync("featured_rooms_8");
+                await _cache.RemoveAsync("featured_rooms_10");
+                await _cache.RemoveAsync("featured_rooms_12");
+            }
+            catch { }
+        }
 
         var payload = new
         {

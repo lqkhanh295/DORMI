@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { Link, useNavigate, useLocation } from 'react-router-dom';
+import { motion, AnimatePresence } from 'framer-motion';
 import { Menu, X, Plus, Users, ArrowLeft, LogIn, LogOut } from 'lucide-react';
 import { useStore } from '../../store/useStore';
 import { NotificationBell } from '../common/NotificationBell';
@@ -98,53 +99,61 @@ export function GlobalNav() {
         </button>
       </div>
 
-      {/* Mobile Drawer Menu */}
-      {mobileMenuOpen && (
-        <div className="md:hidden bg-white border-b border-[#E2E8F0] p-4 flex flex-col gap-4 animate-fade-in shadow-md">
-          <Link 
-            to="/search" 
-            onClick={() => setMobileMenuOpen(false)}
-            className="text-body font-medium text-[#0F172A] py-2 border-b border-[#F1F5F9]"
+      {/* Mobile Drawer Menu with Smooth Physical Unfold */}
+      <AnimatePresence>
+        {mobileMenuOpen && (
+          <motion.div 
+            initial={{ opacity: 0, height: 0 }}
+            animate={{ opacity: 1, height: 'auto' }}
+            exit={{ opacity: 0, height: 0 }}
+            transition={{ duration: 0.18, ease: [0.16, 1, 0.3, 1] }}
+            className="md:hidden bg-white border-b border-[#E2E8F0] p-4 flex flex-col gap-4 shadow-md overflow-hidden motion-gpu"
           >
-            Tìm phòng
-          </Link>
-          <Link 
-            to="/tenant/match" 
-            onClick={() => setMobileMenuOpen(false)}
-            className="text-body font-medium text-[#0F172A] py-2 border-b border-[#F1F5F9] flex items-center gap-2"
-          >
-            <Users className="w-4 h-4" />
-            Ở ghép
-          </Link>
-          <Link 
-            to={currentUser?.role === 'Tenant' ? '/tenant/post' : '/landlord/listing/new'} 
-            onClick={() => setMobileMenuOpen(false)}
-            className="text-body font-medium text-[#0F172A] py-2 border-b border-[#F1F5F9] flex items-center gap-2 text-[#00153D] font-semibold"
-          >
-            <Plus className="w-4 h-4" />
-            {currentUser?.role === 'Tenant' ? 'Đăng tin ở ghép' : 'Đăng phòng trọ'}
-          </Link>
-          {!currentUser ? (
             <Link 
-              to="/auth" 
+              to="/search" 
               onClick={() => setMobileMenuOpen(false)}
-              className="bg-[#00153D] text-white text-center text-body font-semibold py-2.5 rounded-[10px]"
+              className="text-body font-medium text-[#0F172A] py-2 border-b border-[#F1F5F9] transition-colors"
             >
-              Đăng nhập
+              Tìm phòng
             </Link>
-          ) : (
-            <div className="flex flex-col gap-2 pt-2">
-              <span className="text-caption text-[#64748B]">Đăng nhập bởi {currentUser.name}</span>
-              <button 
-                onClick={() => { logout(); setMobileMenuOpen(false); }}
-                className="text-body font-semibold text-[#C62828] text-left py-2"
+            <Link 
+              to="/tenant/match" 
+              onClick={() => setMobileMenuOpen(false)}
+              className="text-body font-medium text-[#0F172A] py-2 border-b border-[#F1F5F9] flex items-center gap-2 transition-colors"
+            >
+              <Users className="w-4 h-4" />
+              Ở ghép
+            </Link>
+            <Link 
+              to={currentUser?.role === 'Tenant' ? '/tenant/post' : '/landlord/listing/new'} 
+              onClick={() => setMobileMenuOpen(false)}
+              className="text-body font-medium text-[#0F172A] py-2 border-b border-[#F1F5F9] flex items-center gap-2 text-[#00153D] font-semibold transition-colors"
+            >
+              <Plus className="w-4 h-4" />
+              {currentUser?.role === 'Tenant' ? 'Đăng tin ở ghép' : 'Đăng phòng trọ'}
+            </Link>
+            {!currentUser ? (
+              <Link 
+                to="/auth" 
+                onClick={() => setMobileMenuOpen(false)}
+                className="bg-[#00153D] text-white text-center text-body font-semibold py-2.5 rounded-[10px] active:scale-95 transition-transform"
               >
-                Đăng xuất
-              </button>
-            </div>
-          )}
-        </div>
-      )}
+                Đăng nhập
+              </Link>
+            ) : (
+              <div className="flex flex-col gap-2 pt-2">
+                <span className="text-caption text-[#64748B]">Đăng nhập bởi {currentUser.name}</span>
+                <button 
+                  onClick={() => { logout(); setMobileMenuOpen(false); }}
+                  className="text-body font-semibold text-[#C62828] text-left py-2"
+                >
+                  Đăng xuất
+                </button>
+              </div>
+            )}
+          </motion.div>
+        )}
+      </AnimatePresence>
     </nav>
   );
 }

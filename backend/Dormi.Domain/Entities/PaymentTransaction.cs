@@ -11,6 +11,9 @@ public class PaymentTransaction
     public Guid? SubscriptionId { get; set; }
     public LandlordSubscription? Subscription { get; set; }
 
+    public Guid? RoomId { get; set; }
+    public Room? Room { get; set; }
+
     public decimal Amount { get; set; }
     public string PaymentMethod { get; set; } = "VNPay"; // VNPay, MoMo, BankTransfer
     public string TransactionRef { get; set; } = string.Empty;

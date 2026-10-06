@@ -28,6 +28,9 @@ export interface Listing {
   trustScore?: number;
   views?: number;
   leads?: number;
+  isBoosted?: boolean;
+  boostType?: string;
+  boostExpiresAt?: string;
   latitude?: number;
   longitude?: number;
   distanceKm?: number;
@@ -54,6 +57,11 @@ export interface RoommateProfile {
   budget: string;
   bio: string;
   tags: string[];
+  roomId?: string;
+  roomTitle?: string;
+  roomAddress?: string;
+  roomPrice?: number;
+  roomImageUrl?: string;
 }
 
 interface AppState {
@@ -157,6 +165,9 @@ export const useStore = create<AppState>()(
               landlordId: r.landlordId,
               status: statusMap[r.status] || 'Available',
               isVerifiedLandlord: r.isVerifiedLandlord ?? false,
+              isBoosted: !!r.isBoosted,
+              boostType: r.boostType,
+              boostExpiresAt: r.boostExpiresAt,
               area: Number(r.area || 25),
               utilities: r.utilities || '',
               latitude: r.latitude,

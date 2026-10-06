@@ -17,4 +17,6 @@ public interface ILandlordDashboardService
     Task<ServiceResult<object>> VerifyPaymentAsync(Guid landlordId, PaymentVerifyDto dto);
     Task<ServiceResult<string>> ProcessVnpayReturnAsync(IDictionary<string, string> queryParams, string vnp_TxnRef, string vnp_ResponseCode, string vnp_SecureHash);
     Task<ServiceResult<List<TenantDiscoveryDto>>> DiscoverTenantsAsync(Guid landlordId);
+    Task<ServiceResult<object>> BoostRoomAsync(Guid landlordId, Guid roomId, BoostRoomDto dto, string clientIp);
+    Task<ServiceResult<object>> InviteTenantToRoomAsync(Guid landlordId, InviteTenantDto dto);
 }

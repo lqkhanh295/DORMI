@@ -260,6 +260,7 @@ public class KafkaNotificationConsumer : BackgroundService
                     break;
 
                 case "AppointmentCreated":
+                case "ViewingRequested":
                     if (evt.UserId.HasValue && evt.Metadata != null)
                     {
                         await _hubContext.Clients.Group(evt.UserId.Value.ToString().ToLower())
@@ -268,12 +269,116 @@ public class KafkaNotificationConsumer : BackgroundService
                     break;
 
                 case "AppointmentStatusUpdated":
+                case "ViewingConfirmed":
                     if (evt.UserId.HasValue && evt.Metadata != null)
                     {
                         await _hubContext.Clients.Group(evt.UserId.Value.ToString().ToLower())
                             .SendAsync("AppointmentStatusUpdated", evt.Metadata, ct);
                     }
                     break;
+
+                case "ApplicationSubmitted":
+                    if (evt.UserId.HasValue && evt.Metadata != null)
+                    {
+                        await _hubContext.Clients.Group(evt.UserId.Value.ToString().ToLower())
+                            .SendAsync("ApplicationReceived", evt.Metadata, ct);
+                    }
+                    break;
+
+                case "ApplicationApproved":
+                case "ApplicationStatusUpdated":
+                    if (evt.UserId.HasValue && evt.Metadata != null)
+                    {
+                        await _hubContext.Clients.Group(evt.UserId.Value.ToString().ToLower())
+                            .SendAsync("ApplicationStatusUpdated", evt.Metadata, ct);
+                    }
+                    break;
+
+                case "LeasePendingSignature":
+                    if (evt.UserId.HasValue && evt.Metadata != null)
+                    {
+                        await _hubContext.Clients.Group(evt.UserId.Value.ToString().ToLower())
+                            .SendAsync("LeasePendingSignature", evt.Metadata, ct);
+                    }
+                    break;
+
+                case "LeaseActivated":
+                    if (evt.UserId.HasValue && evt.Metadata != null)
+                    {
+                        await _hubContext.Clients.Group(evt.UserId.Value.ToString().ToLower())
+                            .SendAsync("LeaseActivated", evt.Metadata, ct);
+                    }
+                    break;
+
+                case "PaymentCompleted":
+                    if (evt.UserId.HasValue && evt.Metadata != null)
+                    {
+                        await _hubContext.Clients.Group(evt.UserId.Value.ToString().ToLower())
+                            .SendAsync("PaymentReceived", evt.Metadata, ct);
+                    }
+                    break;
+
+                case "MaintenanceCreated":
+                    if (evt.UserId.HasValue && evt.Metadata != null)
+                    {
+                        await _hubContext.Clients.Group(evt.UserId.Value.ToString().ToLower())
+                            .SendAsync("MaintenanceReceived", evt.Metadata, ct);
+                    }
+                    break;
+
+                case "MaintenanceStatusUpdated":
+                    if (evt.UserId.HasValue && evt.Metadata != null)
+                    {
+                        await _hubContext.Clients.Group(evt.UserId.Value.ToString().ToLower())
+                            .SendAsync("MaintenanceStatusUpdated", evt.Metadata, ct);
+                    }
+                    break;
+
+                case "MoveOutRequested":
+                    if (evt.UserId.HasValue && evt.Metadata != null)
+                    {
+                        await _hubContext.Clients.Group(evt.UserId.Value.ToString().ToLower())
+                            .SendAsync("MoveOutReceived", evt.Metadata, ct);
+                    }
+                    break;
+
+                case "MoveOutSettled":
+                    if (evt.UserId.HasValue && evt.Metadata != null)
+                    {
+                        await _hubContext.Clients.Group(evt.UserId.Value.ToString().ToLower())
+                            .SendAsync("MoveOutSettled", evt.Metadata, ct);
+                    }
+                    break;
+
+                case "ReviewCreated":
+                    if (evt.UserId.HasValue && evt.Metadata != null)
+                    {
+                        await _hubContext.Clients.Group(evt.UserId.Value.ToString().ToLower())
+                            .SendAsync("ReviewReceived", evt.Metadata, ct);
+                    }
+                    break;
+            }
+
+            // 3. Immutable audit trail persistence for critical contract & financial actions
+            if (evt.EventType is "LeaseActivated" or "PaymentCompleted" or "MoveOutSettled")
+            {
+                var entityId = evt.Metadata?.GetValueOrDefault("leaseId")?.ToString()
+                    ?? evt.Metadata?.GetValueOrDefault("paymentId")?.ToString()
+                    ?? evt.Id.ToString();
+
+                db.AuditLogs.Add(new AuditLog
+                {
+                    Id = Guid.NewGuid(),
+                    ActorId = evt.UserId,
+                    ActorEmail = "transaction-engine@dormi.space",
+                    Action = evt.EventType,
+                    EntityType = evt.Type ?? "Transaction",
+                    EntityId = entityId,
+                    Details = evt.Message,
+                    CreatedAt = DateTime.UtcNow
+                });
+                await db.SaveChangesAsync(ct);
+                _logger.LogInformation("[KafkaConsumer] Audit trail recorded for {EventType} (EntityId: {EntityId})", evt.EventType, entityId);
             }
         }
         catch (Exception ex)

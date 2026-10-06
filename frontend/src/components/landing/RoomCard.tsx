@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
-import { CheckCircle, Heart } from 'lucide-react';
+import { CheckCircle, Heart, Flame } from 'lucide-react';
 import { toast } from 'sonner';
 import { favoritesApi } from '../../services/api';
 import { useStore } from '../../store/useStore';
@@ -13,6 +13,8 @@ export interface RoomItem {
   area: string;
   image: string;
   verified?: boolean;
+  isBoosted?: boolean;
+  boostType?: string;
 }
 
 export function RoomCard({ 
@@ -25,6 +27,7 @@ export function RoomCard({
   onToggleSaved?: (isSaved: boolean) => void;
 }) {
   const [isSaved, setIsSaved] = useState(initialSaved);
+  const [isPulsing, setIsPulsing] = useState(false);
   const { currentUser } = useStore();
 
   useEffect(() => {
@@ -42,6 +45,10 @@ export function RoomCard({
 
     const nextState = !isSaved;
     setIsSaved(nextState);
+    if (nextState) {
+      setIsPulsing(true);
+      setTimeout(() => setIsPulsing(false), 240);
+    }
     if (onToggleSaved) onToggleSaved(nextState);
 
     try {
@@ -59,38 +66,48 @@ export function RoomCard({
     }
   };
 
-  // ponytail: RoomCard with independent favorite toggle (no page nav trigger) and clear price hierarchy
+  // ponytail: Apple-grade tactile room card (1.01 subtle hover scale, GPU-only transitions, 1->1.15->0.98->1 favorite spring)
   return (
     <Link 
       to={`/room/${room.id}`}
-      className="bg-white rounded-[18px] shadow-clay-soft p-3 overflow-hidden flex flex-col transition-all duration-150 hover:-translate-y-[2px] hover:shadow-clay-primary group"
+      className="bg-white rounded-[18px] shadow-clay-soft p-3 overflow-hidden flex flex-col transition-[transform,box-shadow] duration-200 ease-[cubic-bezier(0.22,1,0.36,1)] hover:-translate-y-[2px] hover:scale-[1.01] hover:shadow-clay-primary active:scale-[0.99] group motion-gpu"
     >
       <div className="aspect-[4/3] w-full rounded-[14px] overflow-hidden bg-[#EEF2F6] relative">
         <img 
           src={room.image} 
           alt={room.title} 
-          className="w-full h-full object-cover transition-transform duration-200 group-hover:scale-[1.02]"
+          loading="lazy"
+          className="w-full h-full object-cover transition-transform duration-200 ease-[cubic-bezier(0.22,1,0.36,1)] group-hover:scale-[1.02]"
         />
         
         {/* Verification Signal */}
         {room.verified && (
-          <div className="absolute top-3 left-3 bg-white/95 backdrop-blur-xs text-[#16803C] border border-[#DCFCE7] text-caption font-bold px-2.5 py-1 rounded-full flex items-center gap-1 shadow-xs">
+          <div className="absolute top-3 left-3 bg-white/95 backdrop-blur-xs text-[#16803C] border border-[#DCFCE7] text-caption font-bold px-2.5 py-1 rounded-full flex items-center gap-1 shadow-xs select-none">
             <CheckCircle className="w-4 h-4" /> Đã xác minh
           </div>
         )}
 
-        {/* Independent Favorite Button */}
+        {/* Boosted / Nổi bật Badge */}
+        {room.isBoosted && (
+          <div className="absolute bottom-3 left-3 bg-gradient-to-r from-amber-500 to-orange-500 text-white text-caption font-bold px-2.5 py-1 rounded-full flex items-center gap-1 shadow-md select-none">
+            <Flame className="w-3.5 h-3.5 fill-white text-white" /> Nổi bật
+          </div>
+        )}
+
+        {/* Tactile Favorite Button */}
         <button
           type="button"
           onClick={toggleFavorite}
           aria-label={isSaved ? "Bỏ lưu phòng" : "Lưu phòng"}
-          className={`absolute top-3 right-3 w-10 h-10 rounded-full flex items-center justify-center transition-all duration-180 ${
+          className={`absolute top-3 right-3 w-10 h-10 rounded-full flex items-center justify-center transition-[background-color,color,box-shadow,transform] duration-150 ease-[cubic-bezier(0.22,1,0.36,1)] active:scale-95 ${
+            isPulsing ? 'favorite-heart-pulse' : ''
+          } ${
             isSaved 
-              ? 'bg-[#FEF2F2] text-[#C62828] scale-110 shadow-sm' 
+              ? 'bg-[#FEF2F2] text-[#C62828] shadow-xs' 
               : 'bg-white/90 text-[#64748B] hover:text-[#C62828] hover:bg-white shadow-xs'
           }`}
         >
-          <Heart className={`w-5 h-5 ${isSaved ? 'fill-current' : ''}`} />
+          <Heart className={`w-5 h-5 transition-colors duration-150 ${isSaved ? 'fill-current' : ''}`} />
         </button>
       </div>
 
@@ -100,7 +117,7 @@ export function RoomCard({
           <p className="text-h3 font-bold text-[#00153D]">
             {room.price}
           </p>
-          <h3 className="text-body font-bold text-[#0F172A] line-clamp-1 group-hover:text-[#00153D] transition-colors leading-snug">
+          <h3 className="text-body font-bold text-[#0F172A] line-clamp-1 group-hover:text-[#00153D] transition-colors duration-150 leading-snug">
             {room.title}
           </h3>
           <p className="text-caption text-[#64748B] font-medium">

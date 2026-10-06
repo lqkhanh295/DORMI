@@ -14,10 +14,12 @@ namespace Dormi.Infrastructure.Services;
 public class ReviewService : IReviewService
 {
     private readonly DormiDbContext _db;
+    private readonly IKafkaProducer? _kafkaProducer;
 
-    public ReviewService(DormiDbContext db)
+    public ReviewService(DormiDbContext db, IKafkaProducer? kafkaProducer = null)
     {
         _db = db;
+        _kafkaProducer = kafkaProducer;
     }
 
     public async Task<ServiceResult<RoomReviewSummaryDto>> GetRoomReviewsAsync(Guid roomId)
@@ -95,6 +97,28 @@ public class ReviewService : IReviewService
 
         _db.RoomReviews.Add(review);
         await _db.SaveChangesAsync();
+
+        if (_kafkaProducer != null)
+        {
+            await _kafkaProducer.PublishNotificationAsync(new NotificationEvent
+            {
+                Id = Guid.NewGuid(),
+                EventType = "ReviewCreated",
+                UserId = room.LandlordId,
+                Title = "Đánh giá mới cho phòng trọ",
+                Message = $"{user.FullName} vừa gửi đánh giá {dto.Rating} sao cho phòng '{room.Title}'.",
+                Type = "Review",
+                LinkUrl = $"/room/{roomId}",
+                CreatedAt = DateTime.UtcNow,
+                Metadata = new Dictionary<string, object?>
+                {
+                    ["reviewId"] = review.Id.ToString(),
+                    ["roomId"] = roomId.ToString(),
+                    ["rating"] = dto.Rating,
+                    ["customerId"] = userId.ToString()
+                }
+            });
+        }
 
         return ServiceResult<object>.Ok(new { id = review.Id, message = "Đã gửi đánh giá thành công!" });
     }

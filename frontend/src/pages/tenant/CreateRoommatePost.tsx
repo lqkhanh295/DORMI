@@ -1,10 +1,10 @@
 import { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useLocation } from 'react-router-dom';
 import { Card } from '../../components/ui/Card';
 import { Button } from '../../components/ui/Button';
 import { roommatesApi } from '../../services/api';
 import { toast } from 'sonner';
-import { Calendar, DollarSign, MapPin, Users, Check } from 'lucide-react';
+import { Calendar, DollarSign, MapPin, Users, Check, Home, X } from 'lucide-react';
 
 const COMMON_TRAITS = [
   'Không hút thuốc',
@@ -21,12 +21,20 @@ const COMMON_TRAITS = [
 
 export default function CreateRoommatePost() {
   const navigate = useNavigate();
+  const location = useLocation();
+  const roomState = location.state as { roomId?: string; roomTitle?: string; roomAddress?: string; roomPrice?: number } | null;
+
+  const [attachedRoomId, setAttachedRoomId] = useState<string | undefined>(roomState?.roomId);
+  const [attachedRoomTitle, setAttachedRoomTitle] = useState<string | undefined>(roomState?.roomTitle);
+  const [attachedRoomAddress, setAttachedRoomAddress] = useState<string | undefined>(roomState?.roomAddress);
+  const [attachedRoomPrice, setAttachedRoomPrice] = useState<number | undefined>(roomState?.roomPrice);
+
   const [submitting, setSubmitting] = useState(false);
 
   // Form states
-  const [title, setTitle] = useState('');
-  const [district, setDistrict] = useState('Quận 10');
-  const [budget, setBudget] = useState<number | string>('3500000');
+  const [title, setTitle] = useState(roomState?.roomTitle ? `Tìm bạn ở ghép: ${roomState.roomTitle}` : '');
+  const [district, setDistrict] = useState(roomState?.roomAddress || 'Quận 10');
+  const [budget, setBudget] = useState<number | string>(roomState?.roomPrice ? Math.round(roomState.roomPrice / 2) : '3500000');
   const [moveInDate, setMoveInDate] = useState(() => {
     const d = new Date();
     d.setDate(d.getDate() + 7);
@@ -67,7 +75,8 @@ export default function CreateRoommatePost() {
         location: district,
         moveInDate: new Date(moveInDate).toISOString(),
         genderPreference: genderPreference,
-        lifestyleTraits: selectedTraits.join(', ')
+        lifestyleTraits: selectedTraits.join(', '),
+        roomId: attachedRoomId
       });
 
       toast.success('Đã đăng bài tìm bạn ở ghép thành công!');
@@ -89,6 +98,36 @@ export default function CreateRoommatePost() {
           Chia sẻ thói quen sống và mong muốn của bạn để thuật toán kết nối bạn ở ghép phù hợp nhất.
         </p>
       </div>
+
+      {attachedRoomId && (
+        <div className="p-4 bg-gradient-to-r from-blue-50 to-indigo-50 border border-blue-200 rounded-[18px] flex items-center justify-between shadow-sm">
+          <div className="flex items-center gap-3">
+            <div className="w-10 h-10 rounded-xl bg-blue-600 text-white flex items-center justify-center shrink-0">
+              <Home className="w-5 h-5" />
+            </div>
+            <div>
+              <span className="text-xs font-bold uppercase tracking-wider text-blue-600">Phòng trọ được gắn kèm tin đăng</span>
+              <h4 className="text-body font-bold text-slate-900">{attachedRoomTitle || 'Phòng trọ DORMI'}</h4>
+              <p className="text-caption text-slate-500">
+                {attachedRoomAddress} · Giá gốc: {attachedRoomPrice ? `${Number(attachedRoomPrice).toLocaleString('vi-VN')}đ/tháng` : 'Thương lượng'}
+              </p>
+            </div>
+          </div>
+          <button
+            type="button"
+            onClick={() => {
+              setAttachedRoomId(undefined);
+              setAttachedRoomTitle(undefined);
+              setAttachedRoomAddress(undefined);
+              setAttachedRoomPrice(undefined);
+            }}
+            className="p-1 text-slate-400 hover:text-rose-600 transition-colors"
+            title="Gỡ liên kết phòng"
+          >
+            <X className="w-5 h-5" />
+          </button>
+        </div>
+      )}
 
       <Card className="bg-white rounded-[18px] shadow-clay-soft p-8 border-none">
         <form onSubmit={handleSubmit} className="space-y-6">

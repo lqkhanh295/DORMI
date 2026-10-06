@@ -11,4 +11,5 @@ public interface IAppointmentService
     Task<ServiceResult<object>> CreateAppointmentAsync(Guid userId, CreateAppointmentDto dto);
     Task<ServiceResult<List<AppointmentResponseDto>>> GetMyAppointmentsAsync(Guid userId);
     Task<ServiceResult<object>> UpdateStatusAsync(Guid id, Guid userId, bool isAdmin, UpdateAppointmentStatusDto dto);
+    Task<ServiceResult<object>> RescheduleAsync(Guid id, Guid userId, RescheduleAppointmentDto dto);
 }

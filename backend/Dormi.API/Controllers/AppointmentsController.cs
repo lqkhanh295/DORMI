@@ -48,4 +48,14 @@ public class AppointmentsController : BaseApiController
         var result = await _appointmentService.UpdateStatusAsync(id, userId.Value, IsAdmin(), dto);
         return HandleResult(result);
     }
+
+    [HttpPost("{id:guid}/reschedule")]
+    public async Task<IActionResult> Reschedule(Guid id, [FromBody] RescheduleAppointmentDto dto)
+    {
+        var userId = GetCurrentUserId();
+        if (!userId.HasValue) return Unauthorized();
+
+        var result = await _appointmentService.RescheduleAsync(id, userId.Value, dto);
+        return HandleResult(result);
+    }
 }

@@ -25,6 +25,12 @@ public class DormiDbContext : DbContext
     public DbSet<RoomView> RoomViews { get; set; } = null!;
     public DbSet<TenantReview> TenantReviews { get; set; } = null!;
     public DbSet<LeaseContract> LeaseContracts { get; set; } = null!;
+    public DbSet<RentalApplication> RentalApplications { get; set; } = null!;
+    public DbSet<ApplicationDocument> ApplicationDocuments { get; set; } = null!;
+    public DbSet<LeaseDocument> LeaseDocuments { get; set; } = null!;
+    public DbSet<RentalPaymentSchedule> RentalPaymentSchedules { get; set; } = null!;
+    public DbSet<MaintenanceRequest> MaintenanceRequests { get; set; } = null!;
+    public DbSet<AuditLog> AuditLogs { get; set; } = null!;
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
@@ -97,11 +103,74 @@ public class DormiDbContext : DbContext
             .HasForeignKey(l => l.TenantId)
             .OnDelete(DeleteBehavior.Restrict);
 
+        modelBuilder.Entity<LeaseContract>()
+            .HasMany(l => l.Documents)
+            .WithOne(d => d.LeaseContract)
+            .HasForeignKey(d => d.LeaseContractId)
+            .OnDelete(DeleteBehavior.Cascade);
+
+        modelBuilder.Entity<LeaseContract>()
+            .HasOne(l => l.RentalApplication)
+            .WithMany()
+            .HasForeignKey(l => l.RentalApplicationId)
+            .OnDelete(DeleteBehavior.SetNull);
+
         // Room Views
         modelBuilder.Entity<RoomView>()
             .HasOne(rv => rv.Room)
             .WithMany()
             .HasForeignKey(rv => rv.RoomId)
+            .OnDelete(DeleteBehavior.Cascade);
+
+        // Rental Applications
+        modelBuilder.Entity<RentalApplication>()
+            .HasOne(ra => ra.Room)
+            .WithMany(r => r.Applications)
+            .HasForeignKey(ra => ra.RoomId)
+            .OnDelete(DeleteBehavior.Cascade);
+
+        modelBuilder.Entity<RentalApplication>()
+            .HasOne(ra => ra.Tenant)
+            .WithMany(u => u.RentalApplications)
+            .HasForeignKey(ra => ra.TenantId)
+            .OnDelete(DeleteBehavior.Restrict);
+
+        modelBuilder.Entity<RentalApplication>()
+            .HasMany(ra => ra.Documents)
+            .WithOne(d => d.RentalApplication)
+            .HasForeignKey(d => d.RentalApplicationId)
+            .OnDelete(DeleteBehavior.Cascade);
+
+        // Rental Payment Schedules (Tenant -> Landlord)
+        modelBuilder.Entity<RentalPaymentSchedule>()
+            .HasOne(s => s.LeaseContract)
+            .WithMany(l => l.PaymentSchedules)
+            .HasForeignKey(s => s.LeaseContractId)
+            .OnDelete(DeleteBehavior.Cascade);
+
+        // Maintenance Requests
+        modelBuilder.Entity<MaintenanceRequest>()
+            .HasOne(m => m.LeaseContract)
+            .WithMany(l => l.MaintenanceRequests)
+            .HasForeignKey(m => m.LeaseContractId)
+            .OnDelete(DeleteBehavior.Cascade);
+
+        modelBuilder.Entity<MaintenanceRequest>()
+            .HasOne(m => m.Tenant)
+            .WithMany()
+            .HasForeignKey(m => m.TenantId)
+            .OnDelete(DeleteBehavior.Restrict);
+
+        modelBuilder.Entity<MaintenanceRequest>()
+            .HasOne(m => m.Landlord)
+            .WithMany()
+            .HasForeignKey(m => m.LandlordId)
+            .OnDelete(DeleteBehavior.Restrict);
+
+        modelBuilder.Entity<MaintenanceRequest>()
+            .HasOne(m => m.Room)
+            .WithMany()
+            .HasForeignKey(m => m.RoomId)
             .OnDelete(DeleteBehavior.Cascade);
     }
 }

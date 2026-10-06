@@ -23,11 +23,11 @@ export default function AdminLayout() {
   return (
     <div className="min-h-screen bg-[#F8FAFC] flex text-[#1F2937]">
       {/* Sidebar */}
-      <aside className="w-64 bg-[#1F2937] text-white hidden md:block border-r border-[#374151]">
-        <div className="p-6">
+      <aside className="w-64 bg-[#1F2937] text-white hidden md:flex md:flex-col border-r border-[#374151] sticky top-0 h-screen shrink-0 overflow-y-auto z-30">
+        <div className="p-6 shrink-0">
           <Link to="/" className="text-xl font-bold tracking-tight text-white">DORMI <span className="text-[#6366F1] text-xs ml-1 font-bold">ADMIN</span></Link>
         </div>
-        <nav className="px-4 py-4 space-y-2">
+        <nav className="px-4 py-4 space-y-2 flex-1">
           {navItems.map(item => {
             const isActive = item.path === '/admin' 
               ? location.pathname === '/admin' 
@@ -48,15 +48,15 @@ export default function AdminLayout() {
       </aside>
 
       {/* Main Content */}
-      <div className="flex-1 flex flex-col">
-        <header className="h-[56px] bg-white border-b border-[#E5E7EB] shadow-[0_10px_20px_-10px_rgba(99,102,241,0.08)] flex items-center justify-end px-6 gap-4">
+      <div className="flex-1 flex flex-col min-w-0">
+        <header className="h-[56px] bg-white border-b border-[#E5E7EB] shadow-[0_10px_20px_-10px_rgba(99,102,241,0.08)] flex items-center justify-end px-6 gap-4 sticky top-0 z-20">
           <span className="text-sm font-semibold text-[#1F2937]">{currentUser?.name}</span>
           <div className="w-8 h-8 rounded-full bg-[#EEF2FF] flex items-center justify-center text-[#4F46E5] font-bold overflow-hidden border border-[#6366F1]/20">
             A
           </div>
           <button onClick={handleLogout} className="text-xs text-[#991B1B] hover:underline font-semibold min-h-[44px] px-2">Đăng xuất</button>
         </header>
-        <main className="p-6">
+        <main className="p-6 flex-1">
           <div key={location.pathname} className="page-transition">
             <Outlet />
           </div>

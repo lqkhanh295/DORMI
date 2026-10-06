@@ -20,7 +20,15 @@ public class UpdateAppointmentStatusDto
 {
     [Required]
     [MaxLength(50)]
-    public string Status { get; set; } = string.Empty; // Approved, Rejected, Cancelled, Completed
+    public string Status { get; set; } = string.Empty; // Confirmed, Approved, Rejected, Cancelled, Completed, NoShow
+    public string? Reason { get; set; }
+}
+
+public class RescheduleAppointmentDto
+{
+    [Required]
+    public DateTime NewAppointmentDate { get; set; }
+    public string? Reason { get; set; }
 }
 
 public class AppointmentResponseDto
@@ -28,13 +36,22 @@ public class AppointmentResponseDto
     public Guid Id { get; set; }
     public Guid CustomerId { get; set; }
     public string CustomerName { get; set; } = string.Empty;
+    public string? CustomerPhone { get; set; }
+    public string? CustomerAvatar { get; set; }
     public Guid RoomId { get; set; }
     public string RoomTitle { get; set; } = string.Empty;
     public string RoomAddress { get; set; } = string.Empty;
+    public decimal RoomPrice { get; set; }
+    public string? RoomImageUrl { get; set; }
+    public Guid LandlordId { get; set; }
+    public string LandlordName { get; set; } = string.Empty;
     public DateTime AppointmentDate { get; set; }
     public string Status { get; set; } = string.Empty;
     public string? Notes { get; set; }
+    public DateTime? RescheduledDate { get; set; }
+    public string? RejectionReason { get; set; }
     public DateTime CreatedAt { get; set; }
+    public DateTime? CompletedAt { get; set; }
 }
 
 // Messaging DTOs

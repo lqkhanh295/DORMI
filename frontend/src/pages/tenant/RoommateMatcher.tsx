@@ -1,14 +1,15 @@
 import { useState, useEffect } from 'react';
 import { Button } from '../../components/ui/Button';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, Link } from 'react-router-dom';
 import { useStore, type RoommateProfile } from '../../store/useStore';
-import { Heart, X, MessageCircle, Check, CheckCircle2, Trash2, Users } from 'lucide-react';
+import { Heart, X, MessageCircle, Check, CheckCircle2, Trash2, Users, Home, ExternalLink } from 'lucide-react';
 import { roommatesApi } from '../../services/api';
 
 export default function RoommateMatcher() {
   const [currentIndex, setCurrentIndex] = useState(0);
   const [showLikedModal, setShowLikedModal] = useState(false);
   const [roommates, setRoommates] = useState<RoommateProfile[]>([]);
+  const [filterMode, setFilterMode] = useState<'all' | 'hasRoom'>('all');
   const [loading, setLoading] = useState(true);
 
   const { likedRoommates, addLikedRoommate, removeLikedRoommate } = useStore();
@@ -32,7 +33,12 @@ export default function RoommateMatcher() {
             matchScore: r.matchScore != null ? Math.round(r.matchScore) : null,
             budget: `${Number(r.budget || 3000000).toLocaleString('vi-VN')}đ`,
             bio: r.description || 'Tìm bạn cùng phòng giữ vệ sinh tốt và thân thiện.',
-            tags: (r.lifestyleTraits || 'Yên tĩnh, Sạch sẽ').split(',').map((t: string) => t.trim())
+            tags: (r.lifestyleTraits || 'Yên tĩnh, Sạch sẽ').split(',').map((t: string) => t.trim()),
+            roomId: r.roomId,
+            roomTitle: r.roomTitle,
+            roomAddress: r.roomAddress,
+            roomPrice: r.roomPrice,
+            roomImageUrl: r.roomImageUrl
           }));
           setRoommates(apiRoommates);
         } else {
@@ -50,10 +56,14 @@ export default function RoommateMatcher() {
     return () => { isMounted = false; };
   }, []);
 
+  const filteredRoommates = filterMode === 'hasRoom' 
+    ? roommates.filter(r => !!r.roomId) 
+    : roommates;
+
   const handleAction = (type: 'left' | 'right') => {
-    if (currentIndex >= roommates.length) return;
+    if (currentIndex >= filteredRoommates.length) return;
     if (type === 'right') {
-      addLikedRoommate(roommates[currentIndex]);
+      addLikedRoommate(filteredRoommates[currentIndex]);
     }
     setCurrentIndex(prev => prev + 1);
   };
@@ -68,7 +78,7 @@ export default function RoommateMatcher() {
     });
   };
 
-  const profile = roommates[currentIndex];
+  const profile = filteredRoommates[currentIndex];
 
   const LikedList = () => (
     <div className="flex-1 overflow-y-auto flex flex-col p-5 space-y-4 bg-white">
@@ -132,12 +142,24 @@ export default function RoommateMatcher() {
       {/* Main Area */}
       <div className="flex-1 flex flex-col relative bg-[#F5F7FA] rounded-[18px] justify-center">
         
-        <div className="bg-white rounded-[18px] shadow-clay-soft p-4 mb-6 flex items-center justify-between">
-          <span className="text-caption font-bold text-[#00153D]">Thuật toán đối soát độ tương thích lối sống (Lifestyle Compatibility Matching)</span>
-          <div className="flex items-center gap-1.5">
-            <span className="w-3 h-3 rounded-full bg-[#00153D]"></span>
-            <span className="w-8 h-1.5 rounded-full bg-[#00153D]"></span>
-            <span className="w-3 h-3 rounded-full bg-[#00153D]"></span>
+        <div className="bg-white rounded-[18px] shadow-clay-soft p-4 mb-6 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+          <div>
+            <span className="text-caption font-bold text-[#00153D]">Thuật toán đối soát độ tương thích lối sống</span>
+            <p className="text-[11px] text-[#64748B]">Kết nối bạn cùng phòng và các căn phòng đang có sẵn trên Marketplace</p>
+          </div>
+          <div className="flex bg-[#E2E8F0] p-1 rounded-xl text-caption font-semibold">
+            <button
+              onClick={() => { setFilterMode('all'); setCurrentIndex(0); }}
+              className={`px-3 py-1 rounded-lg transition-all ${filterMode === 'all' ? 'bg-white text-[#00153D] shadow-sm font-bold' : 'text-[#64748B]'}`}
+            >
+              Tất cả ({roommates.length})
+            </button>
+            <button
+              onClick={() => { setFilterMode('hasRoom'); setCurrentIndex(0); }}
+              className={`px-3 py-1 rounded-lg transition-all ${filterMode === 'hasRoom' ? 'bg-white text-[#00153D] shadow-sm font-bold' : 'text-[#64748B]'}`}
+            >
+              Đã có phòng sẵn ({roommates.filter(r => !!r.roomId).length})
+            </button>
           </div>
         </div>
 
@@ -201,6 +223,33 @@ export default function RoommateMatcher() {
                   <p className="text-caption text-[#64748B] font-semibold">{profile.major} · Ngân sách {profile.budget}</p>
                   <p className="text-body text-[#64748B] mt-2">{profile.bio}</p>
                 </div>
+
+                {profile.roomId && (
+                  <div className="p-3 bg-gradient-to-r from-blue-50 to-indigo-50 border border-blue-200 rounded-[14px] flex items-center justify-between gap-3 shadow-sm">
+                    <div className="flex items-center gap-2.5 overflow-hidden">
+                      {profile.roomImageUrl ? (
+                        <img src={profile.roomImageUrl} alt={profile.roomTitle} className="w-12 h-12 rounded-[10px] object-cover shrink-0 border border-blue-100" />
+                      ) : (
+                        <div className="w-12 h-12 rounded-[10px] bg-blue-600 text-white flex items-center justify-center shrink-0">
+                          <Home className="w-5 h-5" />
+                        </div>
+                      )}
+                      <div className="overflow-hidden">
+                        <span className="text-[10px] font-bold text-blue-700 uppercase tracking-wide">Căn phòng tương ứng</span>
+                        <h4 className="text-caption font-bold text-slate-900 truncate">{profile.roomTitle || 'Phòng trọ'}</h4>
+                        <p className="text-[11px] text-slate-500 truncate">{profile.roomAddress}</p>
+                      </div>
+                    </div>
+                    <Link 
+                      to={`/room/${profile.roomId}`}
+                      target="_blank"
+                      className="shrink-0 px-3 py-1.5 rounded-lg bg-blue-600 text-white text-xs font-semibold hover:bg-blue-700 transition-colors flex items-center gap-1 shadow-sm"
+                    >
+                      <span>Xem phòng</span>
+                      <ExternalLink className="w-3.5 h-3.5" />
+                    </Link>
+                  </div>
+                )}
 
                 <div className="bg-[#F5F7FA] shadow-clay-inset p-4 rounded-[12px] space-y-2">
                   <span className="text-caption font-bold text-[#0F172A] block mb-1">Lý do tương thích:</span>

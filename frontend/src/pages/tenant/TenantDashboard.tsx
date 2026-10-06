@@ -10,6 +10,7 @@ import {
   MapPin, ShieldCheck, Clock, Trash2, ArrowRight,
   Home, Eye, ArrowUpDown, X
 } from 'lucide-react';
+import { motion, AnimatePresence } from 'framer-motion';
 
 const getCleanPrice = (price: any): number => {
   if (typeof price === 'number' && !isNaN(price)) return price;
@@ -347,8 +348,16 @@ export default function TenantDashboard() {
       {/* ============================================================ */}
       {/* TAB 1: DANH SÁCH PHÒNG HIỆN CÓ (TOP PRIORITY VIEW)             */}
       {/* ============================================================ */}
-      {activeTab === 'rooms' && (
-        <div className="space-y-6">
+      <AnimatePresence mode="wait">
+        {activeTab === 'rooms' && (
+          <motion.div
+            key="rooms-tab"
+            initial={{ opacity: 0, y: 8 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -8 }}
+            transition={{ duration: 0.18, ease: [0.22, 1, 0.36, 1] }}
+            className="space-y-6 motion-gpu"
+          >
           {/* Filter Toolbar */}
           <div className="bg-white p-4 md:p-5 rounded-[18px] shadow-clay-soft border border-[#E2E8F0] space-y-4">
             <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4">
@@ -603,14 +612,21 @@ export default function TenantDashboard() {
               </Button>
             </div>
           )}
-        </div>
+        </motion.div>
       )}
 
       {/* ============================================================ */}
       {/* TAB 2: LỊCH HẸN XEM PHÒNG                                     */}
       {/* ============================================================ */}
       {activeTab === 'appointments' && (
-        <div className="space-y-4">
+        <motion.div
+          key="appointments-tab"
+          initial={{ opacity: 0, y: 8 }}
+          animate={{ opacity: 1, y: 0 }}
+          exit={{ opacity: 0, y: -8 }}
+          transition={{ duration: 0.18, ease: [0.22, 1, 0.36, 1] }}
+          className="space-y-4 motion-gpu"
+        >
           <div className="flex justify-between items-center">
             <div>
               <h2 className="text-h2 font-bold text-[#0F172A] flex items-center gap-2">
@@ -625,9 +641,11 @@ export default function TenantDashboard() {
           </div>
 
           {loadingApts ? (
-            <Card className="p-8 text-center text-[#64748B] bg-white rounded-[18px]">
-              Đang tải danh sách lịch hẹn...
-            </Card>
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+              {[1, 2, 3].map(i => (
+                <div key={i} className="h-44 rounded-[18px] skeleton-shimmer bg-white p-5 border border-[#E2E8F0]" />
+              ))}
+            </div>
           ) : appointments.length === 0 ? (
             <Card className="p-8 text-center bg-white rounded-[18px] border border-dashed border-[#CBD5E1] space-y-3">
               <Clock className="w-10 h-10 text-[#94A3B8] mx-auto" />
@@ -707,14 +725,21 @@ export default function TenantDashboard() {
               })}
             </div>
           )}
-        </div>
+        </motion.div>
       )}
 
       {/* ============================================================ */}
       {/* TAB 3: DANH SÁCH PHÒNG ĐÃ LƯU (WISHLIST)                      */}
       {/* ============================================================ */}
       {activeTab === 'favorites' && (
-        <div className="space-y-4">
+        <motion.div
+          key="favorites-tab"
+          initial={{ opacity: 0, y: 8 }}
+          animate={{ opacity: 1, y: 0 }}
+          exit={{ opacity: 0, y: -8 }}
+          transition={{ duration: 0.18, ease: [0.22, 1, 0.36, 1] }}
+          className="space-y-4 motion-gpu"
+        >
           <div className="flex justify-between items-center">
             <div>
               <h2 className="text-h2 font-bold text-[#0F172A] flex items-center gap-2">
@@ -729,9 +754,11 @@ export default function TenantDashboard() {
           </div>
 
           {loadingFavs ? (
-            <Card className="p-8 text-center text-[#64748B] bg-white rounded-[18px]">
-              Đang tải danh sách phòng đã lưu...
-            </Card>
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5">
+              {[1, 2, 3, 4].map(i => (
+                <div key={i} className="h-72 rounded-[18px] skeleton-shimmer bg-white border border-[#E2E8F0]" />
+              ))}
+            </div>
           ) : favorites.length === 0 ? (
             <Card className="p-8 text-center bg-white rounded-[18px] border border-dashed border-[#CBD5E1] space-y-3">
               <Heart className="w-10 h-10 text-[#CBD5E1] mx-auto" />
@@ -789,8 +816,9 @@ export default function TenantDashboard() {
               })}
             </div>
           )}
-        </div>
+        </motion.div>
       )}
+      </AnimatePresence>
     </div>
   );
 }

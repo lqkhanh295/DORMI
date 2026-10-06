@@ -1,11 +1,15 @@
 import { useState, useEffect } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
+import { motion, AnimatePresence } from 'framer-motion';
 import { Card } from '../../components/ui/Card';
 import { Button } from '../../components/ui/Button';
 import { useStore } from '../../store/useStore';
 import { Toaster, toast } from 'sonner';
-import { ArrowLeft, CheckCircle, Heart, Share2 as ShareNetwork, AlertTriangle as Warning, CalendarCheck, X, MessageSquare, ShieldCheck, Camera, Check } from 'lucide-react';
-import { appointmentsApi, favoritesApi, roomsApi, type RoomResponse } from '../../services/api';
+import { ArrowLeft, CheckCircle, Heart, Share2 as ShareNetwork, AlertTriangle as Warning, CalendarCheck, X, MessageSquare, ShieldCheck, Camera, Check, FileText, Flame, Users } from 'lucide-react';
+import { appointmentsApi, favoritesApi, roomsApi, trustSafetyApi, type RoomResponse, type TrustScoreBreakdown } from '../../services/api';
+import RentalApplicationModal from '../../components/transaction/RentalApplicationModal';
+import TrustScoreModal from '../../components/trust/TrustScoreModal';
+import { modalBackdropVariants, modalContentVariants } from '../../utils/motion';
 
 export default function RoomDetail() {
   const navigate = useNavigate();
@@ -17,11 +21,15 @@ export default function RoomDetail() {
   const [notFound, setNotFound] = useState(false);
   const [showGallery, setShowGallery] = useState(false);
   const [showVerificationModal, setShowVerificationModal] = useState(false);
+  const [showTrustScoreModal, setShowTrustScoreModal] = useState(false);
+  const [trustScore, setTrustScore] = useState<TrustScoreBreakdown | null>(null);
   const [showScheduler, setShowScheduler] = useState(false);
+  const [showApplicationModal, setShowApplicationModal] = useState(false);
   const [schedulerStep, setSchedulerStep] = useState<1 | 2 | 3>(1);
   const [selectedDate, setSelectedDate] = useState('');
   const [selectedTime, setSelectedTime] = useState('');
   const [isSaved, setIsSaved] = useState(false);
+  const [isPulsing, setIsPulsing] = useState(false);
 
   useEffect(() => {
     if (id) {
@@ -41,6 +49,10 @@ export default function RoomDetail() {
         .finally(() => {
           setLoading(false);
         });
+
+      trustSafetyApi.getRoomTrustScore(id)
+        .then(res => setTrustScore(res))
+        .catch(() => {});
 
       if (currentUser) {
         favoritesApi.getFavorites()
@@ -70,6 +82,10 @@ export default function RoomDetail() {
     if (!id) return;
     const newState = !isSaved;
     setIsSaved(newState);
+    if (newState) {
+      setIsPulsing(true);
+      setTimeout(() => setIsPulsing(false), 240);
+    }
     try {
       if (newState) {
         await favoritesApi.addFavorite(id);
@@ -125,11 +141,45 @@ export default function RoomDetail() {
     }
   };
 
+  // ponytail: Apple-standard calm skeleton placeholder mirrors final layout to prevent content layout jumps
   if (loading) {
     return (
-      <div className="container-dormi py-24 flex flex-col items-center justify-center min-h-[50vh] text-[#64748B] space-y-4">
-        <div className="w-10 h-10 border-4 border-[#00153D]/20 border-t-[#00153D] rounded-full animate-spin"></div>
-        <p className="text-body font-medium">Đang tải thông tin phòng trọ...</p>
+      <div className="container-dormi pt-6 pb-28 md:py-10 space-y-8 relative bg-[#F5F7FA]">
+        <div className="flex justify-between items-center">
+          <div className="w-28 h-10 rounded-[12px] bg-slate-200 skeleton-shimmer" />
+        </div>
+        
+        {/* Hero Gallery Skeleton */}
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 h-[40vh] md:h-[55vh]">
+          <div className="md:col-span-2 h-full bg-white shadow-clay-soft rounded-[18px] p-2 border border-[#E2E8F0]">
+            <div className="w-full h-full rounded-[14px] skeleton-shimmer" />
+          </div>
+          <div className="hidden md:flex flex-col gap-6 h-full">
+            <div className="flex-1 bg-white shadow-clay-soft rounded-[18px] p-2 border border-[#E2E8F0]">
+              <div className="w-full h-full rounded-[14px] skeleton-shimmer" />
+            </div>
+            <div className="flex-1 bg-white shadow-clay-soft rounded-[18px] p-2 border border-[#E2E8F0]">
+              <div className="w-full h-full rounded-[14px] skeleton-shimmer" />
+            </div>
+          </div>
+        </div>
+
+        {/* Details Skeleton */}
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-10">
+          <div className="lg:col-span-8 space-y-6">
+            <div className="bg-white rounded-[18px] shadow-clay-soft p-8 space-y-4 border border-[#E2E8F0]">
+              <div className="h-10 w-2/3 rounded-lg skeleton-shimmer" />
+              <div className="h-5 w-1/3 rounded-md skeleton-shimmer" />
+              <div className="h-28 w-full rounded-xl skeleton-shimmer mt-6" />
+            </div>
+          </div>
+          <div className="lg:col-span-4 space-y-6">
+            <div className="bg-white rounded-[18px] shadow-clay-soft p-6 space-y-4 border border-[#E2E8F0]">
+              <div className="h-8 w-1/2 rounded-lg skeleton-shimmer" />
+              <div className="h-12 w-full rounded-xl skeleton-shimmer" />
+            </div>
+          </div>
+        </div>
       </div>
     );
   }
@@ -159,7 +209,12 @@ export default function RoomDetail() {
   }
 
   return (
-    <div className="container-dormi pt-6 pb-28 md:py-10 space-y-8 relative bg-[#F5F7FA]">
+    <motion.div 
+      initial={{ opacity: 0, y: 4 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ duration: 0.22, ease: [0.16, 1, 0.3, 1] }}
+      className="container-dormi pt-6 pb-28 md:py-10 space-y-8 relative bg-[#F5F7FA]"
+    >
       <Toaster position="top-center" richColors />
       
       <div className="flex justify-between items-center">
@@ -208,18 +263,36 @@ export default function RoomDetail() {
             <div>
               <div className="flex flex-col sm:flex-row sm:justify-between sm:items-start gap-4 mb-3">
                 <h1 className="text-hero text-[#0F172A]">{roomData?.title || 'Studio Hiện Đại'}</h1>
-                {roomData?.isVerifiedLandlord ? (
-                  <button 
-                    onClick={() => setShowVerificationModal(true)}
-                    className="bg-[#F0FDF4] text-[#16803C] border border-[#DCFCE7] text-caption font-bold px-3.5 py-1.5 rounded-full flex items-center gap-1.5 self-start hover:bg-[#DCFCE7] transition-colors touch-target"
+                <div className="flex flex-wrap items-center gap-2">
+                  {roomData?.isBoosted && (
+                    <span className="bg-gradient-to-r from-amber-500 to-orange-500 text-white text-caption font-bold px-3.5 py-1.5 rounded-full flex items-center gap-1.5 self-start shadow-sm">
+                      <Flame className="w-4 h-4 fill-white text-white" /> Tin nổi bật
+                    </span>
+                  )}
+                  {roomData?.isPropertyVerified && (
+                    <span className="bg-[#ECFDF5] text-[#065F46] border border-[#A7F3D0] text-caption font-bold px-3.5 py-1.5 rounded-full flex items-center gap-1.5 self-start">
+                      <ShieldCheck className="w-4 h-4 text-[#059669]" /> Sổ đỏ/Chủ quyền đã xác thực
+                    </span>
+                  )}
+                  {roomData?.isVerifiedLandlord ? (
+                    <button 
+                      onClick={() => setShowVerificationModal(true)}
+                      className="bg-[#F0FDF4] text-[#16803C] border border-[#DCFCE7] text-caption font-bold px-3.5 py-1.5 rounded-full flex items-center gap-1.5 self-start hover:bg-[#DCFCE7] transition-colors touch-target"
+                    >
+                      <CheckCircle className="w-4 h-4" /> Chủ trọ đã xác minh CCCD
+                    </button>
+                  ) : (
+                    <span className="bg-slate-100 text-slate-600 border border-slate-200 text-caption font-medium px-3.5 py-1.5 rounded-full flex items-center gap-1.5 self-start">
+                      Chưa xác thực CCCD
+                    </span>
+                  )}
+                  <button
+                    onClick={() => setShowTrustScoreModal(true)}
+                    className="bg-[#EFF6FF] text-[#1D4ED8] border border-[#BFDBFE] text-caption font-bold px-3.5 py-1.5 rounded-full flex items-center gap-1.5 self-start hover:bg-[#DBEAFE] transition-colors touch-target"
                   >
-                    <CheckCircle className="w-4 h-4" /> Chủ trọ đã xác minh CCCD
+                    <ShieldCheck className="w-4 h-4 text-[#2563EB]" /> Điểm tin cậy: {trustScore?.totalScore ?? (roomData?.isVerifiedLandlord ? 85 : 70)}/100
                   </button>
-                ) : (
-                  <span className="bg-slate-100 text-slate-600 border border-slate-200 text-caption font-medium px-3.5 py-1.5 rounded-full flex items-center gap-1.5 self-start">
-                    Chưa xác thực CCCD
-                  </span>
-                )}
+                </div>
               </div>
               <p className="text-body text-[#64748B]">{roomData?.address || 'Địa chỉ phòng trọ'}</p>
             </div>
@@ -275,35 +348,43 @@ export default function RoomDetail() {
                   <ShieldCheck className="w-6 h-6 text-[#2563EB]" />
                   Chỉ số tin cậy DORMI Trust Score
                 </h2>
-                <span className="px-3 py-1 rounded-full text-caption font-bold bg-[#F0FDF4] text-[#16803C] border border-[#DCFCE7]">
-                  {roomData?.isVerifiedLandlord ? '95 / 100 điểm' : '75 / 100 điểm'}
-                </span>
+                <div className="flex items-center gap-2">
+                  <span className="px-3 py-1 rounded-full text-caption font-bold bg-[#F0FDF4] text-[#16803C] border border-[#DCFCE7]">
+                    {trustScore ? `${trustScore.totalScore} / 100 điểm (${trustScore.ratingLevel})` : (roomData?.isVerifiedLandlord ? '85 / 100 điểm (Rất tốt)' : '70 / 100 điểm (Tốt)')}
+                  </span>
+                  <button
+                    onClick={() => setShowTrustScoreModal(true)}
+                    className="text-caption font-semibold text-[#2563EB] hover:underline cursor-pointer"
+                  >
+                    Xem giải trình
+                  </button>
+                </div>
               </div>
 
               <div className="p-4 rounded-[14px] bg-[#F5F7FA] border border-[#E2E8F0] space-y-3 shadow-clay-inset">
                 <div className="w-full bg-[#E2E8F0] h-2.5 rounded-full overflow-hidden">
                   <div 
                     className="h-full bg-gradient-to-r from-[#2563EB] to-[#16803C] rounded-full transition-all duration-500" 
-                    style={{ width: roomData?.isVerifiedLandlord ? '95%' : '75%' }}
+                    style={{ width: `${trustScore ? trustScore.totalScore : (roomData?.isVerifiedLandlord ? 85 : 70)}%` }}
                   ></div>
                 </div>
 
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 text-caption text-[#475569] pt-1">
                   <div className="flex items-center gap-1.5">
                     <Check className="w-4 h-4 text-[#16803C] shrink-0" />
-                    <span>{roomData?.isVerifiedLandlord ? 'CCCD chủ trọ đã xác thực' : 'Tài khoản chủ trọ chưa KYC'}</span>
+                    <span>{roomData?.isVerifiedLandlord ? 'CCCD chủ trọ đã xác thực (+20đ)' : 'Tài khoản chủ trọ chưa KYC'}</span>
+                  </div>
+                  <div className="flex items-center gap-1.5">
+                    <Check className={`w-4 h-4 shrink-0 ${roomData?.isPropertyVerified ? 'text-[#16803C]' : 'text-slate-400'}`} />
+                    <span>{roomData?.isPropertyVerified ? 'Chủ quyền phòng (Sổ đỏ) đã xác thực (+20đ)' : 'Chưa nộp hồ sơ chủ quyền phòng'}</span>
                   </div>
                   <div className="flex items-center gap-1.5">
                     <Check className="w-4 h-4 text-[#16803C] shrink-0" />
-                    <span>Số điện thoại chính chủ</span>
+                    <span>{roomData?.images && roomData.images.length >= 3 ? 'Ảnh chụp thực tế đạt chuẩn (+15đ)' : 'Hình ảnh phòng cơ bản'}</span>
                   </div>
                   <div className="flex items-center gap-1.5">
                     <Check className="w-4 h-4 text-[#16803C] shrink-0" />
-                    <span>Tọa độ vị trí phòng đã định vị</span>
-                  </div>
-                  <div className="flex items-center gap-1.5">
-                    <Check className="w-4 h-4 text-[#16803C] shrink-0" />
-                    <span>Tin đăng được kiểm duyệt tự động</span>
+                    <span>Địa chỉ & Tọa độ phòng định vị rõ ràng (+15đ)</span>
                   </div>
                 </div>
               </div>
@@ -343,13 +424,50 @@ export default function RoomDetail() {
                 size="lg" 
                 onClick={() => {
                   if (!currentUser) navigate('/auth');
+                  else setShowApplicationModal(true);
+                }}
+                className="flex items-center justify-center gap-2 shadow-clay-primary"
+              >
+                <FileText className="w-5 h-5" />
+                Nộp hồ sơ thuê ngay
+              </Button>
+
+              <Button 
+                variant="outline" 
+                fullWidth 
+                size="md" 
+                onClick={() => {
+                  if (!currentUser) navigate('/auth');
                   else {
                     setSchedulerStep(1);
                     setShowScheduler(true);
                   }
                 }}
+                className="flex items-center justify-center gap-2 border-[#CBD5E1] text-[#00153D]"
               >
+                <CalendarCheck className="w-4 h-4 text-[#00153D]" />
                 Đặt lịch xem phòng
+              </Button>
+
+              <Button 
+                variant="outline" 
+                fullWidth 
+                size="md" 
+                onClick={() => {
+                  if (!currentUser) navigate('/auth');
+                  else navigate('/tenant/post', {
+                    state: {
+                      roomId: roomData.id,
+                      roomTitle: roomData.title,
+                      roomAddress: roomData.address,
+                      roomPrice: roomData.price
+                    }
+                  });
+                }}
+                className="flex items-center justify-center gap-2 border-[#CBD5E1] text-[#00153D]"
+              >
+                <Users className="w-4 h-4 text-[#00153D]" />
+                Tìm bạn ở ghép phòng này
               </Button>
 
               <Button 
@@ -359,7 +477,7 @@ export default function RoomDetail() {
                 onClick={handleFavorite}
                 className="flex items-center justify-center gap-2"
               >
-                <Heart className={`w-5 h-5 text-[#C62828] ${isSaved ? 'fill-current' : ''}`} />
+                <Heart className={`w-5 h-5 text-[#C62828] ${isSaved ? 'fill-current' : ''} ${isPulsing ? 'favorite-heart-pulse' : ''}`} />
                 {isSaved ? 'Đã lưu phòng' : 'Lưu phòng'}
               </Button>
             </div>
@@ -419,142 +537,225 @@ export default function RoomDetail() {
 
       </div>
 
-      {showGallery && (
-        <div className="fixed inset-0 z-50 bg-[#0F172A] flex flex-col p-6 overflow-y-auto">
-          <div className="flex justify-between items-center mb-6">
-            <h3 className="text-h2 font-bold text-white">Hình ảnh căn hộ ({photos.length})</h3>
-            <button onClick={() => setShowGallery(false)} className="text-white hover:text-[#EEF2F6] p-2">
-              <X className="w-6 h-6" />
-            </button>
-          </div>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4 max-w-5xl mx-auto w-full">
-            {photos.map((photo, i) => (
-              <img key={i} src={photo} alt={`Photo ${i}`} className="w-full h-64 object-cover rounded-[14px]" />
-            ))}
-          </div>
-        </div>
-      )}
-
-      {showVerificationModal && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-[#0F172A]/40 p-4">
-          <div className="bg-white rounded-[18px] shadow-clay-primary max-w-md w-full p-6 space-y-6 overflow-hidden">
-            <div className="flex justify-between items-center border-b border-[#E2E8F0] pb-4">
-              <div className="flex items-center gap-2 text-[#16803C]">
-                <CheckCircle className="w-6 h-6" />
-                <h3 className="text-h3 font-bold text-[#0F172A]">Thông tin đã xác minh</h3>
-              </div>
-              <button onClick={() => setShowVerificationModal(false)} className="text-[#64748B] hover:text-[#0F172A] p-1">
-                <X className="w-5 h-5" />
+      {/* Gallery Modal with Apple-grade Physics */}
+      <AnimatePresence>
+        {showGallery && (
+          <motion.div 
+            variants={modalBackdropVariants}
+            initial="hidden"
+            animate="visible"
+            exit="exit"
+            className="fixed inset-0 z-50 bg-[#0F172A]/90 backdrop-blur-md flex flex-col p-6 overflow-y-auto"
+          >
+            <div className="flex justify-between items-center mb-6 max-w-5xl mx-auto w-full">
+              <h3 className="text-h2 font-bold text-white">Hình ảnh căn hộ ({photos.length})</h3>
+              <button 
+                onClick={() => setShowGallery(false)} 
+                className="text-white hover:text-[#EEF2F6] p-2 rounded-full hover:bg-white/10 transition-colors"
+                aria-label="Đóng thư viện ảnh"
+              >
+                <X className="w-6 h-6" />
               </button>
             </div>
+            <motion.div 
+              variants={modalContentVariants}
+              initial="hidden"
+              animate="visible"
+              exit="exit"
+              className="grid grid-cols-1 md:grid-cols-2 gap-4 max-w-5xl mx-auto w-full motion-gpu"
+            >
+              {photos.map((photo, i) => (
+                <img key={i} src={photo} alt={`Photo ${i}`} className="w-full h-64 object-cover rounded-[14px] shadow-lg" />
+              ))}
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
 
-            <div className="space-y-3 text-body text-[#0F172A]">
-              <div className="flex items-center gap-3 p-3 bg-[#F5F7FA] rounded-[12px] shadow-clay-inset">
-                <CheckCircle className="w-5 h-5 text-[#16803C]" />
-                <span>Danh tính người đăng đã đối soát CCCD</span>
-              </div>
-              <div className="flex items-center gap-3 p-3 bg-[#F5F7FA] rounded-[12px] shadow-clay-inset">
-                <CheckCircle className="w-5 h-5 text-[#16803C]" />
-                <span>Hình ảnh phòng trọ chụp thực tế</span>
-              </div>
-            </div>
-
-            <div className="text-caption text-[#64748B] border-t border-[#E2E8F0] pt-4 text-center">
-              Lần đối soát kiểm duyệt gần nhất: <span className="font-semibold text-[#0F172A]">12/08/2026</span>
-            </div>
-          </div>
-        </div>
-      )}
-
-      {showScheduler && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-[#0F172A]/40 p-4">
-          <div className="bg-white rounded-[18px] shadow-clay-primary max-w-md w-full p-6 space-y-6 overflow-hidden">
-            <div className="flex justify-between items-center border-b border-[#E2E8F0] pb-4">
-              <h3 className="text-h3 font-bold text-[#0F172A] flex items-center gap-2">
-                {schedulerStep === 3 ? (
-                  <>
-                    <Check className="w-5 h-5 text-emerald-600" />
-                    <span>Đã đặt lịch xem phòng</span>
-                  </>
-                ) : (
-                  <span>Đặt lịch xem phòng</span>
-                )}
-              </h3>
-              <button onClick={() => setShowScheduler(false)} className="text-[#64748B] hover:text-[#0F172A] p-1">
-                <X className="w-5 h-5" />
-              </button>
-            </div>
-
-            {schedulerStep !== 3 && (
-              <div className="space-y-6">
-                <div>
-                  <label className="block text-caption font-semibold text-[#64748B] uppercase mb-2">1. Chọn ngày xem phòng</label>
-                  <input 
-                    type="date" 
-                    min={new Date().toISOString().split('T')[0]}
-                    value={selectedDate}
-                    onChange={e => { setSelectedDate(e.target.value); setSchedulerStep(2); }}
-                    className="w-full bg-[#F5F7FA] shadow-clay-inset border border-[#E2E8F0] rounded-[12px] px-4 py-2.5 text-body text-[#0F172A] outline-none min-h-[44px]"
-                  />
+      {/* Verification Details Modal */}
+      <AnimatePresence>
+        {showVerificationModal && (
+          <motion.div 
+            variants={modalBackdropVariants}
+            initial="hidden"
+            animate="visible"
+            exit="exit"
+            onClick={() => setShowVerificationModal(false)}
+            className="fixed inset-0 z-50 flex items-center justify-center bg-[#0F172A]/40 backdrop-blur-xs p-4"
+          >
+            <motion.div 
+              variants={modalContentVariants}
+              initial="hidden"
+              animate="visible"
+              exit="exit"
+              onClick={e => e.stopPropagation()}
+              className="bg-white rounded-[20px] shadow-clay-primary max-w-md w-full p-6 space-y-6 overflow-hidden border border-[#E2E8F0] motion-gpu"
+            >
+              <div className="flex justify-between items-center border-b border-[#E2E8F0] pb-4">
+                <div className="flex items-center gap-2 text-[#16803C]">
+                  <CheckCircle className="w-6 h-6" />
+                  <h3 className="text-h3 font-bold text-[#0F172A]">Thông tin đã xác minh</h3>
                 </div>
-
-                {schedulerStep >= 2 && (
-                  <div className="space-y-2">
-                    <label className="block text-caption font-semibold text-[#64748B] uppercase mb-2">2. Chọn khung giờ</label>
-                    <div className="grid grid-cols-2 gap-2">
-                      {['09:00', '10:30', '14:00', '16:00'].map(slot => (
-                        <button
-                          key={slot}
-                          type="button"
-                          onClick={() => setSelectedTime(slot)}
-                          className={`py-2.5 rounded-[12px] text-caption font-semibold transition-all ${selectedTime === slot ? 'btn-clay-primary' : 'bg-[#F5F7FA] border border-[#E2E8F0] text-[#0F172A]'}`}
-                        >
-                          {slot}
-                        </button>
-                      ))}
-                    </div>
-                  </div>
-                )}
-
-                <Button fullWidth size="lg" onClick={handleConfirmSchedule}>
-                  Xác nhận lịch xem phòng (API)
-                </Button>
-              </div>
-            )}
-
-            {schedulerStep === 3 && (
-              <div className="space-y-6 text-center py-4">
-                <div className="w-16 h-16 bg-[#F0FDF4] text-[#16803C] rounded-full flex items-center justify-center mx-auto">
-                  <CalendarCheck className="w-8 h-8" />
-                </div>
-                <div className="space-y-2">
-                  <h4 className="text-h3 font-bold text-[#0F172A]">Gửi yêu cầu lịch hẹn thành công!</h4>
-                  <div className="bg-[#F5F7FA] shadow-clay-inset p-4 rounded-[12px] text-body font-semibold text-[#00153D] space-y-1">
-                    <p>Ngày: {selectedDate}</p>
-                    <p>Giờ dự kiến: {selectedTime}</p>
-                  </div>
-                  <p className="text-caption text-[#64748B]">
-                    Chủ nhà {roomData?.landlordName || 'Lê Văn B'} sẽ xác nhận qua tin nhắn trong thời gian sớm nhất.
-                  </p>
-                </div>
-                <Button 
-                  fullWidth 
-                  onClick={() => navigate('/tenant/chat', { 
-                    state: { 
-                      tab: 'appointments',
-                      targetUserId: roomData?.landlordId,
-                      targetUserName: roomData?.landlordName,
-                      targetUserRole: 'Landlord'
-                    } 
-                  })}
+                <button 
+                  onClick={() => setShowVerificationModal(false)} 
+                  className="text-[#64748B] hover:text-[#0F172A] p-1 rounded-full hover:bg-slate-100 transition-colors"
+                  aria-label="Đóng"
                 >
-                  Xem lịch & Chat với chủ nhà
-                </Button>
+                  <X className="w-5 h-5" />
+                </button>
               </div>
-            )}
-          </div>
-        </div>
+
+              <div className="space-y-3 text-body text-[#0F172A]">
+                <div className="flex items-center gap-3 p-3 bg-[#F5F7FA] rounded-[12px] shadow-clay-inset">
+                  <CheckCircle className="w-5 h-5 text-[#16803C]" />
+                  <span>Danh tính người đăng đã đối soát CCCD</span>
+                </div>
+                <div className="flex items-center gap-3 p-3 bg-[#F5F7FA] rounded-[12px] shadow-clay-inset">
+                  <CheckCircle className="w-5 h-5 text-[#16803C]" />
+                  <span>Hình ảnh phòng trọ chụp thực tế</span>
+                </div>
+              </div>
+
+              <div className="text-caption text-[#64748B] border-t border-[#E2E8F0] pt-4 text-center">
+                Lần đối soát kiểm duyệt gần nhất: <span className="font-semibold text-[#0F172A]">12/08/2026</span>
+              </div>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+      {/* Scheduler Modal */}
+      <AnimatePresence>
+        {showScheduler && (
+          <motion.div 
+            variants={modalBackdropVariants}
+            initial="hidden"
+            animate="visible"
+            exit="exit"
+            onClick={() => setShowScheduler(false)}
+            className="fixed inset-0 z-50 flex items-center justify-center bg-[#0F172A]/40 backdrop-blur-xs p-4"
+          >
+            <motion.div 
+              variants={modalContentVariants}
+              initial="hidden"
+              animate="visible"
+              exit="exit"
+              onClick={e => e.stopPropagation()}
+              className="bg-white rounded-[20px] shadow-clay-primary max-w-md w-full p-6 space-y-6 overflow-hidden border border-[#E2E8F0] motion-gpu"
+            >
+              <div className="flex justify-between items-center border-b border-[#E2E8F0] pb-4">
+                <h3 className="text-h3 font-bold text-[#0F172A] flex items-center gap-2">
+                  {schedulerStep === 3 ? (
+                    <>
+                      <Check className="w-5 h-5 text-emerald-600" />
+                      <span>Đã đặt lịch xem phòng</span>
+                    </>
+                  ) : (
+                    <span>Đặt lịch xem phòng</span>
+                  )}
+                </h3>
+                <button 
+                  onClick={() => setShowScheduler(false)} 
+                  className="text-[#64748B] hover:text-[#0F172A] p-1 rounded-full hover:bg-slate-100 transition-colors"
+                  aria-label="Đóng"
+                >
+                  <X className="w-5 h-5" />
+                </button>
+              </div>
+
+              {schedulerStep !== 3 && (
+                <div className="space-y-6">
+                  <div>
+                    <label className="block text-caption font-semibold text-[#64748B] uppercase mb-2">1. Chọn ngày xem phòng</label>
+                    <input 
+                      type="date" 
+                      min={new Date().toISOString().split('T')[0]}
+                      value={selectedDate}
+                      onChange={e => { setSelectedDate(e.target.value); setSchedulerStep(2); }}
+                      className="w-full bg-[#F5F7FA] shadow-clay-inset border border-[#E2E8F0] rounded-[12px] px-4 py-2.5 text-body text-[#0F172A] outline-none min-h-[44px]"
+                    />
+                  </div>
+
+                  {schedulerStep >= 2 && (
+                    <div className="space-y-2">
+                      <label className="block text-caption font-semibold text-[#64748B] uppercase mb-2">2. Chọn khung giờ</label>
+                      <div className="grid grid-cols-2 gap-2">
+                        {['09:00', '10:30', '14:00', '16:00'].map(slot => (
+                          <button
+                            key={slot}
+                            type="button"
+                            onClick={() => setSelectedTime(slot)}
+                            className={`py-2.5 rounded-[12px] text-caption font-semibold transition-[background-color,color,border-color] duration-150 active:scale-95 ${selectedTime === slot ? 'btn-clay-primary' : 'bg-[#F5F7FA] border border-[#E2E8F0] text-[#0F172A]'}`}
+                          >
+                            {slot}
+                          </button>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+
+                  <Button fullWidth size="lg" onClick={handleConfirmSchedule}>
+                    Xác nhận lịch xem phòng (API)
+                  </Button>
+                </div>
+              )}
+
+              {schedulerStep === 3 && (
+                <div className="space-y-6 text-center py-4">
+                  <div className="w-16 h-16 bg-[#F0FDF4] text-[#16803C] rounded-full flex items-center justify-center mx-auto shadow-xs">
+                    <CalendarCheck className="w-8 h-8" />
+                  </div>
+                  <div className="space-y-2">
+                    <h4 className="text-h3 font-bold text-[#0F172A]">Gửi yêu cầu lịch hẹn thành công!</h4>
+                    <div className="bg-[#F5F7FA] shadow-clay-inset p-4 rounded-[12px] text-body font-semibold text-[#00153D] space-y-1">
+                      <p>Ngày: {selectedDate}</p>
+                      <p>Giờ dự kiến: {selectedTime}</p>
+                    </div>
+                    <p className="text-caption text-[#64748B]">
+                      Chủ nhà {roomData?.landlordName || 'Lê Văn B'} sẽ xác nhận qua tin nhắn trong thời gian sớm nhất.
+                    </p>
+                  </div>
+                  <Button 
+                    fullWidth 
+                    onClick={() => navigate('/tenant/chat', { 
+                      state: { 
+                        tab: 'appointments',
+                        targetUserId: roomData?.landlordId,
+                        targetUserName: roomData?.landlordName,
+                        targetUserRole: 'Landlord'
+                      } 
+                    })}
+                  >
+                    Xem lịch & Chat với chủ nhà
+                  </Button>
+                </div>
+              )}
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+      {/* Rental Application Modal */}
+      {roomData && (
+        <RentalApplicationModal
+          isOpen={showApplicationModal}
+          onClose={() => setShowApplicationModal(false)}
+          roomId={roomData.id}
+          roomTitle={roomData.title}
+          roomPrice={roomData.price}
+          landlordName={roomData.landlordName || 'Chủ nhà'}
+        />
       )}
-    </div>
+
+      {/* Trust Score Breakdown Modal */}
+      {roomData && (
+        <TrustScoreModal
+          isOpen={showTrustScoreModal}
+          onClose={() => setShowTrustScoreModal(false)}
+          roomId={roomData.id}
+          roomTitle={roomData.title}
+        />
+      )}
+    </motion.div>
   );
 }

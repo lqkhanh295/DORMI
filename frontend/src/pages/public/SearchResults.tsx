@@ -1,4 +1,5 @@
 import { useState, useMemo, useEffect } from 'react';
+import { motion, AnimatePresence } from 'framer-motion';
 import { Button } from '../../components/ui/Button';
 import { Input } from '../../components/ui/Input';
 import { useStore } from '../../store/useStore';
@@ -6,6 +7,7 @@ import { useNavigate, useSearchParams } from 'react-router-dom';
 import { ArrowLeft, SlidersHorizontal, Map as MapTrifold, X, Sliders as FadersHorizontal } from 'lucide-react';
 import { RoomCard } from '../../components/landing/RoomCard';
 import RoomMapView from '../../components/map/RoomMapView';
+import { modalBackdropVariants, bottomSheetVariants, staggerListContainer, staggerListItem } from '../../utils/motion';
 
 const getCleanPrice = (price: any): number => {
   if (typeof price === 'number' && !isNaN(price)) return price;
@@ -301,62 +303,83 @@ export default function SearchResults() {
         {/* Results Grid Container */}
         <div className="flex-1 overflow-y-auto p-6 pt-2">
           
-          {/* Skeleton Loading State */}
-          {isLoading && (
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
-              {[1, 2, 4].map(n => (
-                <div key={n} className="bg-white rounded-[18px] p-3 shadow-clay-soft space-y-3">
-                  <div className="aspect-[4/3] rounded-[14px] skeleton-shimmer"></div>
-                  <div className="h-6 w-3/4 skeleton-shimmer rounded-md"></div>
-                  <div className="h-4 w-1/2 skeleton-shimmer rounded-md"></div>
+          <AnimatePresence mode="wait">
+            {/* Skeleton Loading State */}
+            {isLoading ? (
+              <motion.div 
+                key="search-skeletons"
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                exit={{ opacity: 0, transition: { duration: 0.15 } }}
+                className="grid grid-cols-1 sm:grid-cols-2 gap-6"
+              >
+                {[1, 2, 3, 4].map(n => (
+                  <div key={n} className="bg-white rounded-[18px] p-3 shadow-clay-soft space-y-3 border border-[#E2E8F0]">
+                    <div className="aspect-[4/3] rounded-[14px] skeleton-shimmer"></div>
+                    <div className="h-6 w-3/4 skeleton-shimmer rounded-md"></div>
+                    <div className="h-4 w-1/2 skeleton-shimmer rounded-md"></div>
+                  </div>
+                ))}
+              </motion.div>
+            ) : filteredListings.length === 0 ? (
+              /* Empty Recovery State */
+              <motion.div 
+                key="search-empty"
+                initial={{ opacity: 0, y: 6 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0 }}
+                className="bg-white rounded-[18px] shadow-clay-soft p-8 text-center space-y-6 max-w-md mx-auto my-8 border border-[#E2E8F0]"
+              >
+                <div className="w-16 h-16 bg-[#F5F7FA] rounded-full flex items-center justify-center text-[#64748B] mx-auto">
+                  <FadersHorizontal className="w-8 h-8" />
                 </div>
-              ))}
-            </div>
-          )}
-
-          {/* Empty Recovery State */}
-          {!isLoading && filteredListings.length === 0 && (
-            <div className="bg-white rounded-[18px] shadow-clay-soft p-8 text-center space-y-6 max-w-md mx-auto my-8">
-              <div className="w-16 h-16 bg-[#F5F7FA] rounded-full flex items-center justify-center text-[#64748B] mx-auto">
-                <FadersHorizontal className="w-8 h-8" />
-              </div>
-              <div className="space-y-2">
-                <h3 className="text-h3 font-bold text-[#0F172A]">Không tìm thấy phòng phù hợp</h3>
-                <p className="text-caption text-[#64748B]">Bạn có thể thử các gợi ý sau để mở rộng kết quả:</p>
-              </div>
-              <ul className="text-caption text-[#0F172A] font-semibold text-left space-y-2 bg-[#F5F7FA] p-4 rounded-[12px]">
-                <li>• Mở rộng khu vực tìm kiếm</li>
-                <li>• Tăng ngân sách thêm 500.000đ</li>
-                <li>• Bỏ bớt một bộ lọc quá hẹp</li>
-              </ul>
-              <Button fullWidth onClick={clearAllFilters}>Mở rộng tìm kiếm</Button>
-            </div>
-          )}
-
-          {/* Room List Cards */}
-          {!isLoading && filteredListings.length > 0 && (
-            <div className={`grid grid-cols-1 ${!showMap ? 'sm:grid-cols-2 lg:grid-cols-3' : 'sm:grid-cols-2'} gap-6`}>
-              {filteredListings.map(room => (
-                <div 
-                  key={room.id}
-                  onClick={() => setSelectedRoomId(room.id)}
-                  className={`cursor-pointer transition-all rounded-[18px] ${selectedRoomId === room.id ? 'ring-3 ring-[#00153D] shadow-clay-primary' : ''}`}
-                >
-                  <RoomCard 
-                    room={{
-                      id: room.id,
-                      title: room.title,
-                      price: `${room.price.toLocaleString('vi-VN')}đ / tháng`,
-                      location: room.address.split(',')[0],
-                      area: '25m²',
-                      image: room.image,
-                      verified: !!room.isVerifiedLandlord
-                    }} 
-                  />
+                <div className="space-y-2">
+                  <h3 className="text-h3 font-bold text-[#0F172A]">Không tìm thấy phòng phù hợp</h3>
+                  <p className="text-caption text-[#64748B]">Bạn có thể thử các gợi ý sau để mở rộng kết quả:</p>
                 </div>
-              ))}
-            </div>
-          )}
+                <ul className="text-caption text-[#0F172A] font-semibold text-left space-y-2 bg-[#F5F7FA] p-4 rounded-[12px]">
+                  <li>• Mở rộng khu vực tìm kiếm</li>
+                  <li>• Tăng ngân sách thêm 500.000đ</li>
+                  <li>• Bỏ bớt một bộ lọc quá hẹp</li>
+                </ul>
+                <Button fullWidth onClick={clearAllFilters}>Mở rộng tìm kiếm</Button>
+              </motion.div>
+            ) : (
+              /* Room List Cards with 25ms Cohesive Stagger */
+              <motion.div 
+                key="search-cards"
+                variants={staggerListContainer}
+                initial="hidden"
+                animate="visible"
+                className={`grid grid-cols-1 ${!showMap ? 'sm:grid-cols-2 lg:grid-cols-3' : 'sm:grid-cols-2'} gap-6`}
+              >
+                {filteredListings.map(room => (
+                  <motion.div 
+                    key={room.id}
+                    variants={staggerListItem}
+                    onClick={() => setSelectedRoomId(room.id)}
+                    className={`cursor-pointer rounded-[18px] transition-[box-shadow,transform] duration-150 ease-[cubic-bezier(0.22,1,0.36,1)] ${
+                      selectedRoomId === room.id ? 'ring-2 ring-[#00153D] shadow-clay-primary scale-[1.008]' : ''
+                    }`}
+                  >
+                    <RoomCard 
+                      room={{
+                        id: room.id,
+                        title: room.title,
+                        price: `${room.price.toLocaleString('vi-VN')}đ / tháng`,
+                        location: room.address.split(',')[0],
+                        area: room.area ? `${room.area}m²` : '25m²',
+                        image: room.image,
+                        verified: !!room.isVerifiedLandlord,
+                        isBoosted: !!room.isBoosted,
+                        boostType: room.boostType
+                      }} 
+                    />
+                  </motion.div>
+                ))}
+              </motion.div>
+            )}
+          </AnimatePresence>
         </div>
       </div>  
       
@@ -371,116 +394,139 @@ export default function SearchResults() {
         </div>
       )}
 
-      {/* Mobile Filter Bottom Sheet */}
-      {showMobileFilter && (
-        <div className="fixed inset-0 bg-[#0F172A]/40 z-50 flex flex-col justify-end">
-          <div className="bg-white rounded-t-[18px] shadow-clay-primary max-h-[85vh] flex flex-col overflow-hidden">
-            <div className="p-4 border-b border-[#E2E8F0] flex justify-between items-center bg-white">
-              <h3 className="text-h3 font-bold text-[#0F172A]">Bộ lọc tìm kiếm</h3>
-              <button onClick={() => setShowMobileFilter(false)} className="text-[#64748B] hover:text-[#0F172A] p-2">
-                <X className="w-6 h-6" />
-              </button>
-            </div>
-            
-            <div className="p-6 space-y-6 overflow-y-auto flex-1">
-              {/* Khu vực */}
-              <div className="space-y-2">
-                <label className="text-caption font-semibold text-[#0F172A]">Khu vực</label>
-                <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
-                  {['Quận 1', 'Quận 3', 'Quận 5', 'Quận 7', 'Quận 10', 'Bình Thạnh', 'Tân Bình', 'Thủ Đức'].map(d => (
-                    <button
-                      key={d}
-                      type="button"
-                      onClick={() => setSelectedDistrict(selectedDistrict === d ? null : d)}
-                      className={`py-2 px-3 rounded-[10px] text-caption font-semibold border transition-all ${selectedDistrict === d ? 'btn-clay-primary' : 'bg-[#F5F7FA] text-[#64748B] border-[#E2E8F0] hover:text-[#0F172A]'}`}
-                    >
-                      {d}
-                    </button>
-                  ))}
+      {/* Mobile Filter Bottom Sheet with Native Apple Spring Physics */}
+      <AnimatePresence>
+        {showMobileFilter && (
+          <motion.div 
+            variants={modalBackdropVariants}
+            initial="hidden"
+            animate="visible"
+            exit="exit"
+            onClick={() => setShowMobileFilter(false)}
+            className="fixed inset-0 bg-[#0F172A]/40 z-50 flex flex-col justify-end backdrop-blur-xs"
+          >
+            <motion.div 
+              variants={bottomSheetVariants}
+              initial="hidden"
+              animate="visible"
+              exit="exit"
+              onClick={e => e.stopPropagation()}
+              className="bg-white rounded-t-[20px] shadow-clay-primary max-h-[85vh] flex flex-col overflow-hidden motion-gpu"
+            >
+              <div className="p-4 border-b border-[#E2E8F0] flex justify-between items-center bg-white">
+                <div className="flex items-center gap-2">
+                  <div className="w-8 h-1 bg-slate-300 rounded-full mx-auto absolute top-2 left-1/2 -translate-x-1/2" />
+                  <h3 className="text-h3 font-bold text-[#0F172A]">Bộ lọc tìm kiếm</h3>
                 </div>
+                <button 
+                  onClick={() => setShowMobileFilter(false)} 
+                  className="text-[#64748B] hover:text-[#0F172A] p-2 rounded-full hover:bg-slate-100 transition-colors"
+                  aria-label="Đóng bộ lọc"
+                >
+                  <X className="w-5 h-5" />
+                </button>
               </div>
-
-              {/* Khoảng giá */}
-              <div className="space-y-2">
-                <label className="text-caption font-semibold text-[#0F172A]">Khoảng giá thuê</label>
-                <div className="grid grid-cols-2 gap-2">
-                  {[
-                    { id: 'under3m', label: 'Dưới 3 triệu' },
-                    { id: '3mTo5m', label: '3 - 5 triệu' },
-                    { id: '5mTo8m', label: '5 - 8 triệu' },
-                    { id: 'above8m', label: 'Trên 8 triệu' }
-                  ].map(p => (
-                    <button
-                      key={p.id}
-                      type="button"
-                      onClick={() => setSelectedPrice(selectedPrice === p.id ? null : p.id)}
-                      className={`py-2 px-3 rounded-[10px] text-caption font-semibold border transition-all ${selectedPrice === p.id ? 'btn-clay-primary' : 'bg-[#F5F7FA] text-[#64748B] border-[#E2E8F0] hover:text-[#0F172A]'}`}
-                    >
-                      {p.label}
-                    </button>
-                  ))}
-                </div>
-              </div>
-
-              {/* Khoảng diện tích */}
-              <div className="space-y-2">
-                <label className="text-caption font-semibold text-[#0F172A]">Diện tích căn phòng</label>
-                <div className="grid grid-cols-2 gap-2">
-                  {[
-                    { id: 'under20', label: 'Dưới 20 m²' },
-                    { id: '20to30', label: '20 - 30 m²' },
-                    { id: '30to45', label: '30 - 45 m²' },
-                    { id: 'above45', label: 'Trên 45 m²' }
-                  ].map(a => (
-                    <button
-                      key={a.id}
-                      type="button"
-                      onClick={() => setSelectedArea(selectedArea === a.id ? null : a.id)}
-                      className={`py-2 px-3 rounded-[10px] text-caption font-semibold border transition-all ${selectedArea === a.id ? 'btn-clay-primary' : 'bg-[#F5F7FA] text-[#64748B] border-[#E2E8F0] hover:text-[#0F172A]'}`}
-                    >
-                      {a.label}
-                    </button>
-                  ))}
-                </div>
-              </div>
-
-              {/* Tiện ích */}
-              <div className="space-y-2">
-                <label className="text-caption font-semibold text-[#0F172A]">Tiện ích mong muốn (Chọn nhiều)</label>
-                <div className="flex flex-wrap gap-2">
-                  {['Wifi', 'Máy lạnh', 'Tủ lạnh', 'Máy giặt', 'Ban công', 'Bếp riêng', 'Thang máy', 'Giờ giấc tự do', 'Bãi giữ xe'].map(util => {
-                    const isSelected = selectedUtilities.includes(util);
-                    return (
+              
+              <div className="p-6 space-y-6 overflow-y-auto flex-1">
+                {/* Khu vực */}
+                <div className="space-y-2">
+                  <label className="text-caption font-semibold text-[#0F172A]">Khu vực</label>
+                  <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
+                    {['Quận 1', 'Quận 3', 'Quận 5', 'Quận 7', 'Quận 10', 'Bình Thạnh', 'Tân Bình', 'Thủ Đức'].map(d => (
                       <button
-                        key={util}
+                        key={d}
                         type="button"
-                        onClick={() => {
-                          setSelectedUtilities(prev => 
-                            isSelected ? prev.filter(u => u !== util) : [...prev, util]
-                          );
-                        }}
-                        className={`py-1.5 px-3 rounded-full text-caption font-semibold border transition-all ${isSelected ? 'bg-[#00153D] text-white border-[#00153D]' : 'bg-[#F5F7FA] text-[#64748B] border-[#E2E8F0] hover:text-[#0F172A]'}`}
+                        onClick={() => setSelectedDistrict(selectedDistrict === d ? null : d)}
+                        className={`py-2 px-3 rounded-[10px] text-caption font-semibold border transition-[background-color,color,border-color] duration-150 active:scale-95 ${selectedDistrict === d ? 'btn-clay-primary' : 'bg-[#F5F7FA] text-[#64748B] border-[#E2E8F0] hover:text-[#0F172A]'}`}
                       >
-                        {util}
+                        {d}
                       </button>
-                    );
-                  })}
+                    ))}
+                  </div>
+                </div>
+
+                {/* Khoảng giá */}
+                <div className="space-y-2">
+                  <label className="text-caption font-semibold text-[#0F172A]">Khoảng giá thuê</label>
+                  <div className="grid grid-cols-2 gap-2">
+                    {[
+                      { id: 'under3m', label: 'Dưới 3 triệu' },
+                      { id: '3mTo5m', label: '3 - 5 triệu' },
+                      { id: '5mTo8m', label: '5 - 8 triệu' },
+                      { id: 'above8m', label: 'Trên 8 triệu' }
+                    ].map(p => (
+                      <button
+                        key={p.id}
+                        type="button"
+                        onClick={() => setSelectedPrice(selectedPrice === p.id ? null : p.id)}
+                        className={`py-2 px-3 rounded-[10px] text-caption font-semibold border transition-[background-color,color,border-color] duration-150 active:scale-95 ${selectedPrice === p.id ? 'btn-clay-primary' : 'bg-[#F5F7FA] text-[#64748B] border-[#E2E8F0] hover:text-[#0F172A]'}`}
+                      >
+                        {p.label}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+
+                {/* Khoảng diện tích */}
+                <div className="space-y-2">
+                  <label className="text-caption font-semibold text-[#0F172A]">Diện tích căn phòng</label>
+                  <div className="grid grid-cols-2 gap-2">
+                    {[
+                      { id: 'under20', label: 'Dưới 20 m²' },
+                      { id: '20to30', label: '20 - 30 m²' },
+                      { id: '30to45', label: '30 - 45 m²' },
+                      { id: 'above45', label: 'Trên 45 m²' }
+                    ].map(a => (
+                      <button
+                        key={a.id}
+                        type="button"
+                        onClick={() => setSelectedArea(selectedArea === a.id ? null : a.id)}
+                        className={`py-2 px-3 rounded-[10px] text-caption font-semibold border transition-[background-color,color,border-color] duration-150 active:scale-95 ${selectedArea === a.id ? 'btn-clay-primary' : 'bg-[#F5F7FA] text-[#64748B] border-[#E2E8F0] hover:text-[#0F172A]'}`}
+                      >
+                        {a.label}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+
+                {/* Tiện ích */}
+                <div className="space-y-2">
+                  <label className="text-caption font-semibold text-[#0F172A]">Tiện ích mong muốn (Chọn nhiều)</label>
+                  <div className="flex flex-wrap gap-2">
+                    {['Wifi', 'Máy lạnh', 'Tủ lạnh', 'Máy giặt', 'Ban công', 'Bếp riêng', 'Thang máy', 'Giờ giấc tự do', 'Bãi giữ xe'].map(util => {
+                      const isSelected = selectedUtilities.includes(util);
+                      return (
+                        <button
+                          key={util}
+                          type="button"
+                          onClick={() => {
+                            setSelectedUtilities(prev => 
+                              isSelected ? prev.filter(u => u !== util) : [...prev, util]
+                            );
+                          }}
+                          className={`py-1.5 px-3 rounded-full text-caption font-semibold border transition-[background-color,color,border-color] duration-150 active:scale-95 ${isSelected ? 'bg-[#00153D] text-white border-[#00153D]' : 'bg-[#F5F7FA] text-[#64748B] border-[#E2E8F0] hover:text-[#0F172A]'}`}
+                        >
+                          {util}
+                        </button>
+                      );
+                    })}
+                  </div>
                 </div>
               </div>
-            </div>
 
-            {/* Dynamic Filter CTA Footers */}
-            <div className="p-4 border-t border-[#E2E8F0] bg-white flex items-center justify-between gap-3">
-              <button onClick={clearAllFilters} className="text-caption font-semibold text-[#64748B] hover:underline px-4">
-                Xóa tất cả
-              </button>
-              <Button onClick={() => setShowMobileFilter(false)} className="flex-1">
-                Xem {filteredListings.length} phòng
-              </Button>
-            </div>
-          </div>
-        </div>
-      )}
+              {/* Dynamic Filter CTA Footers */}
+              <div className="p-4 border-t border-[#E2E8F0] bg-white flex items-center justify-between gap-3">
+                <button onClick={clearAllFilters} className="text-caption font-semibold text-[#64748B] hover:underline px-4">
+                  Xóa tất cả
+                </button>
+                <Button onClick={() => setShowMobileFilter(false)} className="flex-1">
+                  Xem {filteredListings.length} phòng
+                </Button>
+              </div>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
     </div>
   );
 }

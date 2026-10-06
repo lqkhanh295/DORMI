@@ -1,10 +1,12 @@
 import { useState, useRef, useEffect } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
+import { motion } from 'framer-motion';
 import { useStore } from '../../store/useStore';
 import { Button } from '../../components/ui/Button';
 import { Hand, Paperclip, Calendar, MessageCircle, Clock, MapPin, CheckCircle2, AlertCircle } from 'lucide-react';
 import { messagesApi, appointmentsApi } from '../../services/api';
 import { signalRService } from '../../services/signalr';
+import { chatMessageItemVariants } from '../../utils/motion';
 
 export default function TenantChatCenter() {
   const { currentUser, messages, sendMessageWithApi, likedRoommates } = useStore();
@@ -83,7 +85,8 @@ export default function TenantChatCenter() {
 
   // Add backend conversations
   apiConversations.forEach(c => {
-    if (!contactsMap.has(c.otherUserId)) {
+    const existing = contactsMap.get(c.otherUserId);
+    if (!existing) {
       contactsMap.set(c.otherUserId, {
         id: c.otherUserId,
         name: c.otherUserName || 'Người dùng',
@@ -92,8 +95,25 @@ export default function TenantChatCenter() {
         avatar: c.otherUserAvatar || '',
         lastMessage: c.lastMessage
       });
+    } else {
+      if (c.otherUserName && (existing.name === 'Chủ trọ' || existing.name === 'Người dùng')) {
+        existing.name = c.otherUserName;
+      }
+      if (c.otherUserAvatar && !existing.avatar) {
+        existing.avatar = c.otherUserAvatar;
+      }
+      if (c.lastMessage) {
+        existing.lastMessage = c.lastMessage;
+      }
     }
   });
+
+  if (targetUserId && targetUserName) {
+    const target = contactsMap.get(targetUserId);
+    if (target && (target.name === 'Người dùng' || target.name === 'Chủ trọ' || !target.name)) {
+      target.name = targetUserName;
+    }
+  }
 
 
   // Liked Roommates (Real DB profiles only)
@@ -397,7 +417,13 @@ export default function TenantChatCenter() {
                   {chatMessages.map(msg => {
                     const isMe = msg.senderId === currentUser?.id;
                     return (
-                      <div key={msg.id} className={`flex ${isMe ? 'justify-end' : 'justify-start'}`}>
+                      <motion.div 
+                        key={msg.id} 
+                        variants={chatMessageItemVariants}
+                        initial="hidden"
+                        animate="visible"
+                        className={`flex ${isMe ? 'justify-end' : 'justify-start'}`}
+                      >
                         <div className={`flex gap-2 max-w-[70%] ${isMe ? 'flex-row-reverse' : 'flex-row'}`}>
                           {!isMe && (
                             selectedContact.avatar ? (
@@ -415,7 +441,7 @@ export default function TenantChatCenter() {
                             </span>
                           </div>
                         </div>
-                      </div>
+                      </motion.div>
                     );
                   })}
                   <div ref={messagesEndRef} />
