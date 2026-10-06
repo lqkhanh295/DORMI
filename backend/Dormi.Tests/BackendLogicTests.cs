@@ -581,16 +581,16 @@ public class BackendLogicTests
         Assert.True(resExisting.Success);
         Assert.Equal(200, resExisting.StatusCode);
 
-        // Verify token is in cache
-        var cachedToken = cache.GetString("pwd_reset_validuser@dormi.vn");
-        Assert.NotNull(cachedToken);
-        Assert.Equal(6, cachedToken.Length);
+        // Verify hashed OTP state is in cache (and plaintext is NOT stored in pwd_reset_*)
+        var cachedOtpData = cache.GetString($"password-reset:{user.Id}");
+        Assert.NotNull(cachedOtpData);
+        Assert.Contains("OtpHash", cachedOtpData);
 
         // 2. Non-existent email: must return same 200 message (anti-enumeration)
         var resNonExisting = await authService.ForgotPasswordAsync(new ForgotPasswordDto { Email = "ghost@dormi.vn" });
         Assert.True(resNonExisting.Success);
         Assert.Equal(200, resNonExisting.StatusCode);
-        Assert.Null(cache.GetString("pwd_reset_ghost@dormi.vn"));
+        Assert.Null(cache.GetString("password-reset:email:ghost@dormi.vn"));
     }
 
     [Fact]
@@ -666,6 +666,471 @@ public class BackendLogicTests
         var resOwner = await service.GetRoommatePostByIdAsync(inactivePost.Id, ownerId);
         Assert.True(resOwner.Success);
         Assert.Equal(200, resOwner.StatusCode);
+    }
+
+    [Fact]
+    public async Task KafkaProducer_WhenDisabled_ShouldGracefullySkipWithoutException()
+    {
+        var options = Microsoft.Extensions.Options.Options.Create(new Dormi.Infrastructure.Kafka.KafkaOptions
+        {
+            Enabled = false,
+            BootstrapServers = "localhost:9092"
+        });
+
+        var logger = Microsoft.Extensions.Logging.Abstractions.NullLogger<Dormi.Infrastructure.Kafka.KafkaProducer>.Instance;
+
+        using var producer = new Dormi.Infrastructure.Kafka.KafkaProducer(options, logger);
+
+        var evt = new NotificationEvent
+        {
+            Id = Guid.NewGuid(),
+            EventType = "RoomPendingApproval",
+            Title = "Test Room",
+            Message = "Test Message",
+            Type = "Room",
+            CreatedAt = DateTime.UtcNow
+        };
+
+        // Should not throw any exception when disabled
+        var record = await Record.ExceptionAsync(() => producer.PublishNotificationAsync(evt));
+        Assert.Null(record);
+    }
+
+    [Fact]
+    public void NotificationEvent_ShouldInitializeCorrectDefaults()
+    {
+        var evt = new NotificationEvent
+        {
+            Title = "Thông báo phòng mới",
+            Message = "Đang chờ duyệt",
+            Type = "Room"
+        };
+
+        Assert.NotEqual(Guid.Empty, evt.Id);
+        Assert.Equal("Room", evt.Type);
+        Assert.True((DateTime.UtcNow - evt.CreatedAt).TotalSeconds < 5);
+    }
+
+    [Fact]
+    public async Task AuthService_ChangePassword_ValidAndInvalidCredentials()
+    {
+        var options = new DbContextOptionsBuilder<DormiDbContext>()
+            .UseInMemoryDatabase(databaseName: Guid.NewGuid().ToString())
+            .Options;
+
+        using var db = new DormiDbContext(options);
+        var user = new User
+        {
+            Id = Guid.NewGuid(),
+            Email = "tester@dormi.vn",
+            FullName = "Test User",
+            Role = UserRole.Customer,
+            CreatedAt = DateTime.UtcNow
+        };
+        var hasher = new Microsoft.AspNetCore.Identity.PasswordHasher<User>();
+        user.PasswordHash = hasher.HashPassword(user, "OldPassword123");
+        db.Users.Add(user);
+        await db.SaveChangesAsync();
+
+        var cache = new ServiceCollection().AddDistributedMemoryCache().BuildServiceProvider().GetRequiredService<IDistributedCache>();
+        var tokenGen = new JwtTokenGenerator(new ConfigurationBuilder().AddInMemoryCollection(new Dictionary<string, string?>
+        {
+            { "Jwt:Key", "SuperSecretKeyForTestingJwtToken1234567890" },
+            { "Jwt:Issuer", "Dormi" },
+            { "Jwt:Audience", "DormiAudience" }
+        }).Build());
+        var logger = new Microsoft.Extensions.Logging.Abstractions.NullLogger<AuthService>();
+        var authService = new AuthService(db, tokenGen, cache, logger);
+
+        // Wrong current password
+        var failRes = await authService.ChangePasswordAsync(user.Id, new ChangePasswordDto
+        {
+            CurrentPassword = "WrongPassword",
+            NewPassword = "NewPassword123"
+        });
+        Assert.False(failRes.Success);
+        Assert.Equal(400, failRes.StatusCode);
+
+        // Valid current password
+        var successRes = await authService.ChangePasswordAsync(user.Id, new ChangePasswordDto
+        {
+            CurrentPassword = "OldPassword123",
+            NewPassword = "NewPassword123"
+        });
+        Assert.True(successRes.Success);
+        Assert.Equal(200, successRes.StatusCode);
+
+        // Verify new password works
+        var updatedUser = await db.Users.FindAsync(user.Id);
+        Assert.NotNull(updatedUser);
+        var verify = hasher.VerifyHashedPassword(updatedUser, updatedUser.PasswordHash, "NewPassword123");
+        Assert.Equal(Microsoft.AspNetCore.Identity.PasswordVerificationResult.Success, verify);
+    }
+
+    private class TestEmailService : Dormi.Application.Interfaces.IEmailService
+    {
+        public string? LastToEmail { get; private set; }
+        public string? LastSubject { get; private set; }
+        public string? LastOtp { get; private set; }
+
+        public Task SendEmailAsync(string toEmail, string subject, string htmlBody, System.Threading.CancellationToken ct = default)
+        {
+            LastToEmail = toEmail;
+            LastSubject = subject;
+            return Task.CompletedTask;
+        }
+
+        public Task SendPasswordResetOtpAsync(string toEmail, string otp, System.Threading.CancellationToken ct = default)
+        {
+            LastToEmail = toEmail;
+            LastOtp = otp;
+            LastSubject = "Mã xác thực đặt lại mật khẩu DORMI";
+            return Task.CompletedTask;
+        }
+    }
+
+    [Fact]
+    public async Task ForgotPassword_ExistingUser_ShouldReturnGenericMessage_AndStoreHashedOtp_AndSendEmail()
+    {
+        var options = new DbContextOptionsBuilder<DormiDbContext>()
+            .UseInMemoryDatabase(databaseName: Guid.NewGuid().ToString())
+            .Options;
+
+        using var db = new DormiDbContext(options);
+        var user = new User
+        {
+            Id = Guid.NewGuid(),
+            Email = "student@dormi.vn",
+            FullName = "Nguyen Van B",
+            Role = UserRole.Customer,
+            CreatedAt = DateTime.UtcNow
+        };
+        db.Users.Add(user);
+        await db.SaveChangesAsync();
+
+        var cache = new ServiceCollection().AddDistributedMemoryCache().BuildServiceProvider().GetRequiredService<IDistributedCache>();
+        var tokenGen = new JwtTokenGenerator(new ConfigurationBuilder().AddInMemoryCollection(new Dictionary<string, string?>
+        {
+            { "Jwt:Key", "SuperSecretKeyForTestingJwtToken1234567890" },
+            { "Jwt:Issuer", "Dormi" },
+            { "Jwt:Audience", "DormiAudience" }
+        }).Build());
+        var logger = new Microsoft.Extensions.Logging.Abstractions.NullLogger<AuthService>();
+        var emailService = new TestEmailService();
+        var authService = new AuthService(db, tokenGen, cache, logger, emailService);
+
+        var result = await authService.ForgotPasswordAsync(new ForgotPasswordDto { Email = "student@dormi.vn" });
+        Assert.True(result.Success);
+        Assert.Equal(200, result.StatusCode);
+        
+        // Assert anti-enumeration message
+        var json = System.Text.Json.JsonSerializer.Serialize(result.Data);
+        Assert.Contains("If the account exists, an OTP has been sent.", json);
+
+        // Verify email was dispatched with 6-digit OTP
+        Assert.Equal("student@dormi.vn", emailService.LastToEmail);
+        Assert.NotNull(emailService.LastOtp);
+        Assert.Matches(@"^\d{6}$", emailService.LastOtp);
+
+        // Verify OTP is hashed in cache, NOT plaintext
+        var cachedOtpJson = await cache.GetStringAsync($"password-reset:{user.Id}");
+        Assert.NotNull(cachedOtpJson);
+        Assert.DoesNotContain(emailService.LastOtp, cachedOtpJson); // Plaintext OTP must NOT be stored
+        Assert.Contains("OtpHash", cachedOtpJson);
+    }
+
+    [Fact]
+    public async Task ForgotPassword_NonExistentEmail_ShouldReturnSameGenericMessage_WithoutSendingEmail()
+    {
+        var options = new DbContextOptionsBuilder<DormiDbContext>()
+            .UseInMemoryDatabase(databaseName: Guid.NewGuid().ToString())
+            .Options;
+
+        using var db = new DormiDbContext(options);
+        var cache = new ServiceCollection().AddDistributedMemoryCache().BuildServiceProvider().GetRequiredService<IDistributedCache>();
+        var tokenGen = new JwtTokenGenerator(new ConfigurationBuilder().AddInMemoryCollection(new Dictionary<string, string?>
+        {
+            { "Jwt:Key", "SuperSecretKeyForTestingJwtToken1234567890" },
+            { "Jwt:Issuer", "Dormi" },
+            { "Jwt:Audience", "DormiAudience" }
+        }).Build());
+        var logger = new Microsoft.Extensions.Logging.Abstractions.NullLogger<AuthService>();
+        var emailService = new TestEmailService();
+        var authService = new AuthService(db, tokenGen, cache, logger, emailService);
+
+        var result = await authService.ForgotPasswordAsync(new ForgotPasswordDto { Email = "ghost@dormi.vn" });
+        Assert.True(result.Success);
+        Assert.Equal(200, result.StatusCode);
+
+        var json = System.Text.Json.JsonSerializer.Serialize(result.Data);
+        Assert.Contains("If the account exists, an OTP has been sent.", json);
+        Assert.Null(emailService.LastOtp);
+    }
+
+    [Fact]
+    public async Task ForgotPassword_CooldownRateLimit_ShouldReturn429OnImmediateRetry()
+    {
+        var options = new DbContextOptionsBuilder<DormiDbContext>()
+            .UseInMemoryDatabase(databaseName: Guid.NewGuid().ToString())
+            .Options;
+
+        using var db = new DormiDbContext(options);
+        var cache = new ServiceCollection().AddDistributedMemoryCache().BuildServiceProvider().GetRequiredService<IDistributedCache>();
+        var tokenGen = new JwtTokenGenerator(new ConfigurationBuilder().AddInMemoryCollection(new Dictionary<string, string?>
+        {
+            { "Jwt:Key", "SuperSecretKeyForTestingJwtToken1234567890" },
+            { "Jwt:Issuer", "Dormi" },
+            { "Jwt:Audience", "DormiAudience" }
+        }).Build());
+        var logger = new Microsoft.Extensions.Logging.Abstractions.NullLogger<AuthService>();
+        var emailService = new TestEmailService();
+        var authService = new AuthService(db, tokenGen, cache, logger, emailService);
+
+        var res1 = await authService.ForgotPasswordAsync(new ForgotPasswordDto { Email = "fast@dormi.vn" });
+        Assert.True(res1.Success);
+
+        // Immediate second call should hit 60s cooldown limit
+        var res2 = await authService.ForgotPasswordAsync(new ForgotPasswordDto { Email = "fast@dormi.vn" });
+        Assert.False(res2.Success);
+        Assert.Equal(429, res2.StatusCode);
+        Assert.Contains("60 giây", res2.ErrorMessage);
+    }
+
+    [Fact]
+    public async Task ForgotPassword_EmailRateLimit_Max5Per15Minutes()
+    {
+        var options = new DbContextOptionsBuilder<DormiDbContext>()
+            .UseInMemoryDatabase(databaseName: Guid.NewGuid().ToString())
+            .Options;
+
+        using var db = new DormiDbContext(options);
+        var cache = new ServiceCollection().AddDistributedMemoryCache().BuildServiceProvider().GetRequiredService<IDistributedCache>();
+        var tokenGen = new JwtTokenGenerator(new ConfigurationBuilder().AddInMemoryCollection(new Dictionary<string, string?>
+        {
+            { "Jwt:Key", "SuperSecretKeyForTestingJwtToken1234567890" },
+            { "Jwt:Issuer", "Dormi" },
+            { "Jwt:Audience", "DormiAudience" }
+        }).Build());
+        var logger = new Microsoft.Extensions.Logging.Abstractions.NullLogger<AuthService>();
+        var authService = new AuthService(db, tokenGen, cache, logger);
+
+        var testEmail = "frequent@dormi.vn";
+        // Simulate 5 requests
+        await cache.SetStringAsync($"pwd_otp_count_{testEmail}", "5");
+
+        var res = await authService.ForgotPasswordAsync(new ForgotPasswordDto { Email = testEmail });
+        Assert.False(res.Success);
+        Assert.Equal(429, res.StatusCode);
+        Assert.Contains("vượt quá số lần", res.ErrorMessage);
+    }
+
+    [Fact]
+    public async Task ForgotPassword_IpRateLimit_Max10Per15Minutes()
+    {
+        var options = new DbContextOptionsBuilder<DormiDbContext>()
+            .UseInMemoryDatabase(databaseName: Guid.NewGuid().ToString())
+            .Options;
+
+        using var db = new DormiDbContext(options);
+        var cache = new ServiceCollection().AddDistributedMemoryCache().BuildServiceProvider().GetRequiredService<IDistributedCache>();
+        var tokenGen = new JwtTokenGenerator(new ConfigurationBuilder().AddInMemoryCollection(new Dictionary<string, string?>
+        {
+            { "Jwt:Key", "SuperSecretKeyForTestingJwtToken1234567890" },
+            { "Jwt:Issuer", "Dormi" },
+            { "Jwt:Audience", "DormiAudience" }
+        }).Build());
+        var logger = new Microsoft.Extensions.Logging.Abstractions.NullLogger<AuthService>();
+        var authService = new AuthService(db, tokenGen, cache, logger);
+
+        var testIp = "192.168.1.100";
+        await cache.SetStringAsync($"pwd_otp_ip_{testIp}", "10");
+
+        var res = await authService.ForgotPasswordAsync(new ForgotPasswordDto { Email = "newuser@dormi.vn" }, clientIp: testIp);
+        Assert.False(res.Success);
+        Assert.Equal(429, res.StatusCode);
+        Assert.Contains("địa chỉ IP", res.ErrorMessage);
+    }
+
+    [Fact]
+    public async Task VerifyOtp_ValidOtp_ShouldReturnResetToken_AndInvalidateOtp()
+    {
+        var options = new DbContextOptionsBuilder<DormiDbContext>()
+            .UseInMemoryDatabase(databaseName: Guid.NewGuid().ToString())
+            .Options;
+
+        using var db = new DormiDbContext(options);
+        var user = new User
+        {
+            Id = Guid.NewGuid(),
+            Email = "verify@dormi.vn",
+            FullName = "Verify User",
+            Role = UserRole.Customer,
+            CreatedAt = DateTime.UtcNow
+        };
+        db.Users.Add(user);
+        await db.SaveChangesAsync();
+
+        var cache = new ServiceCollection().AddDistributedMemoryCache().BuildServiceProvider().GetRequiredService<IDistributedCache>();
+        var tokenGen = new JwtTokenGenerator(new ConfigurationBuilder().AddInMemoryCollection(new Dictionary<string, string?>
+        {
+            { "Jwt:Key", "SuperSecretKeyForTestingJwtToken1234567890" },
+            { "Jwt:Issuer", "Dormi" },
+            { "Jwt:Audience", "DormiAudience" }
+        }).Build());
+        var logger = new Microsoft.Extensions.Logging.Abstractions.NullLogger<AuthService>();
+        var emailService = new TestEmailService();
+        var authService = new AuthService(db, tokenGen, cache, logger, emailService);
+
+        // Step 1: Request OTP
+        await authService.ForgotPasswordAsync(new ForgotPasswordDto { Email = user.Email });
+        var sentOtp = emailService.LastOtp;
+        Assert.NotNull(sentOtp);
+
+        // Step 2: Verify OTP
+        var verifyRes = await authService.VerifyOtpAsync(new VerifyOtpDto
+        {
+            Email = user.Email,
+            Otp = sentOtp
+        });
+
+        Assert.True(verifyRes.Success);
+        Assert.Equal(200, verifyRes.StatusCode);
+        Assert.NotNull(verifyRes.Data?.ResetToken);
+        Assert.NotEmpty(verifyRes.Data.ResetToken);
+
+        // OTP should now be consumed / invalidated
+        var remainingOtp = await cache.GetStringAsync($"password-reset:{user.Id}");
+        Assert.Null(remainingOtp);
+    }
+
+    [Fact]
+    public async Task VerifyOtp_InvalidOtp_ShouldTrackAttempts_AndLockoutAfter5Fails()
+    {
+        var options = new DbContextOptionsBuilder<DormiDbContext>()
+            .UseInMemoryDatabase(databaseName: Guid.NewGuid().ToString())
+            .Options;
+
+        using var db = new DormiDbContext(options);
+        var user = new User
+        {
+            Id = Guid.NewGuid(),
+            Email = "lockout@dormi.vn",
+            FullName = "Lockout User",
+            Role = UserRole.Customer,
+            CreatedAt = DateTime.UtcNow
+        };
+        db.Users.Add(user);
+        await db.SaveChangesAsync();
+
+        var cache = new ServiceCollection().AddDistributedMemoryCache().BuildServiceProvider().GetRequiredService<IDistributedCache>();
+        var tokenGen = new JwtTokenGenerator(new ConfigurationBuilder().AddInMemoryCollection(new Dictionary<string, string?>
+        {
+            { "Jwt:Key", "SuperSecretKeyForTestingJwtToken1234567890" },
+            { "Jwt:Issuer", "Dormi" },
+            { "Jwt:Audience", "DormiAudience" }
+        }).Build());
+        var logger = new Microsoft.Extensions.Logging.Abstractions.NullLogger<AuthService>();
+        var emailService = new TestEmailService();
+        var authService = new AuthService(db, tokenGen, cache, logger, emailService);
+
+        await authService.ForgotPasswordAsync(new ForgotPasswordDto { Email = user.Email });
+
+        // Failed attempt 1 to 4
+        for (int i = 1; i <= 4; i++)
+        {
+            var res = await authService.VerifyOtpAsync(new VerifyOtpDto
+            {
+                Email = user.Email,
+                Otp = "000000"
+            });
+            Assert.False(res.Success);
+            Assert.Equal(400, res.StatusCode);
+            Assert.Contains($"còn {5 - i} lần thử", res.ErrorMessage);
+        }
+
+        // 5th failed attempt -> Lockout triggered
+        var lockoutRes = await authService.VerifyOtpAsync(new VerifyOtpDto
+        {
+            Email = user.Email,
+            Otp = "000000"
+        });
+        Assert.False(lockoutRes.Success);
+        Assert.Equal(400, lockoutRes.StatusCode);
+        Assert.Contains("quá 5 lần", lockoutRes.ErrorMessage);
+
+        // OTP is completely wiped out
+        var wipedOtp = await cache.GetStringAsync($"password-reset:{user.Id}");
+        Assert.Null(wipedOtp);
+    }
+
+    [Fact]
+    public async Task ResetPassword_CompleteFlow_ShouldUpdatePassword_AndConsumeSingleUseToken()
+    {
+        var options = new DbContextOptionsBuilder<DormiDbContext>()
+            .UseInMemoryDatabase(databaseName: Guid.NewGuid().ToString())
+            .Options;
+
+        using var db = new DormiDbContext(options);
+        var hasher = new Microsoft.AspNetCore.Identity.PasswordHasher<User>();
+        var user = new User
+        {
+            Id = Guid.NewGuid(),
+            Email = "flow@dormi.vn",
+            FullName = "Flow User",
+            Role = UserRole.Customer,
+            CreatedAt = DateTime.UtcNow
+        };
+        user.PasswordHash = hasher.HashPassword(user, "InitialPassword123!");
+        db.Users.Add(user);
+        await db.SaveChangesAsync();
+
+        var cache = new ServiceCollection().AddDistributedMemoryCache().BuildServiceProvider().GetRequiredService<IDistributedCache>();
+        var tokenGen = new JwtTokenGenerator(new ConfigurationBuilder().AddInMemoryCollection(new Dictionary<string, string?>
+        {
+            { "Jwt:Key", "SuperSecretKeyForTestingJwtToken1234567890" },
+            { "Jwt:Issuer", "Dormi" },
+            { "Jwt:Audience", "DormiAudience" }
+        }).Build());
+        var logger = new Microsoft.Extensions.Logging.Abstractions.NullLogger<AuthService>();
+        var emailService = new TestEmailService();
+        var authService = new AuthService(db, tokenGen, cache, logger, emailService);
+
+        // 1. ForgotPassword
+        await authService.ForgotPasswordAsync(new ForgotPasswordDto { Email = user.Email });
+        var otp = emailService.LastOtp;
+        Assert.NotNull(otp);
+
+        // 2. VerifyOtp
+        var verifyRes = await authService.VerifyOtpAsync(new VerifyOtpDto { Email = user.Email, Otp = otp });
+        var resetToken = verifyRes.Data?.ResetToken;
+        Assert.NotNull(resetToken);
+
+        // 3. ResetPassword with new password
+        var resetRes = await authService.ResetPasswordAsync(new ResetPasswordDto
+        {
+            ResetToken = resetToken,
+            NewPassword = "BrandNewSecurePassword456!"
+        });
+        Assert.True(resetRes.Success);
+        Assert.Equal(200, resetRes.StatusCode);
+
+        // Check DB has updated password hash
+        var updatedUser = await db.Users.FindAsync(user.Id);
+        Assert.NotNull(updatedUser);
+        var verifyOld = hasher.VerifyHashedPassword(updatedUser, updatedUser.PasswordHash, "InitialPassword123!");
+        Assert.Equal(Microsoft.AspNetCore.Identity.PasswordVerificationResult.Failed, verifyOld);
+        var verifyNew = hasher.VerifyHashedPassword(updatedUser, updatedUser.PasswordHash, "BrandNewSecurePassword456!");
+        Assert.Equal(Microsoft.AspNetCore.Identity.PasswordVerificationResult.Success, verifyNew);
+
+        // 4. Token is SINGLE-USE: Calling again with same resetToken must fail
+        var reuseRes = await authService.ResetPasswordAsync(new ResetPasswordDto
+        {
+            ResetToken = resetToken,
+            NewPassword = "AnotherPassword789!"
+        });
+        Assert.False(reuseRes.Success);
+        Assert.Equal(400, reuseRes.StatusCode);
+        Assert.Contains("hết hạn", reuseRes.ErrorMessage);
     }
 
     private class TestWebHostEnvironment : Microsoft.AspNetCore.Hosting.IWebHostEnvironment

@@ -60,16 +60,43 @@ public class AuthController : BaseApiController
     }
 
     [HttpPost("forgot-password")]
+    [ProducesResponseType(typeof(object), 200)]
+    [ProducesResponseType(400)]
+    [ProducesResponseType(429)]
     public async Task<IActionResult> ForgotPassword([FromBody] ForgotPasswordDto dto)
     {
-        var result = await _authService.ForgotPasswordAsync(dto);
+        var clientIp = HttpContext.Connection.RemoteIpAddress?.ToString() ?? "127.0.0.1";
+        var result = await _authService.ForgotPasswordAsync(dto, clientIp);
+        return HandleResult(result);
+    }
+
+    [HttpPost("verify-otp")]
+    [ProducesResponseType(typeof(VerifyOtpResponseDto), 200)]
+    [ProducesResponseType(400)]
+    public async Task<IActionResult> VerifyOtp([FromBody] VerifyOtpDto dto)
+    {
+        var clientIp = HttpContext.Connection.RemoteIpAddress?.ToString() ?? "127.0.0.1";
+        var result = await _authService.VerifyOtpAsync(dto, clientIp);
         return HandleResult(result);
     }
 
     [HttpPost("reset-password")]
+    [ProducesResponseType(typeof(object), 200)]
+    [ProducesResponseType(400)]
     public async Task<IActionResult> ResetPassword([FromBody] ResetPasswordDto dto)
     {
         var result = await _authService.ResetPasswordAsync(dto);
+        return HandleResult(result);
+    }
+
+    [Authorize]
+    [HttpPost("change-password")]
+    public async Task<IActionResult> ChangePassword([FromBody] ChangePasswordDto dto)
+    {
+        var userId = GetCurrentUserId();
+        if (!userId.HasValue) return Unauthorized();
+
+        var result = await _authService.ChangePasswordAsync(userId.Value, dto);
         return HandleResult(result);
     }
 }

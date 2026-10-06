@@ -62,9 +62,35 @@ public class ForgotPasswordDto
     public string Email { get; set; } = string.Empty;
 }
 
-public class ResetPasswordDto
+public class VerifyOtpDto
 {
     public string Email { get; set; } = string.Empty;
-    public string Token { get; set; } = string.Empty;
+    public string Otp { get; set; } = string.Empty;
+}
+
+public class VerifyOtpResponseDto
+{
+    public string ResetToken { get; set; } = string.Empty;
+    public string Message { get; set; } = string.Empty;
+}
+
+public class ResetPasswordDto
+{
+    public string? Email { get; set; }
+    public string? Token { get; set; }
+    public string? ResetToken { get; set; }
+    public string NewPassword { get; set; } = string.Empty;
+
+    public string GetEffectiveToken()
+    {
+        if (!string.IsNullOrWhiteSpace(ResetToken)) return ResetToken.Trim();
+        if (!string.IsNullOrWhiteSpace(Token)) return Token.Trim();
+        return string.Empty;
+    }
+}
+
+public class ChangePasswordDto
+{
+    public string CurrentPassword { get; set; } = string.Empty;
     public string NewPassword { get; set; } = string.Empty;
 }

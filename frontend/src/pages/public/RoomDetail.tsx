@@ -23,13 +23,6 @@ export default function RoomDetail() {
   const [selectedTime, setSelectedTime] = useState('');
   const [isSaved, setIsSaved] = useState(false);
 
-  const SAMPLE_PHOTOS = [
-    "https://images.unsplash.com/photo-1522708323590-d24dbb6b0267?auto=format&fit=crop&w=1200&q=80",
-    "https://images.unsplash.com/photo-1502672260266-1c1de2d96674?auto=format&fit=crop&w=1200&q=80",
-    "https://images.unsplash.com/photo-1560448204-e02f11c3d0e2?auto=format&fit=crop&w=1200&q=80",
-    "https://images.unsplash.com/photo-1555854877-bab0e564b8d5?auto=format&fit=crop&w=1200&q=80"
-  ];
-
   useEffect(() => {
     if (id) {
       setLoading(true);
@@ -64,10 +57,10 @@ export default function RoomDetail() {
     }
   }, [id, currentUser]);
 
-  const hasRealPhotos = Boolean(roomData?.images && roomData.images.length > 0);
-  const photos = hasRealPhotos
-    ? roomData!.images.map(img => img.imageUrl) 
-    : SAMPLE_PHOTOS;
+  const photos = (roomData?.images && roomData.images.length > 0)
+    ? roomData.images.map(img => img.imageUrl) 
+    : [];
+  const hasRealPhotos = photos.length > 0;
 
   const handleFavorite = async () => {
     if (!currentUser) {
@@ -175,36 +168,39 @@ export default function RoomDetail() {
         </Button>
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-6 h-[40vh] md:h-[55vh]">
-        <div className="md:col-span-2 h-full bg-white shadow-clay-soft rounded-[18px] overflow-hidden relative group cursor-pointer p-2" onClick={() => setShowGallery(true)}>
-          {!hasRealPhotos && (
-            <div className="absolute top-4 left-4 z-10 bg-amber-600/90 text-white text-xs font-semibold px-3 py-1.5 rounded-full backdrop-blur-xs shadow-sm">
-              Ảnh minh họa (Chưa có ảnh chụp thực tế từ chủ phòng)
+      {hasRealPhotos ? (
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 h-[40vh] md:h-[55vh]">
+          <div className="md:col-span-2 h-full bg-white shadow-clay-soft rounded-[18px] overflow-hidden relative group cursor-pointer p-2" onClick={() => setShowGallery(true)}>
+            <div className="w-full h-full rounded-[14px] overflow-hidden">
+              <img src={photos[0]} alt="Room Main" className="w-full h-full object-cover transition-transform duration-200 group-hover:scale-[1.02]" />
             </div>
-          )}
-          <div className="w-full h-full rounded-[14px] overflow-hidden">
-            <img src={photos[0]} alt="Room Main" className="w-full h-full object-cover transition-transform duration-200 group-hover:scale-[1.02]" />
+            <div className="absolute inset-0 bg-[#0F172A]/20 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
+              <Button variant="secondary" className="bg-white text-[#0F172A] border-none shadow-clay-soft">
+                Xem tất cả ({photos.length}) ảnh
+              </Button>
+            </div>
           </div>
-          <div className="absolute inset-0 bg-[#0F172A]/20 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
-            <Button variant="secondary" className="bg-white text-[#0F172A] border-none shadow-clay-soft">
-              Xem tất cả ({photos.length}) ảnh
-            </Button>
-          </div>
-        </div>
-        <div className="hidden md:flex flex-col gap-6 h-full">
-          <div className="flex-1 bg-white shadow-clay-soft rounded-[18px] p-2 cursor-pointer" onClick={() => setShowGallery(true)}>
-            <img src={photos[1] || photos[0]} alt="Room 2" className="w-full h-full object-cover rounded-[14px] transition-transform hover:scale-[1.02]" />
-          </div>
-          <div className="flex-1 bg-white shadow-clay-soft rounded-[18px] p-2 relative group cursor-pointer" onClick={() => setShowGallery(true)}>
-            <img src={photos[2] || photos[0]} alt="Room 3" className="w-full h-full object-cover rounded-[14px] transition-transform group-hover:scale-[1.02]" />
-            {photos.length > 3 && (
-              <div className="absolute inset-2 rounded-[14px] bg-[#0F172A]/50 flex items-center justify-center">
-                <span className="text-white font-bold text-h2">+{photos.length - 3} Ảnh</span>
-              </div>
-            )}
+          <div className="hidden md:flex flex-col gap-6 h-full">
+            <div className="flex-1 bg-white shadow-clay-soft rounded-[18px] p-2 cursor-pointer" onClick={() => setShowGallery(true)}>
+              <img src={photos[1] || photos[0]} alt="Room 2" className="w-full h-full object-cover rounded-[14px] transition-transform hover:scale-[1.02]" />
+            </div>
+            <div className="flex-1 bg-white shadow-clay-soft rounded-[18px] p-2 relative group cursor-pointer" onClick={() => setShowGallery(true)}>
+              <img src={photos[2] || photos[0]} alt="Room 3" className="w-full h-full object-cover rounded-[14px] transition-transform group-hover:scale-[1.02]" />
+              {photos.length > 3 && (
+                <div className="absolute inset-2 rounded-[14px] bg-[#0F172A]/50 flex items-center justify-center">
+                  <span className="text-white font-bold text-h2">+{photos.length - 3} Ảnh</span>
+                </div>
+              )}
+            </div>
           </div>
         </div>
-      </div>
+      ) : (
+        <div className="w-full h-44 md:h-56 bg-white shadow-clay-soft rounded-[18px] border border-dashed border-[#CBD5E1] flex flex-col items-center justify-center p-6 text-center space-y-2">
+          <Camera className="w-10 h-10 text-[#94A3B8]" />
+          <h3 className="text-body font-bold text-[#475569]">Chưa có hình ảnh chụp thực tế</h3>
+          <p className="text-caption text-[#64748B]">Chủ phòng chưa tải lên ảnh chụp thực tế cho phòng trọ này.</p>
+        </div>
+      )}
 
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-10">
         <div className="lg:col-span-8 space-y-8">

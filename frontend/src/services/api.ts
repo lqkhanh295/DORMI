@@ -151,8 +151,22 @@ export const authApi = {
     });
   },
 
-  resetPassword: async (data: { email: string; token: string; newPassword: string }) => {
+  verifyOtp: async (data: { email: string; otp: string }) => {
+    return request<{ resetToken: string; message: string }>('/auth/verify-otp', {
+      method: 'POST',
+      body: JSON.stringify(data)
+    });
+  },
+
+  resetPassword: async (data: { email?: string; token?: string; resetToken?: string; newPassword: string }) => {
     return request<{ message: string }>('/auth/reset-password', {
+      method: 'POST',
+      body: JSON.stringify(data)
+    });
+  },
+
+  changePassword: async (data: { currentPassword: string; newPassword: string }) => {
+    return request<{ message: string }>('/auth/change-password', {
       method: 'POST',
       body: JSON.stringify(data)
     });

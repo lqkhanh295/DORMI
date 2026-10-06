@@ -75,17 +75,6 @@ export default function LandlordChatCenter() {
     }
   });
 
-  // Seed customer fallback
-  if (!contactsMap.has('16c169d9-eaee-4e33-9914-eb34a19a13dc')) {
-    contactsMap.set('16c169d9-eaee-4e33-9914-eb34a19a13dc', {
-      id: '16c169d9-eaee-4e33-9914-eb34a19a13dc',
-      name: 'Lê Quốc Khánh (Người thuê)',
-      role: 'Tenant',
-      online: true,
-      avatar: ''
-    });
-  }
-
   const contacts = Array.from(contactsMap.values());
   const activeContactId = selectedContactId || contacts[0]?.id;
   const selectedContact = contacts.find(c => c.id === activeContactId) || contacts[0];

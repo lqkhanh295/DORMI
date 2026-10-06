@@ -17,11 +17,13 @@ public class AppointmentService : IAppointmentService
 {
     private readonly DormiDbContext _db;
     private readonly IDistributedCache? _cache;
+    private readonly IKafkaProducer? _kafkaProducer;
 
-    public AppointmentService(DormiDbContext db, IDistributedCache? cache = null)
+    public AppointmentService(DormiDbContext db, IDistributedCache? cache = null, IKafkaProducer? kafkaProducer = null)
     {
         _db = db;
         _cache = cache;
+        _kafkaProducer = kafkaProducer;
     }
 
     public async Task<ServiceResult<object>> CreateAppointmentAsync(Guid userId, CreateAppointmentDto dto)
@@ -83,6 +85,31 @@ public class AppointmentService : IAppointmentService
 
         _db.ViewingAppointments.Add(appointment);
         await _db.SaveChangesAsync();
+
+        // Publish event to Kafka for async notification to landlord
+        if (_kafkaProducer != null)
+        {
+            await _kafkaProducer.PublishNotificationAsync(new NotificationEvent
+            {
+                Id = Guid.NewGuid(),
+                EventType = "AppointmentCreated",
+                UserId = room.LandlordId,
+                Title = "Lịch hẹn xem phòng mới",
+                Message = $"Khách hàng vừa đặt lịch hẹn xem phòng '{room.Title}' vào lúc {appointment.AppointmentDate:dd/MM/yyyy HH:mm}.",
+                Type = "Appointment",
+                LinkUrl = "/landlord/appointments",
+                CreatedAt = DateTime.UtcNow,
+                Metadata = new Dictionary<string, object?>
+                {
+                    ["appointmentId"] = appointment.Id.ToString(),
+                    ["roomId"] = room.Id.ToString(),
+                    ["roomTitle"] = room.Title,
+                    ["customerId"] = userId.ToString(),
+                    ["appointmentDate"] = appointment.AppointmentDate.ToString("o"),
+                    ["status"] = appointment.Status
+                }
+            });
+        }
 
         return ServiceResult<object>.Ok(new { id = appointment.Id, message = "Đặt lịch xem phòng thành công!" });
     }
@@ -151,6 +178,31 @@ public class AppointmentService : IAppointmentService
 
         appointment.Status = dto.Status;
         await _db.SaveChangesAsync();
+
+        if (_kafkaProducer != null)
+        {
+            var recipientId = (appointment.CustomerId == userId) ? appointment.Room.LandlordId : appointment.CustomerId;
+            var roomTitle = appointment.Room?.Title ?? "phòng trọ";
+
+            await _kafkaProducer.PublishNotificationAsync(new NotificationEvent
+            {
+                Id = Guid.NewGuid(),
+                EventType = "AppointmentStatusUpdated",
+                UserId = recipientId,
+                Title = "Cập nhật trạng thái lịch hẹn",
+                Message = $"Lịch hẹn xem '{roomTitle}' đã được cập nhật thành: {dto.Status}.",
+                Type = "Appointment",
+                LinkUrl = "/appointments",
+                CreatedAt = DateTime.UtcNow,
+                Metadata = new Dictionary<string, object?>
+                {
+                    ["appointmentId"] = appointment.Id.ToString(),
+                    ["roomId"] = appointment.RoomId.ToString(),
+                    ["roomTitle"] = roomTitle,
+                    ["status"] = dto.Status
+                }
+            });
+        }
 
         return ServiceResult<object>.Ok(new { message = "Cập nhật trạng thái lịch hẹn thành công." });
     }

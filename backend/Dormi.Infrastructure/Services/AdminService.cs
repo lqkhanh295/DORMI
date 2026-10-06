@@ -18,11 +18,13 @@ public class AdminService : IAdminService
 {
     private readonly DormiDbContext _db;
     private readonly IHubContext<ChatHub> _hubContext;
+    private readonly IKafkaProducer? _kafkaProducer;
 
-    public AdminService(DormiDbContext db, IHubContext<ChatHub> hubContext)
+    public AdminService(DormiDbContext db, IHubContext<ChatHub> hubContext, IKafkaProducer? kafkaProducer = null)
     {
         _db = db;
         _hubContext = hubContext;
+        _kafkaProducer = kafkaProducer;
     }
 
     public async Task<ServiceResult<AdminStatsDto>> GetStatsAsync()
@@ -217,17 +219,21 @@ public class AdminService : IAdminService
         var oldStatus = room.Status;
         room.Status = status;
 
+        Guid notifId = Guid.NewGuid();
+        string notifTitle = status == RoomStatus.Available 
+            ? "Tin đăng phòng đã được phê duyệt" 
+            : (status == RoomStatus.Hidden ? "Tin đăng phòng bị từ chối / ẩn" : "Cập nhật trạng thái tin đăng");
+        string notifMessage = $"Tin đăng '{room.Title}' đã được quản trị viên duyệt thành trạng thái: {status}.";
+
         if (oldStatus != status)
         {
             _db.Notifications.Add(new Notification
             {
-                Id = Guid.NewGuid(),
+                Id = notifId,
                 UserId = room.LandlordId,
-                Title = status == RoomStatus.Available 
-                    ? "Tin đăng phòng đã được phê duyệt" 
-                    : (status == RoomStatus.Hidden ? "Tin đăng phòng bị từ chối / ẩn" : "Cập nhật trạng thái tin đăng"),
-                Message = $"Tin đăng '{room.Title}' đã được quản trị viên duyệt thành trạng thái: {status}.",
-                Type = "System",
+                Title = notifTitle,
+                Message = notifMessage,
+                Type = "Room",
                 LinkUrl = $"/rooms/{room.Id}",
                 CreatedAt = DateTime.UtcNow
             });
@@ -235,21 +241,48 @@ public class AdminService : IAdminService
 
         await _db.SaveChangesAsync();
 
-        // Broadcast real-time room moderation event via SignalR
+        var payload = new
+        {
+            roomId = room.Id.ToString(),
+            title = room.Title,
+            landlordId = room.LandlordId.ToString(),
+            landlordName = room.Landlord?.FullName ?? "Chủ trọ",
+            oldStatus = (int)oldStatus,
+            newStatus = (int)status,
+            statusName = status.ToString(),
+            updatedAt = DateTime.UtcNow.ToString("o")
+        };
+
+        // Stream event to Kafka for decoupled processing/audit
+        if (_kafkaProducer != null && oldStatus != status)
+        {
+            await _kafkaProducer.PublishNotificationAsync(new NotificationEvent
+            {
+                Id = notifId,
+                EventType = "RoomStatusUpdated",
+                UserId = room.LandlordId,
+                Title = notifTitle,
+                Message = notifMessage,
+                Type = "Room",
+                LinkUrl = $"/rooms/{room.Id}",
+                CreatedAt = DateTime.UtcNow,
+                Metadata = new Dictionary<string, object?>
+                {
+                    ["roomId"] = payload.roomId,
+                    ["title"] = payload.title,
+                    ["landlordId"] = payload.landlordId,
+                    ["landlordName"] = payload.landlordName,
+                    ["oldStatus"] = payload.oldStatus,
+                    ["newStatus"] = payload.newStatus,
+                    ["statusName"] = payload.statusName,
+                    ["updatedAt"] = payload.updatedAt
+                }
+            });
+        }
+
+        // Direct SignalR broadcast fallback for instant UI response
         try
         {
-            var payload = new
-            {
-                roomId = room.Id.ToString(),
-                title = room.Title,
-                landlordId = room.LandlordId.ToString(),
-                landlordName = room.Landlord?.FullName ?? "Chủ trọ",
-                oldStatus = (int)oldStatus,
-                newStatus = (int)status,
-                statusName = status.ToString(),
-                updatedAt = DateTime.UtcNow.ToString("o")
-            };
-
             await _hubContext.Clients.Group(room.LandlordId.ToString().ToLower())
                 .SendAsync("RoomStatusUpdated", payload);
 

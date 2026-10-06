@@ -25,17 +25,20 @@ public class RoomService : IRoomService
     private readonly IImageService _imageService;
     private readonly IHubContext<ChatHub> _hubContext;
     private readonly IDistributedCache _cache;
+    private readonly IKafkaProducer? _kafkaProducer;
 
     public RoomService(
         DormiDbContext db, 
         IImageService imageService, 
         IHubContext<ChatHub> hubContext,
-        IDistributedCache cache)
+        IDistributedCache cache,
+        IKafkaProducer? kafkaProducer = null)
     {
         _db = db;
         _imageService = imageService;
         _hubContext = hubContext;
         _cache = cache;
+        _kafkaProducer = kafkaProducer;
     }
 
     private static bool IsValidImageFile(IFormFile file, out string? errorMessage)
@@ -457,15 +460,40 @@ public class RoomService : IRoomService
         _db.Rooms.Add(room);
         await _db.SaveChangesAsync();
 
+        // Publish event to Kafka for async notification & moderation pipeline
+        if (_kafkaProducer != null)
+        {
+            await _kafkaProducer.PublishNotificationAsync(new NotificationEvent
+            {
+                Id = room.Id,
+                EventType = "NewRoomPendingApproval",
+                UserId = null,
+                Title = "Tin đăng phòng mới chờ duyệt",
+                Message = $"Chủ trọ vừa đăng phòng '{room.Title}', đang chờ duyệt.",
+                Type = "Room",
+                LinkUrl = $"/admin/rooms",
+                CreatedAt = room.CreatedAt,
+                Metadata = new Dictionary<string, object?>
+                {
+                    ["roomId"] = room.Id.ToString(),
+                    ["title"] = room.Title,
+                    ["landlordId"] = room.LandlordId.ToString(),
+                    ["createdAt"] = room.CreatedAt.ToString("o")
+                }
+            });
+        }
+
         try
         {
-            await _hubContext.Clients.Group("admins").SendAsync("NewRoomPending", new
+            var adminPayload = new
             {
                 roomId = room.Id,
                 title = room.Title,
                 landlordId = room.LandlordId,
                 createdAt = room.CreatedAt
-            });
+            };
+            await _hubContext.Clients.Group("admins").SendAsync("NewRoomPending", adminPayload);
+            await _hubContext.Clients.Group("admins").SendAsync("NewRoomPendingApproval", adminPayload);
         }
         catch
         {

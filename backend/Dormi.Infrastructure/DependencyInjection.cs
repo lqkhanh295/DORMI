@@ -35,7 +35,25 @@ public static class DependencyInjection
 
         // Register Distributed Cache (Redis with in-memory fallback for local resilience)
         var redisConn = configuration.GetConnectionString("Redis");
+        var redisAvailable = false;
         if (!string.IsNullOrEmpty(redisConn))
+        {
+            try
+            {
+                var redisOptions = StackExchange.Redis.ConfigurationOptions.Parse(redisConn);
+                redisOptions.ConnectTimeout = 1000;
+                redisOptions.SyncTimeout = 1000;
+                redisOptions.AbortOnConnectFail = true;
+                using var testConn = StackExchange.Redis.ConnectionMultiplexer.Connect(redisOptions);
+                redisAvailable = testConn.IsConnected;
+            }
+            catch
+            {
+                redisAvailable = false;
+            }
+        }
+
+        if (redisAvailable)
         {
             services.AddStackExchangeRedisCache(options =>
             {
@@ -49,6 +67,8 @@ public static class DependencyInjection
         }
 
         // Register Core Infrastructure Services
+        services.Configure<EmailOptions>(configuration.GetSection(EmailOptions.SectionName));
+        services.AddScoped<IEmailService, EmailService>();
         services.AddScoped<IImageService, CloudinaryService>();
         services.AddScoped<IJwtTokenGenerator, JwtTokenGenerator>();
 
@@ -66,6 +86,12 @@ public static class DependencyInjection
         services.AddScoped<ITenantReviewService, TenantReviewService>();
         services.AddScoped<INotificationService, NotificationService>();
 
+        // Register Apache Kafka Messaging (Event streaming & Notification Consumer)
+        services.Configure<Dormi.Infrastructure.Kafka.KafkaOptions>(configuration.GetSection(Dormi.Infrastructure.Kafka.KafkaOptions.SectionName));
+        services.AddSingleton<IKafkaProducer, Dormi.Infrastructure.Kafka.KafkaProducer>();
+        services.AddHostedService<Dormi.Infrastructure.Kafka.KafkaNotificationConsumer>();
+
         return services;
     }
 }
+

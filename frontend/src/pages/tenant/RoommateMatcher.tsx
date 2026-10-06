@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import { Button } from '../../components/ui/Button';
 import { useNavigate } from 'react-router-dom';
 import { useStore, type RoommateProfile } from '../../store/useStore';
-import { Heart, X, MessageCircle, Check, CheckCircle2, Trash2 } from 'lucide-react';
+import { Heart, X, MessageCircle, Check, CheckCircle2, Trash2, Users } from 'lucide-react';
 import { roommatesApi } from '../../services/api';
 
 export default function RoommateMatcher() {
@@ -14,10 +14,7 @@ export default function RoommateMatcher() {
   const { likedRoommates, addLikedRoommate, removeLikedRoommate } = useStore();
   const navigate = useNavigate();
 
-  // Filter out any stale mock profiles defensively
-  const activeLikedRoommates = (likedRoommates || []).filter(
-    r => r && r.customerId && !['Alex', 'Sarah', 'Minh'].includes(r.name)
-  );
+  const activeLikedRoommates = (likedRoommates || []).filter(r => r && r.customerId);
 
   useEffect(() => {
     let isMounted = true;
@@ -39,50 +36,12 @@ export default function RoommateMatcher() {
           }));
           setRoommates(apiRoommates);
         } else {
-          setRoommates([
-            {
-              id: 'rm-1',
-              customerId: 'c0000000-0000-0000-0000-000000000002',
-              name: 'Trần Thị Bích',
-              age: 21,
-              major: 'Sinh viên ĐH Kinh Tế',
-              image: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=400&q=80',
-              matchScore: 94,
-              budget: '3.500.000đ',
-              bio: 'Tìm bạn cùng phòng chia sẻ căn hộ 2PN gần trung tâm. Thói quen sạch sẽ, thích nấu ăn và giữ yên tĩnh buổi tối.',
-              tags: ['Yên tĩnh', 'Sạch sẽ', 'Không hút thuốc', 'Nấu ăn']
-            },
-            {
-              id: 'rm-2',
-              customerId: 'c0000000-0000-0000-0000-000000000004',
-              name: 'Phạm Thị Dung',
-              age: 23,
-              major: 'Chuyên viên Marketing',
-              image: 'https://images.unsplash.com/photo-1517841905240-472988babdf9?auto=format&fit=crop&w=400&q=80',
-              matchScore: 88,
-              budget: '4.000.000đ',
-              bio: 'Đi làm giờ hành chính 8h-17h, thích tập gym và lối sống lành mạnh. Cần bạn ở ghép thân thiện, tôn trọng không gian riêng.',
-              tags: ['Dậy sớm', 'Tập gym', 'Gọn gàng']
-            }
-          ]);
+          setRoommates([]);
         }
       })
       .catch((err) => {
         console.warn('API getRecommendations failed:', err);
-        setRoommates([
-          {
-            id: 'rm-1',
-            customerId: 'c0000000-0000-0000-0000-000000000002',
-            name: 'Trần Thị Bích',
-            age: 21,
-            major: 'Sinh viên ĐH Kinh Tế',
-            image: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=400&q=80',
-            matchScore: 94,
-            budget: '3.500.000đ',
-            bio: 'Tìm bạn cùng phòng chia sẻ căn hộ 2PN gần trung tâm. Thói quen sạch sẽ, thích nấu ăn và giữ yên tĩnh buổi tối.',
-            tags: ['Yên tĩnh', 'Sạch sẽ', 'Không hút thuốc', 'Nấu ăn']
-          }
-        ]);
+        setRoommates([]);
       })
       .finally(() => {
         if (isMounted) setLoading(false);
@@ -198,6 +157,19 @@ export default function RoommateMatcher() {
           <div className="flex flex-col items-center justify-center p-12 text-[#64748B]">
             <div className="w-8 h-8 border-4 border-[#00153D] border-t-transparent rounded-full animate-spin mb-3"></div>
             <p>Đang tải danh sách người ở ghép từ Backend API...</p>
+          </div>
+        ) : roommates.length === 0 ? (
+          <div className="flex-1 flex flex-col items-center justify-center text-center bg-white rounded-[18px] shadow-clay-soft p-8 max-w-md mx-auto w-full space-y-4">
+            <div className="w-16 h-16 bg-blue-50 text-[#00153D] rounded-full flex items-center justify-center mx-auto">
+              <Users size={32} />
+            </div>
+            <h2 className="text-h2 font-bold text-[#0F172A]">Chưa có người ở ghép</h2>
+            <p className="text-[#64748B] text-body max-w-xs mx-auto">
+              Hiện tại chưa có bài đăng tìm người ở ghép phù hợp trên hệ thống. Hãy là người đầu tiên đăng bài!
+            </p>
+            <Button onClick={() => navigate('/tenant/post')} variant="primary" className="px-6">
+              Đăng tin tìm người ở ghép
+            </Button>
           </div>
         ) : currentIndex >= roommates.length || !profile ? (
           <div className="flex-1 flex flex-col items-center justify-center text-center bg-white rounded-[18px] shadow-clay-soft p-8 max-w-md mx-auto w-full space-y-4">

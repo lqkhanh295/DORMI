@@ -5,6 +5,7 @@ import { Input } from '../../components/ui/Input';
 import { toast } from 'sonner';
 import { Lock, Bell, Shield, AlertTriangle } from 'lucide-react';
 import { useStore } from '../../store/useStore';
+import { authApi } from '../../services/api';
 
 type TabType = 'notifications' | 'security' | 'privacy' | 'danger';
 
@@ -30,7 +31,7 @@ export default function TenantSettings() {
     toast.success('Đã lưu cấu hình thông báo thành công!');
   };
 
-  const handleUpdatePassword = (e: React.FormEvent) => {
+  const handleUpdatePassword = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!currentPassword) {
       toast.error('Vui lòng nhập mật khẩu hiện tại.');
@@ -44,14 +45,18 @@ export default function TenantSettings() {
       toast.error('Mật khẩu xác nhận không khớp.');
       return;
     }
-    setUpdatingPassword(true);
-    setTimeout(() => {
-      setUpdatingPassword(false);
+    try {
+      setUpdatingPassword(true);
+      const res = await authApi.changePassword({ currentPassword, newPassword });
       setCurrentPassword('');
       setNewPassword('');
       setConfirmPassword('');
-      toast.success('Đổi mật khẩu thành công!');
-    }, 800);
+      toast.success(res?.message || 'Đổi mật khẩu thành công!');
+    } catch (err: any) {
+      toast.error(err?.message || 'Không thể đổi mật khẩu. Vui lòng kiểm tra lại mật khẩu hiện tại.');
+    } finally {
+      setUpdatingPassword(false);
+    }
   };
 
   const handleSavePrivacy = () => {

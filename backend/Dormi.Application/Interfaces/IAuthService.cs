@@ -12,6 +12,8 @@ public interface IAuthService
     Task<ServiceResult<AuthResponseDto>> VerifyMfaAsync(VerifyMfaDto dto, string clientIp = "127.0.0.1");
     Task<ServiceResult<CaptchaChallengeDto>> GenerateCaptchaChallengeAsync();
     Task<ServiceResult<UserDto>> GetMeAsync(Guid userId);
-    Task<ServiceResult<object>> ForgotPasswordAsync(ForgotPasswordDto dto);
+    Task<ServiceResult<object>> ForgotPasswordAsync(ForgotPasswordDto dto, string clientIp = "127.0.0.1");
+    Task<ServiceResult<VerifyOtpResponseDto>> VerifyOtpAsync(VerifyOtpDto dto, string clientIp = "127.0.0.1");
     Task<ServiceResult<object>> ResetPasswordAsync(ResetPasswordDto dto);
+    Task<ServiceResult<object>> ChangePasswordAsync(Guid userId, ChangePasswordDto dto);
 }

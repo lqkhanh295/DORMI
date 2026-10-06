@@ -98,7 +98,7 @@ export default function TenantChatCenter() {
 
   // Liked Roommates (Real DB profiles only)
   (likedRoommates || [])
-    .filter(r => r && r.customerId && !['Alex', 'Sarah', 'Minh'].includes(r.name))
+    .filter(r => r && r.customerId)
     .forEach(r => {
       const rId = r.customerId!;
       if (!contactsMap.has(rId)) {

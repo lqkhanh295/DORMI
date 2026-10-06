@@ -21,6 +21,8 @@ public class AuthService : IAuthService
     private readonly IJwtTokenGenerator _tokenGenerator;
     private readonly IDistributedCache _cache;
     private readonly ILogger<AuthService> _logger;
+    private readonly IEmailService? _emailService;
+    private readonly IKafkaProducer? _kafkaProducer;
     private readonly PasswordHasher<User> _passwordHasher = new();
 
     private class MfaSessionData
@@ -31,22 +33,82 @@ public class AuthService : IAuthService
         public int Attempts { get; set; }
     }
 
+    private class PasswordResetOtpData
+    {
+        public Guid UserId { get; set; }
+        public string Email { get; set; } = string.Empty;
+        public string OtpHash { get; set; } = string.Empty;
+        public int Attempts { get; set; }
+        public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
+    }
+
+    private class PasswordResetTokenData
+    {
+        public Guid UserId { get; set; }
+        public string Email { get; set; } = string.Empty;
+        public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
+    }
+
     private static bool IsDevelopment()
     {
         var env = Environment.GetEnvironmentVariable("ASPNETCORE_ENVIRONMENT");
         return string.IsNullOrEmpty(env) || string.Equals(env, "Development", StringComparison.OrdinalIgnoreCase);
     }
 
+    private static string HashSha256Hex(string input)
+    {
+        var bytes = System.Text.Encoding.UTF8.GetBytes(input);
+        var hash = SHA256.HashData(bytes);
+        return Convert.ToHexString(hash).ToLowerInvariant();
+    }
+
+    private static bool SlowEqualsHex(string hex1, string hex2)
+    {
+        if (string.IsNullOrWhiteSpace(hex1) || string.IsNullOrWhiteSpace(hex2)) return false;
+        if (hex1.Length != hex2.Length) return false;
+        try
+        {
+            var b1 = Convert.FromHexString(hex1);
+            var b2 = Convert.FromHexString(hex2);
+            return CryptographicOperations.FixedTimeEquals(b1, b2);
+        }
+        catch
+        {
+            return false;
+        }
+    }
+
+    private static bool SlowEquals(string a, string b)
+    {
+        var aBytes = System.Text.Encoding.UTF8.GetBytes(a);
+        var bBytes = System.Text.Encoding.UTF8.GetBytes(b);
+        return CryptographicOperations.FixedTimeEquals(aBytes, bBytes);
+    }
+
+    private static string MaskEmail(string email)
+    {
+        if (string.IsNullOrWhiteSpace(email)) return string.Empty;
+        var parts = email.Split('@');
+        if (parts.Length != 2) return "***";
+        var name = parts[0];
+        var maskedName = name.Length <= 2 ? name[0] + "***" : name[0] + "***" + name[^1];
+        return $"{maskedName}@{parts[1]}";
+    }
+
     public AuthService(
         DormiDbContext db, 
         IJwtTokenGenerator tokenGenerator, 
         IDistributedCache cache,
-        ILogger<AuthService> logger)
+        ILogger<AuthService> logger,
+        IEmailService? emailService = null,
+        IKafkaProducer? kafkaProducer = null)
     {
         _db = db;
         _tokenGenerator = tokenGenerator;
         _cache = cache;
         _logger = logger;
+        _emailService = emailService;
+        _kafkaProducer = kafkaProducer;
     }
 
     public async Task<ServiceResult<AuthResponseDto>> RegisterAsync(RegisterDto dto)
@@ -429,39 +491,271 @@ public class AuthService : IAuthService
         });
     }
 
-    public async Task<ServiceResult<object>> ForgotPasswordAsync(ForgotPasswordDto dto)
+    public async Task<ServiceResult<object>> ForgotPasswordAsync(ForgotPasswordDto dto, string clientIp = "127.0.0.1")
     {
         if (string.IsNullOrWhiteSpace(dto.Email))
         {
             return ServiceResult<object>.Fail("Vui lòng nhập địa chỉ email.", 400);
         }
 
-        var normalizedEmail = dto.Email.Trim().ToLower();
-        var user = await _db.Users.FirstOrDefaultAsync(u => u.Email.ToLower() == normalizedEmail);
-        
-        // Anti-enumeration: Return generic success message regardless of whether email exists
-        if (user != null)
+        var normalizedEmail = dto.Email.Trim().ToLowerInvariant();
+        var safeIp = string.IsNullOrWhiteSpace(clientIp) ? "127.0.0.1" : clientIp.Trim();
+
+        // 1. Rate limiting: 60s cooldown per email
+        var cooldownKey = $"pwd_otp_cooldown_{normalizedEmail}";
+        if (!string.IsNullOrEmpty(await _cache.GetStringAsync(cooldownKey)))
         {
-            // Generate a secure 6-digit OTP reset token with 15-minute expiration
-            var resetToken = RandomNumberGenerator.GetInt32(100000, 1000000).ToString();
-            await _cache.SetStringAsync($"pwd_reset_{normalizedEmail}", resetToken, new DistributedCacheEntryOptions
-            {
-                AbsoluteExpirationRelativeToNow = TimeSpan.FromMinutes(15)
-            });
-            _logger.LogInformation("[AUTH AUDIT] PASSWORD_RESET_REQUESTED: Email={Email}", normalizedEmail);
+            return ServiceResult<object>.Fail("Vui lòng đợi 60 giây trước khi yêu cầu mã mới.", 429);
         }
 
+        // 2. Rate limiting: max 5 requests per 15 minutes per email
+        var emailCountKey = $"pwd_otp_count_{normalizedEmail}";
+        var emailCountStr = await _cache.GetStringAsync(emailCountKey);
+        int.TryParse(emailCountStr, out var emailCount);
+        if (emailCount >= 5)
+        {
+            return ServiceResult<object>.Fail("Bạn đã vượt quá số lần yêu cầu mã OTP (tối đa 5 lần trong 15 phút). Vui lòng thử lại sau.", 429);
+        }
+
+        // 3. Rate limiting: max 10 requests per 15 minutes per IP
+        var ipCountKey = $"pwd_otp_ip_{safeIp}";
+        var ipCountStr = await _cache.GetStringAsync(ipCountKey);
+        int.TryParse(ipCountStr, out var ipCount);
+        if (ipCount >= 10)
+        {
+            return ServiceResult<object>.Fail("Quá nhiều yêu cầu từ địa chỉ IP này. Vui lòng thử lại sau.", 429);
+        }
+
+        // Update rate limits in cache
+        await _cache.SetStringAsync(cooldownKey, "1", new DistributedCacheEntryOptions
+        {
+            AbsoluteExpirationRelativeToNow = TimeSpan.FromSeconds(60)
+        });
+
+        await _cache.SetStringAsync(emailCountKey, (emailCount + 1).ToString(), new DistributedCacheEntryOptions
+        {
+            AbsoluteExpirationRelativeToNow = TimeSpan.FromMinutes(15)
+        });
+
+        await _cache.SetStringAsync(ipCountKey, (ipCount + 1).ToString(), new DistributedCacheEntryOptions
+        {
+            AbsoluteExpirationRelativeToNow = TimeSpan.FromMinutes(15)
+        });
+
+        // 4. Check if account exists
+        var user = await _db.Users.FirstOrDefaultAsync(u => u.Email.ToLower() == normalizedEmail);
+        if (user != null)
+        {
+            // Invalidate any previous OTP for the same account
+            await _cache.RemoveAsync($"password-reset:{user.Id}");
+            await _cache.RemoveAsync($"password-reset:email:{normalizedEmail}");
+
+            // Generate cryptographically secure 6-digit OTP
+            var otp = RandomNumberGenerator.GetInt32(100000, 1000000).ToString("D6");
+            var otpHash = HashSha256Hex(otp);
+
+            var otpData = new PasswordResetOtpData
+            {
+                UserId = user.Id,
+                Email = user.Email,
+                OtpHash = otpHash,
+                Attempts = 0,
+                CreatedAt = DateTime.UtcNow
+            };
+
+            var entryOptions = new DistributedCacheEntryOptions
+            {
+                AbsoluteExpirationRelativeToNow = TimeSpan.FromMinutes(5)
+            };
+
+            await _cache.SetStringAsync($"password-reset:{user.Id}", JsonSerializer.Serialize(otpData), entryOptions);
+            await _cache.SetStringAsync($"password-reset:email:{normalizedEmail}", user.Id.ToString(), entryOptions);
+
+            _logger.LogInformation("[AUTH AUDIT] PASSWORD_RESET_OTP_ISSUED: Email={MaskedEmail}, IP={ClientIp}",
+                MaskEmail(user.Email), safeIp);
+
+            // 1. Direct delivery via EmailService
+            if (_emailService != null)
+            {
+                try
+                {
+                    await _emailService.SendPasswordResetOtpAsync(user.Email, otp);
+                }
+                catch (Exception ex)
+                {
+                    _logger.LogError(ex, "[AuthService] Failed to send password reset email to {MaskedEmail}", MaskEmail(user.Email));
+                }
+            }
+
+            // 2. Publish audit event to Kafka asynchronously if available
+            if (_kafkaProducer != null)
+            {
+                try
+                {
+                    await _kafkaProducer.PublishNotificationAsync(new NotificationEvent
+                    {
+                        Id = Guid.NewGuid(),
+                        UserId = user.Id,
+                        Title = "Mã xác thực đặt lại mật khẩu",
+                        Message = $"Mã xác thực của bạn là: {otp} (có hiệu lực trong 5 phút).",
+                        Type = "Security",
+                        EventType = "PasswordResetOtp",
+                        CreatedAt = DateTime.UtcNow,
+                        Metadata = new System.Collections.Generic.Dictionary<string, object?>
+                        {
+                            ["Email"] = user.Email,
+                            ["Otp"] = otp
+                        }
+                    });
+                }
+                catch (Exception ex)
+                {
+                    _logger.LogDebug(ex, "[AuthService] Optional Kafka notification skipped.");
+                }
+            }
+        }
+        else
+        {
+            _logger.LogInformation("[AUTH AUDIT] PASSWORD_RESET_NONEXISTENT_EMAIL: Email={MaskedEmail}, IP={ClientIp}",
+                MaskEmail(normalizedEmail), safeIp);
+        }
+
+        // Generic response regardless of whether email exists to prevent user enumeration
         return ServiceResult<object>.Ok(new 
         { 
-            message = "Nếu địa chỉ email tồn tại trên hệ thống, hướng dẫn đặt lại mật khẩu đã được gửi đến hộp thư của bạn."
+            message = "If the account exists, an OTP has been sent."
+        });
+    }
+
+    public async Task<ServiceResult<VerifyOtpResponseDto>> VerifyOtpAsync(VerifyOtpDto dto, string clientIp = "127.0.0.1")
+    {
+        if (string.IsNullOrWhiteSpace(dto.Email) || string.IsNullOrWhiteSpace(dto.Otp))
+        {
+            return ServiceResult<VerifyOtpResponseDto>.Fail("Vui lòng nhập email và mã OTP.", 400);
+        }
+
+        var trimmedOtp = dto.Otp.Trim();
+        if (!System.Text.RegularExpressions.Regex.IsMatch(trimmedOtp, @"^\d{6}$"))
+        {
+            return ServiceResult<VerifyOtpResponseDto>.Fail("Mã OTP phải gồm 6 chữ số.", 400);
+        }
+
+        var normalizedEmail = dto.Email.Trim().ToLowerInvariant();
+
+        // Find userId from email index in cache or fallback to database
+        var userIdStr = await _cache.GetStringAsync($"password-reset:email:{normalizedEmail}");
+        Guid userId = Guid.Empty;
+        if (!string.IsNullOrEmpty(userIdStr) && Guid.TryParse(userIdStr, out var parsedGuid))
+        {
+            userId = parsedGuid;
+        }
+        else
+        {
+            var userInDb = await _db.Users.FirstOrDefaultAsync(u => u.Email.ToLower() == normalizedEmail);
+            if (userInDb != null)
+            {
+                userId = userInDb.Id;
+            }
+        }
+
+        if (userId == Guid.Empty)
+        {
+            return ServiceResult<VerifyOtpResponseDto>.Fail("Mã OTP không hợp lệ hoặc đã hết hạn.", 400);
+        }
+
+        var otpCacheKey = $"password-reset:{userId}";
+        var cachedOtpJson = await _cache.GetStringAsync(otpCacheKey);
+        if (string.IsNullOrEmpty(cachedOtpJson))
+        {
+            return ServiceResult<VerifyOtpResponseDto>.Fail("Mã OTP không hợp lệ hoặc đã hết hạn.", 400);
+        }
+
+        PasswordResetOtpData? otpData = null;
+        try
+        {
+            otpData = JsonSerializer.Deserialize<PasswordResetOtpData>(cachedOtpJson);
+        }
+        catch
+        {
+            // invalid json
+        }
+
+        if (otpData == null)
+        {
+            return ServiceResult<VerifyOtpResponseDto>.Fail("Mã OTP không hợp lệ hoặc đã hết hạn.", 400);
+        }
+
+        // Lockout check: max 5 failed attempts
+        if (otpData.Attempts >= 5)
+        {
+            await _cache.RemoveAsync(otpCacheKey);
+            await _cache.RemoveAsync($"password-reset:email:{normalizedEmail}");
+            _logger.LogWarning("[AUTH AUDIT] OTP_MAX_ATTEMPTS_EXCEEDED: UserId={UserId}, Email={MaskedEmail}", userId, MaskEmail(normalizedEmail));
+            return ServiceResult<VerifyOtpResponseDto>.Fail("Bạn đã nhập sai mã OTP quá 5 lần. Mã đã bị vô hiệu hóa, vui lòng yêu cầu mã mới.", 400);
+        }
+
+        // Constant-time comparison of OTP hash
+        var inputHash = HashSha256Hex(trimmedOtp);
+        var isValid = SlowEqualsHex(inputHash, otpData.OtpHash);
+
+        if (!isValid)
+        {
+            otpData.Attempts++;
+            if (otpData.Attempts >= 5)
+            {
+                await _cache.RemoveAsync(otpCacheKey);
+                await _cache.RemoveAsync($"password-reset:email:{normalizedEmail}");
+                _logger.LogWarning("[AUTH AUDIT] OTP_LOCKOUT_TRIGGERED: UserId={UserId}, Email={MaskedEmail}", userId, MaskEmail(normalizedEmail));
+                return ServiceResult<VerifyOtpResponseDto>.Fail("Bạn đã nhập sai mã OTP quá 5 lần. Mã đã bị vô hiệu hóa, vui lòng yêu cầu mã mới.", 400);
+            }
+
+            // Update remaining attempts in cache with 5-min TTL
+            await _cache.SetStringAsync(otpCacheKey, JsonSerializer.Serialize(otpData), new DistributedCacheEntryOptions
+            {
+                AbsoluteExpirationRelativeToNow = TimeSpan.FromMinutes(5)
+            });
+
+            var remaining = 5 - otpData.Attempts;
+            return ServiceResult<VerifyOtpResponseDto>.Fail($"Mã OTP không chính xác. Bạn còn {remaining} lần thử.", 400);
+        }
+
+        // Success: immediately invalidate OTP (single-use)
+        await _cache.RemoveAsync(otpCacheKey);
+        await _cache.RemoveAsync($"password-reset:email:{normalizedEmail}");
+
+        // Generate cryptographically secure random reset token (32 bytes)
+        var tokenBytes = RandomNumberGenerator.GetBytes(32);
+        var resetToken = Convert.ToHexString(tokenBytes).ToLowerInvariant();
+        var resetTokenHash = HashSha256Hex(resetToken);
+
+        var tokenData = new PasswordResetTokenData
+        {
+            UserId = userId,
+            Email = normalizedEmail,
+            CreatedAt = DateTime.UtcNow
+        };
+
+        // Store resetToken hash in Redis with 10-minute TTL
+        await _cache.SetStringAsync($"password-reset-token:{resetTokenHash}", JsonSerializer.Serialize(tokenData), new DistributedCacheEntryOptions
+        {
+            AbsoluteExpirationRelativeToNow = TimeSpan.FromMinutes(10)
+        });
+
+        _logger.LogInformation("[AUTH AUDIT] OTP_VERIFIED_SUCCESS: UserId={UserId}, Email={MaskedEmail}", userId, MaskEmail(normalizedEmail));
+
+        return ServiceResult<VerifyOtpResponseDto>.Ok(new VerifyOtpResponseDto
+        {
+            ResetToken = resetToken,
+            Message = "Xác thực OTP thành công. Vui lòng đặt mật khẩu mới trong vòng 10 phút."
         });
     }
 
     public async Task<ServiceResult<object>> ResetPasswordAsync(ResetPasswordDto dto)
     {
-        if (string.IsNullOrWhiteSpace(dto.Email) || string.IsNullOrWhiteSpace(dto.Token) || string.IsNullOrWhiteSpace(dto.NewPassword))
+        var token = dto.GetEffectiveToken();
+        if (string.IsNullOrWhiteSpace(token) || string.IsNullOrWhiteSpace(dto.NewPassword))
         {
-            return ServiceResult<object>.Fail("Vui lòng cung cấp đầy đủ email, mã xác thực và mật khẩu mới.", 400);
+            return ServiceResult<object>.Fail("Vui lòng cung cấp mã xác thực đặt lại mật khẩu và mật khẩu mới.", 400);
         }
 
         if (dto.NewPassword.Length < 6)
@@ -469,26 +763,113 @@ public class AuthService : IAuthService
             return ServiceResult<object>.Fail("Mật khẩu mới phải có độ dài từ 6 ký tự trở lên.", 400);
         }
 
-        var normalizedEmail = dto.Email.Trim().ToLower();
-        var cachedToken = await _cache.GetStringAsync($"pwd_reset_{normalizedEmail}");
-        if (string.IsNullOrEmpty(cachedToken) || cachedToken != dto.Token.Trim())
+        Guid userId = Guid.Empty;
+        string? userEmail = null;
+
+        // 1. Try lookup by resetToken hash in Redis
+        var tokenHash = HashSha256Hex(token);
+        var tokenCacheKey = $"password-reset-token:{tokenHash}";
+        var cachedTokenJson = await _cache.GetStringAsync(tokenCacheKey);
+
+        if (!string.IsNullOrEmpty(cachedTokenJson))
         {
-            return ServiceResult<object>.Fail("Mã xác thực đặt lại mật khẩu không chính xác hoặc đã hết hạn.", 400);
+            try
+            {
+                var tokenData = JsonSerializer.Deserialize<PasswordResetTokenData>(cachedTokenJson);
+                if (tokenData != null)
+                {
+                    userId = tokenData.UserId;
+                    userEmail = tokenData.Email;
+                }
+            }
+            catch
+            {
+                // ignore
+            }
+
+            // Single-use: immediately consume and invalidate token
+            await _cache.RemoveAsync(tokenCacheKey);
+        }
+        else
+        {
+            // Backward-compatibility: Check legacy pwd_reset_{email}
+            if (!string.IsNullOrWhiteSpace(dto.Email))
+            {
+                var legacyEmail = dto.Email.Trim().ToLowerInvariant();
+                var legacyCachedToken = await _cache.GetStringAsync($"pwd_reset_{legacyEmail}");
+                if (!string.IsNullOrEmpty(legacyCachedToken) && SlowEquals(legacyCachedToken, token))
+                {
+                    await _cache.RemoveAsync($"pwd_reset_{legacyEmail}");
+                    userEmail = legacyEmail;
+                }
+            }
         }
 
-        var user = await _db.Users.FirstOrDefaultAsync(u => u.Email.ToLower() == normalizedEmail);
+        if (userId == Guid.Empty && string.IsNullOrEmpty(userEmail))
+        {
+            return ServiceResult<object>.Fail("Mã đặt lại mật khẩu không hợp lệ hoặc đã hết hạn.", 400);
+        }
+
+        User? user = null;
+        if (userId != Guid.Empty)
+        {
+            user = await _db.Users.FindAsync(userId);
+        }
+        else if (!string.IsNullOrEmpty(userEmail))
+        {
+            user = await _db.Users.FirstOrDefaultAsync(u => u.Email.ToLower() == userEmail);
+        }
+
         if (user == null)
         {
-            return ServiceResult<object>.NotFound("Không tìm thấy tài khoản tương ứng với email này.");
+            return ServiceResult<object>.NotFound("Không tìm thấy tài khoản tương ứng.");
         }
 
+        // Hash new password using ASP.NET Core PasswordHasher
         user.PasswordHash = _passwordHasher.HashPassword(user, dto.NewPassword);
         await _db.SaveChangesAsync();
-        await _cache.RemoveAsync($"pwd_reset_{normalizedEmail}");
+
+        // Invalidate any residual OTP keys or legacy keys
+        await _cache.RemoveAsync($"password-reset:{user.Id}");
+        await _cache.RemoveAsync($"password-reset:email:{user.Email.ToLowerInvariant()}");
+        await _cache.RemoveAsync($"pwd_reset_{user.Email.ToLowerInvariant()}");
+
+        _logger.LogInformation("[AUTH AUDIT] PASSWORD_RESET_COMPLETED: UserId={UserId}, Email={MaskedEmail}", user.Id, MaskEmail(user.Email));
 
         return ServiceResult<object>.Ok(new 
         { 
             message = "Đặt lại mật khẩu thành công! Bạn có thể đăng nhập ngay bằng mật khẩu mới." 
         });
+    }
+
+    public async Task<ServiceResult<object>> ChangePasswordAsync(Guid userId, ChangePasswordDto dto)
+    {
+        if (string.IsNullOrWhiteSpace(dto.CurrentPassword) || string.IsNullOrWhiteSpace(dto.NewPassword))
+        {
+            return ServiceResult<object>.Fail("Vui lòng cung cấp mật khẩu hiện tại và mật khẩu mới.", 400);
+        }
+
+        if (dto.NewPassword.Length < 6)
+        {
+            return ServiceResult<object>.Fail("Mật khẩu mới phải có ít nhất 6 ký tự.", 400);
+        }
+
+        var user = await _db.Users.FindAsync(userId);
+        if (user == null)
+        {
+            return ServiceResult<object>.NotFound("Không tìm thấy thông tin tài khoản.");
+        }
+
+        var verifyResult = _passwordHasher.VerifyHashedPassword(user, user.PasswordHash, dto.CurrentPassword);
+        if (verifyResult == PasswordVerificationResult.Failed)
+        {
+            return ServiceResult<object>.Fail("Mật khẩu hiện tại không chính xác.", 400);
+        }
+
+        user.PasswordHash = _passwordHasher.HashPassword(user, dto.NewPassword);
+        await _db.SaveChangesAsync();
+
+        _logger.LogInformation("[AUTH AUDIT] PASSWORD_CHANGED: UserId={UserId}", userId);
+        return ServiceResult<object>.Ok(new { message = "Đổi mật khẩu thành công!" });
     }
 }

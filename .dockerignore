@@ -8,3 +8,5 @@
 **/appsettings*.Local.json
 **/appsettings*.local.json
 **/*.env*
+**/node_modules
+**/dist

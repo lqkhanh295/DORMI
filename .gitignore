@@ -3,11 +3,92 @@
 ##
 ## Get latest from `dotnet new gitignore`
 
-# dotenv files
-.env
+# ====================================================================
+# SENSITIVE FILES & SECRETS (STRICTLY NEVER COMMIT)
+# ====================================================================
 
-# Local secrets (never commit)
-appsettings.Local.json
+# Environment variable files (all variations)
+.env
+.env.*
+*.env
+*.env.*
+.env.local
+.env.development.local
+.env.test.local
+.env.production.local
+!.env.example
+!.env.*.example
+
+# Local ASP.NET / Application configuration & user secrets
+appsettings*.Local.json
+appsettings*.local.json
+*.Local.json
+*.local.json
+!appsettings*.example*.json
+!appsettings*.Example*.json
+secrets.json
+*.secrets.json
+secrets/
+**/secrets/
+credentials.json
+credentials/
+**/credentials/
+
+# Cloud Service Accounts, Google Credentials & OAuth
+client_secret*.json
+service-account*.json
+serviceAccountKey*.json
+google-services*.json
+firebase-adminsdk*.json
+*google*.json
+*gmail*.json
+*oauth*.json
+*credentials*.json
+*token*.json
+
+# Password notes, secret text files (App Passwords, API tokens)
+*password*.txt
+*passwords*.txt
+*secret*.txt
+*credential*.txt
+*token*.txt
+*gmail*.txt
+*app_password*
+*app-password*
+
+# Private keys, certificates & authentication tokens
+*.pem
+*.key
+*.pfx
+*.p12
+*.cer
+*.crt
+*.der
+*.pkcs12
+*.snk
+id_rsa
+id_rsa.pub
+id_ed25519
+id_ed25519.pub
+
+# Web Deployment / Publish credentials
+*.publishsettings
+*.pubxml.user
+*.publishproj.user
+
+# Database dumps & Redis persistence files (real data / session states)
+*.dump
+*.dmp
+*.rdb
+dump.rdb
+
+# Browser automation, CDP session profiles & cookies
+**/cdp_profile/
+cdp_profile/
+cookies.txt
+*.session
+
+# Temporary scripts & data
 /*_jira*.js
 /*_dor_*.js
 /*qa*.js

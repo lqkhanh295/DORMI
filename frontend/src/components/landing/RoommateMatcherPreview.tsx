@@ -1,11 +1,26 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { Users } from 'lucide-react';
+import { roommatesApi } from '../../services/api';
 
 export function RoommateMatcherPreview() {
   const [sleepTime, setSleepTime] = useState('22h - 00h');
   const [smoking, setSmoking] = useState('Không');
   const [pets, setPets] = useState('Không');
+  const [realPost, setRealPost] = useState<any>(null);
+
+  useEffect(() => {
+    let isMounted = true;
+    roommatesApi.getPosts()
+      .then(res => {
+        if (!isMounted) return;
+        if (Array.isArray(res) && res.length > 0) {
+          setRealPost(res[0]);
+        }
+      })
+      .catch(() => {});
+    return () => { isMounted = false; };
+  }, []);
 
   // Dynamic compatibility scoring algorithm: Sleep (40%) + Smoking (30%) + Pet (30%)
   const calculateScore = () => {
@@ -115,20 +130,24 @@ export function RoommateMatcherPreview() {
                 <span className="bg-[#F0FDF4] text-[#16803C] border border-[#DCFCE7] text-body font-bold px-3 py-1 rounded-full">
                   {matchScore}% phù hợp
                 </span>
-                <span className="text-caption text-[#64748B] font-medium">Ví dụ kết quả tương thích</span>
+                <span className="text-caption text-[#64748B] font-medium">Đối soát thuật toán tương thích</span>
               </div>
 
               <div className="flex items-center gap-4">
-                <div className="w-16 h-16 rounded-full overflow-hidden shadow-clay-soft bg-[#EEF2F6]">
-                  <img 
-                    src="https://images.unsplash.com/photo-1534528741775-53994a69daeb?q=80&w=200&auto=format&fit=crop" 
-                    alt="Nguyễn Minh" 
-                    className="w-full h-full object-cover"
-                  />
+                <div className="w-16 h-16 rounded-full overflow-hidden shadow-clay-soft bg-[#00153D] text-white flex items-center justify-center font-bold text-h3">
+                  {realPost?.customerAvatar ? (
+                    <img 
+                      src={realPost.customerAvatar} 
+                      alt={realPost.customerName || 'Người ở ghép'} 
+                      className="w-full h-full object-cover"
+                    />
+                  ) : (
+                    <span>{(realPost?.customerName || 'U')[0]}</span>
+                  )}
                 </div>
                 <div>
-                  <h3 className="text-h3 text-[#0F172A]">Nguyễn Minh</h3>
-                  <p className="text-caption text-[#64748B]">22 tuổi · Sinh viên Quận 10</p>
+                  <h3 className="text-h3 text-[#0F172A]">{realPost?.customerName || 'Hồ sơ người ở ghép'}</h3>
+                  <p className="text-caption text-[#64748B]">{realPost?.location || 'Khu vực TP. Hồ Chí Minh'}{realPost?.budget ? ` · Ngân sách ${Number(realPost.budget).toLocaleString('vi-VN')}đ` : ''}</p>
                 </div>
               </div>
 
