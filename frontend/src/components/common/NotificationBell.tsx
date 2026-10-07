@@ -22,9 +22,10 @@ export function NotificationBell() {
   const [loading, setLoading] = useState(false);
   const dropdownRef = useRef<HTMLDivElement>(null);
   const currentUser = useStore(state => state.currentUser);
+  const currentUserId = currentUser?.id;
 
   const fetchNotifications = async () => {
-    if (!currentUser) return;
+    if (!currentUserId) return;
     try {
       setLoading(true);
       const res: any = await notificationsApi.getNotifications();
@@ -38,11 +39,12 @@ export function NotificationBell() {
   };
 
   useEffect(() => {
+    if (!currentUserId) return;
     fetchNotifications();
     // Poll every 30 seconds for live updates
     const interval = setInterval(fetchNotifications, 30000);
     return () => clearInterval(interval);
-  }, [currentUser]);
+  }, [currentUserId]);
 
   useEffect(() => {
     function handleClickOutside(event: MouseEvent) {

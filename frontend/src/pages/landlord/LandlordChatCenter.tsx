@@ -38,7 +38,7 @@ export default function LandlordChatCenter() {
     if (currentUser?.id) {
       signalRService.startConnection(currentUser.id, currentUser.token);
     }
-  }, [currentUser]);
+  }, [currentUser?.id, currentUser?.token]);
 
   // Load backend conversations
   useEffect(() => {

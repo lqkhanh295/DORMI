@@ -55,11 +55,11 @@ public class RoomService : IRoomService
             return false;
         }
 
-        var allowedExtensions = new[] { ".jpg", ".jpeg", ".png", ".webp", ".gif", ".bmp", ".heic", ".heif" };
+        var allowedExtensions = new[] { ".jpg", ".jpeg", ".jfif", ".png", ".webp", ".gif", ".bmp", ".svg", ".avif", ".heic", ".heif", ".ico", ".tiff", ".tif" };
         var ext = Path.GetExtension(file.FileName).ToLowerInvariant();
         if (string.IsNullOrEmpty(ext) || !allowedExtensions.Contains(ext))
         {
-            errorMessage = "Định dạng tập tin không được hỗ trợ. Chỉ chấp nhận các định dạng ảnh: .jpg, .jpeg, .png, .webp, .heic.";
+            errorMessage = "Định dạng tập tin không được hỗ trợ. Chấp nhận các định dạng: JPG, PNG, WEBP, GIF, SVG, AVIF, HEIC, BMP, ICO, TIFF.";
             return false;
         }
 
@@ -77,27 +77,41 @@ public class RoomService : IRoomService
     {
         try
         {
+            if (file.ContentType?.StartsWith("image/") == true && (ext == ".svg" || ext == ".ico"))
+            {
+                return true;
+            }
+
             using var stream = file.OpenReadStream();
-            if (stream.Length < 12) return false;
-            var header = new byte[12];
-            var bytesRead = stream.Read(header, 0, 12);
-            if (bytesRead < 12) return false;
+            if (stream.Length < 4) return false;
+            var header = new byte[Math.Min(stream.Length, 128)];
+            var bytesRead = stream.Read(header, 0, header.Length);
+            if (bytesRead < 4) return false;
 
             return ext switch
             {
-                ".jpg" or ".jpeg" => header[0] == 0xFF && header[1] == 0xD8 && header[2] == 0xFF,
+                ".jpg" or ".jpeg" or ".jfif" => header[0] == 0xFF && header[1] == 0xD8,
                 ".png" => header[0] == 0x89 && header[1] == 0x50 && header[2] == 0x4E && header[3] == 0x47,
                 ".gif" => header[0] == 0x47 && header[1] == 0x49 && header[2] == 0x46 && header[3] == 0x38,
                 ".bmp" => header[0] == 0x42 && header[1] == 0x4D,
-                ".webp" => header[0] == 0x52 && header[1] == 0x49 && header[2] == 0x46 && header[3] == 0x46 &&
+                ".webp" => bytesRead >= 12 && header[0] == 0x52 && header[1] == 0x49 && header[2] == 0x46 && header[3] == 0x46 &&
                            header[8] == 0x57 && header[9] == 0x45 && header[10] == 0x42 && header[11] == 0x50,
-                ".heic" or ".heif" => header[4] == 0x66 && header[5] == 0x74 && header[6] == 0x79 && header[7] == 0x70, // "ftyp"
-                _ => false
+                ".heic" or ".heif" => bytesRead >= 12 && header[4] == 0x66 && header[5] == 0x74 && header[6] == 0x79 && header[7] == 0x70,
+                ".avif" => bytesRead >= 12 && (
+                    (header[4] == 0x66 && header[5] == 0x74 && header[6] == 0x79 && header[7] == 0x70) ||
+                    System.Text.Encoding.ASCII.GetString(header, 0, bytesRead).Contains("avif")),
+                ".svg" => (file.ContentType?.Contains("svg") == true) || 
+                          System.Text.Encoding.UTF8.GetString(header, 0, bytesRead).Contains("<svg") ||
+                          System.Text.Encoding.UTF8.GetString(header, 0, bytesRead).Contains("<?xml"),
+                ".ico" => header[0] == 0x00 && header[1] == 0x00 && (header[2] == 0x01 || header[2] == 0x02) && header[3] == 0x00,
+                ".tiff" or ".tif" => (header[0] == 0x49 && header[1] == 0x49 && header[2] == 0x2A && header[3] == 0x00) ||
+                                     (header[0] == 0x4D && header[1] == 0x4D && header[2] == 0x00 && header[3] == 0x2A),
+                _ => file.ContentType?.StartsWith("image/") == true
             };
         }
         catch
         {
-            return false;
+            return file.ContentType?.StartsWith("image/") == true;
         }
     }
 

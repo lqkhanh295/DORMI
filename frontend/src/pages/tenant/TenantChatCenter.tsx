@@ -40,7 +40,7 @@ export default function TenantChatCenter() {
     return () => {
       // Keep alive during chat session
     };
-  }, [currentUser]);
+  }, [currentUser?.id, currentUser?.token]);
 
   // Load active conversations from backend
   useEffect(() => {
