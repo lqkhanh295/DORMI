@@ -84,7 +84,7 @@ export default function TenantSettings() {
             <button 
               type="button"
               onClick={() => setActiveTab('notifications')}
-              className={`w-full text-left px-4 py-2.5 text-caption font-semibold rounded-[12px] transition-all flex items-center gap-2 ${
+              className={`w-full text-left px-4 py-2.5 text-caption font-semibold rounded-[12px] transition-[background-color,color,box-shadow,transform] duration-150 ease-out active:scale-[0.98] flex items-center gap-2 ${
                 activeTab === 'notifications' 
                   ? 'btn-clay-primary' 
                   : 'text-[#64748B] hover:text-[#0F172A] hover:bg-white'
@@ -96,7 +96,7 @@ export default function TenantSettings() {
             <button 
               type="button"
               onClick={() => setActiveTab('security')}
-              className={`w-full text-left px-4 py-2.5 text-caption font-semibold rounded-[12px] transition-all flex items-center gap-2 ${
+              className={`w-full text-left px-4 py-2.5 text-caption font-semibold rounded-[12px] transition-[background-color,color,box-shadow,transform] duration-150 ease-out active:scale-[0.98] flex items-center gap-2 ${
                 activeTab === 'security' 
                   ? 'btn-clay-primary' 
                   : 'text-[#64748B] hover:text-[#0F172A] hover:bg-white'
@@ -108,7 +108,7 @@ export default function TenantSettings() {
             <button 
               type="button"
               onClick={() => setActiveTab('privacy')}
-              className={`w-full text-left px-4 py-2.5 text-caption font-semibold rounded-[12px] transition-all flex items-center gap-2 ${
+              className={`w-full text-left px-4 py-2.5 text-caption font-semibold rounded-[12px] transition-[background-color,color,box-shadow,transform] duration-150 ease-out active:scale-[0.98] flex items-center gap-2 ${
                 activeTab === 'privacy' 
                   ? 'btn-clay-primary' 
                   : 'text-[#64748B] hover:text-[#0F172A] hover:bg-white'
@@ -120,7 +120,7 @@ export default function TenantSettings() {
             <button 
               type="button"
               onClick={() => setActiveTab('danger')}
-              className={`w-full text-left px-4 py-2.5 text-caption font-semibold rounded-[12px] transition-all flex items-center gap-2 mt-8 ${
+              className={`w-full text-left px-4 py-2.5 text-caption font-semibold rounded-[12px] transition-[background-color,color,box-shadow,transform] duration-150 ease-out active:scale-[0.98] flex items-center gap-2 mt-8 ${
                 activeTab === 'danger' 
                   ? 'bg-red-600 text-white shadow-sm' 
                   : 'text-[#C62828] hover:bg-[#FEF2F2]'

@@ -198,7 +198,7 @@ export function TenantRatingModal({
                         key={v}
                         type="button"
                         onClick={() => setPunctualityScore(v)}
-                        className={`w-7 h-7 rounded-lg text-xs font-bold transition-all ${
+                        className={`w-7 h-7 rounded-lg text-xs font-bold transition-[background-color,color,box-shadow,transform] duration-150 ease-out active:scale-95 ${
                           punctualityScore === v
                             ? 'bg-[#2563EB] text-white shadow-xs'
                             : 'bg-[#F1F5F9] text-[#64748B] hover:bg-[#E2E8F0]'
@@ -219,7 +219,7 @@ export function TenantRatingModal({
                         key={v}
                         type="button"
                         onClick={() => setCleanlinessScore(v)}
-                        className={`w-7 h-7 rounded-lg text-xs font-bold transition-all ${
+                        className={`w-7 h-7 rounded-lg text-xs font-bold transition-[background-color,color,box-shadow,transform] duration-150 ease-out active:scale-95 ${
                           cleanlinessScore === v
                             ? 'bg-[#2563EB] text-white shadow-xs'
                             : 'bg-[#F1F5F9] text-[#64748B] hover:bg-[#E2E8F0]'
@@ -240,7 +240,7 @@ export function TenantRatingModal({
                         key={v}
                         type="button"
                         onClick={() => setRespectScore(v)}
-                        className={`w-7 h-7 rounded-lg text-xs font-bold transition-all ${
+                        className={`w-7 h-7 rounded-lg text-xs font-bold transition-[background-color,color,box-shadow,transform] duration-150 ease-out active:scale-95 ${
                           respectScore === v
                             ? 'bg-[#2563EB] text-white shadow-xs'
                             : 'bg-[#F1F5F9] text-[#64748B] hover:bg-[#E2E8F0]'

@@ -1,11 +1,11 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { Card } from '../../components/ui/Card';
 import { Button } from '../../components/ui/Button';
 import { Input } from '../../components/ui/Input';
 import { useStore } from '../../store/useStore';
-import { profilesApi } from '../../services/api';
+import { profilesApi, imagesApi } from '../../services/api';
 import { toast } from 'sonner';
-import { Users } from 'lucide-react';
+import { Users, Camera, Upload, Link as LinkIcon, Loader2, Plus } from 'lucide-react';
 
 export default function TenantProfile() {
   const { currentUser, updateUser } = useStore();
@@ -14,6 +14,12 @@ export default function TenantProfile() {
   const [phoneNumber, setPhoneNumber] = useState('');
   const [isLookingForRoommate, setIsLookingForRoommate] = useState(false);
   const [loading, setLoading] = useState(true);
+  const [isUploadingAvatar, setIsUploadingAvatar] = useState(false);
+  const fileInputRef = useRef<HTMLInputElement>(null);
+
+  const [avatar, setAvatar] = useState<string>(
+    currentUser?.avatar || "https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?auto=format&fit=crop&w=200&q=80"
+  );
 
   const [tags, setTags] = useState([
     { name: 'Yên tĩnh', active: true },
@@ -38,6 +44,9 @@ export default function TenantProfile() {
     if (currentUser?.name) {
       parseName(currentUser.name);
     }
+    if (currentUser?.avatar) {
+      setAvatar(currentUser.avatar);
+    }
 
     let isMounted = true;
     profilesApi.getCustomerProfile()
@@ -48,6 +57,10 @@ export default function TenantProfile() {
         }
         if (res?.phoneNumber) {
           setPhoneNumber(res.phoneNumber);
+        }
+        if (res?.avatarUrl) {
+          setAvatar(res.avatarUrl);
+          updateUser({ avatar: res.avatarUrl });
         }
         if (res?.lifestyle) {
           const parsedTags = res.lifestyle.split(',').map((t: string) => t.trim()).filter(Boolean);
@@ -69,6 +82,67 @@ export default function TenantProfile() {
     return () => { isMounted = false; };
   }, [currentUser]);
 
+  const handleAvatarFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    if (!file.type.startsWith('image/')) {
+      toast.error('Vui lòng chọn tập tin hình ảnh hợp lệ (JPG, PNG, WebP).');
+      return;
+    }
+    if (file.size > 10 * 1024 * 1024) {
+      toast.error('Dung lượng ảnh không được vượt quá 10MB.');
+      return;
+    }
+
+    const previewUrl = URL.createObjectURL(file);
+    const previousAvatar = avatar;
+    setAvatar(previewUrl);
+    setIsUploadingAvatar(true);
+
+    try {
+      const uploadRes = await imagesApi.uploadImage(file);
+      const newAvatarUrl = uploadRes.imageUrl;
+
+      setAvatar(newAvatarUrl);
+      updateUser({ avatar: newAvatarUrl });
+
+      await profilesApi.updateCustomerProfile({
+        fullName: [lastName, firstName].filter(Boolean).join(' ').trim(),
+        avatarUrl: newAvatarUrl
+      });
+
+      toast.success('Cập nhật ảnh đại diện thành công!');
+    } catch (err: any) {
+      console.error('Avatar upload failed:', err);
+      setAvatar(previousAvatar);
+      toast.error('Không thể tải ảnh lên: ' + (err?.message || 'Lỗi mạng'));
+    } finally {
+      setIsUploadingAvatar(false);
+      URL.revokeObjectURL(previewUrl);
+      if (fileInputRef.current) {
+        fileInputRef.current.value = '';
+      }
+    }
+  };
+
+  const handlePasteAvatarUrl = () => {
+    const url = window.prompt('Nhập đường dẫn (URL) ảnh đại diện của bạn:', avatar);
+    if (url && url.trim() && url.trim() !== avatar) {
+      const cleanUrl = url.trim();
+      setAvatar(cleanUrl);
+      updateUser({ avatar: cleanUrl });
+      profilesApi.updateCustomerProfile({
+        fullName: [lastName, firstName].filter(Boolean).join(' ').trim(),
+        avatarUrl: cleanUrl
+      }).then(() => {
+        toast.success('Đã lưu đường dẫn ảnh đại diện!');
+      }).catch((err: any) => {
+        toast.error('Không thể lưu ảnh đại diện: ' + (err?.message || 'Lỗi'));
+      });
+    }
+  };
+
   const handleAddTag = () => {
     const newTag = window.prompt('Nhập thẻ phong cách sống mới:');
     if (newTag && newTag.trim()) {
@@ -86,12 +160,13 @@ export default function TenantProfile() {
     const fullName = [lastName, firstName].filter(Boolean).join(' ').trim();
     const lifestyle = tags.filter(t => t.active).map(t => t.name).join(', ');
 
-    updateUser({ name: fullName });
+    updateUser({ name: fullName, avatar });
 
     try {
       await profilesApi.updateCustomerProfile({
         fullName,
         phoneNumber,
+        avatarUrl: avatar,
         lifestyle,
         preferences: 'Phòng yên tĩnh, sạch sẽ',
         isLookingForRoommate
@@ -110,17 +185,65 @@ export default function TenantProfile() {
           <h1 className="text-h2 font-bold text-[#0F172A]">Hồ sơ cá nhân (API Connected)</h1>
           <p className="text-[#64748B] text-body">Cập nhật thông tin và phong cách sống thời gian thực.</p>
         </div>
-        <Button onClick={handleSave} className="px-6" disabled={loading}>Lưu thay đổi (API)</Button>
+        <Button onClick={handleSave} className="px-6" disabled={loading || isUploadingAvatar}>Lưu thay đổi (API)</Button>
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
         <Card className="p-6 md:col-span-1 flex flex-col items-center text-center space-y-4 bg-white rounded-[18px] shadow-clay-soft">
-          <div className="w-32 h-32 bg-[#EEF2F6] rounded-full overflow-hidden relative group cursor-pointer border-4 border-white shadow-clay-soft">
-            <img src={currentUser?.avatar || "https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?auto=format&fit=crop&w=200&q=80"} alt="Profile" className="w-full h-full object-cover" />
-            <div className="absolute inset-0 bg-[#0F172A]/40 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
-              <span className="text-white text-caption font-semibold">Sửa ảnh</span>
+          <input 
+            type="file" 
+            ref={fileInputRef} 
+            onChange={handleAvatarFileChange} 
+            accept="image/*" 
+            className="hidden" 
+          />
+
+          <div 
+            onClick={() => !isUploadingAvatar && fileInputRef.current?.click()}
+            className="w-32 h-32 bg-[#EEF2F6] rounded-full overflow-hidden relative group cursor-pointer border-4 border-white shadow-clay-soft transition-transform active:scale-95"
+            title="Nhấn để đổi ảnh đại diện"
+          >
+            <img 
+              src={avatar} 
+              alt="Profile" 
+              className="w-full h-full object-cover" 
+            />
+            <div className={`absolute inset-0 bg-[#0F172A]/50 flex flex-col items-center justify-center transition-opacity ${isUploadingAvatar ? 'opacity-100' : 'opacity-0 group-hover:opacity-100'}`}>
+              {isUploadingAvatar ? (
+                <>
+                  <Loader2 className="w-6 h-6 text-white animate-spin mb-1" />
+                  <span className="text-white text-[11px] font-medium">Đang tải...</span>
+                </>
+              ) : (
+                <>
+                  <Camera className="w-6 h-6 text-white mb-1" />
+                  <span className="text-white text-[12px] font-semibold">Đổi ảnh</span>
+                </>
+              )}
             </div>
           </div>
+
+          <div className="flex items-center gap-2">
+            <button
+              type="button"
+              disabled={isUploadingAvatar}
+              onClick={() => fileInputRef.current?.click()}
+              className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-[10px] text-[12px] font-medium bg-[#F1F5F9] text-[#334155] hover:bg-[#E2E8F0] hover:text-[#0F172A] transition-colors"
+            >
+              <Upload className="w-3.5 h-3.5" />
+              <span>Tải ảnh lên</span>
+            </button>
+            <button
+              type="button"
+              disabled={isUploadingAvatar}
+              onClick={handlePasteAvatarUrl}
+              className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-[10px] text-[12px] font-medium bg-[#F8FAFC] text-[#64748B] hover:bg-[#F1F5F9] hover:text-[#0F172A] border border-[#E2E8F0] transition-colors"
+            >
+              <LinkIcon className="w-3.5 h-3.5" />
+              <span>Dán URL</span>
+            </button>
+          </div>
+
           <div>
             <h3 className="text-h3 text-[#0F172A]">{[lastName, firstName].filter(Boolean).join(' ') || currentUser?.name || 'Nguyễn Văn An'}</h3>
             <p className="text-caption text-[#64748B]">Người thuê trọ</p>
@@ -173,7 +296,7 @@ export default function TenantProfile() {
                   key={index}
                   type="button"
                   onClick={() => toggleTag(index)}
-                  className={`px-4 py-2 rounded-[12px] text-caption font-semibold transition-all ${
+                  className={`px-4 py-2 rounded-[12px] text-caption font-semibold transition-[background-color,color,box-shadow,transform] duration-150 ease-out active:scale-95 ${
                     tag.active 
                       ? 'btn-clay-primary' 
                       : 'bg-[#F5F7FA] text-[#64748B] shadow-clay-soft hover:bg-white hover:text-[#0F172A]'
@@ -185,9 +308,10 @@ export default function TenantProfile() {
               <button 
                 type="button"
                 onClick={handleAddTag}
-                className="px-4 py-2 bg-white border border-dashed border-[#CBD5E1] text-[#64748B] rounded-[12px] text-caption font-semibold hover:border-[#00153D] hover:text-[#00153D] transition-colors"
+                className="inline-flex items-center gap-1.5 px-4 py-2 bg-white border border-dashed border-[#CBD5E1] text-[#64748B] rounded-[12px] text-caption font-semibold hover:border-[#00153D] hover:text-[#00153D] transition-colors"
               >
-                + Thêm thẻ mới
+                <Plus className="w-3.5 h-3.5" />
+                <span>Thêm thẻ mới</span>
               </button>
             </div>
           </div>

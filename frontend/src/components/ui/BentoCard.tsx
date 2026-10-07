@@ -21,8 +21,8 @@ export function BentoCard({
     <div
       className={twMerge(
         clsx(
-          'relative overflow-hidden rounded-[18px] bg-white shadow-clay-soft transition-all duration-150',
-          hoverEffect && 'hover:-translate-y-[2px] cursor-pointer',
+          'relative overflow-hidden rounded-[18px] bg-white shadow-clay-soft motion-gpu transition-[transform,box-shadow] duration-200 ease-out',
+          hoverEffect && 'hover:-translate-y-0.5 hover:shadow-clay-card active:scale-[0.995] cursor-pointer',
           !noPadding && 'p-6 md:p-8',
           className
         )

@@ -111,6 +111,43 @@ public class AuthService : IAuthService
         _kafkaProducer = kafkaProducer;
     }
 
+    private async Task<string?> SafeGetCacheStringAsync(string key)
+    {
+        try
+        {
+            return await _cache.GetStringAsync(key);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogWarning(ex, "[CACHE RESILIENCE] Error reading cache key {Key}", key);
+            return null;
+        }
+    }
+
+    private async Task SafeSetCacheStringAsync(string key, string value, DistributedCacheEntryOptions options)
+    {
+        try
+        {
+            await _cache.SetStringAsync(key, value, options);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogWarning(ex, "[CACHE RESILIENCE] Error writing cache key {Key}", key);
+        }
+    }
+
+    private async Task SafeRemoveCacheAsync(string key)
+    {
+        try
+        {
+            await _cache.RemoveAsync(key);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogWarning(ex, "[CACHE RESILIENCE] Error removing cache key {Key}", key);
+        }
+    }
+
     public async Task<ServiceResult<AuthResponseDto>> RegisterAsync(RegisterDto dto)
     {
         if (await _db.Users.AnyAsync(u => u.Email.ToLower() == dto.Email.ToLower()))
@@ -163,7 +200,7 @@ public class AuthService : IAuthService
         var question = $"{a} + {b} = ?";
         var answer = (a + b).ToString();
         var token = Guid.NewGuid().ToString("N");
-        await _cache.SetStringAsync($"captcha_{token}", answer, new DistributedCacheEntryOptions
+        await SafeSetCacheStringAsync($"captcha_{token}", answer, new DistributedCacheEntryOptions
         {
             AbsoluteExpirationRelativeToNow = TimeSpan.FromMinutes(5)
         });
@@ -181,9 +218,9 @@ public class AuthService : IAuthService
 
         // 1. IP Rate Limiting (max 10 login requests per 60 seconds per IP)
         var ipRateKey = $"rate_limit_login_{clientIp}";
-        var currentReqStr = await _cache.GetStringAsync(ipRateKey);
+        var currentReqStr = await SafeGetCacheStringAsync(ipRateKey);
         var requestCount = int.TryParse(currentReqStr, out var c) ? c + 1 : 1;
-        await _cache.SetStringAsync(ipRateKey, requestCount.ToString(), new DistributedCacheEntryOptions
+        await SafeSetCacheStringAsync(ipRateKey, requestCount.ToString(), new DistributedCacheEntryOptions
         {
             AbsoluteExpirationRelativeToNow = TimeSpan.FromSeconds(60)
         });
@@ -198,7 +235,7 @@ public class AuthService : IAuthService
 
         // 2. Temporary Lockout Check (15 minutes lockout after 5 consecutive failures)
         var lockoutKey = $"auth_lockout_{normalizedEmail}";
-        var lockoutVal = await _cache.GetStringAsync(lockoutKey);
+        var lockoutVal = await SafeGetCacheStringAsync(lockoutKey);
         if (!string.IsNullOrEmpty(lockoutVal) && DateTime.TryParse(lockoutVal, out var lockoutUntil) && DateTime.UtcNow < lockoutUntil)
         {
             var remainingSeconds = (int)(lockoutUntil - DateTime.UtcNow).TotalSeconds;
@@ -213,7 +250,7 @@ public class AuthService : IAuthService
 
         // 3. CAPTCHA / Risk Challenge Check
         var attemptsKey = $"auth_attempts_{normalizedEmail}";
-        var attemptsVal = await _cache.GetStringAsync(attemptsKey);
+        var attemptsVal = await SafeGetCacheStringAsync(attemptsKey);
         int.TryParse(attemptsVal, out var failedAttempts);
 
         // If user already failed 2 or more times, CAPTCHA is strictly required
@@ -237,7 +274,7 @@ public class AuthService : IAuthService
             }
 
             var captchaKey = $"captcha_{dto.CaptchaToken.Trim()}";
-            var expectedAnswer = await _cache.GetStringAsync(captchaKey);
+            var expectedAnswer = await SafeGetCacheStringAsync(captchaKey);
             if (string.IsNullOrEmpty(expectedAnswer) || 
                 !string.Equals(expectedAnswer, dto.CaptchaAnswer.Trim(), StringComparison.OrdinalIgnoreCase))
             {
@@ -257,7 +294,7 @@ public class AuthService : IAuthService
             }
 
             // Captcha passed
-            await _cache.RemoveAsync(captchaKey);
+            await SafeRemoveCacheAsync(captchaKey);
         }
 
         // 4. Verify User & Password
@@ -283,8 +320,8 @@ public class AuthService : IAuthService
         }
 
         // 5. Successful Password Verification -> Reset failed attempts
-        await _cache.RemoveAsync(attemptsKey);
-        await _cache.RemoveAsync(lockoutKey);
+        await SafeRemoveCacheAsync(attemptsKey);
+        await SafeRemoveCacheAsync(lockoutKey);
 
         // 6. Multi-Factor Authentication (MFA / 2FA)
         // High security accounts (Admin role or admin@ email) require MFA 6-digit OTP verification
@@ -301,7 +338,7 @@ public class AuthService : IAuthService
                 Attempts = 0
             };
 
-            await _cache.SetStringAsync($"mfa_{mfaSessionToken}", JsonSerializer.Serialize(sessionData), new DistributedCacheEntryOptions
+            await SafeSetCacheStringAsync($"mfa_{mfaSessionToken}", JsonSerializer.Serialize(sessionData), new DistributedCacheEntryOptions
             {
                 AbsoluteExpirationRelativeToNow = TimeSpan.FromMinutes(5)
             });
@@ -353,11 +390,11 @@ public class AuthService : IAuthService
         if (failedAttempts >= 5)
         {
             var lockoutUntil = DateTime.UtcNow.AddMinutes(15);
-            await _cache.SetStringAsync($"auth_lockout_{normalizedEmail}", lockoutUntil.ToString("O"), new DistributedCacheEntryOptions
+            await SafeSetCacheStringAsync($"auth_lockout_{normalizedEmail}", lockoutUntil.ToString("O"), new DistributedCacheEntryOptions
             {
                 AbsoluteExpirationRelativeToNow = TimeSpan.FromMinutes(15)
             });
-            await _cache.RemoveAsync(attemptsKey);
+            await SafeRemoveCacheAsync(attemptsKey);
 
             _logger.LogWarning("[AUTH AUDIT] ACCOUNT_TEMPORARILY_LOCKED: Email={Email}, IP={IP}, Duration=15min", normalizedEmail, clientIp);
 
@@ -367,7 +404,7 @@ public class AuthService : IAuthService
                 new AuthResponseDto { LockoutSeconds = 900 });
         }
 
-        await _cache.SetStringAsync(attemptsKey, failedAttempts.ToString(), new DistributedCacheEntryOptions
+        await SafeSetCacheStringAsync(attemptsKey, failedAttempts.ToString(), new DistributedCacheEntryOptions
         {
             AbsoluteExpirationRelativeToNow = TimeSpan.FromMinutes(30)
         });
@@ -410,7 +447,7 @@ public class AuthService : IAuthService
         }
 
         var sessionKey = $"mfa_{dto.MfaSessionToken.Trim()}";
-        var sessionJson = await _cache.GetStringAsync(sessionKey);
+        var sessionJson = await SafeGetCacheStringAsync(sessionKey);
         if (string.IsNullOrEmpty(sessionJson))
         {
             _logger.LogWarning("[AUTH AUDIT] MFA_EXPIRED_OR_INVALID: Token={Token}, IP={IP}", dto.MfaSessionToken, clientIp);
@@ -425,7 +462,7 @@ public class AuthService : IAuthService
 
         if (session.Attempts >= 3)
         {
-            await _cache.RemoveAsync(sessionKey);
+            await SafeRemoveCacheAsync(sessionKey);
             _logger.LogWarning("[AUTH AUDIT] MFA_MAX_ATTEMPTS_EXCEEDED: Email={Email}, IP={IP}", session.Email, clientIp);
             return ServiceResult<AuthResponseDto>.Fail("Bạn đã nhập sai mã OTP quá 3 lần. Vui lòng đăng nhập lại từ đầu.", 400);
         }
@@ -437,7 +474,7 @@ public class AuthService : IAuthService
         {
             session.Attempts++;
             var remaining = 3 - session.Attempts;
-            await _cache.SetStringAsync(sessionKey, JsonSerializer.Serialize(session), new DistributedCacheEntryOptions
+            await SafeSetCacheStringAsync(sessionKey, JsonSerializer.Serialize(session), new DistributedCacheEntryOptions
             {
                 AbsoluteExpirationRelativeToNow = TimeSpan.FromMinutes(5)
             });
@@ -446,7 +483,7 @@ public class AuthService : IAuthService
         }
 
         // Correct OTP -> complete login
-        await _cache.RemoveAsync(sessionKey);
+        await SafeRemoveCacheAsync(sessionKey);
 
         var user = await _db.Users.FindAsync(session.UserId);
         if (user == null)
@@ -503,14 +540,14 @@ public class AuthService : IAuthService
 
         // 1. Rate limiting: 60s cooldown per email
         var cooldownKey = $"pwd_otp_cooldown_{normalizedEmail}";
-        if (!string.IsNullOrEmpty(await _cache.GetStringAsync(cooldownKey)))
+        if (!string.IsNullOrEmpty(await SafeGetCacheStringAsync(cooldownKey)))
         {
             return ServiceResult<object>.Fail("Vui lòng đợi 60 giây trước khi yêu cầu mã mới.", 429);
         }
 
         // 2. Rate limiting: max 5 requests per 15 minutes per email
         var emailCountKey = $"pwd_otp_count_{normalizedEmail}";
-        var emailCountStr = await _cache.GetStringAsync(emailCountKey);
+        var emailCountStr = await SafeGetCacheStringAsync(emailCountKey);
         int.TryParse(emailCountStr, out var emailCount);
         if (emailCount >= 5)
         {
@@ -519,7 +556,7 @@ public class AuthService : IAuthService
 
         // 3. Rate limiting: max 10 requests per 15 minutes per IP
         var ipCountKey = $"pwd_otp_ip_{safeIp}";
-        var ipCountStr = await _cache.GetStringAsync(ipCountKey);
+        var ipCountStr = await SafeGetCacheStringAsync(ipCountKey);
         int.TryParse(ipCountStr, out var ipCount);
         if (ipCount >= 10)
         {
@@ -527,17 +564,17 @@ public class AuthService : IAuthService
         }
 
         // Update rate limits in cache
-        await _cache.SetStringAsync(cooldownKey, "1", new DistributedCacheEntryOptions
+        await SafeSetCacheStringAsync(cooldownKey, "1", new DistributedCacheEntryOptions
         {
             AbsoluteExpirationRelativeToNow = TimeSpan.FromSeconds(60)
         });
 
-        await _cache.SetStringAsync(emailCountKey, (emailCount + 1).ToString(), new DistributedCacheEntryOptions
+        await SafeSetCacheStringAsync(emailCountKey, (emailCount + 1).ToString(), new DistributedCacheEntryOptions
         {
             AbsoluteExpirationRelativeToNow = TimeSpan.FromMinutes(15)
         });
 
-        await _cache.SetStringAsync(ipCountKey, (ipCount + 1).ToString(), new DistributedCacheEntryOptions
+        await SafeSetCacheStringAsync(ipCountKey, (ipCount + 1).ToString(), new DistributedCacheEntryOptions
         {
             AbsoluteExpirationRelativeToNow = TimeSpan.FromMinutes(15)
         });
@@ -547,8 +584,8 @@ public class AuthService : IAuthService
         if (user != null)
         {
             // Invalidate any previous OTP for the same account
-            await _cache.RemoveAsync($"password-reset:{user.Id}");
-            await _cache.RemoveAsync($"password-reset:email:{normalizedEmail}");
+            await SafeRemoveCacheAsync($"password-reset:{user.Id}");
+            await SafeRemoveCacheAsync($"password-reset:email:{normalizedEmail}");
 
             // Generate cryptographically secure 6-digit OTP
             var otp = RandomNumberGenerator.GetInt32(100000, 1000000).ToString("D6");
@@ -568,8 +605,8 @@ public class AuthService : IAuthService
                 AbsoluteExpirationRelativeToNow = TimeSpan.FromMinutes(5)
             };
 
-            await _cache.SetStringAsync($"password-reset:{user.Id}", JsonSerializer.Serialize(otpData), entryOptions);
-            await _cache.SetStringAsync($"password-reset:email:{normalizedEmail}", user.Id.ToString(), entryOptions);
+            await SafeSetCacheStringAsync($"password-reset:{user.Id}", JsonSerializer.Serialize(otpData), entryOptions);
+            await SafeSetCacheStringAsync($"password-reset:email:{normalizedEmail}", user.Id.ToString(), entryOptions);
 
             _logger.LogInformation("[AUTH AUDIT] PASSWORD_RESET_OTP_ISSUED: Email={MaskedEmail}, IP={ClientIp}",
                 MaskEmail(user.Email), safeIp);
@@ -643,7 +680,7 @@ public class AuthService : IAuthService
         var normalizedEmail = dto.Email.Trim().ToLowerInvariant();
 
         // Find userId from email index in cache or fallback to database
-        var userIdStr = await _cache.GetStringAsync($"password-reset:email:{normalizedEmail}");
+        var userIdStr = await SafeGetCacheStringAsync($"password-reset:email:{normalizedEmail}");
         Guid userId = Guid.Empty;
         if (!string.IsNullOrEmpty(userIdStr) && Guid.TryParse(userIdStr, out var parsedGuid))
         {
@@ -664,7 +701,7 @@ public class AuthService : IAuthService
         }
 
         var otpCacheKey = $"password-reset:{userId}";
-        var cachedOtpJson = await _cache.GetStringAsync(otpCacheKey);
+        var cachedOtpJson = await SafeGetCacheStringAsync(otpCacheKey);
         if (string.IsNullOrEmpty(cachedOtpJson))
         {
             return ServiceResult<VerifyOtpResponseDto>.Fail("Mã OTP không hợp lệ hoặc đã hết hạn.", 400);
@@ -688,8 +725,8 @@ public class AuthService : IAuthService
         // Lockout check: max 5 failed attempts
         if (otpData.Attempts >= 5)
         {
-            await _cache.RemoveAsync(otpCacheKey);
-            await _cache.RemoveAsync($"password-reset:email:{normalizedEmail}");
+            await SafeRemoveCacheAsync(otpCacheKey);
+            await SafeRemoveCacheAsync($"password-reset:email:{normalizedEmail}");
             _logger.LogWarning("[AUTH AUDIT] OTP_MAX_ATTEMPTS_EXCEEDED: UserId={UserId}, Email={MaskedEmail}", userId, MaskEmail(normalizedEmail));
             return ServiceResult<VerifyOtpResponseDto>.Fail("Bạn đã nhập sai mã OTP quá 5 lần. Mã đã bị vô hiệu hóa, vui lòng yêu cầu mã mới.", 400);
         }
@@ -703,14 +740,14 @@ public class AuthService : IAuthService
             otpData.Attempts++;
             if (otpData.Attempts >= 5)
             {
-                await _cache.RemoveAsync(otpCacheKey);
-                await _cache.RemoveAsync($"password-reset:email:{normalizedEmail}");
+                await SafeRemoveCacheAsync(otpCacheKey);
+                await SafeRemoveCacheAsync($"password-reset:email:{normalizedEmail}");
                 _logger.LogWarning("[AUTH AUDIT] OTP_LOCKOUT_TRIGGERED: UserId={UserId}, Email={MaskedEmail}", userId, MaskEmail(normalizedEmail));
                 return ServiceResult<VerifyOtpResponseDto>.Fail("Bạn đã nhập sai mã OTP quá 5 lần. Mã đã bị vô hiệu hóa, vui lòng yêu cầu mã mới.", 400);
             }
 
             // Update remaining attempts in cache with 5-min TTL
-            await _cache.SetStringAsync(otpCacheKey, JsonSerializer.Serialize(otpData), new DistributedCacheEntryOptions
+            await SafeSetCacheStringAsync(otpCacheKey, JsonSerializer.Serialize(otpData), new DistributedCacheEntryOptions
             {
                 AbsoluteExpirationRelativeToNow = TimeSpan.FromMinutes(5)
             });
@@ -720,8 +757,8 @@ public class AuthService : IAuthService
         }
 
         // Success: immediately invalidate OTP (single-use)
-        await _cache.RemoveAsync(otpCacheKey);
-        await _cache.RemoveAsync($"password-reset:email:{normalizedEmail}");
+        await SafeRemoveCacheAsync(otpCacheKey);
+        await SafeRemoveCacheAsync($"password-reset:email:{normalizedEmail}");
 
         // Generate cryptographically secure random reset token (32 bytes)
         var tokenBytes = RandomNumberGenerator.GetBytes(32);
@@ -736,7 +773,7 @@ public class AuthService : IAuthService
         };
 
         // Store resetToken hash in Redis with 10-minute TTL
-        await _cache.SetStringAsync($"password-reset-token:{resetTokenHash}", JsonSerializer.Serialize(tokenData), new DistributedCacheEntryOptions
+        await SafeSetCacheStringAsync($"password-reset-token:{resetTokenHash}", JsonSerializer.Serialize(tokenData), new DistributedCacheEntryOptions
         {
             AbsoluteExpirationRelativeToNow = TimeSpan.FromMinutes(10)
         });
@@ -769,7 +806,7 @@ public class AuthService : IAuthService
         // 1. Try lookup by resetToken hash in Redis
         var tokenHash = HashSha256Hex(token);
         var tokenCacheKey = $"password-reset-token:{tokenHash}";
-        var cachedTokenJson = await _cache.GetStringAsync(tokenCacheKey);
+        var cachedTokenJson = await SafeGetCacheStringAsync(tokenCacheKey);
 
         if (!string.IsNullOrEmpty(cachedTokenJson))
         {
@@ -788,7 +825,7 @@ public class AuthService : IAuthService
             }
 
             // Single-use: immediately consume and invalidate token
-            await _cache.RemoveAsync(tokenCacheKey);
+            await SafeRemoveCacheAsync(tokenCacheKey);
         }
         else
         {
@@ -796,10 +833,10 @@ public class AuthService : IAuthService
             if (!string.IsNullOrWhiteSpace(dto.Email))
             {
                 var legacyEmail = dto.Email.Trim().ToLowerInvariant();
-                var legacyCachedToken = await _cache.GetStringAsync($"pwd_reset_{legacyEmail}");
+                var legacyCachedToken = await SafeGetCacheStringAsync($"pwd_reset_{legacyEmail}");
                 if (!string.IsNullOrEmpty(legacyCachedToken) && SlowEquals(legacyCachedToken, token))
                 {
-                    await _cache.RemoveAsync($"pwd_reset_{legacyEmail}");
+                    await SafeRemoveCacheAsync($"pwd_reset_{legacyEmail}");
                     userEmail = legacyEmail;
                 }
             }
@@ -830,9 +867,9 @@ public class AuthService : IAuthService
         await _db.SaveChangesAsync();
 
         // Invalidate any residual OTP keys or legacy keys
-        await _cache.RemoveAsync($"password-reset:{user.Id}");
-        await _cache.RemoveAsync($"password-reset:email:{user.Email.ToLowerInvariant()}");
-        await _cache.RemoveAsync($"pwd_reset_{user.Email.ToLowerInvariant()}");
+        await SafeRemoveCacheAsync($"password-reset:{user.Id}");
+        await SafeRemoveCacheAsync($"password-reset:email:{user.Email.ToLowerInvariant()}");
+        await SafeRemoveCacheAsync($"pwd_reset_{user.Email.ToLowerInvariant()}");
 
         _logger.LogInformation("[AUTH AUDIT] PASSWORD_RESET_COMPLETED: UserId={UserId}, Email={MaskedEmail}", user.Id, MaskEmail(user.Email));
 

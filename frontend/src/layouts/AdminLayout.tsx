@@ -37,7 +37,7 @@ export default function AdminLayout() {
               <Link 
                 key={item.name}
                 to={item.path} 
-                className={`px-4 py-2.5 rounded-full text-sm font-semibold transition-all min-h-[44px] flex items-center gap-3 ${isActive ? 'text-white bg-[#6366F1] shadow-[0_10px_20px_-10px_rgba(99,102,241,0.5)]' : 'text-gray-300 hover:text-white hover:bg-gray-800'}`}
+                className={`px-4 py-2.5 rounded-full text-sm font-semibold transition-[background-color,color,box-shadow,transform] duration-150 ease-out active:scale-[0.98] min-h-[44px] flex items-center gap-3 ${isActive ? 'text-white bg-[#6366F1] shadow-[0_10px_20px_-10px_rgba(99,102,241,0.5)]' : 'text-gray-300 hover:text-white hover:bg-gray-800'}`}
               >
                 <Icon className="w-4 h-4 shrink-0" />
                 <span>{item.name}</span>

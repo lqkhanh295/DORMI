@@ -465,10 +465,17 @@ export const profilesApi = {
     return request<any>('/profiles/customer');
   },
 
-  updateCustomerProfile: async (data: { fullName?: string; phoneNumber?: string; preferences?: string; lifestyle?: string; isLookingForRoommate?: boolean }) => {
+  updateCustomerProfile: async (data: { fullName?: string; phoneNumber?: string; preferences?: string; lifestyle?: string; isLookingForRoommate?: boolean; avatarUrl?: string }) => {
     return request<any>('/profiles/customer', {
       method: 'PUT',
       body: JSON.stringify(data)
+    });
+  },
+
+  updateAvatar: async (avatarUrl: string) => {
+    return request<any>('/profiles/avatar', {
+      method: 'POST',
+      body: JSON.stringify({ avatarUrl })
     });
   },
 
@@ -476,7 +483,7 @@ export const profilesApi = {
     return request<any>('/profiles/landlord');
   },
 
-  updateLandlordProfile: async (data: { fullName?: string; phoneNumber?: string }) => {
+  updateLandlordProfile: async (data: { fullName?: string; phoneNumber?: string; avatarUrl?: string }) => {
     return request<any>('/profiles/landlord', {
       method: 'PUT',
       body: JSON.stringify(data)

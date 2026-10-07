@@ -22,7 +22,7 @@ export function SoftCard({ children, className, padding = 'md', ...props }: Soft
   return (
     <div 
       className={cn(
-        "bg-white rounded-[18px] shadow-clay-soft transition-all duration-150 hover:-translate-y-[2px]",
+        "bg-white rounded-[18px] shadow-clay-soft motion-gpu transition-[transform,box-shadow] duration-200 ease-out hover:-translate-y-0.5 hover:shadow-clay-card active:scale-[0.995]",
         paddings[padding],
         className
       )}

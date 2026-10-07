@@ -38,6 +38,19 @@ public class ProfilesController : BaseApiController
         return HandleResult(result);
     }
 
+    [HttpPost("avatar")]
+    public async Task<IActionResult> UpdateAvatar([FromBody] UpdateAvatarDto dto)
+    {
+        var userId = GetCurrentUserId();
+        if (!userId.HasValue) return Unauthorized();
+
+        if (string.IsNullOrWhiteSpace(dto?.AvatarUrl))
+            return BadRequest(new { message = "Đường dẫn ảnh đại diện không hợp lệ." });
+
+        var result = await _profileService.UpdateAvatarAsync(userId.Value, dto.AvatarUrl);
+        return HandleResult(result);
+    }
+
     [HttpGet("landlord")]
     public async Task<IActionResult> GetLandlordProfile()
     {

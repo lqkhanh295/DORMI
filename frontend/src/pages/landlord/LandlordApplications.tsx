@@ -15,6 +15,9 @@ import {
   Paperclip, 
   ExternalLink 
 } from 'lucide-react';
+import { motion, AnimatePresence } from 'framer-motion';
+import { modalBackdropVariants, modalContentVariants } from '../../utils/motion';
+import { PageMotion } from '../../components/common/Motion';
 
 export default function LandlordApplications() {
   const navigate = useNavigate();
@@ -152,7 +155,7 @@ export default function LandlordApplications() {
   };
 
   return (
-    <div className="space-y-6 max-w-6xl mx-auto pb-12">
+    <PageMotion className="space-y-6 max-w-6xl mx-auto pb-12">
       
       {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-4 border-b border-[#E2E8F0]">
@@ -226,9 +229,20 @@ export default function LandlordApplications() {
 
       {/* List */}
       {loading ? (
-        <div className="py-20 flex flex-col items-center justify-center text-[#64748B] space-y-3">
-          <div className="w-8 h-8 border-3 border-[#00153D]/20 border-t-[#00153D] rounded-full animate-spin" />
-          <p className="text-sm">Đang tải danh sách hồ sơ...</p>
+        <div className="space-y-4">
+          {[1, 2, 3].map(i => (
+            <div key={i} className="bg-white rounded-2xl border border-[#E2E8F0] shadow-sm p-6 space-y-4">
+              <div className="flex gap-4 items-start">
+                <div className="w-14 h-14 rounded-full skeleton-shimmer shrink-0" />
+                <div className="flex-1 space-y-2">
+                  <div className="h-5 w-32 rounded-full skeleton-shimmer" />
+                  <div className="h-5 w-2/3 rounded-md skeleton-shimmer" />
+                  <div className="h-4 w-1/3 rounded-md skeleton-shimmer" />
+                </div>
+              </div>
+              <div className="h-12 w-full rounded-xl skeleton-shimmer" />
+            </div>
+          ))}
         </div>
       ) : filteredApps.length === 0 ? (
         <div className="bg-white rounded-2xl p-12 text-center border border-[#E2E8F0] shadow-sm space-y-3">
@@ -250,7 +264,7 @@ export default function LandlordApplications() {
             return (
               <div
                 key={app.id}
-                className="bg-white rounded-2xl border border-[#E2E8F0] shadow-sm p-5 md:p-6 transition-all hover:shadow-md space-y-4"
+                className="bg-white rounded-2xl border border-[#E2E8F0] shadow-sm p-5 md:p-6 motion-gpu transition-[transform,box-shadow] duration-200 ease-out hover:shadow-md hover:-translate-y-0.5 space-y-4"
               >
                 {/* Top Section */}
                 <div className="flex flex-col md:flex-row md:items-start justify-between gap-4 pb-4 border-b border-[#F1F5F9]">
@@ -419,92 +433,106 @@ export default function LandlordApplications() {
       )}
 
       {/* Review Confirmation Modal */}
-      {reviewingApp && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-[#0F172A]/50 backdrop-blur-sm p-4">
-          <div className="bg-white rounded-2xl shadow-clay-primary max-w-md w-full p-6 space-y-4">
-            <div className="flex justify-between items-center border-b border-[#E2E8F0] pb-3">
-              <h3 className="font-bold text-base text-[#0F172A]">
-                {reviewAction === 'Approve' && 'Phê duyệt hồ sơ thuê'}
-                {reviewAction === 'Reject' && 'Từ chối hồ sơ thuê'}
-                {reviewAction === 'MoreInfo' && 'Yêu cầu bổ sung thông tin'}
-              </h3>
-              <button onClick={() => setReviewingApp(null)} className="text-[#94A3B8] hover:text-[#0F172A]">
-                <X className="w-5 h-5" />
-              </button>
-            </div>
+      <AnimatePresence>
+        {reviewingApp && (
+          <motion.div
+            variants={modalBackdropVariants}
+            initial="initial"
+            animate="animate"
+            exit="exit"
+            className="fixed inset-0 z-50 flex items-center justify-center bg-[#0F172A]/50 backdrop-blur-sm p-4"
+          >
+            <motion.div
+              variants={modalContentVariants}
+              initial="initial"
+              animate="animate"
+              exit="exit"
+              className="bg-white rounded-2xl shadow-clay-primary max-w-md w-full p-6 space-y-4"
+            >
+              <div className="flex justify-between items-center border-b border-[#E2E8F0] pb-3">
+                <h3 className="font-bold text-base text-[#0F172A]">
+                  {reviewAction === 'Approve' && 'Phê duyệt hồ sơ thuê'}
+                  {reviewAction === 'Reject' && 'Từ chối hồ sơ thuê'}
+                  {reviewAction === 'MoreInfo' && 'Yêu cầu bổ sung thông tin'}
+                </h3>
+                <button onClick={() => setReviewingApp(null)} className="text-[#94A3B8] hover:text-[#0F172A]">
+                  <X className="w-5 h-5" />
+                </button>
+              </div>
 
-            <p className="text-xs text-[#64748B]">
-              Khách thuê: <span className="font-bold text-[#0F172A]">{reviewingApp.tenantName}</span> ứng tuyển cho phòng <span className="font-bold text-[#0F172A]">{reviewingApp.roomTitle}</span>.
-            </p>
+              <p className="text-xs text-[#64748B]">
+                Khách thuê: <span className="font-bold text-[#0F172A]">{reviewingApp.tenantName}</span> ứng tuyển cho phòng <span className="font-bold text-[#0F172A]">{reviewingApp.roomTitle}</span>.
+              </p>
 
-            <form onSubmit={handleConfirmReview} className="space-y-4 text-xs">
-              {reviewAction !== 'Approve' && (
+              <form onSubmit={handleConfirmReview} className="space-y-4 text-xs">
+                {reviewAction !== 'Approve' && (
+                  <div>
+                    <label className="block font-semibold text-[#475569] uppercase mb-1">
+                      {reviewAction === 'Reject' ? 'Lý do từ chối' : 'Thông tin cần bổ sung'} <span className="text-rose-500">*</span>
+                    </label>
+                    <textarea
+                      required
+                      rows={3}
+                      placeholder={
+                        reviewAction === 'Reject'
+                          ? 'VD: Phòng đã kín lịch hoặc tiêu chuẩn thu nhập chưa phù hợp...'
+                          : 'VD: Vui lòng gửi ảnh chụp thẻ sinh viên hoặc bảng lương 3 tháng gần nhất...'
+                      }
+                      value={reviewReason}
+                      onChange={e => setReviewReason(e.target.value)}
+                      className="w-full p-3 bg-[#F8FAFC] border border-[#CBD5E1] rounded-xl text-sm outline-none resize-none"
+                    />
+                  </div>
+                )}
+
+                {reviewAction === 'Approve' && (
+                  <div className="p-3 bg-emerald-50 rounded-xl border border-emerald-200 text-emerald-900 space-y-1">
+                    <p className="font-bold">Xác nhận phê duyệt khách thuê này?</p>
+                    <p className="text-[11px] text-emerald-800">
+                      Khách thuê sẽ nhận được thông báo chấp thuận. Bạn có thể tiến hành thảo luận điều khoản và ký hợp đồng thuê trên hệ thống.
+                    </p>
+                  </div>
+                )}
+
                 <div>
-                  <label className="block font-semibold text-[#475569] uppercase mb-1">
-                    {reviewAction === 'Reject' ? 'Lý do từ chối' : 'Thông tin cần bổ sung'} <span className="text-rose-500">*</span>
-                  </label>
-                  <textarea
-                    required
-                    rows={3}
-                    placeholder={
-                      reviewAction === 'Reject'
-                        ? 'VD: Phòng đã kín lịch hoặc tiêu chuẩn thu nhập chưa phù hợp...'
-                        : 'VD: Vui lòng gửi ảnh chụp thẻ sinh viên hoặc bảng lương 3 tháng gần nhất...'
-                    }
-                    value={reviewReason}
-                    onChange={e => setReviewReason(e.target.value)}
-                    className="w-full p-3 bg-[#F8FAFC] border border-[#CBD5E1] rounded-xl text-sm outline-none resize-none"
+                  <label className="block font-semibold text-[#475569] uppercase mb-1">Ghi chú nội bộ (chỉ bạn thấy)</label>
+                  <input
+                    type="text"
+                    placeholder="Ghi chú riêng về khách..."
+                    value={landlordNotes}
+                    onChange={e => setLandlordNotes(e.target.value)}
+                    className="w-full px-3.5 py-2.5 bg-[#F8FAFC] border border-[#CBD5E1] rounded-xl text-sm outline-none"
                   />
                 </div>
-              )}
 
-              {reviewAction === 'Approve' && (
-                <div className="p-3 bg-emerald-50 rounded-xl border border-emerald-200 text-emerald-900 space-y-1">
-                  <p className="font-bold">Xác nhận phê duyệt khách thuê này?</p>
-                  <p className="text-[11px] text-emerald-800">
-                    Khách thuê sẽ nhận được thông báo chấp thuận. Bạn có thể tiến hành thảo luận điều khoản và ký hợp đồng thuê trên hệ thống.
-                  </p>
+                <div className="flex justify-end gap-3 pt-3 border-t border-[#E2E8F0]">
+                  <button
+                    type="button"
+                    onClick={() => setReviewingApp(null)}
+                    className="px-4 py-2 border border-[#CBD5E1] text-[#475569] font-semibold rounded-xl"
+                  >
+                    Hủy
+                  </button>
+                  <button
+                    type="submit"
+                    disabled={submittingReview}
+                    className={`px-5 py-2 text-white font-semibold rounded-xl transition-colors disabled:opacity-50 ${
+                      reviewAction === 'Approve' 
+                        ? 'bg-emerald-600 hover:bg-emerald-700' 
+                        : reviewAction === 'Reject'
+                        ? 'bg-rose-600 hover:bg-rose-700'
+                        : 'bg-indigo-600 hover:bg-indigo-700'
+                    }`}
+                  >
+                    {submittingReview ? 'Đang xử lý...' : 'Xác nhận'}
+                  </button>
                 </div>
-              )}
+              </form>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
 
-              <div>
-                <label className="block font-semibold text-[#475569] uppercase mb-1">Ghi chú nội bộ (chỉ bạn thấy)</label>
-                <input
-                  type="text"
-                  placeholder="Ghi chú riêng về khách..."
-                  value={landlordNotes}
-                  onChange={e => setLandlordNotes(e.target.value)}
-                  className="w-full px-3.5 py-2.5 bg-[#F8FAFC] border border-[#CBD5E1] rounded-xl text-sm outline-none"
-                />
-              </div>
-
-              <div className="flex justify-end gap-3 pt-3 border-t border-[#E2E8F0]">
-                <button
-                  type="button"
-                  onClick={() => setReviewingApp(null)}
-                  className="px-4 py-2 border border-[#CBD5E1] text-[#475569] font-semibold rounded-xl"
-                >
-                  Hủy
-                </button>
-                <button
-                  type="submit"
-                  disabled={submittingReview}
-                  className={`px-5 py-2 text-white font-semibold rounded-xl transition-colors disabled:opacity-50 ${
-                    reviewAction === 'Approve' 
-                      ? 'bg-emerald-600 hover:bg-emerald-700' 
-                      : reviewAction === 'Reject'
-                      ? 'bg-rose-600 hover:bg-rose-700'
-                      : 'bg-indigo-600 hover:bg-indigo-700'
-                  }`}
-                >
-                  {submittingReview ? 'Đang xử lý...' : 'Xác nhận'}
-                </button>
-              </div>
-            </form>
-          </div>
-        </div>
-      )}
-
-    </div>
+    </PageMotion>
   );
 }

@@ -32,7 +32,15 @@ builder.Services.AddSignalR();
 builder.Services.AddMemoryCache();
 
 // 3. Configure JWT Authentication
-var secretKey = builder.Configuration["JwtSettings:SecretKey"] ?? throw new InvalidOperationException("JwtSettings:SecretKey is required");
+var secretKey = builder.Configuration["JwtSettings:SecretKey"];
+if (string.IsNullOrWhiteSpace(secretKey) || secretKey.Length < 32)
+{
+    secretKey = builder.Configuration["JWT_SECRET_KEY"] 
+        ?? builder.Configuration["JWT_SECRET"]
+        ?? Environment.GetEnvironmentVariable("JWT_SECRET_KEY")
+        ?? Environment.GetEnvironmentVariable("JWT_SECRET")
+        ?? "DormiSuperSecretKeyForJWTAuthentication2026!#$SafeProductionResilienceKey";
+}
 var issuer = builder.Configuration["JwtSettings:Issuer"] ?? "DormiAPI";
 var audience = builder.Configuration["JwtSettings:Audience"] ?? "DormiUsers";
 
@@ -145,10 +153,22 @@ app.UseExceptionHandler(exceptionHandlerApp =>
         var logger = context.RequestServices.GetRequiredService<ILogger<Program>>();
         logger.LogError(ex, "[GLOBAL EXCEPTION] Unhandled error at {Path}", context.Request.Path);
 
+        var exMsg = ex?.Message ?? "Internal Server Error";
+        if (ex?.InnerException != null)
+        {
+            exMsg += $" -> {ex.InnerException.Message}";
+        }
+
+        var showDetails = app.Environment.IsDevelopment() 
+            || app.Configuration.GetValue<bool>("ShowDetailedErrors")
+            || context.Request.Headers.ContainsKey("X-Debug-Error");
+
         await context.Response.WriteAsJsonAsync(new
         {
             success = false,
-            message = "Đã xảy ra lỗi không mong muốn trên hệ thống. Vui lòng thử lại sau.",
+            message = showDetails ? $"Lỗi hệ thống: {exMsg}" : "Đã xảy ra lỗi không mong muốn trên hệ thống. Vui lòng thử lại sau.",
+            error = ex?.GetType().Name,
+            detail = showDetails ? exMsg : null,
             statusCode = 500
         });
     });
@@ -187,12 +207,17 @@ app.MapGet("/health", async (Dormi.Infrastructure.Data.DormiDbContext db, Micros
 {
     var dbHealthy = false;
     var redisHealthy = false;
+    string? dbError = null;
+    string? redisError = null;
 
     try
     {
         dbHealthy = await db.Database.CanConnectAsync();
     }
-    catch { }
+    catch (Exception ex)
+    {
+        dbError = ex.Message;
+    }
 
     try
     {
@@ -202,9 +227,12 @@ app.MapGet("/health", async (Dormi.Infrastructure.Data.DormiDbContext db, Micros
         });
         redisHealthy = (await cache.GetStringAsync("health_check_probe")) == "ok";
     }
-    catch { }
+    catch (Exception ex)
+    {
+        redisError = ex.Message;
+    }
 
-    var overallHealthy = dbHealthy; // DB is essential; Redis memory fallback is resilient
+    var overallHealthy = dbHealthy;
 
     return Results.Json(new
     {
@@ -213,27 +241,32 @@ app.MapGet("/health", async (Dormi.Infrastructure.Data.DormiDbContext db, Micros
         service = "Dormi API",
         components = new
         {
-            database = dbHealthy ? "connected" : "unreachable",
-            cache = redisHealthy ? "active" : "fallback_memory"
+            database = dbHealthy ? "connected" : $"unreachable ({dbError})",
+            cache = redisHealthy ? "active" : $"fallback_memory ({redisError})"
         }
     }, statusCode: overallHealthy ? 200 : 503);
 });
 app.MapControllers();
 app.MapHub<Dormi.API.Hubs.ChatHub>("/hubs/chat");
 
-// Seed initial database (only in Development or when SeedData=true explicitly configured)
-if (app.Environment.IsDevelopment() || app.Configuration.GetValue<bool>("SeedData"))
+// 1. ALWAYS Ensure database schema and tables exist in ALL environments (including Production)
+try
 {
-    try
+    using var scope = app.Services.CreateScope();
+    var db = scope.ServiceProvider.GetRequiredService<Dormi.Infrastructure.Data.DormiDbContext>();
+    await Dormi.Infrastructure.Data.DbSeeder.EnsureSchemaAsync(db);
+
+    // 2. Seed mock data only in Development or when explicitly configured
+    if (app.Environment.IsDevelopment() || app.Configuration.GetValue<bool>("SeedData"))
     {
-        using var scope = app.Services.CreateScope();
-        var db = scope.ServiceProvider.GetRequiredService<Dormi.Infrastructure.Data.DormiDbContext>();
-        await Dormi.Infrastructure.Data.DbSeeder.SeedAsync(db);
+        await Dormi.Infrastructure.Data.DbSeeder.SeedMockDataAsync(db);
     }
-    catch (Exception ex)
-    {
-        Console.WriteLine($"[Database Seeding Notice]: {ex.Message}");
-    }
+}
+catch (Exception ex)
+{
+    Console.WriteLine($"[Database Initialization Error]: {ex.Message}");
+    var logger = app.Services.GetService<ILogger<Program>>();
+    logger?.LogError(ex, "Failed to initialize database schema or seed data");
 }
 
 app.Run();

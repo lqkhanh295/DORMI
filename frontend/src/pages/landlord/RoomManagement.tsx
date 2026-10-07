@@ -5,6 +5,9 @@ import { Button } from '../../components/ui/Button';
 import { roomsApi, imagesApi, type RoomResponse } from '../../services/api';
 import { toast } from 'sonner';
 import { Pencil, Eye, EyeOff, Trash2, CheckCircle2, Clock, XCircle, Image as ImageIcon, Check, X, Plus, Camera, Flame } from 'lucide-react';
+import { motion, AnimatePresence } from 'framer-motion';
+import { modalBackdropVariants, modalContentVariants } from '../../utils/motion';
+import { PageMotion } from '../../components/common/Motion';
 
 const UTILITY_OPTIONS = [
   'Wifi', 'Máy lạnh', 'Tủ lạnh', 'Máy giặt', 'Ban công', 
@@ -343,7 +346,7 @@ export default function RoomManagement() {
   };
 
   return (
-    <div className="space-y-6 relative bg-[#F5F7FA]">
+    <PageMotion className="space-y-6 relative bg-[#F5F7FA]">
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-h2 font-bold text-[#0F172A]">Phòng của tôi (API Connected)</h1>
@@ -354,12 +357,23 @@ export default function RoomManagement() {
 
       <div className="grid grid-cols-1 gap-6">
         {loading ? (
-          <div className="py-12 text-center text-[#64748B] bg-white rounded-[18px]">Đang tải danh sách phòng...</div>
+          <div className="space-y-4">
+            {[1, 2, 3].map(i => (
+              <div key={i} className="flex flex-col md:flex-row p-4 gap-6 items-center bg-white rounded-[18px] shadow-clay-soft">
+                <div className="w-full h-48 md:w-48 md:h-32 rounded-[14px] skeleton-shimmer shrink-0" />
+                <div className="flex-1 space-y-3 w-full">
+                  <div className="h-6 w-1/2 rounded-md skeleton-shimmer" />
+                  <div className="h-4 w-3/4 rounded-md skeleton-shimmer" />
+                  <div className="h-4 w-1/3 rounded-md skeleton-shimmer" />
+                </div>
+              </div>
+            ))}
+          </div>
         ) : (
           myRooms.map(room => {
             const primaryImg = room.images?.[0]?.imageUrl || 'https://images.unsplash.com/photo-1522708323590-d24dbb6b0267?auto=format&fit=crop&w=400&q=80';
             return (
-              <Card key={room.id} className="flex flex-col md:flex-row p-4 gap-6 items-center bg-white rounded-[18px] shadow-clay-soft border-none hover:-translate-y-[2px] transition-all">
+              <Card key={room.id} className="flex flex-col md:flex-row p-4 gap-6 items-center bg-white rounded-[18px] shadow-clay-soft border-none motion-gpu transition-[box-shadow,transform] duration-200 ease-out hover:shadow-clay-primary hover:-translate-y-0.5">
                 <div className="w-full h-48 md:w-48 md:h-32 bg-[#EEF2F6] rounded-[14px] overflow-hidden shrink-0">
                   <img 
                     src={primaryImg} 
@@ -439,15 +453,28 @@ export default function RoomManagement() {
       </div>
 
       {/* Add New Room Modal */}
-      {isAdding && (
-        <div className="fixed inset-0 bg-[#0F172A]/40 flex items-center justify-center z-50 p-4 overflow-y-auto">
-          <Card className="w-full max-w-2xl p-6 md:p-8 bg-white rounded-[18px] shadow-clay-primary border-none max-h-[90vh] overflow-y-auto space-y-6">
-            <div className="flex justify-between items-center pb-3 border-b border-[#E2E8F0]">
-              <h2 className="text-h2 font-bold text-[#0F172A]">Thêm phòng trọ mới (Tối ưu ảnh tức thì)</h2>
-              <button onClick={() => setIsAdding(false)} className="text-[#64748B] hover:text-[#0F172A] p-1">
-                <X className="w-5 h-5" />
-              </button>
-            </div>
+      <AnimatePresence>
+        {isAdding && (
+          <motion.div
+            variants={modalBackdropVariants}
+            initial="initial"
+            animate="animate"
+            exit="exit"
+            className="fixed inset-0 bg-[#0F172A]/40 backdrop-blur-xs flex items-center justify-center z-50 p-4 overflow-y-auto"
+          >
+            <motion.div
+              variants={modalContentVariants}
+              initial="initial"
+              animate="animate"
+              exit="exit"
+              className="w-full max-w-2xl p-6 md:p-8 bg-white rounded-[18px] shadow-clay-primary border-none max-h-[90vh] overflow-y-auto space-y-6"
+            >
+              <div className="flex justify-between items-center pb-3 border-b border-[#E2E8F0]">
+                <h2 className="text-h2 font-bold text-[#0F172A]">Thêm phòng trọ mới (Tối ưu ảnh tức thì)</h2>
+                <button onClick={() => setIsAdding(false)} className="text-[#64748B] hover:text-[#0F172A] p-1">
+                  <X className="w-5 h-5" />
+                </button>
+              </div>
 
             <form onSubmit={handleAddNew} className="space-y-5">
               <div>
@@ -527,7 +554,7 @@ export default function RoomManagement() {
                         key={util}
                         type="button"
                         onClick={() => toggleUtility(util)}
-                        className={`px-3 py-1.5 rounded-[10px] text-caption font-semibold transition-all inline-flex items-center gap-1 ${
+                        className={`px-3 py-1.5 rounded-[10px] text-caption font-semibold transition-[background-color,color,box-shadow,transform] duration-150 ease-out active:scale-95 inline-flex items-center gap-1 ${
                           active 
                             ? 'btn-clay-primary' 
                             : 'bg-[#F5F7FA] text-[#64748B] border border-[#E2E8F0] hover:bg-white hover:text-[#0F172A]'
@@ -570,7 +597,7 @@ export default function RoomManagement() {
                   <button
                     type="button"
                     onClick={() => handleAddCustomUtility(false)}
-                    className="px-3.5 py-1.5 bg-[#00153D] text-white rounded-[10px] text-caption font-semibold hover:bg-[#002266] transition-all inline-flex items-center gap-1"
+                    className="px-3.5 py-1.5 bg-[#00153D] text-white rounded-[10px] text-caption font-semibold hover:bg-[#002266] transition-[background-color,box-shadow,transform] duration-150 ease-out active:scale-95 inline-flex items-center gap-1"
                   >
                     <Plus className="w-3.5 h-3.5" /> Thêm
                   </button>
@@ -602,7 +629,7 @@ export default function RoomManagement() {
               <div>
                 <label className="block text-caption font-semibold text-[#64748B] mb-2">Hình ảnh thực tế (Tự động nén & Lưu CSDL)</label>
                 
-                <div className="border-2 border-dashed border-[#CBD5E1] rounded-[14px] p-6 text-center bg-[#F5F7FA] shadow-clay-inset hover:bg-white transition-all cursor-pointer relative">
+                <div className="border-2 border-dashed border-[#CBD5E1] rounded-[14px] p-6 text-center bg-[#F5F7FA] shadow-clay-inset hover:bg-white transition-[background-color,border-color] duration-150 ease-out cursor-pointer relative">
                   <input 
                     type="file" 
                     accept="image/png, image/jpeg, image/jpg, image/webp, image/gif, image/bmp, image/heic, image/heif, image/*, .png, .jpg, .jpeg, .webp, .gif, .bmp, .heic, .heif"
@@ -640,20 +667,34 @@ export default function RoomManagement() {
                 <Button type="submit">Đăng tin phòng trọ (API)</Button>
               </div>
             </form>
-          </Card>
-        </div>
-      )}
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
 
       {/* Edit Room Modal */}
-      {editingRoom && (
-        <div className="fixed inset-0 bg-[#0F172A]/40 flex items-center justify-center z-50 p-4 overflow-y-auto">
-          <Card className="w-full max-w-2xl p-6 md:p-8 bg-white rounded-[18px] shadow-clay-primary border-none max-h-[90vh] overflow-y-auto space-y-6">
-            <div className="flex justify-between items-center pb-3 border-b border-[#E2E8F0]">
-              <h2 className="text-h2 font-bold text-[#0F172A]">Chỉnh sửa bài đăng phòng trọ</h2>
-              <button onClick={() => setEditingRoom(null)} className="text-[#64748B] hover:text-[#0F172A] p-1">
-                <X className="w-5 h-5" />
-              </button>
-            </div>
+      <AnimatePresence>
+        {editingRoom && (
+          <motion.div
+            variants={modalBackdropVariants}
+            initial="initial"
+            animate="animate"
+            exit="exit"
+            className="fixed inset-0 bg-[#0F172A]/40 backdrop-blur-xs flex items-center justify-center z-50 p-4 overflow-y-auto"
+          >
+            <motion.div
+              variants={modalContentVariants}
+              initial="initial"
+              animate="animate"
+              exit="exit"
+              className="w-full max-w-2xl p-6 md:p-8 bg-white rounded-[18px] shadow-clay-primary border-none max-h-[90vh] overflow-y-auto space-y-6"
+            >
+              <div className="flex justify-between items-center pb-3 border-b border-[#E2E8F0]">
+                <h2 className="text-h2 font-bold text-[#0F172A]">Chỉnh sửa bài đăng phòng trọ</h2>
+                <button onClick={() => setEditingRoom(null)} className="text-[#64748B] hover:text-[#0F172A] p-1">
+                  <X className="w-5 h-5" />
+                </button>
+              </div>
 
             <form onSubmit={handleSaveEdit} className="space-y-5">
               <div>
@@ -738,7 +779,7 @@ export default function RoomManagement() {
                         key={util}
                         type="button"
                         onClick={() => toggleUtility(util, true)}
-                        className={`px-3 py-1.5 rounded-[10px] text-caption font-semibold transition-all inline-flex items-center gap-1 ${
+                        className={`px-3 py-1.5 rounded-[10px] text-caption font-semibold transition-[background-color,color,box-shadow,transform] duration-150 ease-out active:scale-95 inline-flex items-center gap-1 ${
                           active 
                             ? 'btn-clay-primary' 
                             : 'bg-[#F5F7FA] text-[#64748B] border border-[#E2E8F0] hover:bg-white hover:text-[#0F172A]'
@@ -781,7 +822,7 @@ export default function RoomManagement() {
                   <button
                     type="button"
                     onClick={() => handleAddCustomUtility(true)}
-                    className="px-3.5 py-1.5 bg-[#00153D] text-white rounded-[10px] text-caption font-semibold hover:bg-[#002266] transition-all inline-flex items-center gap-1"
+                    className="px-3.5 py-1.5 bg-[#00153D] text-white rounded-[10px] text-caption font-semibold hover:bg-[#002266] transition-[background-color,box-shadow,transform] duration-150 ease-out active:scale-95 inline-flex items-center gap-1"
                   >
                     <Plus className="w-3.5 h-3.5" /> Thêm
                   </button>
@@ -800,7 +841,7 @@ export default function RoomManagement() {
 
               <div>
                 <label className="block text-caption font-semibold text-[#64748B] mb-2">Thêm ảnh thực tế mới</label>
-                <div className="border-2 border-dashed border-[#CBD5E1] rounded-[14px] p-6 text-center bg-[#F5F7FA] shadow-clay-inset hover:bg-white transition-all cursor-pointer relative">
+                <div className="border-2 border-dashed border-[#CBD5E1] rounded-[14px] p-6 text-center bg-[#F5F7FA] shadow-clay-inset hover:bg-white transition-[background-color,border-color] duration-150 ease-out cursor-pointer relative">
                   <input 
                     type="file" 
                     accept="image/png, image/jpeg, image/jpg, image/webp, image/gif, image/bmp, image/heic, image/heif, image/*, .png, .jpg, .jpeg, .webp, .gif, .bmp, .heic, .heif"
@@ -838,9 +879,10 @@ export default function RoomManagement() {
                 <Button type="submit">Lưu vào Backend API</Button>
               </div>
             </form>
-          </Card>
-        </div>
-      )}
-    </div>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+    </PageMotion>
   );
 }

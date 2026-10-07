@@ -21,6 +21,9 @@ import {
   X
 } from 'lucide-react';
 import { toast } from 'sonner';
+import { motion, AnimatePresence } from 'framer-motion';
+import { modalBackdropVariants, modalContentVariants } from '../../utils/motion';
+import { PageMotion, SkeletonTable } from '../../components/common/Motion';
 
 export default function AdminReports() {
   const [activeTab, setActiveTab] = useState<'moderation' | 'audit'>('moderation');
@@ -173,7 +176,7 @@ export default function AdminReports() {
   };
 
   return (
-    <div className="space-y-6 pb-8 bg-[#F8FAFC]">
+    <PageMotion className="space-y-6 pb-8 bg-[#F8FAFC]">
       {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 bg-white p-6 rounded-2xl border border-slate-200 shadow-sm">
         <div>
@@ -208,7 +211,7 @@ export default function AdminReports() {
       <div className="flex bg-slate-200/80 p-1 rounded-2xl max-w-md">
         <button
           onClick={() => setActiveTab('moderation')}
-          className={`flex-1 py-2 px-4 rounded-xl text-xs font-bold transition-all flex items-center justify-center gap-2 ${
+          className={`flex-1 py-2 px-4 rounded-xl text-xs font-bold transition-[background-color,color,box-shadow,transform] duration-150 ease-out active:scale-[0.98] flex items-center justify-center gap-2 ${
             activeTab === 'moderation'
               ? 'bg-white text-slate-900 shadow-sm'
               : 'text-slate-600 hover:text-slate-900'
@@ -220,7 +223,7 @@ export default function AdminReports() {
 
         <button
           onClick={() => setActiveTab('audit')}
-          className={`flex-1 py-2 px-4 rounded-xl text-xs font-bold transition-all flex items-center justify-center gap-2 ${
+          className={`flex-1 py-2 px-4 rounded-xl text-xs font-bold transition-[background-color,color,box-shadow,transform] duration-150 ease-out active:scale-[0.98] flex items-center justify-center gap-2 ${
             activeTab === 'audit'
               ? 'bg-white text-slate-900 shadow-sm'
               : 'text-slate-600 hover:text-slate-900'
@@ -277,10 +280,18 @@ export default function AdminReports() {
 
           {/* Reports List */}
           {loadingReports ? (
-            <Card className="p-12 text-center text-slate-400 bg-white rounded-2xl border border-slate-200">
-              <div className="w-7 h-7 border-2 border-indigo-600 border-t-transparent rounded-full animate-spin mx-auto mb-3"></div>
-              <p className="text-sm">Đang tải danh sách hàng đợi kiểm duyệt...</p>
-            </Card>
+            <div className="space-y-4">
+              {[1, 2, 3].map(i => (
+                <div key={i} className="p-5 bg-white rounded-2xl border border-slate-200 shadow-sm space-y-3">
+                  <div className="flex justify-between items-center">
+                    <div className="h-5 w-1/3 rounded-md skeleton-shimmer" />
+                    <div className="h-5 w-24 rounded-full skeleton-shimmer" />
+                  </div>
+                  <div className="h-4 w-1/2 rounded-md skeleton-shimmer" />
+                  <div className="h-12 w-full rounded-xl skeleton-shimmer" />
+                </div>
+              ))}
+            </div>
           ) : reports.length === 0 ? (
             <Card className="p-12 text-center text-slate-400 bg-white rounded-2xl border border-dashed border-slate-200">
               <CheckCircle2 className="w-10 h-10 mx-auto mb-2 text-emerald-400" />
@@ -289,7 +300,7 @@ export default function AdminReports() {
             </Card>
           ) : (
             reports.map(r => (
-              <Card key={r.id} className="p-5 bg-white rounded-2xl border border-slate-200 shadow-sm hover:shadow-md transition-all space-y-4">
+              <Card key={r.id} className="p-5 bg-white rounded-2xl border border-slate-200 shadow-sm hover:shadow-md transition-[transform,box-shadow] duration-200 ease-out hover:-translate-y-0.5 space-y-4">
                 <div className="flex flex-col lg:flex-row lg:items-start justify-between gap-4">
                   <div className="space-y-3 flex-1">
                     <div className="flex flex-wrap items-center gap-2">
@@ -411,10 +422,7 @@ export default function AdminReports() {
             </div>
 
             {loadingAudit ? (
-              <div className="p-12 text-center text-slate-400">
-                <div className="w-7 h-7 border-2 border-indigo-600 border-t-transparent rounded-full animate-spin mx-auto mb-3"></div>
-                <p className="text-sm">Đang tải nhật ký kiểm toán...</p>
-              </div>
+              <SkeletonTable rows={5} cols={5} />
             ) : auditLogs.length === 0 ? (
               <div className="p-12 text-center text-slate-400">
                 <Info className="w-8 h-8 mx-auto mb-2 text-slate-300" />
@@ -471,75 +479,89 @@ export default function AdminReports() {
       )}
 
       {/* RESOLVE ACTION MODAL */}
-      {selectedReport && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4 animate-in fade-in duration-200">
-          <div className="bg-white rounded-2xl shadow-xl max-w-lg w-full p-6 space-y-5">
-            <div className="flex items-center justify-between border-b border-slate-100 pb-3">
-              <div className="flex items-center gap-2">
-                <ShieldCheck className="w-5 h-5 text-indigo-600" />
-                <h3 className="text-base font-bold text-slate-900">Xử lý báo cáo vi phạm</h3>
-              </div>
-              <button
-                onClick={() => setSelectedReport(null)}
-                className="p-1 rounded-lg text-slate-400 hover:text-slate-600 hover:bg-slate-100"
-              >
-                <X className="w-5 h-5" />
-              </button>
-            </div>
-
-            <div className="space-y-4 text-xs">
-              <div>
-                <p className="text-slate-500">Tin đăng bị phản ánh:</p>
-                <p className="font-bold text-slate-900 text-sm mt-0.5">{selectedReport.roomTitle}</p>
-                <p className="text-slate-600 mt-0.5">Lý do: <span className="text-rose-600 font-medium">{selectedReport.reason}</span></p>
-              </div>
-
-              <div>
-                <label className="block font-semibold text-slate-700 mb-1.5">Chọn hành động xử lý:</label>
-                <select
-                  value={modalAction}
-                  onChange={e => setModalAction(e.target.value)}
-                  className="w-full p-2.5 rounded-xl border border-slate-200 bg-slate-50 text-slate-900 font-medium outline-none focus:ring-2 focus:ring-indigo-500"
+      <AnimatePresence>
+        {selectedReport && (
+          <motion.div
+            variants={modalBackdropVariants}
+            initial="initial"
+            animate="animate"
+            exit="exit"
+            className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-xs p-4"
+          >
+            <motion.div
+              variants={modalContentVariants}
+              initial="initial"
+              animate="animate"
+              exit="exit"
+              className="bg-white rounded-2xl shadow-xl max-w-lg w-full p-6 space-y-5"
+            >
+              <div className="flex items-center justify-between border-b border-slate-100 pb-3">
+                <div className="flex items-center gap-2">
+                  <ShieldCheck className="w-5 h-5 text-indigo-600" />
+                  <h3 className="text-base font-bold text-slate-900">Xử lý báo cáo vi phạm</h3>
+                </div>
+                <button
+                  onClick={() => setSelectedReport(null)}
+                  className="p-1 rounded-lg text-slate-400 hover:text-slate-600 hover:bg-slate-100"
                 >
-                  <option value="RoomHidden">Ẩn tin đăng khỏi danh sách tìm kiếm (RoomHidden)</option>
-                  <option value="WarningIssued">Gửi cảnh cáo vi phạm đến chủ trọ (WarningIssued)</option>
-                  <option value="LandlordBanned">Khóa vĩnh viễn tài khoản chủ trọ (LandlordBanned)</option>
-                  <option value="Dismissed">Bác bỏ báo cáo / Tin hợp lệ (Dismissed)</option>
-                </select>
+                  <X className="w-5 h-5" />
+                </button>
               </div>
 
-              <div>
-                <label className="block font-semibold text-slate-700 mb-1.5">Ghi chú của kiểm duyệt viên (Lưu vết Audit Log):</label>
-                <textarea
-                  rows={3}
-                  value={moderatorNotes}
-                  onChange={e => setModeratorNotes(e.target.value)}
-                  placeholder="Ghi rõ lý do xử lý, điều khoản vi phạm hoặc lý do bác bỏ..."
-                  className="w-full p-3 rounded-xl border border-slate-200 bg-slate-50 text-slate-900 outline-none focus:ring-2 focus:ring-indigo-500"
-                />
-              </div>
-            </div>
+              <div className="space-y-4 text-xs">
+                <div>
+                  <p className="text-slate-500">Tin đăng bị phản ánh:</p>
+                  <p className="font-bold text-slate-900 text-sm mt-0.5">{selectedReport.roomTitle}</p>
+                  <p className="text-slate-600 mt-0.5">Lý do: <span className="text-rose-600 font-medium">{selectedReport.reason}</span></p>
+                </div>
 
-            <div className="flex items-center justify-end gap-3 pt-3 border-t border-slate-100">
-              <Button
-                variant="secondary"
-                disabled={resolving}
-                onClick={() => setSelectedReport(null)}
-              >
-                Hủy bỏ
-              </Button>
-              <Button
-                variant="primary"
-                disabled={resolving}
-                onClick={handleConfirmResolve}
-                className="bg-indigo-600 hover:bg-indigo-700 text-white shadow-sm"
-              >
-                {resolving ? 'Đang thực hiện...' : 'Xác nhận xử lý & Ghi log'}
-              </Button>
-            </div>
-          </div>
-        </div>
-      )}
-    </div>
+                <div>
+                  <label className="block font-semibold text-slate-700 mb-1.5">Chọn hành động xử lý:</label>
+                  <select
+                    value={modalAction}
+                    onChange={e => setModalAction(e.target.value)}
+                    className="w-full p-2.5 rounded-xl border border-slate-200 bg-slate-50 text-slate-900 font-medium outline-none focus:ring-2 focus:ring-indigo-500"
+                  >
+                    <option value="RoomHidden">Ẩn tin đăng khỏi danh sách tìm kiếm (RoomHidden)</option>
+                    <option value="WarningIssued">Gửi cảnh cáo vi phạm đến chủ trọ (WarningIssued)</option>
+                    <option value="LandlordBanned">Khóa vĩnh viễn tài khoản chủ trọ (LandlordBanned)</option>
+                    <option value="Dismissed">Bác bỏ báo cáo / Tin hợp lệ (Dismissed)</option>
+                  </select>
+                </div>
+
+                <div>
+                  <label className="block font-semibold text-slate-700 mb-1.5">Ghi chú của kiểm duyệt viên (Lưu vết Audit Log):</label>
+                  <textarea
+                    rows={3}
+                    value={moderatorNotes}
+                    onChange={e => setModeratorNotes(e.target.value)}
+                    placeholder="Ghi rõ lý do xử lý, điều khoản vi phạm hoặc lý do bác bỏ..."
+                    className="w-full p-3 rounded-xl border border-slate-200 bg-slate-50 text-slate-900 outline-none focus:ring-2 focus:ring-indigo-500"
+                  />
+                </div>
+              </div>
+
+              <div className="flex items-center justify-end gap-3 pt-3 border-t border-slate-100">
+                <Button
+                  variant="secondary"
+                  disabled={resolving}
+                  onClick={() => setSelectedReport(null)}
+                >
+                  Hủy bỏ
+                </Button>
+                <Button
+                  variant="primary"
+                  disabled={resolving}
+                  onClick={handleConfirmResolve}
+                  className="bg-indigo-600 hover:bg-indigo-700 text-white shadow-sm"
+                >
+                  {resolving ? 'Đang thực hiện...' : 'Xác nhận xử lý & Ghi log'}
+                </Button>
+              </div>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+    </PageMotion>
   );
 }

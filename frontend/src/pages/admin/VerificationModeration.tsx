@@ -4,6 +4,9 @@ import { Button } from '../../components/ui/Button';
 import { adminApi } from '../../services/api';
 import { toast } from 'sonner';
 import { ShieldCheck, ZoomIn, X, AlertTriangle } from 'lucide-react';
+import { motion, AnimatePresence } from 'framer-motion';
+import { modalBackdropVariants, modalContentVariants } from '../../utils/motion';
+import { PageMotion } from '../../components/common/Motion';
 
 interface VerificationRequestItem {
   id: string;
@@ -92,7 +95,7 @@ export default function VerificationModeration() {
   };
 
   return (
-    <div className="flex flex-col h-[calc(100vh-8rem)] bg-[#F8FAFC]">
+    <PageMotion className="flex flex-col h-[calc(100vh-8rem)] bg-[#F8FAFC]">
       <div className="flex items-center justify-between mb-6">
         <div>
           <h1 className="text-2xl font-bold text-slate-900 flex items-center gap-2">
@@ -112,9 +115,15 @@ export default function VerificationModeration() {
         {/* Left column: list of pending requests */}
         <div className="w-1/3 flex flex-col gap-3 overflow-y-auto pr-2">
           {loading && (
-            <p className="text-slate-400 text-center py-8 bg-white rounded-xl border border-slate-200">
-              Đang tải danh sách hồ sơ...
-            </p>
+            <div className="space-y-3">
+              {[1, 2, 3, 4].map(i => (
+                <div key={i} className="p-4 rounded-xl bg-white border border-slate-200 shadow-sm space-y-2">
+                  <div className="h-4 w-1/2 rounded-md skeleton-shimmer" />
+                  <div className="h-3 w-2/3 rounded-md skeleton-shimmer" />
+                  <div className="h-3 w-1/3 rounded-md skeleton-shimmer" />
+                </div>
+              ))}
+            </div>
           )}
           {!loading && queue.length === 0 && (
             <p className="text-slate-400 text-center py-8 bg-white rounded-xl border border-dashed border-slate-200">
@@ -125,10 +134,10 @@ export default function VerificationModeration() {
             <Card 
               key={item.id} 
               onClick={() => setSelectedId(item.id)}
-              className={`p-4 cursor-pointer transition-all rounded-xl border ${
+              className={`p-4 cursor-pointer motion-gpu transition-[border-color,box-shadow,transform] duration-200 ease-out rounded-xl border ${
                 selectedItem?.id === item.id 
                   ? 'bg-white border-indigo-600 shadow-md ring-2 ring-indigo-100' 
-                  : 'bg-white border-slate-200 hover:border-slate-300 shadow-sm'
+                  : 'bg-white border-slate-200 hover:border-slate-300 shadow-sm hover:-translate-y-0.5'
               }`}
             >
               <div className="flex justify-between items-start">
@@ -272,61 +281,88 @@ export default function VerificationModeration() {
       </div>
 
       {/* Phóng to ảnh modal */}
-      {zoomedImage && (
-        <div 
-          className="fixed inset-0 z-50 bg-black/80 flex items-center justify-center p-4 backdrop-blur-sm"
-          onClick={() => setZoomedImage(null)}
-        >
-          <div className="relative max-w-4xl max-h-[90vh] bg-white rounded-2xl p-2 overflow-hidden" onClick={e => e.stopPropagation()}>
-            <button 
-              onClick={() => setZoomedImage(null)}
-              className="absolute top-4 right-4 bg-slate-900/60 hover:bg-slate-900 text-white p-2 rounded-full z-10 transition-colors"
+      <AnimatePresence>
+        {zoomedImage && (
+          <motion.div 
+            variants={modalBackdropVariants}
+            initial="initial"
+            animate="animate"
+            exit="exit"
+            className="fixed inset-0 z-50 bg-black/80 flex items-center justify-center p-4 backdrop-blur-sm"
+            onClick={() => setZoomedImage(null)}
+          >
+            <motion.div 
+              variants={modalContentVariants}
+              initial="initial"
+              animate="animate"
+              exit="exit"
+              className="relative max-w-4xl max-h-[90vh] bg-white rounded-2xl p-2 overflow-hidden" 
+              onClick={e => e.stopPropagation()}
             >
-              <X className="w-5 h-5" />
-            </button>
-            <img src={zoomedImage} alt="Zoomed Document" className="max-w-full max-h-[85vh] object-contain rounded-xl" />
-          </div>
-        </div>
-      )}
+              <button 
+                onClick={() => setZoomedImage(null)}
+                className="absolute top-4 right-4 bg-slate-900/60 hover:bg-slate-900 text-white p-2 rounded-full z-10 transition-colors"
+              >
+                <X className="w-5 h-5" />
+              </button>
+              <img src={zoomedImage} alt="Zoomed Document" className="max-w-full max-h-[85vh] object-contain rounded-xl" />
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
 
       {/* Modal từ chối với lý do */}
-      {showRejectModal && selectedItem && (
-        <div className="fixed inset-0 z-50 bg-black/50 flex items-center justify-center p-4 backdrop-blur-sm">
-          <div className="bg-white rounded-2xl max-w-md w-full p-6 space-y-4 shadow-xl border border-slate-100">
-            <div className="flex items-center gap-3 text-rose-600">
-              <AlertTriangle className="w-6 h-6" />
-              <h3 className="font-bold text-slate-900 text-lg">Từ chối hồ sơ xác minh</h3>
-            </div>
-            <p className="text-xs text-slate-500">
-              Vui lòng nêu rõ lý do từ chối để chủ trọ <strong>{selectedItem.fullName}</strong> biết và bổ sung lại giấy tờ hợp lệ.
-            </p>
-            <textarea
-              rows={3}
-              placeholder="Ví dụ: Ảnh chụp mặt sau bị mờ, không rõ ngày cấp và số định danh..."
-              value={rejectReason}
-              onChange={e => setRejectReason(e.target.value)}
-              className="w-full p-3 border border-slate-300 rounded-xl text-sm focus:ring-2 focus:ring-rose-500 focus:outline-none"
-            />
-            <div className="flex justify-end gap-2 pt-2">
-              <Button 
-                variant="secondary" 
-                onClick={() => { setShowRejectModal(false); setRejectReason(''); }}
-                className="text-xs px-4"
-              >
-                Hủy
-              </Button>
-              <Button 
-                variant="primary" 
-                disabled={processing || !rejectReason.trim()}
-                onClick={handleReject}
-                className="bg-rose-600 hover:bg-rose-700 text-white text-xs px-4"
-              >
-                {processing ? 'Đang gửi...' : 'Xác nhận từ chối'}
-              </Button>
-            </div>
-          </div>
-        </div>
-      )}
-    </div>
+      <AnimatePresence>
+        {showRejectModal && selectedItem && (
+          <motion.div 
+            variants={modalBackdropVariants}
+            initial="initial"
+            animate="animate"
+            exit="exit"
+            className="fixed inset-0 z-50 bg-black/50 flex items-center justify-center p-4 backdrop-blur-sm"
+          >
+            <motion.div 
+              variants={modalContentVariants}
+              initial="initial"
+              animate="animate"
+              exit="exit"
+              className="bg-white rounded-2xl max-w-md w-full p-6 space-y-4 shadow-xl border border-slate-100"
+            >
+              <div className="flex items-center gap-3 text-rose-600">
+                <AlertTriangle className="w-6 h-6" />
+                <h3 className="font-bold text-slate-900 text-lg">Từ chối hồ sơ xác minh</h3>
+              </div>
+              <p className="text-xs text-slate-500">
+                Vui lòng nêu rõ lý do từ chối để chủ trọ <strong>{selectedItem.fullName}</strong> biết và bổ sung lại giấy tờ hợp lệ.
+              </p>
+              <textarea
+                rows={3}
+                placeholder="Ví dụ: Ảnh chụp mặt sau bị mờ, không rõ ngày cấp và số định danh..."
+                value={rejectReason}
+                onChange={e => setRejectReason(e.target.value)}
+                className="w-full p-3 border border-slate-300 rounded-xl text-sm focus:ring-2 focus:ring-rose-500 focus:outline-none"
+              />
+              <div className="flex justify-end gap-2 pt-2">
+                <Button 
+                  variant="secondary" 
+                  onClick={() => { setShowRejectModal(false); setRejectReason(''); }}
+                  className="text-xs px-4"
+                >
+                  Hủy
+                </Button>
+                <Button 
+                  variant="primary" 
+                  disabled={processing || !rejectReason.trim()}
+                  onClick={handleReject}
+                  className="bg-rose-600 hover:bg-rose-700 text-white text-xs px-4"
+                >
+                  {processing ? 'Đang gửi...' : 'Xác nhận từ chối'}
+                </Button>
+              </div>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+    </PageMotion>
   );
 }

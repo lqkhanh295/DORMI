@@ -14,10 +14,10 @@ export const Input = React.forwardRef<HTMLInputElement, InputProps>(
         <input
           ref={ref}
           disabled={disabled}
-          className={`w-full rounded-[12px] ${error ? 'border-2 border-[#C62828] bg-white' : 'shadow-clay-inset bg-[#F5F7FA] border border-[#E2E8F0]'} px-4 py-2.5 text-body text-[#0F172A] placeholder-[#94A3B8] focus:bg-white focus:border-[#00153D] focus:outline-none focus:ring-1 focus:ring-[#00153D] disabled:bg-[#EEF2F6] disabled:text-[#94A3B8] transition-all duration-150 min-h-[44px] ${className}`}
+          className={`w-full rounded-[12px] ${error ? 'border-2 border-[#C62828] bg-white' : 'shadow-clay-inset bg-[#F5F7FA] border border-[#E2E8F0]'} px-4 py-2.5 text-body text-[#0F172A] placeholder-[#94A3B8] focus:bg-white focus:border-[#00153D] focus:outline-none focus:ring-1 focus:ring-[#00153D] disabled:bg-[#EEF2F6] disabled:text-[#94A3B8] transition-[border-color,box-shadow,background-color] duration-150 ease-out min-h-[44px] ${className}`}
           {...props}
         />
-        {error && <p className="text-caption text-[#C62828] font-medium">{error}</p>}
+        {error && <p className="text-caption text-[#C62828] font-medium transition-opacity duration-150">{error}</p>}
       </div>
     );
   }

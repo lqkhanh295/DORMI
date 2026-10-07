@@ -291,7 +291,7 @@ export default function LandlordLeases() {
               });
               setIsCreateOpen(true);
             }}
-            className="inline-flex items-center gap-1.5 px-4 py-2 bg-[#00153D] hover:bg-[#002266] text-white rounded-xl text-xs font-bold shadow-sm transition-all"
+            className="inline-flex items-center gap-1.5 px-4 py-2 bg-[#00153D] hover:bg-[#002266] text-white rounded-xl text-xs font-bold shadow-sm transition-[background-color,box-shadow,transform] duration-150 ease-out active:scale-[0.98]"
           >
             <Plus className="w-4 h-4" />
             Tạo hợp đồng mới
@@ -369,7 +369,7 @@ export default function LandlordLeases() {
             return (
               <div 
                 key={lease.id}
-                className="bg-white rounded-2xl border border-[#E2E8F0] shadow-sm p-5 md:p-6 transition-all hover:shadow-md space-y-5"
+                className="bg-white rounded-2xl border border-[#E2E8F0] shadow-sm p-5 md:p-6 transition-[transform,box-shadow] duration-200 ease-out hover:-translate-y-0.5 hover:shadow-md space-y-5"
               >
                 {/* Header Row */}
                 <div className="flex flex-col md:flex-row md:items-start justify-between gap-4 pb-4 border-b border-[#F1F5F9]">
@@ -677,7 +677,7 @@ export default function LandlordLeases() {
                 <button
                   type="submit"
                   disabled={isSubmittingCreate}
-                  className="px-5 py-2 bg-[#00153D] hover:bg-[#002266] text-white font-bold rounded-xl shadow-sm transition-all flex items-center gap-2"
+                  className="px-5 py-2 bg-[#00153D] hover:bg-[#002266] text-white font-bold rounded-xl shadow-sm transition-[background-color,box-shadow,transform] duration-150 ease-out active:scale-[0.98] flex items-center gap-2"
                 >
                   {isSubmittingCreate ? (
                     <>
@@ -760,7 +760,7 @@ export default function LandlordLeases() {
                 <button
                   type="submit"
                   disabled={isSubmittingTerminate}
-                  className="px-5 py-2 bg-rose-600 hover:bg-rose-700 text-white font-bold rounded-xl shadow-sm transition-all flex items-center gap-2"
+                  className="px-5 py-2 bg-rose-600 hover:bg-rose-700 text-white font-bold rounded-xl shadow-sm transition-[background-color,box-shadow,transform] duration-150 ease-out active:scale-[0.98] flex items-center gap-2"
                 >
                   {isSubmittingTerminate ? (
                     <>

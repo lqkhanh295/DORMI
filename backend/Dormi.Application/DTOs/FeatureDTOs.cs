@@ -93,6 +93,7 @@ public class CustomerProfileDto
 {
     public string? FullName { get; set; }
     public string? PhoneNumber { get; set; }
+    public string? AvatarUrl { get; set; }
     public string? Preferences { get; set; }
     public string? Lifestyle { get; set; }
     public bool? IsLookingForRoommate { get; set; }
@@ -103,4 +104,10 @@ public class LandlordProfileDto
     public string? FullName { get; set; }
     public bool IsVerified { get; set; }
     public string? PhoneNumber { get; set; }
+    public string? AvatarUrl { get; set; }
+}
+
+public class UpdateAvatarDto
+{
+    public string AvatarUrl { get; set; } = string.Empty;
 }

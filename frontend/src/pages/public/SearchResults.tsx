@@ -191,7 +191,7 @@ export default function SearchResults() {
   return (
     <div className="flex h-[calc(100vh-56px)] overflow-hidden bg-[#F5F7FA]">
       {/* Left Panel: Filters & List */}
-      <div className={`flex flex-col bg-[#F5F7FA] border-r border-[#E2E8F0] transition-all duration-300 ${showMap ? 'w-full lg:w-1/2' : 'w-full'}`}>
+      <div className={`flex flex-col bg-[#F5F7FA] border-r border-[#E2E8F0] transition-[width] duration-300 ease-out ${showMap ? 'w-full lg:w-1/2' : 'w-full'}`}>
         
         {/* Top Bar: Search Input & Controls */}
         <div className="p-6 bg-white rounded-b-[18px] shadow-clay-primary space-y-4 z-10">
@@ -199,7 +199,7 @@ export default function SearchResults() {
             <button 
               type="button"
               onClick={() => navigate(-1)} 
-              className="w-11 h-11 bg-white hover:bg-[#F5F7FA] text-[#0F172A] border border-[#E2E8F0] rounded-[12px] shadow-clay-soft flex items-center justify-center shrink-0 transition-all touch-target active:scale-95"
+              className="w-11 h-11 bg-white hover:bg-[#F5F7FA] text-[#0F172A] border border-[#E2E8F0] rounded-[12px] shadow-clay-soft flex items-center justify-center shrink-0 transition-[background-color,border-color,box-shadow,transform] duration-150 ease-out touch-target active:scale-95"
               aria-label="Quay lại"
             >
               <ArrowLeft className="w-5 h-5 text-[#0F172A]" />
@@ -213,7 +213,7 @@ export default function SearchResults() {
             <button 
               type="button"
               onClick={() => setShowMobileFilter(true)}
-              className="h-11 px-4 bg-white hover:bg-[#F5F7FA] text-[#0F172A] border border-[#E2E8F0] rounded-[12px] shadow-clay-soft flex items-center gap-2 shrink-0 text-caption font-semibold whitespace-nowrap transition-all touch-target active:scale-95"
+              className="h-11 px-4 bg-white hover:bg-[#F5F7FA] text-[#0F172A] border border-[#E2E8F0] rounded-[12px] shadow-clay-soft flex items-center gap-2 shrink-0 text-caption font-semibold whitespace-nowrap transition-[background-color,border-color,box-shadow,transform] duration-150 ease-out touch-target active:scale-95"
             >
               <SlidersHorizontal className="w-4 h-4 text-[#00153D]" />
               <span>Bộ lọc</span>
@@ -221,7 +221,7 @@ export default function SearchResults() {
             <button 
               type="button"
               onClick={() => setShowMap(!showMap)}
-              className={`h-11 px-4 rounded-[12px] shadow-clay-soft border hidden lg:flex items-center gap-2 shrink-0 text-caption font-semibold whitespace-nowrap transition-all touch-target active:scale-95 ${
+              className={`h-11 px-4 rounded-[12px] shadow-clay-soft border hidden lg:flex items-center gap-2 shrink-0 text-caption font-semibold whitespace-nowrap transition-[background-color,border-color,box-shadow,transform] duration-150 ease-out touch-target active:scale-95 ${
                 showMap 
                   ? 'bg-[#00153D] text-white border-[#00153D] hover:bg-[#0A2558]' 
                   : 'bg-white text-[#0F172A] border-[#E2E8F0] hover:bg-[#F5F7FA]'
@@ -240,7 +240,7 @@ export default function SearchResults() {
                 <button 
                   key={district} 
                   type="button"
-                  className={`px-4 py-2 text-caption font-semibold rounded-[12px] whitespace-nowrap transition-all touch-target ${isActive ? 'btn-clay-primary' : 'bg-[#F5F7FA] shadow-clay-soft text-[#64748B] hover:text-[#0F172A]'}`}
+                  className={`px-4 py-2 text-caption font-semibold rounded-[12px] whitespace-nowrap transition-[background-color,color,box-shadow,transform] duration-150 ease-out active:scale-95 touch-target ${isActive ? 'btn-clay-primary' : 'bg-[#F5F7FA] shadow-clay-soft text-[#64748B] hover:text-[#0F172A]'}`}
                   onClick={() => setSelectedDistrict(isActive ? null : district)}
                 >
                   {district}

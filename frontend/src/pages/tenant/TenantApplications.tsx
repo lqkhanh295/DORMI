@@ -14,6 +14,7 @@ import {
   Search, 
   RefreshCw 
 } from 'lucide-react';
+import { PageMotion } from '../../components/common/Motion';
 
 export default function TenantApplications() {
   const navigate = useNavigate();
@@ -118,7 +119,7 @@ export default function TenantApplications() {
   };
 
   return (
-    <div className="space-y-6 max-w-5xl mx-auto pb-12">
+    <PageMotion className="space-y-6 max-w-5xl mx-auto pb-12">
       
       {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-4 border-b border-[#E2E8F0]">
@@ -201,9 +202,20 @@ export default function TenantApplications() {
 
       {/* Content List */}
       {loading ? (
-        <div className="py-20 flex flex-col items-center justify-center text-[#64748B] space-y-3">
-          <div className="w-8 h-8 border-3 border-[#00153D]/20 border-t-[#00153D] rounded-full animate-spin" />
-          <p className="text-sm">Đang tải hồ sơ thuê...</p>
+        <div className="space-y-4">
+          {[1, 2, 3].map(i => (
+            <div key={i} className="bg-white rounded-2xl border border-[#E2E8F0] shadow-sm p-6 space-y-4">
+              <div className="flex gap-4 items-start">
+                <div className="w-20 h-20 rounded-xl skeleton-shimmer shrink-0" />
+                <div className="flex-1 space-y-2">
+                  <div className="h-5 w-28 rounded-full skeleton-shimmer" />
+                  <div className="h-5 w-3/4 rounded-md skeleton-shimmer" />
+                  <div className="h-4 w-1/2 rounded-md skeleton-shimmer" />
+                </div>
+              </div>
+              <div className="h-10 w-full rounded-xl skeleton-shimmer" />
+            </div>
+          ))}
         </div>
       ) : filteredApps.length === 0 ? (
         <div className="bg-white rounded-2xl p-12 text-center border border-[#E2E8F0] shadow-sm space-y-4">
@@ -229,7 +241,7 @@ export default function TenantApplications() {
           {filteredApps.map(app => (
             <div
               key={app.id}
-              className="bg-white rounded-2xl border border-[#E2E8F0] shadow-sm p-5 md:p-6 transition-all hover:shadow-md"
+              className="bg-white rounded-2xl border border-[#E2E8F0] shadow-sm p-5 md:p-6 motion-gpu transition-[transform,box-shadow] duration-200 ease-out hover:shadow-md hover:-translate-y-0.5"
             >
               <div className="flex flex-col md:flex-row md:items-start justify-between gap-4 pb-4 border-b border-[#F1F5F9]">
                 <div className="flex items-start gap-4">
@@ -371,6 +383,6 @@ export default function TenantApplications() {
         </div>
       )}
 
-    </div>
+    </PageMotion>
   );
 }

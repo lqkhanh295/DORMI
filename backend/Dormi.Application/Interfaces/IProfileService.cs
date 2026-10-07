@@ -11,6 +11,7 @@ public interface IProfileService
     Task<ServiceResult<object>> UpdateCustomerProfileAsync(Guid userId, CustomerProfileDto dto);
     Task<ServiceResult<LandlordProfileDto>> GetLandlordProfileAsync(Guid userId);
     Task<ServiceResult<object>> UpdateLandlordProfileAsync(Guid userId, LandlordProfileDto dto);
+    Task<ServiceResult<object>> UpdateAvatarAsync(Guid userId, string avatarUrl);
     Task<ServiceResult<object>> SubmitLandlordVerificationAsync(Guid userId, SubmitVerificationDto dto);
     Task<ServiceResult<object>> GetLandlordVerificationAsync(Guid userId);
 }

@@ -29,6 +29,7 @@ public class ProfileService : IProfileService
         {
             FullName = user.FullName,
             PhoneNumber = user.PhoneNumber,
+            AvatarUrl = user.AvatarUrl,
             Preferences = user.Preferences,
             Lifestyle = user.Lifestyle,
             IsLookingForRoommate = user.IsLookingForRoommate
@@ -42,12 +43,13 @@ public class ProfileService : IProfileService
 
         if (!string.IsNullOrWhiteSpace(dto.FullName)) user.FullName = dto.FullName.Trim();
         if (dto.PhoneNumber != null) user.PhoneNumber = dto.PhoneNumber.Trim();
+        if (!string.IsNullOrWhiteSpace(dto.AvatarUrl)) user.AvatarUrl = dto.AvatarUrl.Trim();
         if (dto.Preferences != null) user.Preferences = dto.Preferences;
         if (dto.Lifestyle != null) user.Lifestyle = dto.Lifestyle;
         if (dto.IsLookingForRoommate.HasValue) user.IsLookingForRoommate = dto.IsLookingForRoommate.Value;
 
         await _db.SaveChangesAsync();
-        return ServiceResult<object>.Ok(new { message = "Cập nhật hồ sơ thành công.", fullName = user.FullName });
+        return ServiceResult<object>.Ok(new { message = "Cập nhật hồ sơ thành công.", fullName = user.FullName, avatarUrl = user.AvatarUrl });
     }
 
     public async Task<ServiceResult<LandlordProfileDto>> GetLandlordProfileAsync(Guid userId)
@@ -62,7 +64,8 @@ public class ProfileService : IProfileService
         {
             FullName = user.FullName,
             IsVerified = user.IsVerified,
-            PhoneNumber = user.PhoneNumber
+            PhoneNumber = user.PhoneNumber,
+            AvatarUrl = user.AvatarUrl
         });
     }
 
@@ -76,9 +79,20 @@ public class ProfileService : IProfileService
 
         if (!string.IsNullOrWhiteSpace(dto.FullName)) user.FullName = dto.FullName.Trim();
         if (dto.PhoneNumber != null) user.PhoneNumber = dto.PhoneNumber.Trim();
+        if (!string.IsNullOrWhiteSpace(dto.AvatarUrl)) user.AvatarUrl = dto.AvatarUrl.Trim();
 
         await _db.SaveChangesAsync();
-        return ServiceResult<object>.Ok(new { message = "Cập nhật hồ sơ chủ trọ thành công.", fullName = user.FullName });
+        return ServiceResult<object>.Ok(new { message = "Cập nhật hồ sơ chủ trọ thành công.", fullName = user.FullName, avatarUrl = user.AvatarUrl });
+    }
+
+    public async Task<ServiceResult<object>> UpdateAvatarAsync(Guid userId, string avatarUrl)
+    {
+        var user = await _db.Users.FindAsync(userId);
+        if (user == null) return ServiceResult<object>.NotFound("Không tìm thấy thông tin người dùng.");
+
+        user.AvatarUrl = avatarUrl.Trim();
+        await _db.SaveChangesAsync();
+        return ServiceResult<object>.Ok(new { message = "Cập nhật ảnh đại diện thành công.", avatarUrl = user.AvatarUrl });
     }
 
     public async Task<ServiceResult<object>> SubmitLandlordVerificationAsync(Guid userId, SubmitVerificationDto dto)

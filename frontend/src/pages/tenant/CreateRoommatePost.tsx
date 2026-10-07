@@ -237,7 +237,7 @@ export default function CreateRoommatePost() {
                     key={trait}
                     type="button"
                     onClick={() => toggleTrait(trait)}
-                    className={`px-3.5 py-1.5 rounded-full text-caption font-semibold transition-all flex items-center gap-1.5 ${
+                    className={`px-3.5 py-1.5 rounded-full text-caption font-semibold transition-[background-color,color,box-shadow,transform] duration-150 ease-out active:scale-95 flex items-center gap-1.5 ${
                       isSelected
                         ? 'bg-[#00153D] text-white shadow-sm'
                         : 'bg-[#F5F7FA] border border-[#E2E8F0] text-[#64748B] hover:text-[#0F172A]'

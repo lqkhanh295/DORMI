@@ -1,10 +1,11 @@
-import React, { useState, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { Card } from '../../components/ui/Card';
 import { Button } from '../../components/ui/Button';
 import { Input } from '../../components/ui/Input';
 import { authApi } from '../../services/api';
 import { Lock, ArrowLeft, Mail, KeyRound, CheckCircle2, RefreshCw } from 'lucide-react';
+import { PageMotion } from '../../components/common/Motion';
 
 export default function ForgotPassword() {
   const [email, setEmail] = useState('');
@@ -106,24 +107,24 @@ export default function ForgotPassword() {
   };
 
   return (
-    <div className="min-h-[calc(100vh-64px)] flex items-center justify-center bg-[#F8FAFC] px-4 py-12">
+    <PageMotion className="min-h-[calc(100vh-64px)] flex items-center justify-center bg-[#F8FAFC] px-4 py-12">
       <Card className="w-full max-w-md p-8 bg-white shadow-clay-soft rounded-[20px]">
         {/* Step Indicator */}
         {!success && (
           <div className="flex items-center justify-center gap-2 mb-6">
-            <span className={`w-8 h-8 rounded-full flex items-center justify-center text-xs font-bold transition-all ${
+            <span className={`w-8 h-8 rounded-full flex items-center justify-center text-xs font-bold transition-colors duration-200 ${
               step === 1 ? 'bg-[#00153D] text-white' : 'bg-[#E2E8F0] text-[#64748B]'
             }`}>
               1
             </span>
-            <div className={`w-8 h-0.5 ${step >= 2 ? 'bg-[#00153D]' : 'bg-[#E2E8F0]'}`} />
-            <span className={`w-8 h-8 rounded-full flex items-center justify-center text-xs font-bold transition-all ${
+            <div className={`w-8 h-0.5 transition-colors duration-200 ${step >= 2 ? 'bg-[#00153D]' : 'bg-[#E2E8F0]'}`} />
+            <span className={`w-8 h-8 rounded-full flex items-center justify-center text-xs font-bold transition-colors duration-200 ${
               step === 2 ? 'bg-[#00153D] text-white' : 'bg-[#E2E8F0] text-[#64748B]'
             }`}>
               2
             </span>
-            <div className={`w-8 h-0.5 ${step >= 3 ? 'bg-[#00153D]' : 'bg-[#E2E8F0]'}`} />
-            <span className={`w-8 h-8 rounded-full flex items-center justify-center text-xs font-bold transition-all ${
+            <div className={`w-8 h-0.5 transition-colors duration-200 ${step >= 3 ? 'bg-[#00153D]' : 'bg-[#E2E8F0]'}`} />
+            <span className={`w-8 h-8 rounded-full flex items-center justify-center text-xs font-bold transition-colors duration-200 ${
               step === 3 ? 'bg-[#00153D] text-white' : 'bg-[#E2E8F0] text-[#64748B]'
             }`}>
               3
@@ -250,11 +251,11 @@ export default function ForgotPassword() {
         )}
 
         <div className="mt-8 text-center">
-          <Link to="/auth" className="text-sm font-medium text-[#00153D] hover:underline transition-all inline-flex items-center justify-center gap-1.5">
+          <Link to="/auth" className="text-sm font-medium text-[#00153D] hover:underline transition-colors inline-flex items-center justify-center gap-1.5">
             <ArrowLeft className="w-4 h-4" /> Quay lại Đăng nhập
           </Link>
         </div>
       </Card>
-    </div>
+    </PageMotion>
   );
 }

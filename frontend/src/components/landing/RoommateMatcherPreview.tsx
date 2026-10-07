@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
-import { Users } from 'lucide-react';
+import { Users, ArrowRight } from 'lucide-react';
 import { roommatesApi } from '../../services/api';
 
 export function RoommateMatcherPreview() {
@@ -71,7 +71,7 @@ export function RoommateMatcherPreview() {
                     key={opt}
                     type="button"
                     onClick={() => setSleepTime(opt)}
-                    className={`py-2.5 rounded-[12px] text-caption font-semibold transition-all ${sleepTime === opt ? 'btn-clay-primary' : 'bg-white shadow-clay-soft text-[#64748B] hover:text-[#0F172A]'}`}
+                    className={`py-2.5 rounded-[12px] text-caption font-semibold transition-[background-color,color,box-shadow,transform] duration-150 ease-out active:scale-[0.98] ${sleepTime === opt ? 'btn-clay-primary' : 'bg-white shadow-clay-soft text-[#64748B] hover:text-[#0F172A]'}`}
                   >
                     {opt}
                   </button>
@@ -88,7 +88,7 @@ export function RoommateMatcherPreview() {
                     key={opt}
                     type="button"
                     onClick={() => setSmoking(opt)}
-                    className={`py-2.5 rounded-[12px] text-caption font-semibold transition-all ${smoking === opt ? 'btn-clay-primary' : 'bg-white shadow-clay-soft text-[#64748B] hover:text-[#0F172A]'}`}
+                    className={`py-2.5 rounded-[12px] text-caption font-semibold transition-[background-color,color,box-shadow,transform] duration-150 ease-out active:scale-[0.98] ${smoking === opt ? 'btn-clay-primary' : 'bg-white shadow-clay-soft text-[#64748B] hover:text-[#0F172A]'}`}
                   >
                     {opt}
                   </button>
@@ -105,7 +105,7 @@ export function RoommateMatcherPreview() {
                     key={opt}
                     type="button"
                     onClick={() => setPets(opt)}
-                    className={`py-2.5 rounded-[12px] text-caption font-semibold transition-all ${pets === opt ? 'btn-clay-primary' : 'bg-white shadow-clay-soft text-[#64748B] hover:text-[#0F172A]'}`}
+                    className={`py-2.5 rounded-[12px] text-caption font-semibold transition-[background-color,color,box-shadow,transform] duration-150 ease-out active:scale-[0.98] ${pets === opt ? 'btn-clay-primary' : 'bg-white shadow-clay-soft text-[#64748B] hover:text-[#0F172A]'}`}
                   >
                     {opt}
                   </button>
@@ -118,7 +118,8 @@ export function RoommateMatcherPreview() {
               className="w-full btn-clay-primary font-semibold py-3 rounded-[12px] flex items-center justify-center gap-2 text-body min-h-[44px]"
             >
               <Users className="w-5 h-5" />
-              Tìm người phù hợp →
+              <span>Tìm người phù hợp</span>
+              <ArrowRight className="w-4 h-4 ml-1" />
             </Link>
           </div>
 
@@ -169,9 +170,10 @@ export function RoommateMatcherPreview() {
               <div className="pt-2">
                 <Link 
                   to="/tenant/match" 
-                  className="inline-flex items-center justify-center bg-white text-[#0F172A] border border-[#E2E8F0] shadow-clay-soft font-semibold px-6 py-2.5 rounded-[12px] transition-all hover:-translate-y-0.5 text-body min-h-[44px]"
+                  className="inline-flex items-center justify-center bg-white text-[#0F172A] border border-[#E2E8F0] shadow-clay-soft font-semibold px-6 py-2.5 rounded-[12px] transition-[transform,box-shadow,background-color] duration-150 ease-out hover:-translate-y-0.5 active:scale-[0.98] text-body min-h-[44px] gap-1.5"
                 >
-                  Xem hồ sơ →
+                  <span>Xem hồ sơ</span>
+                  <ArrowRight className="w-4 h-4" />
                 </Link>
               </div>
 

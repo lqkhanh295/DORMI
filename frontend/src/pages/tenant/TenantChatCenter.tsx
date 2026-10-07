@@ -9,7 +9,7 @@ import { signalRService } from '../../services/signalr';
 import { chatMessageItemVariants } from '../../utils/motion';
 
 export default function TenantChatCenter() {
-  const { currentUser, messages, sendMessageWithApi, likedRoommates } = useStore();
+  const { currentUser, messages, sendMessageWithApi, fetchMessageHistoryWithApi, likedRoommates } = useStore();
   const location = useLocation();
   const navigate = useNavigate();
   const [activeTab, setActiveTab] = useState<'chat' | 'appointments'>('chat');
@@ -17,6 +17,7 @@ export default function TenantChatCenter() {
   const [apiConversations, setApiConversations] = useState<any[]>([]);
   const [apiAppointments, setApiAppointments] = useState<any[]>([]);
   const [loadingAppts, setLoadingAppts] = useState(false);
+  const [loadingHistory, setLoadingHistory] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
   // Parse location state passed from RoomDetail
@@ -146,15 +147,20 @@ export default function TenantChatCenter() {
 
   // Fetch message history when selected contact changes
   useEffect(() => {
-    if (selectedContact && selectedContact.id) {
-      messagesApi.getHistory(selectedContact.id).catch(() => {});
+    if (selectedContact?.id) {
+      setLoadingHistory(true);
+      fetchMessageHistoryWithApi(selectedContact.id)
+        .finally(() => setLoadingHistory(false));
     }
-  }, [selectedContact]);
+  }, [selectedContact?.id]);
 
-  const chatMessages = messages.filter(m => 
-    (m.senderId === currentUser?.id && m.receiverId === selectedContact?.id) ||
-    (m.senderId === selectedContact?.id && m.receiverId === currentUser?.id)
-  );
+  const chatMessages = messages.filter(m => {
+    const s = (m.senderId || '').toLowerCase();
+    const r = (m.receiverId || '').toLowerCase();
+    const u = (currentUser?.id || '').toLowerCase();
+    const c = (selectedContact?.id || '').toLowerCase();
+    return (s === u && r === c) || (s === c && r === u);
+  });
 
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
@@ -180,7 +186,7 @@ export default function TenantChatCenter() {
       <div className="flex items-center gap-3 bg-white p-2 rounded-[14px] shadow-clay-soft border border-[#E2E8F0] w-fit">
         <button
           onClick={() => setActiveTab('chat')}
-          className={`flex items-center gap-2 px-4 py-2 rounded-[10px] text-caption font-bold transition-all ${
+          className={`flex items-center gap-2 px-4 py-2 rounded-[10px] text-caption font-bold transition-[background-color,color,box-shadow,transform] duration-150 ease-out active:scale-[0.98] ${
             activeTab === 'chat'
               ? 'btn-clay-primary'
               : 'text-[#64748B] hover:text-[#0F172A] hover:bg-[#F5F7FA]'
@@ -194,7 +200,7 @@ export default function TenantChatCenter() {
             setActiveTab('appointments');
             fetchAppointments();
           }}
-          className={`flex items-center gap-2 px-4 py-2 rounded-[10px] text-caption font-bold transition-all ${
+          className={`flex items-center gap-2 px-4 py-2 rounded-[10px] text-caption font-bold transition-[background-color,color,box-shadow,transform] duration-150 ease-out active:scale-[0.98] ${
             activeTab === 'appointments'
               ? 'btn-clay-primary'
               : 'text-[#64748B] hover:text-[#0F172A] hover:bg-[#F5F7FA]'
@@ -238,7 +244,7 @@ export default function TenantChatCenter() {
                 return (
                   <div
                     key={appt.id}
-                    className="p-5 rounded-[14px] bg-[#F8FAFC] border border-[#E2E8F0] hover:shadow-md transition-all space-y-3"
+                    className="p-5 rounded-[14px] bg-[#F8FAFC] border border-[#E2E8F0] transition-[box-shadow,transform] duration-200 ease-out hover:-translate-y-0.5 hover:shadow-md space-y-3"
                   >
                     <div className="flex justify-between items-start gap-2">
                       <h4 className="font-bold text-body text-[#0F172A] line-clamp-1">
@@ -343,7 +349,7 @@ export default function TenantChatCenter() {
                   <div 
                     key={contact.id} 
                     onClick={() => setSelectedContactId(contact.id)}
-                    className={`p-4 border-b border-[#E2E8F0] cursor-pointer transition-all flex gap-3 ${
+                    className={`p-4 border-b border-[#E2E8F0] cursor-pointer transition-colors duration-150 flex gap-3 ${
                       isSelected ? 'bg-white font-semibold border-l-4 border-l-[#00153D] shadow-sm' : 'hover:bg-white/50'
                     }`}
                   >
@@ -405,17 +411,22 @@ export default function TenantChatCenter() {
                     <span className="text-caption text-[#64748B] bg-white border border-[#E2E8F0] px-3 py-1 rounded-full font-medium">Hôm nay</span>
                   </div>
                   
-                  {chatMessages.length === 0 && (
+                  {loadingHistory ? (
+                    <div className="flex-1 flex flex-col items-center justify-center text-[#64748B]">
+                      <div className="w-8 h-8 border-4 border-[#00153D] border-t-transparent rounded-full animate-spin mb-3"></div>
+                      <p>Đang tải tin nhắn...</p>
+                    </div>
+                  ) : chatMessages.length === 0 ? (
                     <div className="flex-1 flex flex-col items-center justify-center text-[#64748B]">
                       <div className="w-16 h-16 bg-white shadow-clay-soft rounded-full flex items-center justify-center text-[#00153D] mb-4">
                         <Hand size={32} />
                       </div>
                       <p>Hãy gửi tin nhắn đầu tiên đến {selectedContact.name}!</p>
                     </div>
-                  )}
+                  ) : null}
 
-                  {chatMessages.map(msg => {
-                    const isMe = msg.senderId === currentUser?.id;
+                  {!loadingHistory && chatMessages.map(msg => {
+                    const isMe = (msg.senderId || '').toLowerCase() === (currentUser?.id || '').toLowerCase();
                     return (
                       <motion.div 
                         key={msg.id} 
@@ -448,7 +459,7 @@ export default function TenantChatCenter() {
                 </div>
 
                 <div className="p-4 border-t border-[#E2E8F0] bg-white">
-                  <div className="flex items-end gap-2 bg-[#F5F7FA] shadow-clay-inset rounded-[12px] border border-[#E2E8F0] p-2 focus-within:bg-white focus-within:ring-1 focus-within:ring-[#00153D] transition-all">
+                  <div className="flex items-end gap-2 bg-[#F5F7FA] shadow-clay-inset rounded-[12px] border border-[#E2E8F0] p-2 focus-within:bg-white focus-within:ring-1 focus-within:ring-[#00153D] transition-[background-color,box-shadow,border-color] duration-150">
                     <button className="p-2 text-[#64748B] hover:text-[#0F172A] rounded-full transition-colors flex-shrink-0">
                       <Paperclip size={20} />
                     </button>

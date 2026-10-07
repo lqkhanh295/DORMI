@@ -80,6 +80,7 @@ interface AppState {
   updateListing: (id: string, updates: Partial<Listing>) => void;
   sendMessage: (receiverId: string, text: string) => void;
   sendMessageWithApi: (receiverId: string, text: string) => Promise<boolean>;
+  fetchMessageHistoryWithApi: (otherUserId: string) => Promise<void>;
   updateUser: (updates: Partial<User>) => void;
   addLikedRoommate: (profile: RoommateProfile) => void;
   removeLikedRoommate: (id: string) => void;
@@ -244,6 +245,36 @@ export const useStore = create<AppState>()(
         } catch (err) {
           console.error('API sendMessage failed:', err);
           return false;
+        }
+      },
+
+      fetchMessageHistoryWithApi: async (otherUserId: string) => {
+        if (!otherUserId) return;
+        try {
+          const res = await messagesApi.getHistory(otherUserId);
+          if (Array.isArray(res)) {
+            const currentUserId = (get().currentUser?.id || '').toLowerCase();
+            const otherId = otherUserId.toLowerCase();
+            const mapped: Message[] = res.map((m: any) => ({
+              id: (m.id || m.Id || Math.random().toString(36).substring(2, 9)).toString(),
+              senderId: (m.senderId || m.SenderId || '').toString(),
+              receiverId: (m.receiverId || m.ReceiverId || '').toString(),
+              text: m.content || m.Content || m.text || '',
+              timestamp: m.sentAt || m.SentAt || m.timestamp || new Date().toISOString()
+            }));
+
+            const currentMessages = get().messages;
+            const otherUserMessages = currentMessages.filter(m => {
+              const s = (m.senderId || '').toLowerCase();
+              const r = (m.receiverId || '').toLowerCase();
+              const isCurrentPair = (s === currentUserId && r === otherId) || (s === otherId && r === currentUserId);
+              return !isCurrentPair;
+            });
+
+            set({ messages: [...otherUserMessages, ...mapped] });
+          }
+        } catch (err) {
+          console.warn('Failed to fetch message history:', err);
         }
       },
 

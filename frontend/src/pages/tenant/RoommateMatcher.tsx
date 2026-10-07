@@ -150,13 +150,13 @@ export default function RoommateMatcher() {
           <div className="flex bg-[#E2E8F0] p-1 rounded-xl text-caption font-semibold">
             <button
               onClick={() => { setFilterMode('all'); setCurrentIndex(0); }}
-              className={`px-3 py-1 rounded-lg transition-all ${filterMode === 'all' ? 'bg-white text-[#00153D] shadow-sm font-bold' : 'text-[#64748B]'}`}
+              className={`px-3 py-1 rounded-lg transition-[background-color,color,box-shadow,transform] duration-150 ease-out active:scale-[0.98] ${filterMode === 'all' ? 'bg-white text-[#00153D] shadow-sm font-bold' : 'text-[#64748B]'}`}
             >
               Tất cả ({roommates.length})
             </button>
             <button
               onClick={() => { setFilterMode('hasRoom'); setCurrentIndex(0); }}
-              className={`px-3 py-1 rounded-lg transition-all ${filterMode === 'hasRoom' ? 'bg-white text-[#00153D] shadow-sm font-bold' : 'text-[#64748B]'}`}
+              className={`px-3 py-1 rounded-lg transition-[background-color,color,box-shadow,transform] duration-150 ease-out active:scale-[0.98] ${filterMode === 'hasRoom' ? 'bg-white text-[#00153D] shadow-sm font-bold' : 'text-[#64748B]'}`}
             >
               Đã có phòng sẵn ({roommates.filter(r => !!r.roomId).length})
             </button>
@@ -262,14 +262,14 @@ export default function RoommateMatcher() {
                 <div className="flex justify-center gap-6 pt-2">
                   <button 
                     onClick={() => handleAction('left')}
-                    className="w-14 h-14 rounded-full bg-[#FEF2F2] text-[#C62828] hover:bg-[#C62828] hover:text-white flex items-center justify-center transition-all border border-[#FECACA] shadow-clay-soft touch-target"
+                    className="w-14 h-14 rounded-full bg-[#FEF2F2] text-[#C62828] hover:bg-[#C62828] hover:text-white flex items-center justify-center transition-[background-color,color,transform,box-shadow] duration-150 ease-out hover:scale-105 active:scale-95 border border-[#FECACA] shadow-clay-soft touch-target"
                     title="Bỏ qua"
                   >
                     <X size={24} strokeWidth={2.5} />
                   </button>
                   <button 
                     onClick={() => handleAction('right')}
-                    className="w-14 h-14 rounded-full bg-[#F0FDF4] text-[#16803C] hover:bg-[#16803C] hover:text-white flex items-center justify-center transition-all border border-[#DCFCE7] shadow-clay-soft touch-target"
+                    className="w-14 h-14 rounded-full bg-[#F0FDF4] text-[#16803C] hover:bg-[#16803C] hover:text-white flex items-center justify-center transition-[background-color,color,transform,box-shadow] duration-150 ease-out hover:scale-105 active:scale-95 border border-[#DCFCE7] shadow-clay-soft touch-target"
                     title="Yêu thích"
                   >
                     <Heart size={24} strokeWidth={2.5} className="fill-current" />

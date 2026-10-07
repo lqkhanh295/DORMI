@@ -2,6 +2,7 @@ import { useState, useEffect, useMemo } from 'react';
 import { Card } from '../../components/ui/Card';
 import { adminApi } from '../../services/api';
 import { Users, Search, ShieldAlert, CheckCircle2, X } from 'lucide-react';
+import { PageMotion, SkeletonTable } from '../../components/common/Motion';
 
 interface AdminUserItem {
   id: string;
@@ -58,7 +59,7 @@ export default function AdminUsers() {
   };
 
   return (
-    <div className="space-y-6 pb-8 bg-[#F8FAFC]">
+    <PageMotion className="space-y-6 pb-8 bg-[#F8FAFC]">
       {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 bg-white p-6 rounded-2xl border border-slate-200 shadow-sm">
         <div>
@@ -81,7 +82,7 @@ export default function AdminUsers() {
             placeholder="Tìm theo tên, email..."
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
-            className="w-full pl-9 pr-8 py-2 text-sm bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 transition-all"
+            className="w-full pl-9 pr-8 py-2 text-sm bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 transition-[border-color,background-color,box-shadow] duration-150 ease-out"
           />
           {searchQuery && (
             <button 
@@ -104,7 +105,7 @@ export default function AdminUsers() {
             <button
               key={tab.label}
               onClick={() => setSelectedRole(tab.value as any)}
-              className={`px-3.5 py-1.5 text-xs font-semibold rounded-xl transition-all whitespace-nowrap ${
+              className={`px-3.5 py-1.5 text-xs font-semibold rounded-xl transition-[background-color,color,box-shadow,transform] duration-150 ease-out active:scale-[0.98] whitespace-nowrap ${
                 selectedRole === tab.value
                   ? 'bg-indigo-600 text-white shadow-sm'
                   : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
@@ -117,68 +118,67 @@ export default function AdminUsers() {
       </Card>
 
       {/* Users Table */}
-      <Card className="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden">
-        {loading ? (
-          <div className="py-16 text-center text-slate-400">
-            <div className="w-7 h-7 border-2 border-indigo-600 border-t-transparent rounded-full animate-spin mx-auto mb-3"></div>
-            <p className="text-sm">Đang tải danh sách người dùng...</p>
-          </div>
-        ) : filteredUsers.length === 0 ? (
-          <div className="py-16 text-center text-slate-400">
-            <Users className="w-12 h-12 mx-auto mb-2 text-slate-300" />
-            <p className="text-base font-semibold text-slate-700">Không tìm thấy người dùng phù hợp</p>
-            <p className="text-xs text-slate-400 mt-1">Thử điều chỉnh từ khóa tìm kiếm hoặc bộ lọc vai trò.</p>
-          </div>
-        ) : (
-          <div className="overflow-x-auto">
-            <table className="w-full text-left text-sm">
-              <thead className="bg-slate-50 text-slate-500 font-semibold border-b border-slate-200 text-xs uppercase tracking-wider">
-                <tr>
-                  <th className="py-3.5 px-6">Người dùng</th>
-                  <th className="py-3.5 px-6">Email</th>
-                  <th className="py-3.5 px-6">Vai trò</th>
-                  <th className="py-3.5 px-6">Xác minh danh tính</th>
-                  <th className="py-3.5 px-6 text-right">Ngày tham gia</th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-slate-100">
-                {filteredUsers.map(u => (
-                  <tr key={u.id} className="hover:bg-slate-50/80 transition-colors">
-                    <td className="py-4 px-6 font-medium text-slate-900">
-                      <div className="flex items-center gap-3">
-                        <div className="w-8 h-8 rounded-full bg-slate-800 text-white font-bold text-xs flex items-center justify-center shrink-0">
-                          {u.fullName.charAt(0)}
-                        </div>
-                        <span className="font-semibold">{u.fullName}</span>
-                      </div>
-                    </td>
-                    <td className="py-4 px-6 text-slate-600">{u.email}</td>
-                    <td className="py-4 px-6">{getRoleBadge(u.role)}</td>
-                    <td className="py-4 px-6">
-                      {u.role === 1 ? (
-                        u.isVerifiedLandlord ? (
-                          <span className="inline-flex items-center gap-1 text-xs font-semibold text-emerald-700 bg-emerald-50 border border-emerald-200 px-2 py-0.5 rounded-full">
-                            <CheckCircle2 className="w-3.5 h-3.5" /> Đã xác minh
-                          </span>
-                        ) : (
-                          <span className="inline-flex items-center gap-1 text-xs font-semibold text-amber-700 bg-amber-50 border border-amber-200 px-2 py-0.5 rounded-full">
-                            <ShieldAlert className="w-3.5 h-3.5" /> Chưa xác minh
-                          </span>
-                        )
-                      ) : (
-                        <span className="text-xs text-slate-400">—</span>
-                      )}
-                    </td>
-                    <td className="py-4 px-6 text-right text-slate-500 text-xs">
-                      {new Date(u.createdAt).toLocaleDateString('vi-VN')}
-                    </td>
+      {loading ? (
+        <SkeletonTable rows={6} cols={5} />
+      ) : (
+        <Card className="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden">
+          {filteredUsers.length === 0 ? (
+            <div className="py-16 text-center text-slate-400">
+              <Users className="w-12 h-12 mx-auto mb-2 text-slate-300" />
+              <p className="text-base font-semibold text-slate-700">Không tìm thấy người dùng phù hợp</p>
+              <p className="text-xs text-slate-400 mt-1">Thử điều chỉnh từ khóa tìm kiếm hoặc bộ lọc vai trò.</p>
+            </div>
+          ) : (
+            <div className="overflow-x-auto">
+              <table className="w-full text-left text-sm">
+                <thead className="bg-slate-50 text-slate-500 font-semibold border-b border-slate-200 text-xs uppercase tracking-wider">
+                  <tr>
+                    <th className="py-3.5 px-6">Người dùng</th>
+                    <th className="py-3.5 px-6">Email</th>
+                    <th className="py-3.5 px-6">Vai trò</th>
+                    <th className="py-3.5 px-6">Xác minh danh tính</th>
+                    <th className="py-3.5 px-6 text-right">Ngày tham gia</th>
                   </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
-        )}
-      </Card>
-    </div>
+                </thead>
+                <tbody className="divide-y divide-slate-100">
+                  {filteredUsers.map(u => (
+                    <tr key={u.id} className="hover:bg-slate-50/80 transition-colors">
+                      <td className="py-4 px-6 font-medium text-slate-900">
+                        <div className="flex items-center gap-3">
+                          <div className="w-8 h-8 rounded-full bg-slate-800 text-white font-bold text-xs flex items-center justify-center shrink-0">
+                            {u.fullName.charAt(0)}
+                          </div>
+                          <span className="font-semibold">{u.fullName}</span>
+                        </div>
+                      </td>
+                      <td className="py-4 px-6 text-slate-600">{u.email}</td>
+                      <td className="py-4 px-6">{getRoleBadge(u.role)}</td>
+                      <td className="py-4 px-6">
+                        {u.role === 1 ? (
+                          u.isVerifiedLandlord ? (
+                            <span className="inline-flex items-center gap-1 text-xs font-semibold text-emerald-700 bg-emerald-50 border border-emerald-200 px-2 py-0.5 rounded-full">
+                              <CheckCircle2 className="w-3.5 h-3.5" /> Đã xác minh
+                            </span>
+                          ) : (
+                            <span className="inline-flex items-center gap-1 text-xs font-semibold text-amber-700 bg-amber-50 border border-amber-200 px-2 py-0.5 rounded-full">
+                              <ShieldAlert className="w-3.5 h-3.5" /> Chưa xác minh
+                            </span>
+                          )
+                        ) : (
+                          <span className="text-xs text-slate-400">—</span>
+                        )}
+                      </td>
+                      <td className="py-4 px-6 text-right text-slate-500 text-xs">
+                        {new Date(u.createdAt).toLocaleDateString('vi-VN')}
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          )}
+        </Card>
+      )}
+    </PageMotion>
   );
 }

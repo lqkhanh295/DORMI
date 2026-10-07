@@ -134,7 +134,7 @@ export default function PricingCheckout() {
           <button
             type="button"
             onClick={() => setActiveTab('plans')}
-            className={`px-6 py-2 rounded-xl text-xs font-bold transition-all ${
+            className={`px-6 py-2 rounded-xl text-xs font-bold transition-[background-color,color,box-shadow,transform] duration-150 ease-out active:scale-[0.98] ${
               activeTab === 'plans' 
                 ? 'bg-[#00153D] text-white shadow-sm' 
                 : 'text-[#64748B] hover:text-[#0F172A]'
@@ -145,7 +145,7 @@ export default function PricingCheckout() {
           <button
             type="button"
             onClick={() => setActiveTab('boosts')}
-            className={`inline-flex items-center gap-1.5 px-6 py-2 rounded-xl text-xs font-bold transition-all ${
+            className={`inline-flex items-center gap-1.5 px-6 py-2 rounded-xl text-xs font-bold transition-[background-color,color,box-shadow,transform] duration-150 ease-out active:scale-[0.98] ${
               activeTab === 'boosts' 
                 ? 'bg-amber-600 text-white shadow-sm' 
                 : 'text-[#64748B] hover:text-[#0F172A]'
@@ -271,7 +271,7 @@ export default function PricingCheckout() {
                     <div
                       key={r.id}
                       onClick={() => setSelectedRoomId(r.id)}
-                      className={`p-3 rounded-xl border flex items-center gap-3 cursor-pointer transition-all ${
+                      className={`p-3 rounded-xl border flex items-center gap-3 cursor-pointer transition-[border-color,background-color,box-shadow,transform] duration-150 ease-out active:scale-[0.99] ${
                         selectedRoomId === r.id
                           ? 'border-amber-500 bg-amber-50/60 shadow-sm ring-1 ring-amber-500'
                           : 'border-[#E2E8F0] hover:bg-[#F8FAFC]'
@@ -304,7 +304,7 @@ export default function PricingCheckout() {
               </label>
 
               <div className="space-y-2.5">
-                <label className={`flex items-start gap-3 p-3.5 rounded-xl border cursor-pointer transition-all ${
+                <label className={`flex items-start gap-3 p-3.5 rounded-xl border cursor-pointer transition-[border-color,background-color,box-shadow,transform] duration-150 ease-out active:scale-[0.99] ${
                   selectedBoostType === '24h' ? 'border-amber-500 bg-amber-50/50 shadow-sm' : 'border-[#E2E8F0] hover:bg-[#F8FAFC]'
                 }`}>
                   <input 
@@ -324,7 +324,7 @@ export default function PricingCheckout() {
                   </div>
                 </label>
 
-                <label className={`flex items-start gap-3 p-3.5 rounded-xl border cursor-pointer transition-all ${
+                <label className={`flex items-start gap-3 p-3.5 rounded-xl border cursor-pointer transition-[border-color,background-color,box-shadow,transform] duration-150 ease-out active:scale-[0.99] ${
                   selectedBoostType === '3days' ? 'border-amber-500 bg-amber-50/50 shadow-sm ring-1 ring-amber-500' : 'border-[#E2E8F0] hover:bg-[#F8FAFC]'
                 }`}>
                   <input 
@@ -347,7 +347,7 @@ export default function PricingCheckout() {
                   </div>
                 </label>
 
-                <label className={`flex items-start gap-3 p-3.5 rounded-xl border cursor-pointer transition-all ${
+                <label className={`flex items-start gap-3 p-3.5 rounded-xl border cursor-pointer transition-[border-color,background-color,box-shadow,transform] duration-150 ease-out active:scale-[0.99] ${
                   selectedBoostType === '7days' ? 'border-amber-500 bg-amber-50/50 shadow-sm' : 'border-[#E2E8F0] hover:bg-[#F8FAFC]'
                 }`}>
                   <input 

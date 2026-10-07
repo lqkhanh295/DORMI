@@ -255,7 +255,7 @@ export default function TenantLeases() {
             return (
               <div 
                 key={lease.id}
-                className="bg-white rounded-2xl border border-[#E2E8F0] shadow-sm p-5 md:p-6 transition-all hover:shadow-md space-y-5"
+                className="bg-white rounded-2xl border border-[#E2E8F0] shadow-sm p-5 md:p-6 transition-[transform,box-shadow] duration-200 ease-out hover:-translate-y-0.5 hover:shadow-md space-y-5"
               >
                 {/* Header Row */}
                 <div className="flex flex-col md:flex-row md:items-start justify-between gap-4 pb-4 border-b border-[#F1F5F9]">
@@ -365,7 +365,7 @@ export default function TenantLeases() {
                     <button
                       type="button"
                       onClick={() => handleOpenSign(lease)}
-                      className="inline-flex items-center gap-1.5 px-4 py-2 bg-amber-600 hover:bg-amber-700 text-white text-xs font-bold rounded-xl transition-all shadow-sm hover:shadow"
+                      className="inline-flex items-center gap-1.5 px-4 py-2 bg-amber-600 hover:bg-amber-700 text-white text-xs font-bold rounded-xl transition-[background-color,box-shadow,transform] duration-150 ease-out active:scale-[0.98] shadow-sm hover:shadow"
                     >
                       <PenTool className="w-4 h-4" />
                       Ký hợp đồng điện tử ngay
@@ -486,7 +486,7 @@ export default function TenantLeases() {
                     <button
                       type="submit"
                       disabled={isSubmittingSign || !agreedTerms}
-                      className="px-5 py-2 bg-emerald-600 hover:bg-emerald-700 disabled:opacity-50 text-white font-bold rounded-xl shadow-sm transition-all flex items-center gap-2"
+                      className="px-5 py-2 bg-emerald-600 hover:bg-emerald-700 disabled:opacity-50 text-white font-bold rounded-xl shadow-sm transition-[background-color,box-shadow,transform] duration-150 ease-out active:scale-[0.98] flex items-center gap-2"
                     >
                       {isSubmittingSign ? (
                         <>

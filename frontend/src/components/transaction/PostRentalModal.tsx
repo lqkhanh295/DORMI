@@ -369,7 +369,7 @@ export default function PostRentalModal({ lease, isLandlord, onClose, onRefresh 
           <button
             type="button"
             onClick={() => setActiveTab('overview')}
-            className={`py-3 px-3 text-xs md:text-sm font-bold border-b-2 transition-all flex items-center gap-1.5 whitespace-nowrap ${
+            className={`py-3 px-3 text-xs md:text-sm font-bold border-b-2 transition-colors duration-150 flex items-center gap-1.5 whitespace-nowrap ${
               activeTab === 'overview'
                 ? 'border-[#00153D] text-[#00153D]'
                 : 'border-transparent text-[#64748B] hover:text-[#0F172A]'
@@ -381,7 +381,7 @@ export default function PostRentalModal({ lease, isLandlord, onClose, onRefresh 
           <button
             type="button"
             onClick={() => setActiveTab('payments')}
-            className={`py-3 px-3 text-xs md:text-sm font-bold border-b-2 transition-all flex items-center gap-1.5 whitespace-nowrap ${
+            className={`py-3 px-3 text-xs md:text-sm font-bold border-b-2 transition-colors duration-150 flex items-center gap-1.5 whitespace-nowrap ${
               activeTab === 'payments'
                 ? 'border-[#00153D] text-[#00153D]'
                 : 'border-transparent text-[#64748B] hover:text-[#0F172A]'
@@ -398,7 +398,7 @@ export default function PostRentalModal({ lease, isLandlord, onClose, onRefresh 
           <button
             type="button"
             onClick={() => setActiveTab('maintenance')}
-            className={`py-3 px-3 text-xs md:text-sm font-bold border-b-2 transition-all flex items-center gap-1.5 whitespace-nowrap ${
+            className={`py-3 px-3 text-xs md:text-sm font-bold border-b-2 transition-colors duration-150 flex items-center gap-1.5 whitespace-nowrap ${
               activeTab === 'maintenance'
                 ? 'border-[#00153D] text-[#00153D]'
                 : 'border-transparent text-[#64748B] hover:text-[#0F172A]'
@@ -415,7 +415,7 @@ export default function PostRentalModal({ lease, isLandlord, onClose, onRefresh 
           <button
             type="button"
             onClick={() => setActiveTab('renewal-moveout')}
-            className={`py-3 px-3 text-xs md:text-sm font-bold border-b-2 transition-all flex items-center gap-1.5 whitespace-nowrap ${
+            className={`py-3 px-3 text-xs md:text-sm font-bold border-b-2 transition-colors duration-150 flex items-center gap-1.5 whitespace-nowrap ${
               activeTab === 'renewal-moveout'
                 ? 'border-[#00153D] text-[#00153D]'
                 : 'border-transparent text-[#64748B] hover:text-[#0F172A]'
@@ -561,7 +561,7 @@ export default function PostRentalModal({ lease, isLandlord, onClose, onRefresh 
                         return (
                           <div 
                             key={sch.id}
-                            className={`p-4 rounded-xl border transition-all flex flex-col sm:flex-row sm:items-center justify-between gap-4 ${
+                            className={`p-4 rounded-xl border transition-colors duration-150 flex flex-col sm:flex-row sm:items-center justify-between gap-4 ${
                               isPaid ? 'bg-white border-[#E2E8F0]' : 'bg-amber-50/50 border-amber-200'
                             }`}
                           >
@@ -783,7 +783,7 @@ export default function PostRentalModal({ lease, isLandlord, onClose, onRefresh 
                       {maintenanceList.map(item => (
                         <div 
                           key={item.id}
-                          className="p-4 rounded-xl border border-[#E2E8F0] bg-white hover:border-slate-300 transition-all space-y-3"
+                          className="p-4 rounded-xl border border-[#E2E8F0] bg-white hover:border-slate-300 hover:shadow-xs transition-[border-color,box-shadow] duration-150 space-y-3"
                         >
                           <div className="flex flex-col sm:flex-row sm:items-start justify-between gap-2">
                             <div className="space-y-1">

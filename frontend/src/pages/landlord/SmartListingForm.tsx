@@ -279,7 +279,7 @@ export default function SmartListingForm() {
         </div>
         <div className="flex gap-2">
           {[1,2,3,4].map(s => (
-            <div key={s} className={`w-12 h-2.5 rounded-full transition-all ${step >= s ? 'bg-[#00153D]' : 'bg-[#E2E8F0]'}`} />
+            <div key={s} className={`w-12 h-2.5 rounded-full transition-colors duration-200 ${step >= s ? 'bg-[#00153D]' : 'bg-[#E2E8F0]'}`} />
           ))}
         </div>
       </div>
@@ -357,7 +357,7 @@ export default function SmartListingForm() {
                     key={idx}
                     type="button"
                     onClick={() => setDescription(tmpl.text)}
-                    className="text-caption px-2.5 py-1 rounded-full bg-[#F1F5F9] text-[#00153D] hover:bg-[#E2E8F0] font-medium transition-all"
+                    className="text-caption px-2.5 py-1 rounded-full bg-[#F1F5F9] text-[#00153D] hover:bg-[#E2E8F0] font-medium transition-[background-color,color] duration-150 ease-out active:scale-95"
                   >
                     {tmpl.label}
                   </button>
@@ -389,7 +389,7 @@ export default function SmartListingForm() {
                       key={util}
                       type="button"
                       onClick={() => toggleUtility(util)}
-                      className={`px-3 py-1.5 rounded-[10px] text-caption font-semibold transition-all inline-flex items-center gap-1.5 ${
+                      className={`px-3 py-1.5 rounded-[10px] text-caption font-semibold transition-[background-color,color,box-shadow,transform] duration-150 ease-out active:scale-95 inline-flex items-center gap-1.5 ${
                         active 
                           ? 'bg-[#00153D] text-white shadow-sm' 
                           : 'bg-[#F5F7FA] text-[#64748B] border border-[#E2E8F0] hover:bg-white hover:text-[#0F172A]'
@@ -436,7 +436,7 @@ export default function SmartListingForm() {
                 <button
                   type="button"
                   onClick={() => handleAddCustomUtility()}
-                  className="px-4 py-2 bg-[#00153D] text-white rounded-[10px] text-caption font-semibold hover:bg-[#002266] transition-all inline-flex items-center gap-1"
+                  className="px-4 py-2 bg-[#00153D] text-white rounded-[10px] text-caption font-semibold hover:bg-[#002266] transition-[background-color,box-shadow,transform] duration-150 ease-out active:scale-95 inline-flex items-center gap-1"
                 >
                   <Plus className="w-4 h-4" /> Thêm tiện ích
                 </button>
@@ -453,7 +453,7 @@ export default function SmartListingForm() {
           <div className="space-y-6">
             <h2 className="text-h3 font-bold text-[#0F172A] mb-4">Bước 2: Hình ảnh phòng trọ</h2>
             
-            <div className="border-2 border-dashed border-[#CBD5E1] rounded-[14px] p-8 text-center bg-[#F5F7FA] shadow-clay-inset hover:bg-white transition-all cursor-pointer relative">
+            <div className="border-2 border-dashed border-[#CBD5E1] rounded-[14px] p-8 text-center bg-[#F5F7FA] shadow-clay-inset hover:bg-white transition-[background-color,border-color] duration-150 ease-out cursor-pointer relative">
               <input 
                 type="file" 
                 multiple
@@ -498,7 +498,7 @@ export default function SmartListingForm() {
                       <button
                         type="button"
                         onClick={() => handleRemoveImage(idx)}
-                        className="absolute top-1 right-1 bg-red-600 text-white rounded-full w-6 h-6 flex items-center justify-center text-xs font-bold shadow-md hover:bg-red-700 transition-all"
+                        className="absolute top-1 right-1 bg-red-600 text-white rounded-full w-6 h-6 flex items-center justify-center text-xs font-bold shadow-md hover:bg-red-700 transition-[background-color,transform] duration-150 ease-out active:scale-90"
                       >
                         <X className="w-3.5 h-3.5" />
                       </button>

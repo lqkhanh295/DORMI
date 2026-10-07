@@ -13,7 +13,7 @@ namespace Dormi.Infrastructure.Data;
 
 public static class DbSeeder
 {
-    public static async Task SeedAsync(DormiDbContext db)
+    public static async Task EnsureSchemaAsync(DormiDbContext db)
     {
         try
         {
@@ -259,7 +259,16 @@ public static class DbSeeder
         {
             Console.WriteLine($"[Schema Patch Notice]: {ex.Message}");
         }
+    }
 
+    public static async Task SeedAsync(DormiDbContext db)
+    {
+        await EnsureSchemaAsync(db);
+        await SeedMockDataAsync(db);
+    }
+
+    public static async Task SeedMockDataAsync(DormiDbContext db)
+    {
         if (await db.Users.AnyAsync())
         {
             return;

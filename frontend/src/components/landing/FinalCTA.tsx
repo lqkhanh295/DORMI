@@ -20,7 +20,7 @@ export function FinalCTA() {
             </Link>
             <Link 
               to="/landlord" 
-              className="w-full sm:w-auto bg-white text-[#0F172A] border border-[#E2E8F0] shadow-clay-soft hover:-translate-y-0.5 font-semibold px-8 py-3 rounded-[12px] transition-all min-h-[44px] text-body flex items-center justify-center"
+              className="w-full sm:w-auto bg-white text-[#0F172A] border border-[#E2E8F0] shadow-clay-soft hover:-translate-y-0.5 font-semibold px-8 py-3 rounded-[12px] transition-[transform,box-shadow,background-color] duration-150 ease-out active:scale-[0.985] min-h-[44px] text-body flex items-center justify-center"
             >
               Đăng tin ngay
             </Link>

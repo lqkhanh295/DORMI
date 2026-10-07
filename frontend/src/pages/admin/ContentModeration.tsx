@@ -4,6 +4,9 @@ import { Button } from '../../components/ui/Button';
 import { adminApi } from '../../services/api';
 import { toast } from 'sonner';
 import { CheckCircle2, Clock, XCircle, ShieldCheck, Mail, Phone, UserCheck, ZoomIn, Check, Globe, X } from 'lucide-react';
+import { motion, AnimatePresence } from 'framer-motion';
+import { modalBackdropVariants, modalContentVariants } from '../../utils/motion';
+import { PageMotion } from '../../components/common/Motion';
 
 interface ModerationRoomItem {
   id: string;
@@ -156,7 +159,7 @@ export default function ContentModeration() {
   };
 
   return (
-    <div className="flex flex-col h-[calc(100vh-8rem)] bg-[#F5F7FA]">
+    <PageMotion className="flex flex-col h-[calc(100vh-8rem)] bg-[#F5F7FA]">
       <div className="flex items-center justify-between mb-4">
         <div>
           <h1 className="text-h2 font-bold text-[#0F172A]">Kiểm duyệt nội dung (Admin Portal)</h1>
@@ -165,13 +168,13 @@ export default function ContentModeration() {
         <div className="flex bg-[#E2E8F0] p-1.5 rounded-[14px]">
           <button
             onClick={() => setMainTab('rooms')}
-            className={`px-4 py-2 rounded-[10px] text-body font-semibold transition-all ${mainTab === 'rooms' ? 'bg-[#00153D] text-white shadow-sm' : 'text-[#64748B] hover:text-[#0F172A]'}`}
+            className={`px-4 py-2 rounded-[10px] text-body font-semibold transition-[background-color,color,box-shadow,transform] duration-150 ease-out active:scale-[0.98] ${mainTab === 'rooms' ? 'bg-[#00153D] text-white shadow-sm' : 'text-[#64748B] hover:text-[#0F172A]'}`}
           >
             Tin phòng trọ ({rooms.length})
           </button>
           <button
             onClick={() => setMainTab('roommates')}
-            className={`px-4 py-2 rounded-[10px] text-body font-semibold transition-all ${mainTab === 'roommates' ? 'bg-[#00153D] text-white shadow-sm' : 'text-[#64748B] hover:text-[#0F172A]'}`}
+            className={`px-4 py-2 rounded-[10px] text-body font-semibold transition-[background-color,color,box-shadow,transform] duration-150 ease-out active:scale-[0.98] ${mainTab === 'roommates' ? 'bg-[#00153D] text-white shadow-sm' : 'text-[#64748B] hover:text-[#0F172A]'}`}
           >
             Tin tìm người ở ghép ({roommatePosts.length})
           </button>
@@ -190,37 +193,47 @@ export default function ContentModeration() {
             <div className="flex gap-1 bg-[#E2E8F0] p-1 rounded-xl text-caption font-semibold">
               <button
                 onClick={() => setFilterStatus('all')}
-                className={`flex-1 py-1 rounded-lg transition-all ${filterStatus === 'all' ? 'bg-white text-[#00153D] shadow-sm' : 'text-[#64748B] hover:text-[#00153D]'}`}
+                className={`flex-1 py-1 rounded-lg transition-[background-color,color,box-shadow,transform] duration-150 ease-out active:scale-[0.98] ${filterStatus === 'all' ? 'bg-white text-[#00153D] shadow-sm' : 'text-[#64748B] hover:text-[#00153D]'}`}
               >
                 Tất cả
               </button>
               <button
                 onClick={() => setFilterStatus(2)}
-                className={`flex-1 py-1 rounded-lg transition-all ${filterStatus === 2 ? 'bg-amber-100 text-amber-800 shadow-sm font-bold' : 'text-[#64748B] hover:text-[#00153D]'}`}
+                className={`flex-1 py-1 rounded-lg transition-[background-color,color,box-shadow,transform] duration-150 ease-out active:scale-[0.98] ${filterStatus === 2 ? 'bg-amber-100 text-amber-800 shadow-sm font-bold' : 'text-[#64748B] hover:text-[#00153D]'}`}
               >
                 Chờ duyệt
               </button>
               <button
                 onClick={() => setFilterStatus(0)}
-                className={`flex-1 py-1 rounded-lg transition-all ${filterStatus === 0 ? 'bg-emerald-100 text-emerald-800 shadow-sm font-bold' : 'text-[#64748B] hover:text-[#00153D]'}`}
+                className={`flex-1 py-1 rounded-lg transition-[background-color,color,box-shadow,transform] duration-150 ease-out active:scale-[0.98] ${filterStatus === 0 ? 'bg-emerald-100 text-emerald-800 shadow-sm font-bold' : 'text-[#64748B] hover:text-[#00153D]'}`}
               >
                 Đã duyệt
               </button>
               <button
                 onClick={() => setFilterStatus(3)}
-                className={`flex-1 py-1 rounded-lg transition-all ${filterStatus === 3 ? 'bg-rose-100 text-rose-800 shadow-sm font-bold' : 'text-[#64748B] hover:text-[#00153D]'}`}
+                className={`flex-1 py-1 rounded-lg transition-[background-color,color,box-shadow,transform] duration-150 ease-out active:scale-[0.98] ${filterStatus === 3 ? 'bg-rose-100 text-rose-800 shadow-sm font-bold' : 'text-[#64748B] hover:text-[#00153D]'}`}
               >
                 Từ chối
               </button>
             </div>
           </div>
           <div className="flex-1 overflow-y-auto p-3 space-y-3">
-            {loading && <div className="p-8 text-center text-[#64748B]">Đang tải danh sách phòng...</div>}
+            {loading && (
+              <div className="space-y-3">
+                {[1, 2, 3, 4].map(i => (
+                  <div key={i} className="p-4 rounded-[14px] bg-white border border-[#E2E8F0] space-y-2">
+                    <div className="h-4 w-20 rounded-full skeleton-shimmer" />
+                    <div className="h-5 w-3/4 rounded-md skeleton-shimmer" />
+                    <div className="h-4 w-1/2 rounded-md skeleton-shimmer" />
+                  </div>
+                ))}
+              </div>
+            )}
             {!loading && filteredRooms.map(room => (
               <div
                 key={room.id}
                 onClick={() => setSelectedId(room.id)}
-                className={`p-4 rounded-[14px] cursor-pointer transition-all ${selectedId === room.id ? 'bg-white shadow-clay-primary border-2 border-[#00153D]' : 'bg-[#F5F7FA] border border-[#E2E8F0] hover:bg-white'}`}
+                className={`p-4 rounded-[14px] cursor-pointer transition-[background-color,border-color,box-shadow,transform] duration-150 ease-out hover:-translate-y-0.5 active:scale-[0.99] ${selectedId === room.id ? 'bg-white shadow-clay-primary border-2 border-[#00153D]' : 'bg-[#F5F7FA] border border-[#E2E8F0] hover:bg-white'}`}
               >
                 <div className="flex justify-between items-start mb-2">
                   {renderStatusBadge(room.status)}
@@ -439,12 +452,22 @@ export default function ContentModeration() {
               </div>
             </div>
             <div className="flex-1 overflow-y-auto p-3 space-y-3">
-              {loadingRoommates && <div className="p-8 text-center text-[#64748B]">Đang tải danh sách bài đăng...</div>}
+              {loadingRoommates && (
+                <div className="space-y-3">
+                  {[1, 2, 3, 4].map(i => (
+                    <div key={i} className="p-4 rounded-[14px] bg-white border border-[#E2E8F0] space-y-2">
+                      <div className="h-4 w-20 rounded-full skeleton-shimmer" />
+                      <div className="h-5 w-3/4 rounded-md skeleton-shimmer" />
+                      <div className="h-4 w-1/2 rounded-md skeleton-shimmer" />
+                    </div>
+                  ))}
+                </div>
+              )}
               {!loadingRoommates && roommatePosts.map(post => (
                 <div
                   key={post.id}
                   onClick={() => setSelectedRoommateId(post.id)}
-                  className={`p-4 rounded-[14px] cursor-pointer transition-all ${selectedRoommateId === post.id ? 'bg-white shadow-clay-primary border-2 border-[#00153D]' : 'bg-[#F5F7FA] border border-[#E2E8F0] hover:bg-white'}`}
+                  className={`p-4 rounded-[14px] cursor-pointer transition-[background-color,border-color,box-shadow,transform] duration-150 ease-out hover:-translate-y-0.5 active:scale-[0.99] ${selectedRoommateId === post.id ? 'bg-white shadow-clay-primary border-2 border-[#00153D]' : 'bg-[#F5F7FA] border border-[#E2E8F0] hover:bg-white'}`}
                 >
                   <div className="flex justify-between items-start mb-2">
                     <span className={`text-caption font-bold px-2.5 py-0.5 rounded-full inline-flex items-center gap-1 ${post.isActive ? 'bg-[#F0FDF4] text-[#16803C] border border-[#DCFCE7]' : 'bg-[#FEF2F2] text-[#C62828] border border-[#FECACA]'}`}>
@@ -569,40 +592,66 @@ export default function ContentModeration() {
       )}
 
       {/* Avatar Preview Modal Overlay */}
-      {previewAvatar && (
-        <div 
-          className="fixed inset-0 z-50 bg-black/60 flex items-center justify-center p-4 backdrop-blur-xs"
-          onClick={() => setPreviewAvatar(null)}
-        >
-          <div className="bg-white rounded-[24px] p-6 max-w-sm w-full flex flex-col items-center space-y-4 shadow-2xl relative" onClick={e => e.stopPropagation()}>
-            <button 
-              onClick={() => setPreviewAvatar(null)} 
-              className="absolute top-4 right-4 text-[#64748B] hover:text-[#0F172A] w-8 h-8 flex items-center justify-center rounded-full bg-[#F5F7FA]"
-              aria-label="Đóng"
+      <AnimatePresence>
+        {previewAvatar && (
+          <motion.div 
+            variants={modalBackdropVariants}
+            initial="initial"
+            animate="animate"
+            exit="exit"
+            className="fixed inset-0 z-50 bg-black/60 flex items-center justify-center p-4 backdrop-blur-xs"
+            onClick={() => setPreviewAvatar(null)}
+          >
+            <motion.div 
+              variants={modalContentVariants}
+              initial="initial"
+              animate="animate"
+              exit="exit"
+              className="bg-white rounded-[24px] p-6 max-w-sm w-full flex flex-col items-center space-y-4 shadow-2xl relative" 
+              onClick={e => e.stopPropagation()}
             >
-              <X className="w-5 h-5" />
-            </button>
-            <h3 className="font-bold text-h3 text-[#0F172A]">Chân dung Chủ trọ</h3>
-            <div className="w-48 h-48 rounded-full overflow-hidden border-4 border-[#00153D] shadow-lg bg-[#F5F7FA]">
-              <img src={previewAvatar} alt="Chân dung chủ nhà" className="w-full h-full object-cover" />
-            </div>
-            <p className="text-caption text-[#64748B] font-semibold">{selectedRoom?.landlordName}</p>
-            <Button variant="secondary" size="sm" onClick={() => setPreviewAvatar(null)} className="w-full">Đóng</Button>
-          </div>
-        </div>
-      )}
+              <button 
+                onClick={() => setPreviewAvatar(null)} 
+                className="absolute top-4 right-4 text-[#64748B] hover:text-[#0F172A] w-8 h-8 flex items-center justify-center rounded-full bg-[#F5F7FA]"
+                aria-label="Đóng"
+              >
+                <X className="w-5 h-5" />
+              </button>
+              <h3 className="font-bold text-h3 text-[#0F172A]">Chân dung Chủ trọ</h3>
+              <div className="w-48 h-48 rounded-full overflow-hidden border-4 border-[#00153D] shadow-lg bg-[#F5F7FA]">
+                <img src={previewAvatar} alt="Chân dung chủ nhà" className="w-full h-full object-cover" />
+              </div>
+              <p className="text-caption text-[#64748B] font-semibold">{selectedRoom?.landlordName}</p>
+              <Button variant="secondary" size="sm" onClick={() => setPreviewAvatar(null)} className="w-full">Đóng</Button>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
 
       {/* Room Image Preview Modal */}
-      {previewImage && (
-        <div 
-          className="fixed inset-0 z-50 bg-black/70 flex items-center justify-center p-4 backdrop-blur-xs"
-          onClick={() => setPreviewImage(null)}
-        >
-          <div className="max-w-3xl max-h-[85vh] rounded-2xl overflow-hidden shadow-2xl" onClick={e => e.stopPropagation()}>
-            <img src={previewImage} alt="Ảnh phòng trọ" className="w-full h-full object-contain" />
-          </div>
-        </div>
-      )}
-    </div>
+      <AnimatePresence>
+        {previewImage && (
+          <motion.div 
+            variants={modalBackdropVariants}
+            initial="initial"
+            animate="animate"
+            exit="exit"
+            className="fixed inset-0 z-50 bg-black/70 flex items-center justify-center p-4 backdrop-blur-xs"
+            onClick={() => setPreviewImage(null)}
+          >
+            <motion.div 
+              variants={modalContentVariants}
+              initial="initial"
+              animate="animate"
+              exit="exit"
+              className="max-w-3xl max-h-[85vh] rounded-2xl overflow-hidden shadow-2xl" 
+              onClick={e => e.stopPropagation()}
+            >
+              <img src={previewImage} alt="Ảnh phòng trọ" className="w-full h-full object-contain" />
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+    </PageMotion>
   );
 }

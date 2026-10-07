@@ -16,6 +16,7 @@ import {
   ArrowLeft, 
   Clock 
 } from 'lucide-react';
+import { PageMotion } from '../../components/common/Motion';
 
 export default function AuthPage() {
   const [role, setRole] = useState<Role>('Tenant');
@@ -197,7 +198,7 @@ export default function AuthPage() {
   };
 
   return (
-    <div className="min-h-[calc(100vh-56px)] flex items-center justify-center bg-[#F5F7FA] px-4 py-12">
+    <PageMotion className="min-h-[calc(100vh-56px)] flex items-center justify-center bg-[#F5F7FA] px-4 py-12">
       <Card className="w-full max-w-md p-8 bg-white rounded-[18px] shadow-clay-primary border-none">
         
         {/* Step: MFA / 2FA Verification */}
@@ -303,21 +304,21 @@ export default function AuthPage() {
             <div className="flex p-1 bg-[#F5F7FA] shadow-clay-inset rounded-[12px] mb-6">
               <button 
                 type="button"
-                className={`flex-1 py-2.5 text-caption font-semibold rounded-[10px] transition-all min-h-[44px] ${role === 'Tenant' ? 'btn-clay-primary' : 'text-[#64748B] hover:text-[#0F172A]'}`}
+                className={`flex-1 py-2.5 text-caption font-semibold rounded-[10px] transition-[background-color,color,box-shadow,transform] duration-150 ease-out active:scale-[0.98] min-h-[44px] ${role === 'Tenant' ? 'btn-clay-primary' : 'text-[#64748B] hover:text-[#0F172A]'}`}
                 onClick={() => handleRoleSelect('Tenant')}
               >
                 Người thuê
               </button>
               <button 
                 type="button"
-                className={`flex-1 py-2.5 text-caption font-semibold rounded-[10px] transition-all min-h-[44px] ${role === 'Landlord' ? 'btn-clay-primary' : 'text-[#64748B] hover:text-[#0F172A]'}`}
+                className={`flex-1 py-2.5 text-caption font-semibold rounded-[10px] transition-[background-color,color,box-shadow,transform] duration-150 ease-out active:scale-[0.98] min-h-[44px] ${role === 'Landlord' ? 'btn-clay-primary' : 'text-[#64748B] hover:text-[#0F172A]'}`}
                 onClick={() => handleRoleSelect('Landlord')}
               >
                 Chủ nhà
               </button>
               <button 
                 type="button"
-                className={`flex-1 py-2.5 text-caption font-semibold rounded-[10px] transition-all min-h-[44px] ${role === 'Admin' ? 'btn-clay-primary' : 'text-[#64748B] hover:text-[#0F172A]'}`}
+                className={`flex-1 py-2.5 text-caption font-semibold rounded-[10px] transition-[background-color,color,box-shadow,transform] duration-150 ease-out active:scale-[0.98] min-h-[44px] ${role === 'Admin' ? 'btn-clay-primary' : 'text-[#64748B] hover:text-[#0F172A]'}`}
                 onClick={() => handleRoleSelect('Admin')}
               >
                 Quản trị
@@ -430,6 +431,6 @@ export default function AuthPage() {
           </div>
         )}
       </Card>
-    </div>
+    </PageMotion>
   );
 }

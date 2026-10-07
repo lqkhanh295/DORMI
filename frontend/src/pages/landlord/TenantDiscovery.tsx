@@ -171,7 +171,7 @@ export default function TenantDiscovery() {
             return (
               <Card 
                 key={tenant.id} 
-                className="bg-white rounded-[18px] shadow-clay-soft p-6 border-none hover:-translate-y-[2px] transition-all space-y-4"
+                className="bg-white rounded-[18px] shadow-clay-soft p-6 border-none hover:-translate-y-[2px] hover:shadow-clay-primary transition-[transform,box-shadow] duration-200 ease-out space-y-4"
               >
                 <div className="flex justify-between items-start">
                   <div className="flex items-center gap-4">

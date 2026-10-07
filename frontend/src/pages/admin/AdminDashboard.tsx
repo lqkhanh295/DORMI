@@ -5,6 +5,7 @@ import { Button } from '../../components/ui/Button';
 import { adminApi, RoomStatus } from '../../services/api';
 import { Users, UserCheck, Home, AlertTriangle, ArrowRight, DollarSign } from 'lucide-react';
 import { toast } from 'sonner';
+import { PageMotion } from '../../components/common/Motion';
 
 export default function AdminDashboard() {
   const [stats, setStats] = useState({
@@ -88,7 +89,7 @@ export default function AdminDashboard() {
   };
 
   return (
-    <div className="space-y-8 pb-8 bg-[#F8FAFC]">
+    <PageMotion className="space-y-8 pb-8 bg-[#F8FAFC]">
       {/* Header */}
       <div className="bg-white p-6 rounded-2xl border border-slate-200 shadow-sm flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
         <div>
@@ -99,65 +100,73 @@ export default function AdminDashboard() {
 
       {/* 5 Real KPI Cards */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-5">
-        <Card className="p-5 bg-white rounded-2xl border border-slate-200 shadow-sm hover:shadow-md transition-all">
+        <Card className="p-5 bg-white rounded-2xl border border-slate-200 shadow-sm motion-gpu transition-[transform,box-shadow] duration-200 ease-out hover:shadow-md hover:-translate-y-0.5">
           <div className="flex items-center justify-between mb-3">
             <span className="text-xs font-bold text-slate-500 uppercase tracking-wider">Tổng người dùng</span>
             <div className="w-9 h-9 rounded-xl bg-blue-50 text-blue-600 flex items-center justify-center">
               <Users className="w-5 h-5" />
             </div>
           </div>
-          <p className="text-3xl font-extrabold text-slate-900">{loading ? '...' : stats.totalUsers.toLocaleString()}</p>
+          <p className="text-3xl font-extrabold text-slate-900 min-h-[36px] flex items-center">
+            {loading ? <span className="inline-block w-20 h-7 rounded-lg skeleton-shimmer" /> : stats.totalUsers.toLocaleString()}
+          </p>
           <p className="text-xs text-slate-400 mt-2">Dữ liệu từ CSDL hệ thống</p>
         </Card>
 
-        <Card className="p-5 bg-white rounded-2xl border border-slate-200 shadow-sm hover:shadow-md transition-all">
+        <Card className="p-5 bg-white rounded-2xl border border-slate-200 shadow-sm motion-gpu transition-[transform,box-shadow] duration-200 ease-out hover:shadow-md hover:-translate-y-0.5">
           <div className="flex items-center justify-between mb-3">
             <span className="text-xs font-bold text-amber-600 uppercase tracking-wider">Chờ xác minh</span>
             <div className="w-9 h-9 rounded-xl bg-amber-50 text-amber-600 flex items-center justify-center">
               <UserCheck className="w-5 h-5" />
             </div>
           </div>
-          <p className="text-3xl font-extrabold text-amber-600">{loading ? '...' : stats.pendingVerifications}</p>
+          <p className="text-3xl font-extrabold text-amber-600 min-h-[36px] flex items-center">
+            {loading ? <span className="inline-block w-14 h-7 rounded-lg skeleton-shimmer" /> : stats.pendingVerifications}
+          </p>
           <Link to="/admin/verify" className="text-xs font-semibold text-amber-700 hover:underline inline-flex items-center gap-1 mt-2">
             Xem danh sách <ArrowRight className="w-3 h-3" />
           </Link>
         </Card>
 
-        <Card className="p-5 bg-white rounded-2xl border border-slate-200 shadow-sm hover:shadow-md transition-all">
+        <Card className="p-5 bg-white rounded-2xl border border-slate-200 shadow-sm motion-gpu transition-[transform,box-shadow] duration-200 ease-out hover:shadow-md hover:-translate-y-0.5">
           <div className="flex items-center justify-between mb-3">
             <span className="text-xs font-bold text-indigo-600 uppercase tracking-wider">Phòng chờ duyệt</span>
             <div className="w-9 h-9 rounded-xl bg-indigo-50 text-indigo-600 flex items-center justify-center">
               <Home className="w-5 h-5" />
             </div>
           </div>
-          <p className="text-3xl font-extrabold text-indigo-600">{loading ? '...' : stats.pendingRooms}</p>
+          <p className="text-3xl font-extrabold text-indigo-600 min-h-[36px] flex items-center">
+            {loading ? <span className="inline-block w-14 h-7 rounded-lg skeleton-shimmer" /> : stats.pendingRooms}
+          </p>
           <Link to="/admin/rooms" className="text-xs font-semibold text-indigo-700 hover:underline inline-flex items-center gap-1 mt-2">
             Kiểm duyệt ngay <ArrowRight className="w-3 h-3" />
           </Link>
         </Card>
 
-        <Card className="p-5 bg-white rounded-2xl border border-slate-200 shadow-sm hover:shadow-md transition-all">
+        <Card className="p-5 bg-white rounded-2xl border border-slate-200 shadow-sm motion-gpu transition-[transform,box-shadow] duration-200 ease-out hover:shadow-md hover:-translate-y-0.5">
           <div className="flex items-center justify-between mb-3">
             <span className="text-xs font-bold text-rose-600 uppercase tracking-wider">Báo cáo chưa xử lý</span>
             <div className="w-9 h-9 rounded-xl bg-rose-50 text-rose-600 flex items-center justify-center">
               <AlertTriangle className="w-5 h-5" />
             </div>
           </div>
-          <p className="text-3xl font-extrabold text-rose-600">{loading ? '...' : stats.openReports}</p>
+          <p className="text-3xl font-extrabold text-rose-600 min-h-[36px] flex items-center">
+            {loading ? <span className="inline-block w-14 h-7 rounded-lg skeleton-shimmer" /> : stats.openReports}
+          </p>
           <Link to="/admin/reports" className="text-xs font-semibold text-rose-700 hover:underline inline-flex items-center gap-1 mt-2">
             Xử lý vi phạm <ArrowRight className="w-3 h-3" />
           </Link>
         </Card>
 
-        <Card className="p-5 bg-white rounded-2xl border border-slate-200 shadow-sm hover:shadow-md transition-all">
+        <Card className="p-5 bg-white rounded-2xl border border-slate-200 shadow-sm motion-gpu transition-[transform,box-shadow] duration-200 ease-out hover:shadow-md hover:-translate-y-0.5">
           <div className="flex items-center justify-between mb-3">
             <span className="text-xs font-bold text-emerald-600 uppercase tracking-wider">Doanh thu gói DV</span>
             <div className="w-9 h-9 rounded-xl bg-emerald-50 text-emerald-600 flex items-center justify-center">
               <DollarSign className="w-5 h-5" />
             </div>
           </div>
-          <p className="text-2xl font-extrabold text-emerald-600 truncate">
-            {loading ? '...' : `${Number(stats.totalRevenue).toLocaleString('vi-VN')} đ`}
+          <p className="text-2xl font-extrabold text-emerald-600 truncate min-h-[36px] flex items-center">
+            {loading ? <span className="inline-block w-28 h-7 rounded-lg skeleton-shimmer" /> : `${Number(stats.totalRevenue).toLocaleString('vi-VN')} đ`}
           </p>
           <p className="text-xs text-slate-400 mt-2">Đã thanh toán thực tế</p>
         </Card>
@@ -274,6 +283,6 @@ export default function AdminDashboard() {
           </div>
         </Card>
       </div>
-    </div>
+    </PageMotion>
   );
 }

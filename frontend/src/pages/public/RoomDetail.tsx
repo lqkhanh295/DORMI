@@ -364,7 +364,7 @@ export default function RoomDetail() {
               <div className="p-4 rounded-[14px] bg-[#F5F7FA] border border-[#E2E8F0] space-y-3 shadow-clay-inset">
                 <div className="w-full bg-[#E2E8F0] h-2.5 rounded-full overflow-hidden">
                   <div 
-                    className="h-full bg-gradient-to-r from-[#2563EB] to-[#16803C] rounded-full transition-all duration-500" 
+                    className="h-full bg-gradient-to-r from-[#2563EB] to-[#16803C] rounded-full transition-[width] duration-500 ease-out" 
                     style={{ width: `${trustScore ? trustScore.totalScore : (roomData?.isVerifiedLandlord ? 85 : 70)}%` }}
                   ></div>
                 </div>

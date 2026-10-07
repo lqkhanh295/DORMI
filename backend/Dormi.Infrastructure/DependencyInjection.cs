@@ -12,11 +12,11 @@ public static class DependencyInjection
     public static IServiceCollection AddInfrastructure(this IServiceCollection services, IConfiguration configuration)
     {
         var useInMemory = configuration.GetValue<bool>("UseInMemoryDatabase");
-        var connectionString = configuration.GetConnectionString("DefaultConnection");
+        var connectionString = ResolveConnectionString(configuration);
         
         services.AddDbContext<DormiDbContext>(options =>
         {
-            if (useInMemory)
+            if (useInMemory || string.IsNullOrWhiteSpace(connectionString))
             {
                 options.UseInMemoryDatabase("DORMI_DB");
             }
@@ -35,6 +35,16 @@ public static class DependencyInjection
 
         // Register Distributed Cache (Redis with in-memory fallback for local resilience)
         var redisConn = configuration.GetConnectionString("Redis");
+        if (string.IsNullOrWhiteSpace(redisConn) || redisConn == "localhost:6379")
+        {
+            var envRedis = configuration["REDIS_URL"] 
+                ?? Environment.GetEnvironmentVariable("REDIS_URL");
+            if (!string.IsNullOrWhiteSpace(envRedis))
+            {
+                redisConn = envRedis;
+            }
+        }
+
         var redisAvailable = false;
         if (!string.IsNullOrEmpty(redisConn))
         {
@@ -97,6 +107,52 @@ public static class DependencyInjection
         services.AddHostedService<Dormi.Infrastructure.Kafka.KafkaNotificationConsumer>();
 
         return services;
+    }
+
+    private static string ResolveConnectionString(IConfiguration configuration)
+    {
+        var connectionString = configuration.GetConnectionString("DefaultConnection");
+        if (!string.IsNullOrWhiteSpace(connectionString))
+        {
+            return connectionString;
+        }
+
+        var dbUrl = configuration["DATABASE_URL"] 
+            ?? Environment.GetEnvironmentVariable("DATABASE_URL")
+            ?? configuration["POSTGRES_URL"]
+            ?? Environment.GetEnvironmentVariable("POSTGRES_URL");
+
+        if (!string.IsNullOrWhiteSpace(dbUrl))
+        {
+            return ConvertDatabaseUrlToNpgsql(dbUrl);
+        }
+
+        return string.Empty;
+    }
+
+    private static string ConvertDatabaseUrlToNpgsql(string databaseUrl)
+    {
+        if (!databaseUrl.StartsWith("postgres://", StringComparison.OrdinalIgnoreCase) &&
+            !databaseUrl.StartsWith("postgresql://", StringComparison.OrdinalIgnoreCase))
+        {
+            return databaseUrl;
+        }
+
+        try
+        {
+            var uri = new Uri(databaseUrl);
+            var userInfo = uri.UserInfo.Split(':');
+            var username = userInfo.Length > 0 ? Uri.UnescapeDataString(userInfo[0]) : "";
+            var password = userInfo.Length > 1 ? Uri.UnescapeDataString(userInfo[1]) : "";
+            var database = uri.AbsolutePath.TrimStart('/');
+            var port = uri.Port > 0 ? uri.Port : 5432;
+
+            return $"Host={uri.Host};Port={port};Database={database};Username={username};Password={password};SSL Mode=Require;Trust Server Certificate=true;";
+        }
+        catch
+        {
+            return databaseUrl;
+        }
     }
 }
 

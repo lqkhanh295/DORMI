@@ -300,7 +300,7 @@ export default function LeadAnalytics() {
                     </div>
                     <div className="w-full h-2 bg-[#F1F5F9] rounded-full overflow-hidden">
                       <div 
-                        className="bg-rose-500 h-full rounded-full transition-all" 
+                        className="bg-rose-500 h-full rounded-full transition-[width] duration-500 ease-out" 
                         style={{ width: `${Math.min(100, Math.max(viewToLeadRate, 4))}%` }}
                       />
                     </div>
@@ -318,7 +318,7 @@ export default function LeadAnalytics() {
                     </div>
                     <div className="w-full h-2 bg-[#F1F5F9] rounded-full overflow-hidden">
                       <div 
-                        className="bg-indigo-600 h-full rounded-full transition-all" 
+                        className="bg-indigo-600 h-full rounded-full transition-[width] duration-500 ease-out" 
                         style={{ width: `${Math.min(100, Math.max(leadToViewingRate, 4))}%` }}
                       />
                     </div>
@@ -336,7 +336,7 @@ export default function LeadAnalytics() {
                     </div>
                     <div className="w-full h-2 bg-[#F1F5F9] rounded-full overflow-hidden">
                       <div 
-                        className="bg-amber-500 h-full rounded-full transition-all" 
+                        className="bg-amber-500 h-full rounded-full transition-[width] duration-500 ease-out" 
                         style={{ width: `${Math.min(100, Math.max(viewingToAppRate, 4))}%` }}
                       />
                     </div>
@@ -354,7 +354,7 @@ export default function LeadAnalytics() {
                     </div>
                     <div className="w-full h-2 bg-[#F1F5F9] rounded-full overflow-hidden">
                       <div 
-                        className="bg-emerald-500 h-full rounded-full transition-all" 
+                        className="bg-emerald-500 h-full rounded-full transition-[width] duration-500 ease-out" 
                         style={{ width: `${Math.min(100, Math.max(appToApproveRate, 4))}%` }}
                       />
                     </div>
@@ -372,7 +372,7 @@ export default function LeadAnalytics() {
                     </div>
                     <div className="w-full h-2.5 bg-emerald-100 rounded-full overflow-hidden border border-emerald-200">
                       <div 
-                        className="bg-emerald-600 h-full rounded-full transition-all" 
+                        className="bg-emerald-600 h-full rounded-full transition-[width] duration-500 ease-out" 
                         style={{ width: `${Math.min(100, Math.max(approveToLeaseRate, 5))}%` }}
                       />
                     </div>
@@ -518,7 +518,7 @@ export default function LeadAnalytics() {
                 <div className="space-y-2">
                   <label className="font-bold text-[#0F172A] block">Chọn gói đẩy tin phù hợp:</label>
 
-                  <label className={`flex items-start gap-3 p-3 rounded-xl border cursor-pointer transition-all ${
+                  <label className={`flex items-start gap-3 p-3 rounded-xl border cursor-pointer transition-[border-color,background-color,box-shadow,transform] duration-150 ease-out active:scale-[0.99] ${
                     selectedBoostType === '24h' ? 'border-amber-500 bg-amber-50/50 shadow-sm' : 'border-[#E2E8F0] hover:bg-[#F8FAFC]'
                   }`}>
                     <input 
@@ -538,7 +538,7 @@ export default function LeadAnalytics() {
                     </div>
                   </label>
 
-                  <label className={`flex items-start gap-3 p-3 rounded-xl border cursor-pointer transition-all ${
+                  <label className={`flex items-start gap-3 p-3 rounded-xl border cursor-pointer transition-[border-color,background-color,box-shadow,transform] duration-150 ease-out active:scale-[0.99] ${
                     selectedBoostType === '3days' ? 'border-amber-500 bg-amber-50/50 shadow-sm ring-1 ring-amber-500' : 'border-[#E2E8F0] hover:bg-[#F8FAFC]'
                   }`}>
                     <input 
@@ -561,7 +561,7 @@ export default function LeadAnalytics() {
                     </div>
                   </label>
 
-                  <label className={`flex items-start gap-3 p-3 rounded-xl border cursor-pointer transition-all ${
+                  <label className={`flex items-start gap-3 p-3 rounded-xl border cursor-pointer transition-[border-color,background-color,box-shadow,transform] duration-150 ease-out active:scale-[0.99] ${
                     selectedBoostType === '7days' ? 'border-amber-500 bg-amber-50/50 shadow-sm' : 'border-[#E2E8F0] hover:bg-[#F8FAFC]'
                   }`}>
                     <input 
@@ -594,7 +594,7 @@ export default function LeadAnalytics() {
                   <button
                     type="submit"
                     disabled={isSubmittingBoost}
-                    className="px-5 py-2 bg-amber-600 hover:bg-amber-700 text-white font-bold rounded-xl shadow-sm transition-all flex items-center gap-2"
+                    className="px-5 py-2 bg-amber-600 hover:bg-amber-700 text-white font-bold rounded-xl shadow-sm transition-[background-color,box-shadow,transform] duration-150 ease-out active:scale-[0.98] flex items-center gap-2"
                   >
                     {isSubmittingBoost ? (
                       <>

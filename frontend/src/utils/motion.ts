@@ -53,6 +53,30 @@ export const motionTokens = {
 
 // Reusable Framer Motion Variants for DORMI
 
+// Page View Motion: Smooth calm fade with micro 4px elevation settle
+export const pageVariants: Variants = {
+  initial: {
+    opacity: 0,
+    y: 4,
+  },
+  animate: {
+    opacity: 1,
+    y: 0,
+    transition: {
+      duration: motionTokens.duration.standard,
+      ease: motionTokens.ease.standard,
+    },
+  },
+  exit: {
+    opacity: 0,
+    y: -4,
+    transition: {
+      duration: motionTokens.duration.micro,
+      ease: motionTokens.ease.exit,
+    },
+  },
+};
+
 // Modal Overlay Backdrop
 export const modalBackdropVariants: Variants = {
   hidden: { opacity: 0 },

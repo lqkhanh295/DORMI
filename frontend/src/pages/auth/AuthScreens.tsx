@@ -16,12 +16,12 @@ export function Login() {
             <input 
               type="email" 
               placeholder="Email hoặc Số điện thoại" 
-              className="w-full h-[56px] px-4 rounded-[12px] bg-[#f5f5f7] border border-transparent focus:border-[#0071E3] focus:bg-white focus:ring-4 focus:ring-[#0071E3]/20 outline-none text-[17px] transition-all"
+              className="w-full h-[56px] px-4 rounded-[12px] bg-[#f5f5f7] border border-transparent focus:border-[#0071E3] focus:bg-white focus:ring-4 focus:ring-[#0071E3]/20 outline-none text-[17px] transition-[border-color,background-color,box-shadow] duration-150 ease-out"
             />
             <input 
               type="password" 
               placeholder="Mật khẩu" 
-              className="w-full h-[56px] px-4 rounded-[12px] bg-[#f5f5f7] border border-transparent focus:border-[#0071E3] focus:bg-white focus:ring-4 focus:ring-[#0071E3]/20 outline-none text-[17px] transition-all"
+              className="w-full h-[56px] px-4 rounded-[12px] bg-[#f5f5f7] border border-transparent focus:border-[#0071E3] focus:bg-white focus:ring-4 focus:ring-[#0071E3]/20 outline-none text-[17px] transition-[border-color,background-color,box-shadow] duration-150 ease-out"
             />
             
             <div className="flex justify-end">
@@ -53,7 +53,7 @@ export function Register() {
           <p className="text-[15px] text-[#6e6e73] mb-8">Bạn đang tìm phòng hay cho thuê phòng?</p>
           
           <div className="grid gap-4 md:grid-cols-2 text-left mb-8">
-            <label className="flex flex-col gap-3 p-6 rounded-[16px] border-2 border-[#0071e3] bg-[#0071e3]/5 cursor-pointer transition-all">
+            <label className="flex flex-col gap-3 p-6 rounded-[16px] border-2 border-[#0071e3] bg-[#0071e3]/5 cursor-pointer transition-[border-color,background-color,box-shadow,transform] duration-150 ease-out hover:-translate-y-0.5 active:scale-[0.99]">
               <div className="flex items-center justify-between">
                 <span className="text-[17px] font-semibold text-[#1d1d1f]">Khách thuê</span>
                 <input type="radio" name="role" defaultChecked className="w-5 h-5 text-[#0071e3] focus:ring-[#0071e3]" />
@@ -61,7 +61,7 @@ export function Register() {
               <p className="text-[13px] text-[#6e6e73]">Tìm kiếm phòng trọ, căn hộ, KTX và bạn cùng phòng.</p>
             </label>
             
-            <label className="flex flex-col gap-3 p-6 rounded-[16px] border-2 border-transparent bg-[#f5f5f7] hover:bg-[#e8e8ed] cursor-pointer transition-all">
+            <label className="flex flex-col gap-3 p-6 rounded-[16px] border-2 border-transparent bg-[#f5f5f7] hover:bg-[#e8e8ed] cursor-pointer transition-[border-color,background-color,box-shadow,transform] duration-150 ease-out hover:-translate-y-0.5 active:scale-[0.99]">
               <div className="flex items-center justify-between">
                 <span className="text-[17px] font-semibold text-[#1d1d1f]">Chủ nhà</span>
                 <input type="radio" name="role" className="w-5 h-5 text-[#0071e3] focus:ring-[#0071e3]" />

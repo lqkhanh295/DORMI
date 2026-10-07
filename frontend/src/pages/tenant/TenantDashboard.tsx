@@ -232,7 +232,7 @@ export default function TenantDashboard() {
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
             placeholder="Tìm kiếm phòng theo tên đường, quận huyện, trường học, tiện ích..." 
-            className="w-full pl-12 pr-10 py-3 bg-[#F5F7FA] shadow-clay-inset border border-[#E2E8F0] rounded-[14px] focus:outline-none focus:ring-1 focus:ring-[#00153D] focus:bg-white transition-all text-body text-[#0F172A] placeholder-[#94A3B8] min-h-[48px]"
+            className="w-full pl-12 pr-10 py-3 bg-[#F5F7FA] shadow-clay-inset border border-[#E2E8F0] rounded-[14px] focus:outline-none focus:ring-1 focus:ring-[#00153D] focus:bg-white transition-[border-color,background-color,box-shadow] duration-150 ease-out text-body text-[#0F172A] placeholder-[#94A3B8] min-h-[48px]"
           />
           {searchQuery && (
             <button 
@@ -251,7 +251,7 @@ export default function TenantDashboard() {
           <button
             type="button"
             onClick={() => setActiveTab('rooms')}
-            className={`p-3.5 rounded-[14px] border text-left transition-all flex items-center justify-between ${
+            className={`p-3.5 rounded-[14px] border text-left transition-[background-color,border-color,box-shadow,transform] duration-150 ease-out active:scale-[0.99] flex items-center justify-between ${
               activeTab === 'rooms' 
                 ? 'bg-blue-50/80 border-blue-500/40 shadow-clay-soft ring-1 ring-blue-500/20' 
                 : 'bg-[#F5F7FA] border-[#E2E8F0] hover:bg-slate-100'
@@ -283,7 +283,7 @@ export default function TenantDashboard() {
           <button
             type="button"
             onClick={() => setActiveTab('appointments')}
-            className={`p-3.5 rounded-[14px] border text-left transition-all flex items-center justify-between ${
+            className={`p-3.5 rounded-[14px] border text-left transition-[background-color,border-color,box-shadow,transform] duration-150 ease-out active:scale-[0.99] flex items-center justify-between ${
               activeTab === 'appointments' 
                 ? 'bg-blue-50/80 border-blue-500/40 shadow-clay-soft ring-1 ring-blue-500/20' 
                 : 'bg-[#F5F7FA] border-[#E2E8F0] hover:bg-slate-100'
@@ -315,7 +315,7 @@ export default function TenantDashboard() {
           <button
             type="button"
             onClick={() => setActiveTab('favorites')}
-            className={`p-3.5 rounded-[14px] border text-left transition-all flex items-center justify-between ${
+            className={`p-3.5 rounded-[14px] border text-left transition-[background-color,border-color,box-shadow,transform] duration-150 ease-out active:scale-[0.99] flex items-center justify-between ${
               activeTab === 'favorites' 
                 ? 'bg-rose-50/80 border-rose-500/40 shadow-clay-soft ring-1 ring-rose-500/20' 
                 : 'bg-[#F5F7FA] border-[#E2E8F0] hover:bg-slate-100'
@@ -367,7 +367,7 @@ export default function TenantDashboard() {
                 <button
                   type="button"
                   onClick={() => setSelectedDistrict(null)}
-                  className={`px-3 py-1.5 text-caption font-semibold rounded-full whitespace-nowrap transition-all ${
+                  className={`px-3 py-1.5 text-caption font-semibold rounded-full whitespace-nowrap transition-[background-color,color,box-shadow,transform] duration-150 ease-out active:scale-95 ${
                     selectedDistrict === null 
                       ? 'bg-[#00153D] text-white' 
                       : 'bg-[#F5F7FA] text-[#64748B] hover:text-[#0F172A] border border-[#E2E8F0]'
@@ -380,7 +380,7 @@ export default function TenantDashboard() {
                     key={d}
                     type="button"
                     onClick={() => setSelectedDistrict(selectedDistrict === d ? null : d)}
-                    className={`px-3 py-1.5 text-caption font-semibold rounded-full whitespace-nowrap transition-all ${
+                    className={`px-3 py-1.5 text-caption font-semibold rounded-full whitespace-nowrap transition-[background-color,color,box-shadow,transform] duration-150 ease-out active:scale-95 ${
                       selectedDistrict === d 
                         ? 'bg-[#00153D] text-white' 
                         : 'bg-[#F5F7FA] text-[#64748B] hover:text-[#0F172A] border border-[#E2E8F0]'
@@ -419,7 +419,7 @@ export default function TenantDashboard() {
                 <button
                   type="button"
                   onClick={() => setSelectedPrice(null)}
-                  className={`px-3 py-1 text-caption font-semibold rounded-[8px] whitespace-nowrap transition-all ${
+                  className={`px-3 py-1 text-caption font-semibold rounded-[8px] whitespace-nowrap transition-[background-color,color,box-shadow,transform] duration-150 ease-out active:scale-95 ${
                     selectedPrice === null 
                       ? 'bg-[#00153D] text-white' 
                       : 'bg-[#F5F7FA] text-[#64748B] hover:text-[#0F172A] border border-[#E2E8F0]'
@@ -432,7 +432,7 @@ export default function TenantDashboard() {
                     key={p.val}
                     type="button"
                     onClick={() => setSelectedPrice(selectedPrice === p.val ? null : p.val)}
-                    className={`px-3 py-1 text-caption font-semibold rounded-[8px] whitespace-nowrap transition-all ${
+                    className={`px-3 py-1 text-caption font-semibold rounded-[8px] whitespace-nowrap transition-[background-color,color,box-shadow,transform] duration-150 ease-out active:scale-95 ${
                       selectedPrice === p.val 
                         ? 'bg-[#00153D] text-white' 
                         : 'bg-[#F5F7FA] text-[#64748B] hover:text-[#0F172A] border border-[#E2E8F0]'
@@ -448,7 +448,7 @@ export default function TenantDashboard() {
                 <button
                   type="button"
                   onClick={() => setFilter3D(!filter3D)}
-                  className={`px-3 py-1 text-caption font-semibold rounded-[8px] border flex items-center gap-1.5 transition-all ${
+                  className={`px-3 py-1 text-caption font-semibold rounded-[8px] border flex items-center gap-1.5 transition-[background-color,color,border-color,transform] duration-150 ease-out active:scale-95 ${
                     filter3D 
                       ? 'bg-blue-600 text-white border-blue-600' 
                       : 'bg-[#F5F7FA] text-[#475569] border-[#E2E8F0] hover:bg-white'
@@ -460,7 +460,7 @@ export default function TenantDashboard() {
                 <button
                   type="button"
                   onClick={() => setFilterVerified(!filterVerified)}
-                  className={`px-3 py-1 text-caption font-semibold rounded-[8px] border flex items-center gap-1.5 transition-all ${
+                  className={`px-3 py-1 text-caption font-semibold rounded-[8px] border flex items-center gap-1.5 transition-[background-color,color,border-color,transform] duration-150 ease-out active:scale-95 ${
                     filterVerified 
                       ? 'bg-emerald-600 text-white border-emerald-600' 
                       : 'bg-[#F5F7FA] text-[#475569] border-[#E2E8F0] hover:bg-white'
@@ -522,7 +522,7 @@ export default function TenantDashboard() {
                   <Card 
                     key={room.id}
                     onClick={() => navigate(`/room/${room.id}`)}
-                    className="group cursor-pointer flex flex-col h-full bg-white rounded-[18px] shadow-clay-soft p-3 transition-all duration-150 hover:-translate-y-[2px] hover:shadow-clay-primary border border-[#E2E8F0]"
+                    className="group cursor-pointer flex flex-col h-full bg-white rounded-[18px] shadow-clay-soft p-3 transition-[transform,box-shadow] duration-200 ease-out hover:-translate-y-0.5 hover:shadow-clay-primary border border-[#E2E8F0]"
                   >
                     {/* Room Image Container */}
                     <div className="aspect-[4/3] relative overflow-hidden bg-[#EEF2F6] rounded-[14px]">
@@ -554,7 +554,7 @@ export default function TenantDashboard() {
                         type="button"
                         onClick={(e) => handleToggleFavorite(room.id, e)}
                         aria-label={isSaved ? "Bỏ lưu phòng" : "Lưu phòng"}
-                        className={`absolute top-2.5 right-2.5 w-9 h-9 rounded-full flex items-center justify-center transition-all ${
+                        className={`absolute top-2.5 right-2.5 w-9 h-9 rounded-full flex items-center justify-center transition-[transform,background-color,color,box-shadow] duration-150 ease-out active:scale-90 ${
                           isSaved 
                             ? 'bg-rose-50 text-rose-600 scale-105 shadow-sm' 
                             : 'bg-white/90 text-[#64748B] hover:text-rose-600 hover:bg-white shadow-xs'
@@ -778,7 +778,7 @@ export default function TenantDashboard() {
                   <Card 
                     key={room.id}
                     onClick={() => navigate(`/room/${room.id}`)}
-                    className="group cursor-pointer flex flex-col h-full bg-white rounded-[18px] shadow-clay-soft p-3 transition-all duration-150 hover:-translate-y-[2px] border border-[#E2E8F0]"
+                    className="group cursor-pointer flex flex-col h-full bg-white rounded-[18px] shadow-clay-soft p-3 transition-[transform,box-shadow] duration-200 ease-out hover:-translate-y-0.5 hover:shadow-clay-primary border border-[#E2E8F0]"
                   >
                     <div className="aspect-[4/3] relative overflow-hidden bg-[#EEF2F6] rounded-[14px]">
                       <img 

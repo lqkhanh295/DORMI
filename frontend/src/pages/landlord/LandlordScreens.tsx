@@ -94,23 +94,23 @@ export function CreateRoom() {
         <div className="flex flex-col gap-6">
           <div className="flex flex-col gap-1.5">
             <label className="text-[13px] font-semibold text-[#1d1d1f] ml-1">Tiêu đề bài đăng</label>
-            <input type="text" placeholder="VD: Phòng trọ ban công sáng sủa..." className="w-full h-[56px] px-4 rounded-[12px] bg-[#f5f5f7] border border-transparent focus:border-[#0071E3] focus:bg-white focus:ring-4 focus:ring-[#0071E3]/20 outline-none text-[17px] transition-all" />
+            <input type="text" placeholder="VD: Phòng trọ ban công sáng sủa..." className="w-full h-[56px] px-4 rounded-[12px] bg-[#f5f5f7] border border-transparent focus:border-[#0071E3] focus:bg-white focus:ring-4 focus:ring-[#0071E3]/20 outline-none text-[17px] transition-[border-color,background-color,box-shadow] duration-150 ease-out" />
           </div>
           
           <div className="grid md:grid-cols-2 gap-6">
              <div className="flex flex-col gap-1.5">
                <label className="text-[13px] font-semibold text-[#1d1d1f] ml-1">Giá cho thuê (VNĐ)</label>
-               <input type="number" placeholder="3000000" className="w-full h-[56px] px-4 rounded-[12px] bg-[#f5f5f7] border border-transparent focus:border-[#0071E3] focus:bg-white focus:ring-4 focus:ring-[#0071E3]/20 outline-none text-[17px] transition-all" />
+               <input type="number" placeholder="3000000" className="w-full h-[56px] px-4 rounded-[12px] bg-[#f5f5f7] border border-transparent focus:border-[#0071E3] focus:bg-white focus:ring-4 focus:ring-[#0071E3]/20 outline-none text-[17px] transition-[border-color,background-color,box-shadow] duration-150 ease-out" />
              </div>
              <div className="flex flex-col gap-1.5">
                <label className="text-[13px] font-semibold text-[#1d1d1f] ml-1">Diện tích (m²)</label>
-               <input type="number" placeholder="25" className="w-full h-[56px] px-4 rounded-[12px] bg-[#f5f5f7] border border-transparent focus:border-[#0071E3] focus:bg-white focus:ring-4 focus:ring-[#0071E3]/20 outline-none text-[17px] transition-all" />
+               <input type="number" placeholder="25" className="w-full h-[56px] px-4 rounded-[12px] bg-[#f5f5f7] border border-transparent focus:border-[#0071E3] focus:bg-white focus:ring-4 focus:ring-[#0071E3]/20 outline-none text-[17px] transition-[border-color,background-color,box-shadow] duration-150 ease-out" />
              </div>
           </div>
           
           <div className="flex flex-col gap-1.5">
             <label className="text-[13px] font-semibold text-[#1d1d1f] ml-1">Địa chỉ</label>
-            <input type="text" placeholder="Nhập địa chỉ đầy đủ..." className="w-full h-[56px] px-4 rounded-[12px] bg-[#f5f5f7] border border-transparent focus:border-[#0071E3] focus:bg-white focus:ring-4 focus:ring-[#0071E3]/20 outline-none text-[17px] transition-all" />
+            <input type="text" placeholder="Nhập địa chỉ đầy đủ..." className="w-full h-[56px] px-4 rounded-[12px] bg-[#f5f5f7] border border-transparent focus:border-[#0071E3] focus:bg-white focus:ring-4 focus:ring-[#0071E3]/20 outline-none text-[17px] transition-[border-color,background-color,box-shadow] duration-150 ease-out" />
           </div>
           
           <div className="flex justify-end pt-6 border-t border-[#d2d2d7]/50 mt-4">

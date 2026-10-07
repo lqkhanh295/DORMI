@@ -162,7 +162,7 @@ export default function LandlordDashboard() {
               <span className="text-[#0F172A] font-bold">{analytics.totalViews}</span>
             </div>
             <div className="w-full bg-[#F5F7FA] rounded-full h-3 overflow-hidden border border-[#E2E8F0]">
-              <div className="bg-[#00153D] h-full rounded-full transition-all duration-500" style={{width: '100%'}}></div>
+              <div className="bg-[#00153D] h-full rounded-full transition-[width] duration-500 ease-out" style={{width: '100%'}}></div>
             </div>
           </div>
           
@@ -172,7 +172,7 @@ export default function LandlordDashboard() {
               <span className="text-[#0F172A] font-bold">{analytics.totalAppointments}</span>
             </div>
             <div className="w-full bg-[#F5F7FA] rounded-full h-3 overflow-hidden border border-[#E2E8F0]">
-              <div className="bg-[#16803C] h-full rounded-full transition-all duration-500" style={{width: `${Math.min(100, analytics.conversionRate * 5)}%`}}></div>
+              <div className="bg-[#16803C] h-full rounded-full transition-[width] duration-500 ease-out" style={{width: `${Math.min(100, analytics.conversionRate * 5)}%`}}></div>
             </div>
           </div>
         </div>

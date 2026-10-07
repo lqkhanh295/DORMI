@@ -9,7 +9,7 @@ import { Hand, Paperclip, CheckCircle2, Circle, Search, Home, Send } from 'lucid
 import { chatMessageItemVariants } from '../../utils/motion';
 
 export default function LandlordChatCenter() {
-  const { currentUser, messages, sendMessageWithApi } = useStore();
+  const { currentUser, messages, sendMessageWithApi, fetchMessageHistoryWithApi } = useStore();
   const location = useLocation();
 
   // Location state passed when navigating from Applications, Leases, Viewings, or Discovery
@@ -23,6 +23,7 @@ export default function LandlordChatCenter() {
   const [apiConversations, setApiConversations] = useState<any[]>([]);
   const [appointments, setAppointments] = useState<any[]>([]);
   const [selectedContactId, setSelectedContactId] = useState<string>(targetUserId || '');
+  const [loadingHistory, setLoadingHistory] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
   // Auto-select contact when targetUserId is provided via navigation state
@@ -155,14 +156,19 @@ export default function LandlordChatCenter() {
 
   useEffect(() => {
     if (selectedContact?.id) {
-      messagesApi.getHistory(selectedContact.id).catch(() => {});
+      setLoadingHistory(true);
+      fetchMessageHistoryWithApi(selectedContact.id)
+        .finally(() => setLoadingHistory(false));
     }
   }, [selectedContact?.id]);
 
-  const chatMessages = messages.filter(m => 
-    (m.senderId === currentUser?.id && m.receiverId === selectedContact?.id) ||
-    (m.senderId === selectedContact?.id && m.receiverId === currentUser?.id)
-  );
+  const chatMessages = messages.filter(m => {
+    const s = (m.senderId || '').toLowerCase();
+    const r = (m.receiverId || '').toLowerCase();
+    const u = (currentUser?.id || '').toLowerCase();
+    const c = (selectedContact?.id || '').toLowerCase();
+    return (s === u && r === c) || (s === c && r === u);
+  });
 
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
@@ -240,7 +246,7 @@ export default function LandlordChatCenter() {
                 <div 
                   key={contact.id}
                   onClick={() => setSelectedContactId(contact.id)}
-                  className={`p-4 border-b border-[#E2E8F0] cursor-pointer transition-all flex gap-3 ${
+                  className={`p-4 border-b border-[#E2E8F0] cursor-pointer transition-colors duration-150 flex gap-3 ${
                     isSelected ? 'bg-white font-semibold border-l-4 border-l-[#00153D] shadow-sm' : 'hover:bg-white/50'
                   }`}
                 >
@@ -337,17 +343,22 @@ export default function LandlordChatCenter() {
                 <span className="text-caption text-[#64748B] bg-white border border-[#E2E8F0] px-3 py-1 rounded-full font-medium">Hôm nay</span>
               </div>
               
-              {chatMessages.length === 0 && (
+              {loadingHistory ? (
+                <div className="flex-1 flex flex-col items-center justify-center text-[#64748B]">
+                  <div className="w-8 h-8 border-4 border-[#00153D] border-t-transparent rounded-full animate-spin mb-3"></div>
+                  <p>Đang tải tin nhắn...</p>
+                </div>
+              ) : chatMessages.length === 0 ? (
                 <div className="flex-1 flex flex-col items-center justify-center text-[#64748B]">
                   <div className="w-16 h-16 bg-white shadow-clay-soft rounded-full flex items-center justify-center text-[#00153D] mb-4">
                     <Hand className="w-8 h-8" />
                   </div>
                   <p>Hãy gửi tin nhắn đầu tiên đến {selectedContact.name || 'khách thuê'}!</p>
                 </div>
-              )}
+              ) : null}
 
-              {chatMessages.map(msg => {
-                const isMe = msg.senderId === currentUser?.id;
+              {!loadingHistory && chatMessages.map(msg => {
+                const isMe = (msg.senderId || '').toLowerCase() === (currentUser?.id || '').toLowerCase();
                 return (
                   <motion.div 
                     key={msg.id} 
@@ -381,7 +392,7 @@ export default function LandlordChatCenter() {
 
             {/* Input Area */}
             <div className="p-4 border-t border-[#E2E8F0] bg-white">
-              <div className="flex items-end gap-2 bg-[#F5F7FA] shadow-clay-inset rounded-[12px] border border-[#E2E8F0] p-2 focus-within:bg-white focus-within:ring-1 focus-within:ring-[#00153D] transition-all">
+              <div className="flex items-end gap-2 bg-[#F5F7FA] shadow-clay-inset rounded-[12px] border border-[#E2E8F0] p-2 focus-within:bg-white focus-within:ring-1 focus-within:ring-[#00153D] transition-[background-color,box-shadow,border-color] duration-150">
                 <button type="button" className="p-2 text-[#64748B] hover:text-[#0F172A] rounded-full transition-colors flex-shrink-0">
                   <Paperclip className="w-5 h-5" />
                 </button>

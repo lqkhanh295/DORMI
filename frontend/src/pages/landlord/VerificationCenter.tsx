@@ -202,7 +202,7 @@ export default function VerificationCenter() {
         <button
           type="button"
           onClick={() => setActiveTab('identity')}
-          className={`flex-1 py-2.5 px-4 rounded-[12px] text-body font-bold transition-all flex items-center justify-center gap-2 ${
+          className={`flex-1 py-2.5 px-4 rounded-[12px] text-body font-bold transition-[background-color,color,box-shadow,transform] duration-150 ease-out active:scale-[0.98] flex items-center justify-center gap-2 ${
             activeTab === 'identity' 
               ? 'bg-[#00153D] text-white shadow-sm' 
               : 'text-[#64748B] hover:text-[#0F172A]'
@@ -215,7 +215,7 @@ export default function VerificationCenter() {
         <button
           type="button"
           onClick={() => setActiveTab('property')}
-          className={`flex-1 py-2.5 px-4 rounded-[12px] text-body font-bold transition-all flex items-center justify-center gap-2 ${
+          className={`flex-1 py-2.5 px-4 rounded-[12px] text-body font-bold transition-[background-color,color,box-shadow,transform] duration-150 ease-out active:scale-[0.98] flex items-center justify-center gap-2 ${
             activeTab === 'property' 
               ? 'bg-[#00153D] text-white shadow-sm' 
               : 'text-[#64748B] hover:text-[#0F172A]'
