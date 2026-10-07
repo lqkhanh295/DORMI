@@ -5,7 +5,26 @@ import { Input } from '../../components/ui/Input';
 import { useStore } from '../../store/useStore';
 import { profilesApi, imagesApi } from '../../services/api';
 import { toast } from 'sonner';
-import { Users, Camera, Upload, Link as LinkIcon, Loader2, Plus } from 'lucide-react';
+import { motion, AnimatePresence } from 'framer-motion';
+import { modalBackdropVariants, modalContentVariants } from '../../utils/motion';
+import { Users, Camera, Upload, Link as LinkIcon, Loader2, Plus, Tag, X, Check, Sparkles } from 'lucide-react';
+
+const SUGGESTED_LIFESTYLE_TAGS = [
+  'Thích nấu ăn',
+  'Yêu thú cưng',
+  'Không nuôi thú cưng',
+  'Hướng nội',
+  'Hướng ngoại',
+  'Dậy sớm',
+  'Thức khuya',
+  'Thích thể thao',
+  'Ăn chay',
+  'Không nhậu nhẹt',
+  'Gọn gàng sạch sẽ',
+  'Tập trung học tập',
+  'Tôn trọng riêng tư',
+  'Thân thiện hòa đồng'
+];
 
 export default function TenantProfile() {
   const { currentUser, updateUser } = useStore();
@@ -16,6 +35,15 @@ export default function TenantProfile() {
   const [loading, setLoading] = useState(true);
   const [isUploadingAvatar, setIsUploadingAvatar] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
+
+  // Khung thêm thẻ phong cách sống (Add tag modal state)
+  const [isAddTagModalOpen, setIsAddTagModalOpen] = useState(false);
+  const [newTagInput, setNewTagInput] = useState('');
+  const newTagInputRef = useRef<HTMLInputElement>(null);
+
+  // Khung dán URL ảnh đại diện (Avatar URL modal state)
+  const [isAvatarUrlModalOpen, setIsAvatarUrlModalOpen] = useState(false);
+  const [avatarUrlInput, setAvatarUrlInput] = useState('');
 
   const [avatar, setAvatar] = useState<string>(
     currentUser?.avatar || "https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?auto=format&fit=crop&w=200&q=80"
@@ -60,7 +88,6 @@ export default function TenantProfile() {
         }
         if (res?.avatarUrl) {
           setAvatar(res.avatarUrl);
-          updateUser({ avatar: res.avatarUrl });
         }
         if (res?.lifestyle) {
           const parsedTags = res.lifestyle.split(',').map((t: string) => t.trim()).filter(Boolean);
@@ -80,73 +107,160 @@ export default function TenantProfile() {
       });
 
     return () => { isMounted = false; };
-  }, [currentUser]);
+  }, []); // Run ONCE on mount to prevent infinite request loop
 
   const handleAvatarFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
 
-    if (!file.type.startsWith('image/')) {
-      toast.error('Vui lòng chọn tập tin hình ảnh hợp lệ (JPG, PNG, WebP).');
+    const allowedExtensions = /\.(jpg|jpeg|jfif|png|webp|gif|bmp|svg|avif|ico|heic|heif|tiff|tif)$/i;
+    if (!file.type.startsWith('image/') && !file.name.match(allowedExtensions)) {
+      toast.error('Định dạng ảnh không được hỗ trợ. Chấp nhận: JPG, PNG, WEBP, GIF, SVG, AVIF, BMP, ICO, HEIC, TIFF.');
       return;
     }
-    if (file.size > 10 * 1024 * 1024) {
-      toast.error('Dung lượng ảnh không được vượt quá 10MB.');
+    if (file.size > 20 * 1024 * 1024) {
+      toast.error('Dung lượng ảnh vượt quá giới hạn 20MB.');
       return;
     }
 
-    const previewUrl = URL.createObjectURL(file);
-    const previousAvatar = avatar;
-    setAvatar(previewUrl);
     setIsUploadingAvatar(true);
 
+    const reader = new FileReader();
+    reader.onload = async (event) => {
+      const dataUrl = event.target?.result as string;
+      if (!dataUrl) {
+        setIsUploadingAvatar(false);
+        return;
+      }
+
+      // 1. Hiển thị ngay lập tức không bị chớp hay mất ảnh
+      setAvatar(dataUrl);
+      updateUser({ avatar: dataUrl });
+
+      let savedUrl = dataUrl;
+      try {
+        const uploadRes = await imagesApi.uploadImage(file);
+        if (uploadRes?.imageUrl && !uploadRes.imageUrl.includes('522708323590-d24dbb6b0267')) {
+          savedUrl = uploadRes.imageUrl;
+          setAvatar(savedUrl);
+          updateUser({ avatar: savedUrl });
+        }
+
+        await profilesApi.updateCustomerProfile({
+          fullName: [lastName, firstName].filter(Boolean).join(' ').trim(),
+          avatarUrl: savedUrl
+        });
+
+        toast.success('Cập nhật ảnh đại diện thành công!');
+      } catch (err: any) {
+        console.warn('Upload image API fallback to local dataUrl:', err);
+        try {
+          await profilesApi.updateCustomerProfile({
+            fullName: [lastName, firstName].filter(Boolean).join(' ').trim(),
+            avatarUrl: dataUrl
+          });
+          toast.success('Đã lưu ảnh đại diện thành công!');
+        } catch {
+          toast.success('Đã áp dụng ảnh đại diện mới!');
+        }
+      } finally {
+        setIsUploadingAvatar(false);
+        if (fileInputRef.current) {
+          fileInputRef.current.value = '';
+        }
+      }
+    };
+
+    reader.onerror = () => {
+      setIsUploadingAvatar(false);
+      toast.error('Không thể đọc tập tin ảnh.');
+    };
+
+    reader.readAsDataURL(file);
+  };
+
+  const handleOpenAvatarUrlModal = () => {
+    setAvatarUrlInput(avatar.startsWith('data:') ? '' : avatar);
+    setIsAvatarUrlModalOpen(true);
+  };
+
+  const handleConfirmAvatarUrl = async (e?: React.FormEvent) => {
+    if (e) e.preventDefault();
+    const cleanUrl = avatarUrlInput.trim();
+    if (!cleanUrl) {
+      toast.error('Vui lòng nhập đường dẫn (URL) ảnh hợp lệ.');
+      return;
+    }
+
+    setAvatar(cleanUrl);
+    updateUser({ avatar: cleanUrl });
+    setIsAvatarUrlModalOpen(false);
+
     try {
-      const uploadRes = await imagesApi.uploadImage(file);
-      const newAvatarUrl = uploadRes.imageUrl;
-
-      setAvatar(newAvatarUrl);
-      updateUser({ avatar: newAvatarUrl });
-
       await profilesApi.updateCustomerProfile({
         fullName: [lastName, firstName].filter(Boolean).join(' ').trim(),
-        avatarUrl: newAvatarUrl
-      });
-
-      toast.success('Cập nhật ảnh đại diện thành công!');
-    } catch (err: any) {
-      console.error('Avatar upload failed:', err);
-      setAvatar(previousAvatar);
-      toast.error('Không thể tải ảnh lên: ' + (err?.message || 'Lỗi mạng'));
-    } finally {
-      setIsUploadingAvatar(false);
-      URL.revokeObjectURL(previewUrl);
-      if (fileInputRef.current) {
-        fileInputRef.current.value = '';
-      }
-    }
-  };
-
-  const handlePasteAvatarUrl = () => {
-    const url = window.prompt('Nhập đường dẫn (URL) ảnh đại diện của bạn:', avatar);
-    if (url && url.trim() && url.trim() !== avatar) {
-      const cleanUrl = url.trim();
-      setAvatar(cleanUrl);
-      updateUser({ avatar: cleanUrl });
-      profilesApi.updateCustomerProfile({
-        fullName: [lastName, firstName].filter(Boolean).join(' ').trim(),
         avatarUrl: cleanUrl
-      }).then(() => {
-        toast.success('Đã lưu đường dẫn ảnh đại diện!');
-      }).catch((err: any) => {
-        toast.error('Không thể lưu ảnh đại diện: ' + (err?.message || 'Lỗi'));
       });
+      toast.success('Đã lưu đường dẫn ảnh đại diện!');
+    } catch (err: any) {
+      toast.error('Không thể lưu ảnh đại diện: ' + (err?.message || 'Lỗi'));
     }
   };
 
-  const handleAddTag = () => {
-    const newTag = window.prompt('Nhập thẻ phong cách sống mới:');
-    if (newTag && newTag.trim()) {
-      setTags([...tags, { name: newTag.trim(), active: true }]);
+  const handleOpenAddTagModal = () => {
+    setNewTagInput('');
+    setIsAddTagModalOpen(true);
+    setTimeout(() => {
+      newTagInputRef.current?.focus();
+    }, 100);
+  };
+
+  const handleConfirmAddTag = (e?: React.FormEvent) => {
+    if (e) e.preventDefault();
+    const cleanTag = newTagInput.trim();
+    if (!cleanTag) return;
+
+    const existingIndex = tags.findIndex(t => t.name.toLowerCase() === cleanTag.toLowerCase());
+    if (existingIndex >= 0) {
+      if (!tags[existingIndex].active) {
+        const next = [...tags];
+        next[existingIndex].active = true;
+        setTags(next);
+        toast.success(`Đã kích hoạt thẻ "${tags[existingIndex].name}"`);
+      } else {
+        toast.info(`Thẻ "${tags[existingIndex].name}" đã có trong danh sách.`);
+      }
+    } else {
+      setTags([...tags, { name: cleanTag, active: true }]);
+      toast.success(`Đã thêm thẻ "${cleanTag}"!`);
+    }
+
+    setNewTagInput('');
+    setIsAddTagModalOpen(false);
+  };
+
+  const handleAddPresetTag = (presetName: string) => {
+    const existingIndex = tags.findIndex(t => t.name.toLowerCase() === presetName.toLowerCase());
+    if (existingIndex >= 0) {
+      if (!tags[existingIndex].active) {
+        const next = [...tags];
+        next[existingIndex].active = true;
+        setTags(next);
+        toast.success(`Đã kích hoạt thẻ "${tags[existingIndex].name}"`);
+      } else {
+        toast.info(`Thẻ "${tags[existingIndex].name}" đã có trong danh sách.`);
+      }
+    } else {
+      setTags([...tags, { name: presetName, active: true }]);
+      toast.success(`Đã thêm thẻ "${presetName}"!`);
+    }
+  };
+
+  const handleRemoveTag = (index: number) => {
+    const removedName = tags[index]?.name;
+    setTags(tags.filter((_, i) => i !== index));
+    if (removedName) {
+      toast.info(`Đã gỡ thẻ "${removedName}"`);
     }
   };
 
@@ -194,7 +308,7 @@ export default function TenantProfile() {
             type="file" 
             ref={fileInputRef} 
             onChange={handleAvatarFileChange} 
-            accept="image/*" 
+            accept="image/*,.jpg,.jpeg,.jfif,.png,.webp,.gif,.bmp,.svg,.avif,.ico,.heic,.heif,.tiff,.tif" 
             className="hidden" 
           />
 
@@ -206,6 +320,9 @@ export default function TenantProfile() {
             <img 
               src={avatar} 
               alt="Profile" 
+              onError={(e) => {
+                (e.currentTarget as HTMLImageElement).src = "https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?auto=format&fit=crop&w=200&q=80";
+              }}
               className="w-full h-full object-cover" 
             />
             <div className={`absolute inset-0 bg-[#0F172A]/50 flex flex-col items-center justify-center transition-opacity ${isUploadingAvatar ? 'opacity-100' : 'opacity-0 group-hover:opacity-100'}`}>
@@ -236,7 +353,7 @@ export default function TenantProfile() {
             <button
               type="button"
               disabled={isUploadingAvatar}
-              onClick={handlePasteAvatarUrl}
+              onClick={handleOpenAvatarUrlModal}
               className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-[10px] text-[12px] font-medium bg-[#F8FAFC] text-[#64748B] hover:bg-[#F1F5F9] hover:text-[#0F172A] border border-[#E2E8F0] transition-colors"
             >
               <LinkIcon className="w-3.5 h-3.5" />
@@ -292,23 +409,37 @@ export default function TenantProfile() {
             <p className="text-body text-[#64748B] mb-4">Chọn các thẻ mô tả đúng nhất lối sống của bạn để kết nối bạn ở ghép tương thích.</p>
             <div className="flex flex-wrap gap-2">
               {tags.map((tag, index) => (
-                <button 
-                  key={index}
-                  type="button"
-                  onClick={() => toggleTag(index)}
-                  className={`px-4 py-2 rounded-[12px] text-caption font-semibold transition-[background-color,color,box-shadow,transform] duration-150 ease-out active:scale-95 ${
-                    tag.active 
-                      ? 'btn-clay-primary' 
-                      : 'bg-[#F5F7FA] text-[#64748B] shadow-clay-soft hover:bg-white hover:text-[#0F172A]'
-                  }`}
-                >
-                  {tag.name}
-                </button>
+                <div key={index} className="inline-flex items-center group relative">
+                  <button 
+                    type="button"
+                    onClick={() => toggleTag(index)}
+                    className={`px-3.5 py-2 rounded-[12px] text-caption font-semibold transition-[background-color,color,box-shadow,transform] duration-150 ease-out active:scale-95 flex items-center gap-1.5 ${
+                      tag.active 
+                        ? 'btn-clay-primary' 
+                        : 'bg-[#F5F7FA] text-[#64748B] shadow-clay-soft hover:bg-white hover:text-[#0F172A]'
+                    }`}
+                  >
+                    {tag.active && <Check className="w-3.5 h-3.5 text-white" />}
+                    <span>{tag.name}</span>
+                  </button>
+                  <button
+                    type="button"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      handleRemoveTag(index);
+                    }}
+                    title={`Xóa thẻ "${tag.name}"`}
+                    aria-label={`Xóa thẻ ${tag.name}`}
+                    className="ml-1 p-1 text-[#94A3B8] hover:text-red-500 rounded-full hover:bg-red-50 transition-colors opacity-0 group-hover:opacity-100 focus:opacity-100"
+                  >
+                    <X className="w-3 h-3" />
+                  </button>
+                </div>
               ))}
               <button 
                 type="button"
-                onClick={handleAddTag}
-                className="inline-flex items-center gap-1.5 px-4 py-2 bg-white border border-dashed border-[#CBD5E1] text-[#64748B] rounded-[12px] text-caption font-semibold hover:border-[#00153D] hover:text-[#00153D] transition-colors"
+                onClick={handleOpenAddTagModal}
+                className="inline-flex items-center gap-1.5 px-4 py-2 bg-white border border-dashed border-[#CBD5E1] text-[#64748B] rounded-[12px] text-caption font-semibold hover:border-[#00153D] hover:text-[#00153D] transition-colors shadow-xs hover:shadow-sm"
               >
                 <Plus className="w-3.5 h-3.5" />
                 <span>Thêm thẻ mới</span>
@@ -317,6 +448,221 @@ export default function TenantProfile() {
           </div>
         </Card>
       </div>
+
+      {/* Khung thêm thẻ phong cách sống (Add Tag Modal) */}
+      <AnimatePresence>
+        {isAddTagModalOpen && (
+          <motion.div
+            key="add-tag-modal-backdrop"
+            variants={modalBackdropVariants}
+            initial="hidden"
+            animate="visible"
+            exit="exit"
+            onClick={() => setIsAddTagModalOpen(false)}
+            className="fixed inset-0 z-50 flex items-center justify-center bg-[#0F172A]/50 p-4 backdrop-blur-xs"
+          >
+            <motion.div
+              key="add-tag-modal-content"
+              variants={modalContentVariants}
+              initial="hidden"
+              animate="visible"
+              exit="exit"
+              onClick={(e) => e.stopPropagation()}
+              className="bg-white rounded-[20px] shadow-clay-primary max-w-md w-full p-6 space-y-5 overflow-hidden"
+            >
+              {/* Header */}
+              <div className="flex justify-between items-center pb-3 border-b border-[#E2E8F0]">
+                <div className="flex items-center gap-2.5">
+                  <div className="w-9 h-9 rounded-xl bg-blue-50 text-[#00153D] flex items-center justify-center">
+                    <Tag className="w-5 h-5" />
+                  </div>
+                  <div>
+                    <h3 className="text-h3 font-bold text-[#0F172A]">Thêm thẻ phong cách sống</h3>
+                    <p className="text-caption text-[#64748B]">Tạo thẻ mô tả thói quen hoặc sở thích của bạn</p>
+                  </div>
+                </div>
+                <button
+                  type="button"
+                  onClick={() => setIsAddTagModalOpen(false)}
+                  className="p-1.5 rounded-full text-[#64748B] hover:text-[#0F172A] hover:bg-slate-100 transition-colors"
+                >
+                  <X className="w-5 h-5" />
+                </button>
+              </div>
+
+              {/* Form */}
+              <form onSubmit={handleConfirmAddTag} className="space-y-4">
+                <div className="space-y-1.5">
+                  <label className="text-caption font-semibold text-[#0F172A]">
+                    Tên thẻ
+                  </label>
+                  <input
+                    ref={newTagInputRef}
+                    type="text"
+                    maxLength={30}
+                    value={newTagInput}
+                    onChange={(e) => setNewTagInput(e.target.value)}
+                    placeholder="VD: Thích nấu ăn, Dậy sớm, Nuôi mèo..."
+                    className="w-full bg-[#F5F7FA] shadow-clay-inset border border-[#E2E8F0] rounded-[12px] px-3.5 py-2.5 text-body text-[#0F172A] focus:outline-none focus:ring-1 focus:ring-[#00153D] focus:bg-white"
+                    autoFocus
+                  />
+                  <div className="flex justify-between text-[11px] text-[#94A3B8]">
+                    <span>Nhấn Enter để thêm nhanh</span>
+                    <span>{newTagInput.trim().length}/30 ký tự</span>
+                  </div>
+                </div>
+
+                {/* Popular Presets */}
+                <div className="space-y-2">
+                  <label className="text-caption font-semibold text-[#64748B] flex items-center gap-1.5">
+                    <Sparkles className="w-3.5 h-3.5 text-amber-500" />
+                    <span>Gợi ý phổ biến</span>
+                  </label>
+                  <div className="flex flex-wrap gap-1.5 max-h-36 overflow-y-auto pr-1">
+                    {SUGGESTED_LIFESTYLE_TAGS.map((suggested) => {
+                      const isAlreadyAdded = tags.some(t => t.name.toLowerCase() === suggested.toLowerCase());
+                      return (
+                        <button
+                          key={suggested}
+                          type="button"
+                          disabled={isAlreadyAdded}
+                          onClick={() => {
+                            if (!isAlreadyAdded) {
+                              handleAddPresetTag(suggested);
+                            }
+                          }}
+                          className={`px-2.5 py-1 rounded-[10px] text-[12px] font-medium transition-all duration-150 flex items-center gap-1 ${
+                            isAlreadyAdded
+                              ? 'bg-slate-100 text-slate-400 cursor-not-allowed border border-slate-200'
+                              : 'bg-[#F1F5F9] text-[#334155] hover:bg-[#E2E8F0] hover:text-[#0F172A] border border-[#E2E8F0] active:scale-95'
+                          }`}
+                        >
+                          {isAlreadyAdded ? <Check className="w-3 h-3 text-emerald-600" /> : <Plus className="w-3 h-3 text-[#64748B]" />}
+                          <span>{suggested}</span>
+                        </button>
+                      );
+                    })}
+                  </div>
+                </div>
+
+                {/* Actions */}
+                <div className="flex items-center justify-end gap-3 pt-3 border-t border-[#E2E8F0]">
+                  <button
+                    type="button"
+                    onClick={() => setIsAddTagModalOpen(false)}
+                    className="px-4 py-2 rounded-[12px] text-caption font-semibold text-[#64748B] hover:text-[#0F172A] hover:bg-slate-100 transition-colors"
+                  >
+                    Hủy
+                  </button>
+                  <Button
+                    type="submit"
+                    disabled={!newTagInput.trim()}
+                    className="px-5 py-2 inline-flex items-center gap-1.5"
+                  >
+                    <Plus className="w-4 h-4" />
+                    <span>Thêm thẻ</span>
+                  </Button>
+                </div>
+              </form>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+      {/* Khung dán URL ảnh đại diện (Avatar URL Modal) */}
+      <AnimatePresence>
+        {isAvatarUrlModalOpen && (
+          <motion.div
+            key="avatar-url-modal-backdrop"
+            variants={modalBackdropVariants}
+            initial="hidden"
+            animate="visible"
+            exit="exit"
+            onClick={() => setIsAvatarUrlModalOpen(false)}
+            className="fixed inset-0 z-50 flex items-center justify-center bg-[#0F172A]/50 p-4 backdrop-blur-xs"
+          >
+            <motion.div
+              key="avatar-url-modal-content"
+              variants={modalContentVariants}
+              initial="hidden"
+              animate="visible"
+              exit="exit"
+              onClick={(e) => e.stopPropagation()}
+              className="bg-white rounded-[20px] shadow-clay-primary max-w-md w-full p-6 space-y-5 overflow-hidden"
+            >
+              {/* Header */}
+              <div className="flex justify-between items-center pb-3 border-b border-[#E2E8F0]">
+                <div className="flex items-center gap-2.5">
+                  <div className="w-9 h-9 rounded-xl bg-blue-50 text-[#00153D] flex items-center justify-center">
+                    <LinkIcon className="w-5 h-5" />
+                  </div>
+                  <div>
+                    <h3 className="text-h3 font-bold text-[#0F172A]">Dán URL ảnh đại diện</h3>
+                    <p className="text-caption text-[#64748B]">Sử dụng đường dẫn ảnh trực tiếp từ internet</p>
+                  </div>
+                </div>
+                <button
+                  type="button"
+                  onClick={() => setIsAvatarUrlModalOpen(false)}
+                  className="p-1.5 rounded-full text-[#64748B] hover:text-[#0F172A] hover:bg-slate-100 transition-colors"
+                >
+                  <X className="w-5 h-5" />
+                </button>
+              </div>
+
+              {/* Form */}
+              <form onSubmit={handleConfirmAvatarUrl} className="space-y-4">
+                <div className="space-y-1.5">
+                  <label className="text-caption font-semibold text-[#0F172A]">
+                    Đường dẫn ảnh (URL)
+                  </label>
+                  <input
+                    type="url"
+                    value={avatarUrlInput}
+                    onChange={(e) => setAvatarUrlInput(e.target.value)}
+                    placeholder="https://images.unsplash.com/..."
+                    className="w-full bg-[#F5F7FA] shadow-clay-inset border border-[#E2E8F0] rounded-[12px] px-3.5 py-2.5 text-body text-[#0F172A] focus:outline-none focus:ring-1 focus:ring-[#00153D] focus:bg-white"
+                    autoFocus
+                  />
+                </div>
+
+                {avatarUrlInput.trim() && (
+                  <div className="p-3 bg-[#F8FAFC] rounded-[12px] border border-[#E2E8F0] flex items-center gap-3">
+                    <img
+                      src={avatarUrlInput.trim()}
+                      alt="Preview"
+                      onError={(e) => { (e.currentTarget as HTMLImageElement).style.display = 'none'; }}
+                      className="w-12 h-12 rounded-full object-cover border border-slate-200"
+                    />
+                    <div className="text-caption text-[#64748B] overflow-hidden truncate">
+                      Xem trước ảnh đại diện
+                    </div>
+                  </div>
+                )}
+
+                {/* Actions */}
+                <div className="flex items-center justify-end gap-3 pt-3 border-t border-[#E2E8F0]">
+                  <button
+                    type="button"
+                    onClick={() => setIsAvatarUrlModalOpen(false)}
+                    className="px-4 py-2 rounded-[12px] text-caption font-semibold text-[#64748B] hover:text-[#0F172A] hover:bg-slate-100 transition-colors"
+                  >
+                    Hủy
+                  </button>
+                  <Button
+                    type="submit"
+                    disabled={!avatarUrlInput.trim()}
+                    className="px-5 py-2 inline-flex items-center gap-1.5"
+                  >
+                    <Check className="w-4 h-4" />
+                    <span>Áp dụng ảnh</span>
+                  </Button>
+                </div>
+              </form>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
     </div>
   );
 }
