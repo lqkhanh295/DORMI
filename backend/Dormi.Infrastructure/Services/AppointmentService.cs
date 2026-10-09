@@ -57,6 +57,11 @@ public class AppointmentService : IAppointmentService
             return ServiceResult<object>.Fail("Phòng trọ này hiện không khả dụng để đặt lịch hẹn.", 400);
         }
 
+        if (room.LandlordId == userId)
+        {
+            return ServiceResult<object>.Fail("Chủ nhà không thể tự đặt lịch xem phòng của chính mình.", 400);
+        }
+
         if (dto.AppointmentDate <= DateTime.UtcNow)
         {
             return ServiceResult<object>.Fail("Thời gian hẹn xem phòng phải ở trong tương lai.", 400);

@@ -141,8 +141,18 @@ public class PostRentalService : IPostRentalService
 
             if (dto.MarkAsPaid)
             {
+                // Security enforcement: A tenant cannot mark an unpaid payment as Paid
+                if (userId != lease.LandlordId)
+                {
+                    return ServiceResult<RentalPaymentScheduleDto>.Fail("Chỉ Chủ nhà mới có quyền xác nhận hóa đơn đã thanh toán thành công.", 403);
+                }
                 schedule.Status = "Paid";
                 schedule.PaidAt = DateTime.UtcNow;
+            }
+            else if (userId == lease.TenantId && schedule.Status != "Paid")
+            {
+                // Tenant submitted payment details/proof for confirmation
+                schedule.Status = "PendingConfirmation";
             }
 
             await _db.SaveChangesAsync();

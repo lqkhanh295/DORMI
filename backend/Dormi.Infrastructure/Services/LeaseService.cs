@@ -49,6 +49,21 @@ public class LeaseService : ILeaseService
             return ServiceResult<LeaseContractResponseDto>.Fail("Ngày bắt đầu hợp đồng phải trước ngày kết thúc.", 400);
         }
 
+        if (room.Status == RoomStatus.Rented)
+        {
+            return ServiceResult<LeaseContractResponseDto>.Fail("Phòng trọ này hiện đã được cho thuê.", 400);
+        }
+
+        var hasOverlappingLease = await _db.LeaseContracts.AnyAsync(l =>
+            l.RoomId == dto.RoomId &&
+            (l.Status == "Active" || l.Status == "PendingSignature") &&
+            l.StartDate < dto.EndDate && dto.StartDate < l.EndDate);
+
+        if (hasOverlappingLease)
+        {
+            return ServiceResult<LeaseContractResponseDto>.Fail("Phòng trọ này đã có hợp đồng thuê đang có hiệu lực hoặc đang chờ ký trong khoảng thời gian này.", 400);
+        }
+
         // Link with RentalApplication if supplied
         RentalApplication? linkedApplication = null;
         if (dto.RentalApplicationId.HasValue)

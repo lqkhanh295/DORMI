@@ -155,10 +155,10 @@ public class AuthService : IAuthService
             return ServiceResult<AuthResponseDto>.Fail("Email đã tồn tại trong hệ thống.", 400);
         }
 
-        // Disallow self-registration of Admin role. Only Customer or Landlord allowed publicly.
-        if (dto.Role == UserRole.Admin || !Enum.IsDefined(typeof(UserRole), dto.Role))
+        // Disallow self-registration of Admin role or invalid roles. Only Customer/Tenant or Landlord allowed publicly.
+        if (dto.Role != UserRole.Customer && dto.Role != UserRole.Landlord)
         {
-            return ServiceResult<AuthResponseDto>.Fail("Không được phép tự tạo tài khoản Quản trị viên.", 400);
+            return ServiceResult<AuthResponseDto>.Fail("Chỉ được phép đăng ký tài khoản Khách thuê hoặc Chủ trọ.", 400);
         }
 
         var user = new User

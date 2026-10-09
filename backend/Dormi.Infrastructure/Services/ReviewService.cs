@@ -75,14 +75,15 @@ public class ReviewService : IReviewService
             return ServiceResult<object>.Fail("Bạn đã gửi đánh giá cho phòng trọ này rồi.", 400);
         }
 
+        var hasValidLease = await _db.LeaseContracts.AnyAsync(l => l.RoomId == roomId && l.TenantId == userId);
         var hasValidAppointment = await _db.ViewingAppointments.AnyAsync(a =>
             a.RoomId == roomId &&
             a.CustomerId == userId &&
             (a.Status == "Confirmed" || a.Status == "Completed"));
 
-        if (!hasValidAppointment)
+        if (!hasValidAppointment && !hasValidLease)
         {
-            return ServiceResult<object>.Fail("Bạn chỉ có thể đánh giá sau khi đã có lịch hẹn xem phòng được xác nhận hoặc hoàn thành.", 400);
+            return ServiceResult<object>.Fail("Bạn chỉ có thể đánh giá sau khi đã có lịch hẹn xem phòng được xác nhận hoặc hợp đồng thuê phòng.", 400);
         }
 
         var review = new RoomReview

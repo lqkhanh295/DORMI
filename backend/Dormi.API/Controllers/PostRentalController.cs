@@ -71,7 +71,7 @@ public class PostRentalController : BaseApiController
         var userId = GetCurrentUserId();
         if (!userId.HasValue) return Unauthorized();
 
-        var landlordFlag = isLandlord ?? User.IsInRole("Landlord");
+        var landlordFlag = User.IsInRole("Landlord");
         var result = await _service.GetMaintenanceRequestsAsync(leaseId, userId.Value, landlordFlag);
         return HandleResult(result);
     }

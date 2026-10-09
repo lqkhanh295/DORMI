@@ -57,6 +57,8 @@ export default function AppRoutes() {
         <Route path="/search" element={<SearchResults />} />
         <Route path="/room/:id" element={<RoomDetail />} />
         <Route path="/auth" element={<AuthPage />} />
+        <Route path="/login" element={<Navigate to="/auth" replace />} />
+        <Route path="/register" element={<Navigate to="/auth?tab=register" replace />} />
         <Route path="/auth/reset" element={<ForgotPassword />} />
         
         {/* Legacy Redirects */}

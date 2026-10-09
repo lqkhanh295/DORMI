@@ -1557,14 +1557,25 @@ public class BackendLogicTests
         var bill = createBillRes.Data!;
         Assert.Equal("Pending", bill.Status);
 
+        // Tenant submits bank transfer proof (enters PendingConfirmation)
         var recordRes = await service.RecordPaymentAsync(bill.Id, new RecordPaymentDto
         {
             PaymentMethod = "BankTransfer",
             PaymentReference = "MB123456",
-            MarkAsPaid = true
+            MarkAsPaid = false
         }, tenantId);
         Assert.True(recordRes.Success);
-        Assert.Equal("Paid", recordRes.Data!.Status);
+        Assert.Equal("PendingConfirmation", recordRes.Data!.Status);
+
+        // Landlord confirms payment
+        var landlordPayRes = await service.RecordPaymentAsync(bill.Id, new RecordPaymentDto
+        {
+            PaymentMethod = "BankTransfer",
+            PaymentReference = "MB123456",
+            MarkAsPaid = true
+        }, landlordId);
+        Assert.True(landlordPayRes.Success);
+        Assert.Equal("Paid", landlordPayRes.Data!.Status);
 
         // 2. Maintenance Ticketing Lifecycle (OPEN -> ASSIGNED -> RESOLVED -> CLOSED)
         var ticketRes = await service.CreateMaintenanceRequestAsync(new CreateMaintenanceRequestDto
@@ -2058,6 +2069,284 @@ public class BackendLogicTests
         Assert.NotNull(evt);
         Assert.Equal(landlord.Id, evt.UserId);
         Assert.Equal("Review", evt.Type);
+    }
+
+    [Fact]
+    public async Task AuthService_Register_ShouldBlockAdminAndInvalidRoles()
+    {
+        var options = new DbContextOptionsBuilder<DormiDbContext>()
+            .UseInMemoryDatabase(databaseName: Guid.NewGuid().ToString())
+            .Options;
+        using var db = new DormiDbContext(options);
+
+        var inMemorySettings = new System.Collections.Generic.Dictionary<string, string?>
+        {
+            { "JwtSettings:SecretKey", "TestOnlyFakeKeyThatIsLongEnough1234!" }
+        };
+        IConfiguration config = new ConfigurationBuilder().AddInMemoryCollection(inMemorySettings).Build();
+        var tokenGen = new JwtTokenGenerator(config);
+        var cache = new ServiceCollection().AddDistributedMemoryCache().BuildServiceProvider().GetRequiredService<IDistributedCache>();
+        var logger = Microsoft.Extensions.Logging.Abstractions.NullLogger<AuthService>.Instance;
+
+        var authService = new AuthService(db, tokenGen, cache, logger);
+
+        // Try register as Admin
+        var adminRegisterRes = await authService.RegisterAsync(new RegisterDto
+        {
+            Email = "hacker@dormi.vn",
+            Password = "Password123!",
+            FullName = "Hacker Admin",
+            Role = UserRole.Admin
+        });
+        Assert.False(adminRegisterRes.Success);
+        Assert.Equal(400, adminRegisterRes.StatusCode);
+
+        // Try register with invalid role cast
+        var invalidRoleRes = await authService.RegisterAsync(new RegisterDto
+        {
+            Email = "unknown@dormi.vn",
+            Password = "Password123!",
+            FullName = "Unknown Role",
+            Role = (UserRole)99
+        });
+        Assert.False(invalidRoleRes.Success);
+        Assert.Equal(400, invalidRoleRes.StatusCode);
+
+        // Register valid Tenant should succeed
+        var tenantRegisterRes = await authService.RegisterAsync(new RegisterDto
+        {
+            Email = "validtenant@dormi.vn",
+            Password = "Password123!",
+            FullName = "Valid Tenant",
+            Role = UserRole.Customer
+        });
+        Assert.True(tenantRegisterRes.Success);
+    }
+
+    [Fact]
+    public async Task PostRentalService_TenantCannotMarkPaymentAsPaid()
+    {
+        var options = new DbContextOptionsBuilder<DormiDbContext>()
+            .UseInMemoryDatabase(databaseName: Guid.NewGuid().ToString())
+            .Options;
+        using var db = new DormiDbContext(options);
+
+        var kafkaProducer = new TestKafkaProducer();
+        var postRentalService = new PostRentalService(db, kafkaProducer);
+
+        var landlord = new User { Id = Guid.NewGuid(), FullName = "Landlord L", Role = UserRole.Landlord };
+        var tenant = new User { Id = Guid.NewGuid(), FullName = "Tenant T", Role = UserRole.Customer };
+        var room = new Room { Id = Guid.NewGuid(), Title = "Phòng 101", LandlordId = landlord.Id, Status = RoomStatus.Rented };
+        var lease = new LeaseContract
+        {
+            Id = Guid.NewGuid(),
+            RoomId = room.Id,
+            LandlordId = landlord.Id,
+            TenantId = tenant.Id,
+            Status = "Active",
+            StartDate = DateTime.UtcNow,
+            EndDate = DateTime.UtcNow.AddMonths(6)
+        };
+        var schedule = new RentalPaymentSchedule
+        {
+            Id = Guid.NewGuid(),
+            LeaseContractId = lease.Id,
+            Type = "Rent",
+            Title = "Tiền thuê tháng 1",
+            Amount = 3000000,
+            DueDate = DateTime.UtcNow,
+            Status = "Pending"
+        };
+        db.Users.AddRange(landlord, tenant);
+        db.Rooms.Add(room);
+        db.LeaseContracts.Add(lease);
+        db.RentalPaymentSchedules.Add(schedule);
+        await db.SaveChangesAsync();
+
+        // Tenant tries to set MarkAsPaid = true
+        var tenantAttempt = await postRentalService.RecordPaymentAsync(
+            schedule.Id,
+            new RecordPaymentDto { MarkAsPaid = true, PaymentMethod = "Cash" },
+            tenant.Id
+        );
+        Assert.False(tenantAttempt.Success);
+        Assert.Equal(403, tenantAttempt.StatusCode);
+
+        // Tenant submits transfer reference (without MarkAsPaid) -> transitions to PendingConfirmation
+        var tenantProof = await postRentalService.RecordPaymentAsync(
+            schedule.Id,
+            new RecordPaymentDto { MarkAsPaid = false, PaymentReference = "FT123456", PaymentMethod = "BankTransfer" },
+            tenant.Id
+        );
+        Assert.True(tenantProof.Success);
+        Assert.Equal("PendingConfirmation", tenantProof.Data?.Status);
+
+        // Landlord confirms payment -> Paid
+        var landlordConfirm = await postRentalService.RecordPaymentAsync(
+            schedule.Id,
+            new RecordPaymentDto { MarkAsPaid = true },
+            landlord.Id
+        );
+        Assert.True(landlordConfirm.Success);
+        Assert.Equal("Paid", landlordConfirm.Data?.Status);
+    }
+
+    [Fact]
+    public async Task RentalApplication_CannotApproveIfRoomAlreadyRented()
+    {
+        var options = new DbContextOptionsBuilder<DormiDbContext>()
+            .UseInMemoryDatabase(databaseName: Guid.NewGuid().ToString())
+            .Options;
+        using var db = new DormiDbContext(options);
+
+        var appService = new RentalApplicationService(db);
+
+        var landlord = new User { Id = Guid.NewGuid(), FullName = "Landlord L", Role = UserRole.Landlord };
+        var tenant = new User { Id = Guid.NewGuid(), FullName = "Tenant T", Role = UserRole.Customer };
+        var room = new Room { Id = Guid.NewGuid(), Title = "Phòng 202", LandlordId = landlord.Id, Status = RoomStatus.Rented };
+        var application = new RentalApplication
+        {
+            Id = Guid.NewGuid(),
+            RoomId = room.Id,
+            TenantId = tenant.Id,
+            Status = ApplicationStatus.Submitted,
+            DesiredMoveInDate = DateTime.UtcNow.AddDays(7),
+            MonthlyIncome = 15000000
+        };
+        db.Users.AddRange(landlord, tenant);
+        db.Rooms.Add(room);
+        db.RentalApplications.Add(application);
+        await db.SaveChangesAsync();
+
+        // Landlord attempts to approve application on already Rented room
+        var reviewRes = await appService.ReviewApplicationAsync(
+            application.Id,
+            landlord.Id,
+            new ReviewApplicationDto { Status = ApplicationStatus.Approved }
+        );
+        Assert.False(reviewRes.Success);
+        Assert.Equal(400, reviewRes.StatusCode);
+    }
+
+    [Fact]
+    public async Task RentalApplication_LandlordCannotApplyToOwnRoom()
+    {
+        var options = new DbContextOptionsBuilder<DormiDbContext>()
+            .UseInMemoryDatabase(databaseName: Guid.NewGuid().ToString())
+            .Options;
+        using var db = new DormiDbContext(options);
+
+        var appService = new RentalApplicationService(db);
+
+        var landlord = new User { Id = Guid.NewGuid(), FullName = "Landlord L", Role = UserRole.Customer }; // even if role allows
+        var room = new Room { Id = Guid.NewGuid(), Title = "Phòng 303", LandlordId = landlord.Id, Status = RoomStatus.Available };
+        db.Users.Add(landlord);
+        db.Rooms.Add(room);
+        await db.SaveChangesAsync();
+
+        var res = await appService.CreateApplicationAsync(landlord.Id, new CreateApplicationDto
+        {
+            RoomId = room.Id,
+            DesiredMoveInDate = DateTime.UtcNow.AddDays(5),
+            MonthlyIncome = 20000000
+        });
+        Assert.False(res.Success);
+        Assert.Equal(400, res.StatusCode);
+    }
+
+    [Fact]
+    public async Task LeaseService_CannotCreateLeaseForRentedRoomOrOverlapping()
+    {
+        var options = new DbContextOptionsBuilder<DormiDbContext>()
+            .UseInMemoryDatabase(databaseName: Guid.NewGuid().ToString())
+            .Options;
+        using var db = new DormiDbContext(options);
+
+        var leaseService = new LeaseService(db);
+
+        var landlord = new User { Id = Guid.NewGuid(), FullName = "Landlord L", Role = UserRole.Landlord };
+        var tenant1 = new User { Id = Guid.NewGuid(), FullName = "Tenant 1", Role = UserRole.Customer };
+        var tenant2 = new User { Id = Guid.NewGuid(), FullName = "Tenant 2", Role = UserRole.Customer };
+        var room = new Room { Id = Guid.NewGuid(), Title = "Phòng 404", LandlordId = landlord.Id, Status = RoomStatus.Rented, Price = 5000000 };
+        db.Users.AddRange(landlord, tenant1, tenant2);
+        db.Rooms.Add(room);
+        await db.SaveChangesAsync();
+
+        // Attempt to create lease on Rented room
+        var res = await leaseService.CreateLeaseAsync(landlord.Id, new CreateLeaseDto
+        {
+            RoomId = room.Id,
+            TenantId = tenant1.Id,
+            StartDate = DateTime.UtcNow,
+            EndDate = DateTime.UtcNow.AddMonths(6),
+            MonthlyRent = 5000000
+        });
+        Assert.False(res.Success);
+        Assert.Equal(400, res.StatusCode);
+
+        // Make room Available, but add an existing Active lease
+        room.Status = RoomStatus.Available;
+        var existingLease = new LeaseContract
+        {
+            Id = Guid.NewGuid(),
+            RoomId = room.Id,
+            LandlordId = landlord.Id,
+            TenantId = tenant1.Id,
+            Status = "Active",
+            StartDate = DateTime.UtcNow.Date,
+            EndDate = DateTime.UtcNow.Date.AddMonths(6)
+        };
+        db.LeaseContracts.Add(existingLease);
+        await db.SaveChangesAsync();
+
+        // Attempt overlapping lease creation
+        var overlappingRes = await leaseService.CreateLeaseAsync(landlord.Id, new CreateLeaseDto
+        {
+            RoomId = room.Id,
+            TenantId = tenant2.Id,
+            StartDate = DateTime.UtcNow.Date.AddMonths(1),
+            EndDate = DateTime.UtcNow.Date.AddMonths(7),
+            MonthlyRent = 5000000
+        });
+        Assert.False(overlappingRes.Success);
+        Assert.Equal(400, overlappingRes.StatusCode);
+    }
+
+    [Fact]
+    public async Task ReviewService_TenantWithActiveLeaseCanReviewWithoutAppointment()
+    {
+        var options = new DbContextOptionsBuilder<DormiDbContext>()
+            .UseInMemoryDatabase(databaseName: Guid.NewGuid().ToString())
+            .Options;
+        using var db = new DormiDbContext(options);
+
+        var reviewService = new ReviewService(db);
+
+        var landlord = new User { Id = Guid.NewGuid(), FullName = "Landlord L", Role = UserRole.Landlord };
+        var tenant = new User { Id = Guid.NewGuid(), FullName = "Tenant T", Role = UserRole.Customer };
+        var room = new Room { Id = Guid.NewGuid(), Title = "Phòng 505", LandlordId = landlord.Id, Status = RoomStatus.Rented, Price = 4000000 };
+        var lease = new LeaseContract
+        {
+            Id = Guid.NewGuid(),
+            RoomId = room.Id,
+            LandlordId = landlord.Id,
+            TenantId = tenant.Id,
+            Status = "Active",
+            StartDate = DateTime.UtcNow.AddMonths(-2),
+            EndDate = DateTime.UtcNow.AddMonths(4)
+        };
+        db.Users.AddRange(landlord, tenant);
+        db.Rooms.Add(room);
+        db.LeaseContracts.Add(lease);
+        await db.SaveChangesAsync();
+
+        // Tenant with lease can review even with NO ViewingAppointment
+        var reviewRes = await reviewService.AddReviewAsync(room.Id, tenant.Id, new CreateReviewDto
+        {
+            Rating = 5,
+            Comment = "Phòng ở rất tốt, chủ nhà thân thiện!"
+        });
+        Assert.True(reviewRes.Success);
     }
 
     private class TestKafkaProducer : IKafkaProducer

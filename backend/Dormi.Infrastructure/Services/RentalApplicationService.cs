@@ -43,6 +43,11 @@ public class RentalApplicationService : IRentalApplicationService
             return ServiceResult<RentalApplicationResponseDto>.Fail("Phòng trọ này hiện không còn khả dụng để nộp hồ sơ thuê.", 400);
         }
 
+        if (room.LandlordId == tenantId)
+        {
+            return ServiceResult<RentalApplicationResponseDto>.Fail("Bạn không thể nộp hồ sơ thuê phòng của chính mình.", 400);
+        }
+
         // ponytail: Check duplicate open application for the exact same room
         var hasActiveForSameRoom = await _db.RentalApplications.AnyAsync(a =>
             a.RoomId == dto.RoomId &&
@@ -195,6 +200,11 @@ public class RentalApplicationService : IRentalApplicationService
         if (application.Status == ApplicationStatus.Withdrawn || application.Status == ApplicationStatus.Expired)
         {
             return ServiceResult<object>.Fail("Hồ sơ đã bị rút hoặc hết hạn, không thể xử lý tiếp.", 400);
+        }
+
+        if (dto.Status == ApplicationStatus.Approved && application.Room.Status == RoomStatus.Rented)
+        {
+            return ServiceResult<object>.Fail("Phòng trọ này hiện đã có người thuê, không thể duyệt thêm hồ sơ.", 400);
         }
 
         application.Status = dto.Status;
