@@ -2,6 +2,12 @@
 
 const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:5167/api';
 
+// ponytail: Early background probe wakes up sleeping server on free-tier hosts (e.g. Render) without blocking page render
+if (typeof window !== 'undefined' && API_BASE_URL.startsWith('http')) {
+  const rootUrl = API_BASE_URL.replace(/\/api\/?$/, '');
+  fetch(`${rootUrl}/`, { method: 'GET', keepalive: true }).catch(() => {});
+}
+
 export interface RoomImage {
   id: string;
   imageUrl: string;

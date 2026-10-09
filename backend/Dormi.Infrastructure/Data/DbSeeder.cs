@@ -253,7 +253,23 @@ public static class DbSeeder
                     ""Details"" text NOT NULL,
                     ""IpAddress"" varchar(100),
                     ""CreatedAt"" timestamp with time zone NOT NULL DEFAULT CURRENT_TIMESTAMP
-                );");
+                );
+                CREATE INDEX IF NOT EXISTS ""IX_Rooms_Status_CreatedAt"" ON ""Rooms"" (""Status"", ""CreatedAt"" DESC);
+                CREATE INDEX IF NOT EXISTS ""IX_Rooms_LandlordId"" ON ""Rooms"" (""LandlordId"");
+                CREATE INDEX IF NOT EXISTS ""IX_Rooms_Price"" ON ""Rooms"" (""Price"");
+                CREATE INDEX IF NOT EXISTS ""IX_Users_Email"" ON ""Users"" (""Email"");
+                CREATE INDEX IF NOT EXISTS ""IX_Notifications_UserId_CreatedAt"" ON ""Notifications"" (""UserId"", ""CreatedAt"" DESC);
+                CREATE INDEX IF NOT EXISTS ""IX_Notifications_UserId_IsRead"" ON ""Notifications"" (""UserId"", ""IsRead"");
+                CREATE INDEX IF NOT EXISTS ""IX_ViewingAppointments_RoomId_Status"" ON ""ViewingAppointments"" (""RoomId"", ""Status"");
+                CREATE INDEX IF NOT EXISTS ""IX_ViewingAppointments_CustomerId"" ON ""ViewingAppointments"" (""CustomerId"");
+                CREATE INDEX IF NOT EXISTS ""IX_RentalApplications_RoomId_Status"" ON ""RentalApplications"" (""RoomId"", ""Status"");
+                CREATE INDEX IF NOT EXISTS ""IX_RentalApplications_TenantId"" ON ""RentalApplications"" (""TenantId"");
+                CREATE INDEX IF NOT EXISTS ""IX_LeaseContracts_RoomId_Status"" ON ""LeaseContracts"" (""RoomId"", ""Status"");
+                CREATE INDEX IF NOT EXISTS ""IX_LeaseContracts_TenantId"" ON ""LeaseContracts"" (""TenantId"");
+                CREATE INDEX IF NOT EXISTS ""IX_LeaseContracts_LandlordId"" ON ""LeaseContracts"" (""LandlordId"");
+                CREATE INDEX IF NOT EXISTS ""IX_RentalPaymentSchedules_LeaseContractId_Status"" ON ""RentalPaymentSchedules"" (""LeaseContractId"", ""Status"");
+                CREATE INDEX IF NOT EXISTS ""IX_MaintenanceRequests_LeaseContractId_Status"" ON ""MaintenanceRequests"" (""LeaseContractId"", ""Status"");
+                CREATE INDEX IF NOT EXISTS ""IX_Messages_Sender_Receiver_SentAt"" ON ""Messages"" (""SenderId"", ""ReceiverId"", ""SentAt"" DESC);");
         }
         catch (Exception ex)
         {

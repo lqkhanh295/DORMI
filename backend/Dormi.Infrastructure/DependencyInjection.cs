@@ -24,7 +24,15 @@ public static class DependencyInjection
             {
                 try
                 {
-                    options.UseNpgsql(connectionString, x => x.UseNetTopologySuite());
+                    options.UseNpgsql(connectionString, npgsqlOptions =>
+                    {
+                        npgsqlOptions.UseNetTopologySuite();
+                        npgsqlOptions.EnableRetryOnFailure(
+                            maxRetryCount: 3,
+                            maxRetryDelay: TimeSpan.FromSeconds(2),
+                            errorCodesToAdd: null);
+                        npgsqlOptions.CommandTimeout(30);
+                    });
                 }
                 catch
                 {
@@ -112,22 +120,26 @@ public static class DependencyInjection
     private static string ResolveConnectionString(IConfiguration configuration)
     {
         var connectionString = configuration.GetConnectionString("DefaultConnection");
-        if (!string.IsNullOrWhiteSpace(connectionString))
+        if (string.IsNullOrWhiteSpace(connectionString))
         {
-            return connectionString;
+            var dbUrl = configuration["DATABASE_URL"] 
+                ?? Environment.GetEnvironmentVariable("DATABASE_URL")
+                ?? configuration["POSTGRES_URL"]
+                ?? Environment.GetEnvironmentVariable("POSTGRES_URL");
+
+            if (!string.IsNullOrWhiteSpace(dbUrl))
+            {
+                connectionString = ConvertDatabaseUrlToNpgsql(dbUrl);
+            }
         }
 
-        var dbUrl = configuration["DATABASE_URL"] 
-            ?? Environment.GetEnvironmentVariable("DATABASE_URL")
-            ?? configuration["POSTGRES_URL"]
-            ?? Environment.GetEnvironmentVariable("POSTGRES_URL");
-
-        if (!string.IsNullOrWhiteSpace(dbUrl))
+        if (!string.IsNullOrWhiteSpace(connectionString) && !connectionString.Contains("Keepalive", StringComparison.OrdinalIgnoreCase))
         {
-            return ConvertDatabaseUrlToNpgsql(dbUrl);
+            var separator = connectionString.TrimEnd().EndsWith(";") ? "" : ";";
+            connectionString += $"{separator}Keepalive=30;Pooling=true;Minimum Pool Size=1;Maximum Pool Size=20;Connection Idle Lifetime=60;Timeout=15;Command Timeout=30;";
         }
 
-        return string.Empty;
+        return connectionString ?? string.Empty;
     }
 
     private static string ConvertDatabaseUrlToNpgsql(string databaseUrl)
@@ -147,7 +159,7 @@ public static class DependencyInjection
             var database = uri.AbsolutePath.TrimStart('/');
             var port = uri.Port > 0 ? uri.Port : 5432;
 
-            return $"Host={uri.Host};Port={port};Database={database};Username={username};Password={password};SSL Mode=Require;Trust Server Certificate=true;";
+            return $"Host={uri.Host};Port={port};Database={database};Username={username};Password={password};SSL Mode=Require;Trust Server Certificate=true;Keepalive=30;Pooling=true;Minimum Pool Size=1;Maximum Pool Size=20;Connection Idle Lifetime=60;Timeout=15;Command Timeout=30;";
         }
         catch
         {

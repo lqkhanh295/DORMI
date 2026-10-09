@@ -172,5 +172,52 @@ public class DormiDbContext : DbContext
             .WithMany()
             .HasForeignKey(m => m.RoomId)
             .OnDelete(DeleteBehavior.Cascade);
+
+        // --- High-Performance Read Indexes ---
+        modelBuilder.Entity<User>()
+            .HasIndex(u => u.Email)
+            .IsUnique();
+
+        modelBuilder.Entity<Room>()
+            .HasIndex(r => new { r.Status, r.CreatedAt });
+        modelBuilder.Entity<Room>()
+            .HasIndex(r => r.LandlordId);
+        modelBuilder.Entity<Room>()
+            .HasIndex(r => r.Price);
+
+        modelBuilder.Entity<Notification>()
+            .HasIndex(n => new { n.UserId, n.CreatedAt });
+        modelBuilder.Entity<Notification>()
+            .HasIndex(n => new { n.UserId, n.IsRead });
+
+        modelBuilder.Entity<ViewingAppointment>()
+            .HasIndex(a => new { a.RoomId, a.Status });
+        modelBuilder.Entity<ViewingAppointment>()
+            .HasIndex(a => a.CustomerId);
+
+        modelBuilder.Entity<RentalApplication>()
+            .HasIndex(ra => new { ra.RoomId, ra.Status });
+        modelBuilder.Entity<RentalApplication>()
+            .HasIndex(ra => ra.TenantId);
+
+        modelBuilder.Entity<LeaseContract>()
+            .HasIndex(l => new { l.RoomId, l.Status });
+        modelBuilder.Entity<LeaseContract>()
+            .HasIndex(l => l.TenantId);
+        modelBuilder.Entity<LeaseContract>()
+            .HasIndex(l => l.LandlordId);
+
+        modelBuilder.Entity<RentalPaymentSchedule>()
+            .HasIndex(s => new { s.LeaseContractId, s.Status });
+        modelBuilder.Entity<RentalPaymentSchedule>()
+            .HasIndex(s => s.DueDate);
+
+        modelBuilder.Entity<MaintenanceRequest>()
+            .HasIndex(m => new { m.LeaseContractId, m.Status });
+
+        modelBuilder.Entity<Message>()
+            .HasIndex(m => new { m.SenderId, m.ReceiverId, m.SentAt });
+        modelBuilder.Entity<Message>()
+            .HasIndex(m => new { m.ReceiverId, m.IsRead });
     }
 }

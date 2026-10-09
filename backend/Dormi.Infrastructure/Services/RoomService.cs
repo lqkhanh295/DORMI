@@ -136,8 +136,7 @@ public class RoomService : IRoomService
         }
 
         var query = _db.Rooms
-            .Include(r => r.Landlord)
-            .Include(r => r.Images)
+            .AsNoTracking()
             .AsQueryable();
 
         if (!string.IsNullOrWhiteSpace(filter.Query))
@@ -338,8 +337,7 @@ public class RoomService : IRoomService
 
         var now = DateTime.UtcNow;
         var featured = await _db.Rooms
-            .Include(r => r.Landlord)
-            .Include(r => r.Images)
+            .AsNoTracking()
             .Where(r => r.Status == RoomStatus.Available)
             .OrderByDescending(r => r.IsBoosted && r.BoostExpiresAt > now)
             .ThenByDescending(r => r.Landlord.IsVerified)
@@ -392,6 +390,7 @@ public class RoomService : IRoomService
     public async Task<ServiceResult<RoomResponseDto>> GetRoomByIdAsync(Guid id, Guid? currentUserId, bool isAdmin, string? clientIp)
     {
         var room = await _db.Rooms
+            .AsNoTracking()
             .Include(r => r.Landlord)
             .Include(r => r.Images)
             .FirstOrDefaultAsync(r => r.Id == id);

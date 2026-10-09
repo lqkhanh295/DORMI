@@ -26,10 +26,14 @@ builder.WebHost.ConfigureKestrel(serverOptions =>
 // 1. Add Infrastructure (DbContext, Services, Cloudinary, JwtTokenGenerator)
 builder.Services.AddInfrastructure(builder.Configuration);
 
-// 2. Add Controllers, SignalR & MemoryCache
+// 2. Add Controllers, SignalR, MemoryCache & Response Compression
 builder.Services.AddControllers();
 builder.Services.AddSignalR();
 builder.Services.AddMemoryCache();
+builder.Services.AddResponseCompression(options =>
+{
+    options.EnableForHttps = true;
+});
 
 // 3. Configure JWT Authentication
 var secretKey = builder.Configuration["JwtSettings:SecretKey"];
@@ -190,6 +194,9 @@ if (app.Environment.IsDevelopment() || builder.Configuration.GetValue<bool>("Ena
         c.RoutePrefix = "swagger";
     });
 }
+
+// Response compression (Gzip / Brotli)
+app.UseResponseCompression();
 
 app.UseCors("AllowDormiOrigins");
 

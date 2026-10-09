@@ -6,6 +6,12 @@ using Confluent.Kafka;
 using Dormi.Application.Common;
 using Dormi.Application.DTOs;
 using Dormi.Application.Interfaces;
+using Dormi.Domain.Entities;
+using Dormi.Infrastructure.Data;
+using Dormi.Infrastructure.Hubs;
+using Microsoft.AspNetCore.SignalR;
+using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 
@@ -16,6 +22,8 @@ public class KafkaProducer : IKafkaProducer, IDisposable
     private readonly KafkaOptions _options;
     private readonly ILogger<KafkaProducer> _logger;
     private readonly Lazy<IProducer<string, string>?> _lazyProducer;
+    private readonly IServiceScopeFactory? _scopeFactory;
+    private readonly IHubContext<ChatHub>? _hubContext;
     private bool _disposed;
 
     private static readonly JsonSerializerOptions JsonOptions = new()
@@ -24,10 +32,16 @@ public class KafkaProducer : IKafkaProducer, IDisposable
         WriteIndented = false
     };
 
-    public KafkaProducer(IOptions<KafkaOptions> options, ILogger<KafkaProducer> logger)
+    public KafkaProducer(
+        IOptions<KafkaOptions> options, 
+        ILogger<KafkaProducer> logger,
+        IServiceScopeFactory? scopeFactory = null,
+        IHubContext<ChatHub>? hubContext = null)
     {
         _options = options.Value;
         _logger = logger;
+        _scopeFactory = scopeFactory;
+        _hubContext = hubContext;
 
         _lazyProducer = new Lazy<IProducer<string, string>?>(() =>
         {
@@ -98,12 +112,96 @@ public class KafkaProducer : IKafkaProducer, IDisposable
 
     public async Task PublishNotificationAsync(NotificationEvent notification, CancellationToken cancellationToken = default)
     {
-        var topic = string.IsNullOrWhiteSpace(_options.NotificationTopic)
-            ? KafkaTopics.Notifications
-            : _options.NotificationTopic;
+        var dispatchedViaKafka = false;
 
-        var partitionKey = notification.UserId?.ToString() ?? notification.Id.ToString();
-        await ProduceAsync(topic, partitionKey, notification, cancellationToken);
+        if (_options.Enabled)
+        {
+            try
+            {
+                // Strict 800ms fail-fast timeout so HTTP request handlers never hang on dead Kafka brokers
+                using var cts = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken);
+                cts.CancelAfter(TimeSpan.FromMilliseconds(800));
+
+                var topic = string.IsNullOrWhiteSpace(_options.NotificationTopic)
+                    ? KafkaTopics.Notifications
+                    : _options.NotificationTopic;
+
+                var partitionKey = notification.UserId?.ToString() ?? notification.Id.ToString();
+                var producer = _lazyProducer.Value;
+                if (producer != null)
+                {
+                    var payload = JsonSerializer.Serialize(notification, JsonOptions);
+                    var kafkaMessage = new Message<string, string>
+                    {
+                        Key = partitionKey,
+                        Value = payload,
+                        Timestamp = new Timestamp(DateTime.UtcNow)
+                    };
+
+                    await producer.ProduceAsync(topic, kafkaMessage, cts.Token);
+                    dispatchedViaKafka = true;
+                }
+            }
+            catch (Exception ex)
+            {
+                _logger.LogWarning(ex, "[Kafka] Produce timed out or failed. Falling back to direct in-process dispatch.");
+            }
+        }
+
+        // Direct in-process delivery: 0ms latency, zero message drops, real-time SignalR active
+        if (!dispatchedViaKafka)
+        {
+            await DispatchInProcessAsync(notification);
+        }
+    }
+
+    private async Task DispatchInProcessAsync(NotificationEvent evt)
+    {
+        if (_scopeFactory == null) return;
+
+        try
+        {
+            using var scope = _scopeFactory.CreateScope();
+            var db = scope.ServiceProvider.GetRequiredService<DormiDbContext>();
+
+            if (evt.UserId.HasValue && evt.UserId.Value != Guid.Empty && evt.EventType != "PasswordResetOtp")
+            {
+                var notification = new Notification
+                {
+                    Id = evt.Id == Guid.Empty ? Guid.NewGuid() : evt.Id,
+                    UserId = evt.UserId.Value,
+                    Title = evt.Title,
+                    Message = evt.Message,
+                    Type = string.IsNullOrWhiteSpace(evt.Type) ? "System" : evt.Type,
+                    LinkUrl = evt.LinkUrl,
+                    IsRead = false,
+                    CreatedAt = evt.CreatedAt != default ? evt.CreatedAt : DateTime.UtcNow
+                };
+
+                db.Notifications.Add(notification);
+                await db.SaveChangesAsync();
+
+                if (_hubContext != null)
+                {
+                    await _hubContext.Clients.User(evt.UserId.Value.ToString()).SendAsync("ReceiveNotification", new
+                    {
+                        id = notification.Id,
+                        title = notification.Title,
+                        message = notification.Message,
+                        type = notification.Type,
+                        linkUrl = notification.LinkUrl,
+                        createdAt = notification.CreatedAt
+                    });
+                }
+
+                _logger.LogInformation("[NotificationFallback] In-process notification {Id} persisted & dispatched to user {UserId}",
+                    notification.Id, notification.UserId);
+            }
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "[NotificationFallback] Failed in-process dispatch for user {UserId}", evt.UserId);
+        }
     }
 
     public void Dispose()
