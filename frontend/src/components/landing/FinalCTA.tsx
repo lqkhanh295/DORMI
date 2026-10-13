@@ -1,30 +1,40 @@
 import { Link } from 'react-router-dom';
+import { Search, Plus } from 'lucide-react';
 
 export function FinalCTA() {
   return (
-    <section className="py-16 md:py-24 bg-[#F5F7FA]">
-      <div className="container-dormi">
-        <div className="bg-white rounded-[18px] shadow-clay-soft p-8 md:p-12 text-center max-w-3xl mx-auto space-y-6">
-          <h2 className="text-h2 text-[#0F172A]">
-            Bắt đầu tìm phòng hoặc đăng tin ngay hôm nay.
-          </h2>
-          <p className="text-body text-[#64748B] max-w-xl mx-auto">
-            Hàng trăm căn phòng được xác minh và người ở ghép tương thích đang chờ bạn trên DORMI.
-          </p>
-          <div className="flex flex-col sm:flex-row items-center justify-center gap-4 pt-2">
-            <Link 
-              to="/search" 
-              className="w-full sm:w-auto btn-clay-primary font-semibold px-8 py-3 rounded-[12px] min-h-[44px] text-body flex items-center justify-center"
-            >
-              Tìm phòng ngay
-            </Link>
-            <Link 
-              to="/landlord" 
-              className="w-full sm:w-auto bg-white text-[#0F172A] border border-[#E2E8F0] shadow-clay-soft hover:-translate-y-0.5 font-semibold px-8 py-3 rounded-[12px] transition-[transform,box-shadow,background-color] duration-150 ease-out active:scale-[0.985] min-h-[44px] text-body flex items-center justify-center"
-            >
-              Đăng tin ngay
-            </Link>
-          </div>
+    <section className="py-20 bg-[#00153D] text-white relative overflow-hidden">
+      {/* Subtle radial glow */}
+      <div className="absolute inset-0 bg-[radial-gradient(circle_at_top_right,rgba(7,51,114,0.6),transparent_50%)] pointer-events-none" />
+      
+      <div className="container-dormi relative z-10 text-center max-w-3xl mx-auto space-y-6">
+        <span className="inline-block text-xs font-bold uppercase tracking-wider text-[#F2A900] bg-white/10 px-3.5 py-1 rounded-full border border-white/10">
+          Nền tảng thuê trọ thế hệ mới
+        </span>
+        
+        <h2 className="text-3xl md:text-4xl font-black tracking-tight text-white leading-tight">
+          Bắt đầu tìm phòng hoặc kết nối người ở ghép ngay hôm nay
+        </h2>
+        
+        <p className="text-slate-300 text-base max-w-xl mx-auto font-normal leading-relaxed">
+          Hàng trăm căn phòng được xác minh thực tế và những người bạn cùng phòng lý tưởng đang chờ bạn trên DORMI.
+        </p>
+
+        <div className="flex flex-col sm:flex-row items-center justify-center gap-3.5 pt-4">
+          <Link 
+            to="/search" 
+            className="w-full sm:w-auto bg-[#F2A900] hover:bg-[#d99700] text-[#00153D] font-bold px-7 py-3.5 rounded-xl transition-all shadow-md text-sm flex items-center justify-center gap-2 active:scale-[0.98]"
+          >
+            <Search className="w-4 h-4" />
+            <span>Tìm phòng ngay</span>
+          </Link>
+          <Link 
+            to="/landlord" 
+            className="w-full sm:w-auto bg-white/10 hover:bg-white/20 text-white border border-white/20 font-bold px-7 py-3.5 rounded-xl transition-all text-sm flex items-center justify-center gap-2 active:scale-[0.98]"
+          >
+            <Plus className="w-4 h-4" />
+            <span>Dành cho chủ nhà trọ</span>
+          </Link>
         </div>
       </div>
     </section>

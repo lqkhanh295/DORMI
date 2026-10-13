@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import { createPortal } from 'react-dom';
 import { Button } from '../../components/ui/Button';
 import { useNavigate, Link } from 'react-router-dom';
 import { useStore, type RoommateProfile } from '../../store/useStore';
@@ -16,6 +17,14 @@ export default function RoommateMatcher() {
   const navigate = useNavigate();
 
   const activeLikedRoommates = (likedRoommates || []).filter(r => r && r.customerId);
+
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') setShowLikedModal(false);
+    };
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, []);
 
   useEffect(() => {
     let isMounted = true;
@@ -94,11 +103,11 @@ export default function RoommateMatcher() {
         </div>
       ) : (
         activeLikedRoommates.map(r => (
-          <div key={r.id} className="flex items-center gap-3 p-3 bg-[#F5F7FA] rounded-[12px] border border-[#E2E8F0] shadow-clay-inset">
-            <img src={r.image} className="w-12 h-12 rounded-full object-cover border border-[#E2E8F0] flex-shrink-0" alt={r.name} />
+          <div key={r.id} className="flex items-center gap-3 p-3 bg-slate-50 rounded-xl border border-slate-200">
+            <img src={r.image} className="w-12 h-12 rounded-full object-cover border border-slate-200 shrink-0" alt={r.name} />
             <div className="flex-1 text-left overflow-hidden">
               <h4 className="text-body font-bold text-[#0F172A] truncate">{r.name}</h4>
-              <p className="text-caption font-bold text-[#16803C]">
+              <p className="text-caption font-bold text-emerald-700">
                 {r.matchScore != null ? `${r.matchScore}% Độ tương thích` : 'Chưa đủ dữ liệu'}
               </p>
             </div>
@@ -251,10 +260,10 @@ export default function RoommateMatcher() {
                   </div>
                 )}
 
-                <div className="bg-[#F5F7FA] shadow-clay-inset p-4 rounded-[12px] space-y-2">
-                  <span className="text-caption font-bold text-[#0F172A] block mb-1">Lý do tương thích:</span>
-                  <div className="flex items-center gap-2 text-caption font-semibold text-[#16803C]">
-                    <CheckCircle2 className="w-4 h-4 text-[#16803C]" />
+                <div className="bg-slate-50 border border-slate-200/80 p-3.5 rounded-xl space-y-1.5">
+                  <span className="text-caption font-bold text-slate-900 block">Lý do tương thích:</span>
+                  <div className="flex items-center gap-2 text-caption font-semibold text-emerald-700">
+                    <CheckCircle2 className="w-4 h-4 text-emerald-600" />
                     <span>Cùng thói quen sinh hoạt và ngân sách</span>
                   </div>
                 </div>
@@ -282,18 +291,29 @@ export default function RoommateMatcher() {
         )}
       </div>
 
-      {showLikedModal && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-[#0F172A]/40 p-4 lg:hidden">
-          <div className="bg-white rounded-[18px] shadow-clay-primary w-full max-w-md h-[80vh] flex flex-col overflow-hidden">
-            <div className="p-4 border-b border-[#E2E8F0] flex justify-between items-center bg-white">
-              <h3 className="font-bold text-h3 text-[#0F172A]">Đã thích ({activeLikedRoommates.length})</h3>
-              <button onClick={() => setShowLikedModal(false)} className="text-[#64748B] hover:text-[#0F172A] p-2">
-                <X size={24} />
-              </button>
+      {createPortal(
+        showLikedModal && (
+          <div className="fixed inset-0 z-[100] flex items-center justify-center bg-[#0F172A]/60 backdrop-blur-xs p-4 lg:hidden overflow-y-auto">
+            <div 
+              className="fixed inset-0"
+              onClick={() => setShowLikedModal(false)}
+            />
+            <div 
+              role="dialog"
+              aria-modal="true"
+              className="relative my-auto bg-white rounded-2xl shadow-xl border border-[#E2E8F0] w-full max-w-md h-[min(80vh,680px)] flex flex-col overflow-hidden"
+            >
+              <div className="p-4 border-b border-[#E2E8F0] flex justify-between items-center bg-white">
+                <h3 className="font-bold text-h3 text-[#0F172A]">Đã thích ({activeLikedRoommates.length})</h3>
+                <button onClick={() => setShowLikedModal(false)} className="text-[#64748B] hover:text-[#0F172A] p-2 rounded-lg">
+                  <X size={20} />
+                </button>
+              </div>
+              <LikedList />
             </div>
-            <LikedList />
           </div>
-        </div>
+        ),
+        document.body
       )}
     </div>
   );

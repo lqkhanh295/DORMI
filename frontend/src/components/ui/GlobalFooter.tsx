@@ -10,10 +10,10 @@ export function GlobalFooter() {
             <Link to="/" className="text-[22px] font-black tracking-wider text-[#00153D] inline-flex items-center">
               DORMI<span className="text-[#F2A900] ml-0.5">.</span>
             </Link>
-            <p className="text-body text-[#64748B] max-w-sm">
+            <p className="text-sm text-[#64748B] max-w-sm">
               Nền tảng tìm kiếm phòng trọ và kết nối bạn ở ghép thông minh, minh bạch tại TP. Hồ Chí Minh.
             </p>
-            <div className="text-caption text-[#64748B] space-y-1 pt-1">
+            <div className="text-xs text-[#64748B] space-y-1 pt-1">
               <p>Hotline: <a href="tel:0909123456" className="text-[#00153D] font-medium hover:underline">0909 123 456</a> (08:00 - 21:00)</p>
               <p>Email: <a href="mailto:hotro@dormi.space" className="text-[#00153D] font-medium hover:underline">hotro@dormi.space</a></p>
               <p>Địa chỉ: Khu Công nghệ cao, TP. Thủ Đức, TP.HCM</p>
@@ -22,10 +22,10 @@ export function GlobalFooter() {
 
           {/* Người thuê */}
           <div>
-            <h4 className="text-caption font-bold text-[#00153D] uppercase tracking-wider mb-3">
+            <h4 className="text-xs font-bold text-[#00153D] uppercase tracking-wider mb-3">
               Người thuê
             </h4>
-            <ul className="space-y-2 text-caption text-[#64748B] font-medium">
+            <ul className="space-y-2 text-xs text-[#64748B] font-medium">
               <li>
                 <Link to="/search" className="hover:text-[#00153D] transition-colors">
                   Tìm phòng trọ
@@ -43,7 +43,7 @@ export function GlobalFooter() {
               </li>
               <li>
                 <Link to="/tenant" className="hover:text-[#00153D] transition-colors">
-                  Bảng điều khiển cá nhân
+                  Phòng của tôi
                 </Link>
               </li>
             </ul>
@@ -51,10 +51,10 @@ export function GlobalFooter() {
 
           {/* Chủ trọ */}
           <div>
-            <h4 className="text-caption font-bold text-[#00153D] uppercase tracking-wider mb-3">
+            <h4 className="text-xs font-bold text-[#00153D] uppercase tracking-wider mb-3">
               Chủ trọ
             </h4>
-            <ul className="space-y-2 text-caption text-[#64748B] font-medium">
+            <ul className="space-y-2 text-xs text-[#64748B] font-medium">
               <li>
                 <Link to="/landlord/create" className="hover:text-[#00153D] transition-colors">
                   Đăng tin cho thuê
@@ -66,7 +66,7 @@ export function GlobalFooter() {
                 </Link>
               </li>
               <li>
-                <Link to="/landlord/verification" className="hover:text-[#00153D] transition-colors">
+                <Link to="/landlord/verify" className="hover:text-[#00153D] transition-colors">
                   Xác minh danh tính
                 </Link>
               </li>
@@ -80,10 +80,10 @@ export function GlobalFooter() {
 
           {/* Khu vực */}
           <div>
-            <h4 className="text-caption font-bold text-[#00153D] uppercase tracking-wider mb-3">
+            <h4 className="text-xs font-bold text-[#00153D] uppercase tracking-wider mb-3">
               Khu vực TP.HCM
             </h4>
-            <ul className="space-y-2 text-caption text-[#64748B] font-medium">
+            <ul className="space-y-2 text-xs text-[#64748B] font-medium">
               <li>
                 <Link to="/search?query=Quận+1" className="hover:text-[#00153D] transition-colors">
                   Quận 1 & Quận 3
@@ -109,7 +109,7 @@ export function GlobalFooter() {
         </div>
 
         {/* Bottom copyright & legal links */}
-        <div className="pt-6 flex flex-col sm:flex-row items-center justify-between gap-3 text-caption text-[#64748B]">
+        <div className="pt-6 flex flex-col sm:flex-row items-center justify-between gap-3 text-xs text-[#64748B]">
           <p>© 2026 DORMI. Nền tảng kết nối phòng trọ & người ở ghép.</p>
           <div className="flex items-center gap-6">
             <Link to="/tenant/settings" className="hover:text-[#00153D] transition-colors">

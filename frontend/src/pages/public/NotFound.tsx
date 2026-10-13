@@ -12,7 +12,7 @@ export default function NotFound() {
             Trang bạn đang truy cập không tồn tại hoặc đã được chuyển dời.
           </p>
         </div>
-        <Link to="/" className="btn-clay-primary text-body font-semibold px-8 py-3 rounded-[12px] inline-flex items-center gap-2 min-h-[44px]">
+        <Link to="/" className="btn-clay-primary text-white text-base font-semibold px-8 py-3 rounded-[12px] inline-flex items-center gap-2 min-h-[44px]">
           <House className="w-5 h-5" />
           Về trang chủ
         </Link>

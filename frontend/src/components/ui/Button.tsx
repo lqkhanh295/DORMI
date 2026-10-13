@@ -1,14 +1,18 @@
 import React from 'react';
 import { Loader2 } from 'lucide-react';
+import clsx from 'clsx';
+import { twMerge } from 'tailwind-merge';
 
-interface ButtonProps extends React.ButtonHTMLAttributes<HTMLButtonElement> {
-  variant?: 'primary' | 'secondary' | 'accent' | 'outline' | 'ghost';
+export interface ButtonProps extends React.ButtonHTMLAttributes<HTMLButtonElement> {
+  variant?: 'primary' | 'secondary' | 'accent' | 'outline' | 'ghost' | 'danger' | 'dark';
   size?: 'sm' | 'md' | 'lg';
   fullWidth?: boolean;
   isLoading?: boolean;
+  leftIcon?: React.ReactNode;
+  rightIcon?: React.ReactNode;
 }
 
-export const Button: React.FC<ButtonProps> = ({ 
+export const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(({ 
   children, 
   variant = 'primary', 
   size = 'md', 
@@ -16,41 +20,55 @@ export const Button: React.FC<ButtonProps> = ({
   className = '',
   disabled,
   isLoading = false,
+  leftIcon,
+  rightIcon,
   ...props 
-}) => {
-  // ponytail: Apple-grade tactile button with explicit GPU transitions and zero layout-shift loader
-  const baseStyle = "relative inline-flex items-center justify-center font-semibold transition-[transform,box-shadow,background-color,border-color,opacity] duration-150 ease-[cubic-bezier(0.22,1,0.36,1)] focus:outline-none focus-visible:outline-2 focus-visible:outline-[#00153D] focus-visible:outline-offset-2 rounded-[12px] touch-target select-none disabled:opacity-50 disabled:pointer-events-none active:scale-[0.985]";
+}, ref) => {
+  const baseStyle = "relative inline-flex items-center justify-center font-semibold transition-[transform,box-shadow,background-color,border-color,opacity] duration-150 ease-[cubic-bezier(0.22,1,0.36,1)] focus:outline-none focus-visible:ring-2 focus-visible:ring-[#00153D] focus-visible:ring-offset-2 rounded-[12px] touch-target select-none disabled:opacity-50 disabled:pointer-events-none active:scale-[0.985]";
   
   const variants = {
-    primary: "btn-clay-primary",
-    secondary: "bg-white text-[#0F172A] border border-[#E2E8F0] shadow-clay-soft hover:shadow-clay-primary hover:border-[#CBD5E1]",
-    accent: "bg-[#F2A900] text-[#00153D] font-bold shadow-clay-primary hover:bg-[#E09B00]",
-    outline: "border border-[#E2E8F0] text-[#0F172A] bg-transparent hover:bg-white hover:border-[#CBD5E1]",
-    ghost: "text-[#64748B] hover:text-[#0F172A] hover:bg-[#EEF2F6]"
+    primary: "bg-[#00153D] hover:bg-[#073372] text-white shadow-xs hover:shadow-md",
+    secondary: "bg-white text-[#0F172A] border border-[#CBD5E1] shadow-xs hover:bg-[#F8FAFC] hover:border-[#94A3B8]",
+    accent: "bg-[#F2A900] text-[#00153D] font-bold shadow-xs hover:bg-[#E09B00]",
+    outline: "border border-[#CBD5E1] text-[#0F172A] bg-transparent hover:bg-slate-50 hover:border-[#94A3B8]",
+    ghost: "text-[#475569] hover:text-[#0F172A] hover:bg-slate-100",
+    danger: "bg-[#FEF2F2] text-[#C62828] border border-[#FECACA] hover:bg-[#FEE2E2] hover:border-[#FCA5A5]",
+    dark: "bg-[#00153D] hover:bg-[#073372] text-white shadow-xs"
   };
   
   const sizes = {
-    sm: "px-4 py-1.5 text-caption min-h-[36px]",
-    md: "px-6 py-2.5 text-body min-h-[44px]",
-    lg: "px-8 py-3.5 text-body min-h-[52px]"
+    sm: "px-3.5 py-1.5 text-xs font-semibold min-h-[36px]",
+    md: "px-5 py-2.5 text-sm font-semibold min-h-[42px]",
+    lg: "px-7 py-3 text-base font-semibold min-h-[48px]"
   };
-
-  const widthStyle = fullWidth ? "w-full" : "";
 
   return (
     <button 
+      ref={ref}
       disabled={disabled || isLoading}
-      className={`${baseStyle} ${variants[variant]} ${sizes[size]} ${widthStyle} ${className}`}
+      className={twMerge(
+        clsx(
+          baseStyle,
+          sizes[size],
+          variants[variant],
+          fullWidth && "w-full",
+          className
+        )
+      )}
       {...props}
     >
-      <span className={`inline-flex items-center justify-center gap-2 transition-opacity duration-150 ${isLoading ? 'opacity-0' : 'opacity-100'}`}>
+      <span className={clsx("inline-flex items-center justify-center gap-2 transition-opacity duration-150", isLoading && "opacity-0")}>
+        {leftIcon}
         {children}
+        {rightIcon}
       </span>
       {isLoading && (
         <span className="absolute inset-0 flex items-center justify-center">
-          <Loader2 className="w-4 h-4 animate-spin" />
+          <Loader2 className="w-4 h-4 animate-spin text-current" />
         </span>
       )}
     </button>
   );
-};
+});
+
+Button.displayName = 'Button';

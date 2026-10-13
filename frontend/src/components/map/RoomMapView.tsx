@@ -9,11 +9,20 @@ import { Navigation, Crosshair, ZoomIn, ZoomOut, Compass } from 'lucide-react';
 interface RoomMapViewProps {
   rooms: Listing[];
   selectedRoomId?: string | null;
+  hoveredRoomId?: string | null;
   onSelectRoom?: (roomId: string) => void;
+  onHoverRoom?: (roomId: string | null) => void;
   className?: string;
 }
 
-export default function RoomMapView({ rooms, selectedRoomId, onSelectRoom, className = '' }: RoomMapViewProps) {
+export default function RoomMapView({ 
+  rooms, 
+  selectedRoomId, 
+  hoveredRoomId,
+  onSelectRoom, 
+  onHoverRoom,
+  className = '' 
+}: RoomMapViewProps) {
   const mapContainerRef = useRef<HTMLDivElement>(null);
   const mapInstanceRef = useRef<L.Map | null>(null);
   const markersLayerRef = useRef<L.LayerGroup | null>(null);
@@ -192,24 +201,7 @@ export default function RoomMapView({ rooms, selectedRoomId, onSelectRoom, class
       const markerHtml = `
         <div 
           id="marker-pill-${room.id}"
-          class="room-pill-marker" 
-          style="
-            background: #FFFFFF;
-            color: #00153D;
-            border: 2px solid #CBD5E1;
-            padding: 3px 10px;
-            border-radius: 20px;
-            font-weight: 700;
-            font-size: 12px;
-            box-shadow: 0 3px 10px rgba(0,21,61,0.18);
-            white-space: nowrap;
-            cursor: pointer;
-            transition: transform 0.22s cubic-bezier(0.22, 1, 0.36, 1), background-color 0.2s, color 0.2s, box-shadow 0.22s cubic-bezier(0.22, 1, 0.36, 1);
-            display: inline-flex;
-            align-items: center;
-            user-select: none;
-            will-change: transform;
-          "
+          class="room-pill-marker"
         >
           <span>${priceText}</span>
         </div>
@@ -282,6 +274,19 @@ export default function RoomMapView({ rooms, selectedRoomId, onSelectRoom, class
         }
       });
 
+      // Handle marker hover: notify parent
+      marker.on('mouseover', () => {
+        if (onHoverRoom) {
+          onHoverRoom(room.id);
+        }
+      });
+
+      marker.on('mouseout', () => {
+        if (onHoverRoom) {
+          onHoverRoom(null);
+        }
+      });
+
       markersLayer.addLayer(marker);
       markersMapRef.current.set(room.id, marker);
     });
@@ -290,43 +295,39 @@ export default function RoomMapView({ rooms, selectedRoomId, onSelectRoom, class
     if (rooms.length > 0 && bounds.isValid()) {
       map.fitBounds(bounds, { padding: [40, 40], maxZoom: 14 });
     }
-  }, [rooms, userLocation, navigate, onSelectRoom]);
+  }, [rooms, userLocation, navigate, onSelectRoom, onHoverRoom]);
 
-  // 5. When selectedRoomId changes: highlight marker & open popup
+  // 5. When selectedRoomId or hoveredRoomId changes: highlight marker & light it up
   useEffect(() => {
-    if (!selectedRoomId || !mapInstanceRef.current) return;
-
     // Update styling on all markers
-    markersMapRef.current.forEach((_, id) => {
+    markersMapRef.current.forEach((marker, id) => {
       const el = document.getElementById(`marker-pill-${id}`);
-      if (el) {
-        if (id === selectedRoomId) {
-          el.style.background = '#00153D';
-          el.style.color = '#FFFFFF';
-          el.style.borderColor = '#00153D';
-          el.style.transform = 'scale(1.08)';
-          el.style.boxShadow = '0 6px 20px rgba(0,21,61,0.32)';
-          el.style.zIndex = '999';
-        } else {
-          el.style.background = '#FFFFFF';
-          el.style.color = '#00153D';
-          el.style.borderColor = '#CBD5E1';
-          el.style.transform = 'scale(1)';
-          el.style.boxShadow = '0 3px 10px rgba(0,21,61,0.18)';
-          el.style.zIndex = '1';
-        }
+      if (!el) return;
+
+      if (id === hoveredRoomId) {
+        el.classList.remove('is-selected');
+        el.classList.add('is-active');
+        marker.setZIndexOffset(10000);
+      } else if (id === selectedRoomId) {
+        el.classList.remove('is-active');
+        el.classList.add('is-selected');
+        marker.setZIndexOffset(9000);
+      } else {
+        el.classList.remove('is-active', 'is-selected');
+        marker.setZIndexOffset(0);
       }
     });
 
-    // Fly to target room and open popup
-    const targetMarker = markersMapRef.current.get(selectedRoomId);
-    if (targetMarker) {
-      mapInstanceRef.current.flyTo(targetMarker.getLatLng(), 15, { duration: 0.6 });
-      setTimeout(() => {
-        targetMarker.openPopup();
-      }, 350);
+    if (selectedRoomId) {
+      const targetMarker = markersMapRef.current.get(selectedRoomId);
+      if (targetMarker && mapInstanceRef.current) {
+        mapInstanceRef.current.flyTo(targetMarker.getLatLng(), 15, { duration: 0.6 });
+        setTimeout(() => {
+          targetMarker.openPopup();
+        }, 350);
+      }
     }
-  }, [selectedRoomId]);
+  }, [selectedRoomId, hoveredRoomId, rooms]);
 
   const handleZoomIn = () => mapInstanceRef.current?.zoomIn();
   const handleZoomOut = () => mapInstanceRef.current?.zoomOut();
@@ -360,6 +361,39 @@ export default function RoomMapView({ rooms, selectedRoomId, onSelectRoom, class
         .custom-room-marker {
           background: transparent !important;
           border: none !important;
+        }
+        .room-pill-marker {
+          background: #FFFFFF;
+          color: #0F172A;
+          border: 1px solid #CBD5E1;
+          padding: 4px 10px;
+          border-radius: 9999px;
+          font-weight: 700;
+          font-size: 12px;
+          box-shadow: 0 2px 6px rgba(0, 21, 61, 0.12);
+          white-space: nowrap;
+          cursor: pointer;
+          transition: transform 160ms cubic-bezier(0.2, 0, 0, 1), background-color 160ms ease, color 160ms ease, border-color 160ms ease, box-shadow 160ms ease;
+          display: inline-flex;
+          align-items: center;
+          user-select: none;
+          will-change: transform;
+        }
+        .room-pill-marker.is-selected {
+          background: #00153D !important;
+          color: #FFFFFF !important;
+          border-color: #00153D !important;
+          transform: scale(1.08) !important;
+          box-shadow: 0 4px 14px rgba(0, 21, 61, 0.22) !important;
+          z-index: 9000 !important;
+        }
+        .room-pill-marker.is-active {
+          background: #00153D !important;
+          color: #FFFFFF !important;
+          border-color: #00153D !important;
+          transform: scale(1.1) translateY(-1px) !important;
+          box-shadow: 0 6px 18px rgba(0, 21, 61, 0.28) !important;
+          z-index: 10000 !important;
         }
       `}</style>
 

@@ -38,7 +38,7 @@ export function LocalNav({ title, items, actionLabel, onAction }: LocalNavProps)
           </nav>
           
           {actionLabel && (
-            <button onClick={onAction} className="btn-clay-primary text-sm font-medium">
+            <button onClick={onAction} className="btn-clay-primary text-white text-sm font-medium px-4 py-2">
               {actionLabel}
             </button>
           )}

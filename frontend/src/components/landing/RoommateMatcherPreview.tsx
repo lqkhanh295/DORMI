@@ -46,32 +46,40 @@ export function RoommateMatcherPreview() {
 
   // ponytail: Flattened Roommate Matcher with live compatibility scoring logic
   return (
-    <section className="py-16 md:py-24 bg-white border-t border-[#E2E8F0]">
+    <section className="py-16 md:py-24 bg-[#F8FAFC] border-t border-[#E2E8F0]">
       <div className="container-dormi">
         <div className="max-w-xl space-y-2 mb-12">
+          <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-blue-50 border border-blue-200/80 text-blue-800 text-caption font-bold">
+            <Users className="w-3.5 h-3.5 text-blue-600" />
+            <span>Thuật toán tương thích DORMI Match</span>
+          </div>
           <h2 className="text-h2 text-[#0F172A]">
-            Tìm người ở cùng phù hợp
+            Tìm người ở cùng phù hợp lối sống
           </h2>
           <p className="text-body text-[#64748B]">
-            Không chỉ tìm một căn phòng. Tìm người có thói quen sống tương thích với bạn.
+            Không chỉ tìm một căn phòng. Tìm người bạn cùng phòng có thói quen sinh hoạt và nhịp sống tương thích nhất với bạn.
           </p>
         </div>
 
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
           
           {/* Left Column (5 cols): Filter form */}
-          <div className="lg:col-span-5 bg-[#F5F7FA] shadow-clay-soft p-6 rounded-[18px] space-y-6">
+          <div className="lg:col-span-5 bg-white border border-slate-200/90 shadow-xs p-6 rounded-2xl space-y-6">
             
             {/* Sleep Time */}
             <div className="space-y-2">
-              <label className="text-caption font-semibold text-[#0F172A] block">Bạn thường ngủ lúc nào?</label>
+              <label className="text-caption font-semibold text-[#0F172A] block">Bạn thường đi ngủ lúc nào?</label>
               <div className="grid grid-cols-3 gap-2">
                 {['< 22h', '22h - 00h', '> 00h'].map(opt => (
                   <button
                     key={opt}
                     type="button"
                     onClick={() => setSleepTime(opt)}
-                    className={`py-2.5 rounded-[12px] text-caption font-semibold transition-[background-color,color,box-shadow,transform] duration-150 ease-out active:scale-[0.98] ${sleepTime === opt ? 'btn-clay-primary' : 'bg-white shadow-clay-soft text-[#64748B] hover:text-[#0F172A]'}`}
+                    className={`py-2.5 rounded-xl text-caption font-semibold transition-all duration-150 active:scale-[0.98] ${
+                      sleepTime === opt 
+                        ? 'bg-[#00153D] text-white shadow-xs' 
+                        : 'bg-slate-50 border border-slate-200 text-slate-600 hover:text-slate-900 hover:bg-slate-100'
+                    }`}
                   >
                     {opt}
                   </button>
@@ -81,14 +89,18 @@ export function RoommateMatcherPreview() {
 
             {/* Smoking */}
             <div className="space-y-2">
-              <label className="text-caption font-semibold text-[#0F172A] block">Hút thuốc</label>
+              <label className="text-caption font-semibold text-[#0F172A] block">Hút thuốc lá</label>
               <div className="grid grid-cols-2 gap-2">
                 {['Không', 'Có'].map(opt => (
                   <button
                     key={opt}
                     type="button"
                     onClick={() => setSmoking(opt)}
-                    className={`py-2.5 rounded-[12px] text-caption font-semibold transition-[background-color,color,box-shadow,transform] duration-150 ease-out active:scale-[0.98] ${smoking === opt ? 'btn-clay-primary' : 'bg-white shadow-clay-soft text-[#64748B] hover:text-[#0F172A]'}`}
+                    className={`py-2.5 rounded-xl text-caption font-semibold transition-all duration-150 active:scale-[0.98] ${
+                      smoking === opt 
+                        ? 'bg-[#00153D] text-white shadow-xs' 
+                        : 'bg-slate-50 border border-slate-200 text-slate-600 hover:text-slate-900 hover:bg-slate-100'
+                    }`}
                   >
                     {opt}
                   </button>
@@ -98,14 +110,18 @@ export function RoommateMatcherPreview() {
 
             {/* Pets */}
             <div className="space-y-2">
-              <label className="text-caption font-semibold text-[#0F172A] block">Thú cưng</label>
+              <label className="text-caption font-semibold text-[#0F172A] block">Nuôi thú cưng</label>
               <div className="grid grid-cols-2 gap-2">
                 {['Không', 'Có'].map(opt => (
                   <button
                     key={opt}
                     type="button"
                     onClick={() => setPets(opt)}
-                    className={`py-2.5 rounded-[12px] text-caption font-semibold transition-[background-color,color,box-shadow,transform] duration-150 ease-out active:scale-[0.98] ${pets === opt ? 'btn-clay-primary' : 'bg-white shadow-clay-soft text-[#64748B] hover:text-[#0F172A]'}`}
+                    className={`py-2.5 rounded-xl text-caption font-semibold transition-all duration-150 active:scale-[0.98] ${
+                      pets === opt 
+                        ? 'bg-[#00153D] text-white shadow-xs' 
+                        : 'bg-slate-50 border border-slate-200 text-slate-600 hover:text-slate-900 hover:bg-slate-100'
+                    }`}
                   >
                     {opt}
                   </button>
@@ -115,27 +131,28 @@ export function RoommateMatcherPreview() {
 
             <Link 
               to="/tenant/match" 
-              className="w-full btn-clay-primary font-semibold py-3 rounded-[12px] flex items-center justify-center gap-2 text-body min-h-[44px]"
+              className="w-full bg-[#00153D] hover:bg-[#073372] text-white font-semibold py-3 rounded-xl flex items-center justify-center gap-2 text-body min-h-[44px] transition-colors shadow-xs"
             >
-              <Users className="w-5 h-5" />
-              <span>Tìm người phù hợp</span>
+              <Users className="w-4 h-4" />
+              <span>Xem danh sách tìm người ở ghép</span>
               <ArrowRight className="w-4 h-4 ml-1" />
             </Link>
           </div>
 
-          {/* Right Column (7 cols): Result Card in Level 1 Primary Clay */}
+          {/* Right Column (7 cols): Result Preview Card */}
           <div className="lg:col-span-7">
-            <div className="bg-white rounded-[18px] shadow-clay-primary p-8 space-y-6">
+            <div className="bg-white border border-slate-200/90 rounded-2xl p-7 lg:p-8 shadow-xs space-y-6">
               
-              <div className="flex items-center justify-between border-b border-[#E2E8F0] pb-4">
-                <span className="bg-[#F0FDF4] text-[#16803C] border border-[#DCFCE7] text-body font-bold px-3 py-1 rounded-full">
-                  {matchScore}% phù hợp
+              <div className="flex items-center justify-between border-b border-slate-100 pb-4">
+                <span className="bg-emerald-50 text-emerald-700 border border-emerald-200/80 text-body font-bold px-3 py-1 rounded-full flex items-center gap-1.5">
+                  <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
+                  {matchScore}% tương thích
                 </span>
-                <span className="text-caption text-[#64748B] font-medium">Đối soát thuật toán tương thích</span>
+                <span className="text-caption text-slate-500 font-medium">Đối soát thói quen sống</span>
               </div>
 
               <div className="flex items-center gap-4">
-                <div className="w-16 h-16 rounded-full overflow-hidden shadow-clay-soft bg-[#00153D] text-white flex items-center justify-center font-bold text-h3">
+                <div className="w-14 h-14 rounded-full overflow-hidden border border-slate-200 bg-[#00153D] text-white flex items-center justify-center font-bold text-h3 shrink-0">
                   {realPost?.customerAvatar ? (
                     <img 
                       src={realPost.customerAvatar} 
@@ -147,39 +164,39 @@ export function RoommateMatcherPreview() {
                   )}
                 </div>
                 <div>
-                  <h3 className="text-h3 text-[#0F172A]">{realPost?.customerName || 'Hồ sơ người ở ghép'}</h3>
-                  <p className="text-caption text-[#64748B]">{realPost?.location || 'Khu vực TP. Hồ Chí Minh'}{realPost?.budget ? ` · Ngân sách ${Number(realPost.budget).toLocaleString('vi-VN')}đ` : ''}</p>
+                  <h3 className="text-h3 text-[#0F172A] font-bold">{realPost?.customerName || 'Hồ sơ sinh viên / nhân viên văn phòng'}</h3>
+                  <p className="text-caption text-slate-500 font-medium mt-0.5">{realPost?.location || 'Khu vực TP. Hồ Chí Minh'}{realPost?.budget ? ` · Ngân sách ~${Number(realPost.budget).toLocaleString('vi-VN')}đ / tháng` : ''}</p>
                 </div>
               </div>
 
-              <div className="grid grid-cols-3 gap-4 bg-[#F5F7FA] shadow-clay-inset p-4 rounded-[12px] text-caption">
+              <div className="grid grid-cols-3 gap-3 bg-slate-50 border border-slate-200/70 p-4 rounded-xl text-caption">
                 <div>
-                  <span className="text-[#64748B] block font-semibold">Giờ ngủ</span>
-                  <span className="font-bold text-[#0F172A]">{sleepTime}</span>
+                  <span className="text-slate-500 block font-semibold">Giờ ngủ</span>
+                  <span className="font-bold text-slate-800">{sleepTime}</span>
                 </div>
                 <div>
-                  <span className="text-[#64748B] block font-semibold">Hút thuốc</span>
-                  <span className="font-bold text-[#0F172A]">{smoking}</span>
+                  <span className="text-slate-500 block font-semibold">Hút thuốc</span>
+                  <span className="font-bold text-slate-800">{smoking}</span>
                 </div>
                 <div>
-                  <span className="text-[#64748B] block font-semibold">Thú cưng</span>
-                  <span className="font-bold text-[#0F172A]">{pets}</span>
+                  <span className="text-slate-500 block font-semibold">Thú cưng</span>
+                  <span className="font-bold text-slate-800">{pets}</span>
                 </div>
               </div>
 
-              <div className="pt-2">
+              <div className="pt-2 flex items-center justify-between">
+                <p className="text-xs text-slate-500">Đã kích hoạt bảo vệ thông tin cá nhân và số điện thoại.</p>
                 <Link 
                   to="/tenant/match" 
-                  className="inline-flex items-center justify-center bg-white text-[#0F172A] border border-[#E2E8F0] shadow-clay-soft font-semibold px-6 py-2.5 rounded-[12px] transition-[transform,box-shadow,background-color] duration-150 ease-out hover:-translate-y-0.5 active:scale-[0.98] text-body min-h-[44px] gap-1.5"
+                  className="inline-flex items-center justify-center bg-white text-[#00153D] border border-slate-300 hover:bg-slate-50 font-semibold px-5 py-2.5 rounded-xl transition-colors text-caption min-h-[40px] gap-1.5 shadow-xs"
                 >
-                  <span>Xem hồ sơ</span>
+                  <span>Khám phá thêm</span>
                   <ArrowRight className="w-4 h-4" />
                 </Link>
               </div>
 
             </div>
           </div>
-
         </div>
       </div>
     </section>

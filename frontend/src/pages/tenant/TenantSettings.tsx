@@ -86,7 +86,7 @@ export default function TenantSettings() {
               onClick={() => setActiveTab('notifications')}
               className={`w-full text-left px-4 py-2.5 text-caption font-semibold rounded-[12px] transition-[background-color,color,box-shadow,transform] duration-150 ease-out active:scale-[0.98] flex items-center gap-2 ${
                 activeTab === 'notifications' 
-                  ? 'btn-clay-primary' 
+                  ? 'btn-clay-primary text-white' 
                   : 'text-[#64748B] hover:text-[#0F172A] hover:bg-white'
               }`}
             >
@@ -98,7 +98,7 @@ export default function TenantSettings() {
               onClick={() => setActiveTab('security')}
               className={`w-full text-left px-4 py-2.5 text-caption font-semibold rounded-[12px] transition-[background-color,color,box-shadow,transform] duration-150 ease-out active:scale-[0.98] flex items-center gap-2 ${
                 activeTab === 'security' 
-                  ? 'btn-clay-primary' 
+                  ? 'btn-clay-primary text-white' 
                   : 'text-[#64748B] hover:text-[#0F172A] hover:bg-white'
               }`}
             >
@@ -110,7 +110,7 @@ export default function TenantSettings() {
               onClick={() => setActiveTab('privacy')}
               className={`w-full text-left px-4 py-2.5 text-caption font-semibold rounded-[12px] transition-[background-color,color,box-shadow,transform] duration-150 ease-out active:scale-[0.98] flex items-center gap-2 ${
                 activeTab === 'privacy' 
-                  ? 'btn-clay-primary' 
+                  ? 'btn-clay-primary text-white' 
                   : 'text-[#64748B] hover:text-[#0F172A] hover:bg-white'
               }`}
             >

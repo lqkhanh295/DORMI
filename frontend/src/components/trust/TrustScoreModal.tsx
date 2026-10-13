@@ -18,7 +18,14 @@ export default function TrustScoreModal({ isOpen, onClose, roomId, roomTitle }: 
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
-    if (isOpen && roomId) {
+    if (!isOpen) return;
+
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') onClose();
+    };
+    window.addEventListener('keydown', handleKeyDown);
+
+    if (roomId) {
       setLoading(true);
       setError(null);
       trustSafetyApi.getRoomTrustScore(roomId)
@@ -32,7 +39,9 @@ export default function TrustScoreModal({ isOpen, onClose, roomId, roomTitle }: 
           setLoading(false);
         });
     }
-  }, [isOpen, roomId]);
+
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [isOpen, roomId, onClose]);
 
   const getScoreColor = (score: number) => {
     if (score >= 85) return 'text-emerald-600';
@@ -57,7 +66,7 @@ export default function TrustScoreModal({ isOpen, onClose, roomId, roomTitle }: 
           animate="visible"
           exit="exit"
           onClick={onClose}
-          className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-xs p-4"
+          className="fixed inset-0 z-[100] flex items-center justify-center bg-black/40 backdrop-blur-xs p-4 overflow-y-auto"
         >
           <motion.div 
             variants={modalContentVariants}
@@ -65,16 +74,19 @@ export default function TrustScoreModal({ isOpen, onClose, roomId, roomTitle }: 
             animate="visible"
             exit="exit"
             onClick={e => e.stopPropagation()}
-            className="bg-white rounded-[20px] shadow-2xl max-w-xl w-full max-h-[90vh] flex flex-col overflow-hidden motion-gpu"
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="trust-score-title"
+            className="bg-white rounded-2xl shadow-xl border border-[#E2E8F0] max-w-xl w-full max-h-[90vh] flex flex-col overflow-hidden motion-gpu my-auto"
           >
             {/* Header */}
             <div className="flex items-center justify-between p-5 border-b border-slate-100 bg-slate-50/50">
               <div className="flex items-center gap-2.5">
-                <div className="w-10 h-10 rounded-xl bg-blue-50 border border-blue-100 flex items-center justify-center text-blue-600">
+                <div className="w-10 h-10 rounded-xl bg-blue-50 border border-blue-100 flex items-center justify-center text-[#073372]">
                   <ShieldCheck className="w-6 h-6" />
                 </div>
                 <div>
-                  <h2 className="text-lg font-bold text-slate-900 leading-tight">DORMI Trust Score</h2>
+                  <h2 id="trust-score-title" className="text-lg font-bold text-[#00153D] leading-tight">DORMI Trust Score</h2>
                   <p className="text-xs text-slate-500 truncate max-w-[280px]">
                     {roomTitle || 'Đánh giá minh bạch và an toàn'}
                   </p>

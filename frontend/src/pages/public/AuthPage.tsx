@@ -257,8 +257,8 @@ export default function AuthPage() {
   };
 
   return (
-    <PageMotion className="min-h-[calc(100vh-56px)] flex items-center justify-center bg-[#F5F7FA] px-4 py-12">
-      <Card className="w-full max-w-lg p-8 bg-white rounded-[20px] shadow-clay-primary border-none">
+    <PageMotion className="min-h-[calc(100vh-56px)] flex items-center justify-center bg-[#F8FAFC] px-4 py-12">
+      <Card className="w-full max-w-lg p-7 sm:p-8 bg-white rounded-2xl border border-slate-200/90 shadow-sm">
         
         {/* Step: MFA / 2FA Verification */}
         {step === 'mfa' ? (
@@ -273,7 +273,7 @@ export default function AuthPage() {
             </button>
 
             <div className="text-center mb-6">
-              <div className="w-12 h-12 rounded-2xl bg-blue-50 text-[#00153D] flex items-center justify-center mx-auto mb-3 shadow-clay-card">
+              <div className="w-12 h-12 rounded-2xl bg-blue-50 text-[#00153D] flex items-center justify-center mx-auto mb-3 border border-blue-200/80">
                 <KeyRound className="w-6 h-6 text-[#00153D]" />
               </div>
               <h2 className="text-h2 font-bold text-[#0F172A]">Xác thực 2 bước (MFA)</h2>
@@ -334,17 +334,17 @@ export default function AuthPage() {
             </div>
 
             {/* Top Switcher: Đăng nhập vs Đăng ký */}
-            <div className="flex p-1 bg-[#F5F7FA] shadow-clay-inset rounded-[14px] mb-6">
+            <div className="flex p-1 bg-slate-100 rounded-xl mb-6">
               <button 
                 type="button"
-                className={`flex-1 py-2.5 text-caption font-semibold rounded-[10px] transition-all duration-150 ease-out active:scale-[0.98] min-h-[42px] ${!isRegister ? 'btn-clay-primary' : 'text-[#64748B] hover:text-[#0F172A]'}`}
+                className={`flex-1 py-2 text-caption font-semibold rounded-lg transition-all duration-150 active:scale-[0.98] min-h-[40px] ${!isRegister ? 'bg-[#00153D] text-white shadow-xs font-bold' : 'text-slate-600 hover:text-slate-900'}`}
                 onClick={() => toggleTab(false)}
               >
                 Đăng nhập
               </button>
               <button 
                 type="button"
-                className={`flex-1 py-2.5 text-caption font-semibold rounded-[10px] transition-all duration-150 ease-out active:scale-[0.98] min-h-[42px] ${isRegister ? 'btn-clay-primary' : 'text-[#64748B] hover:text-[#0F172A]'}`}
+                className={`flex-1 py-2 text-caption font-semibold rounded-lg transition-all duration-150 active:scale-[0.98] min-h-[40px] ${isRegister ? 'bg-[#00153D] text-white shadow-xs font-bold' : 'text-slate-600 hover:text-slate-900'}`}
                 onClick={() => toggleTab(true)}
               >
                 Đăng ký tài khoản
@@ -396,14 +396,14 @@ export default function AuthPage() {
                     <button
                       type="button"
                       onClick={() => setIntention('Tenant')}
-                      className={`p-3.5 rounded-[14px] border text-left transition-all duration-150 flex flex-col justify-between ${
+                      className={`p-3.5 rounded-xl border text-left transition-all duration-150 flex flex-col justify-between ${
                         intention === 'Tenant'
-                          ? 'border-[#00153D] bg-blue-50/40 shadow-clay-card'
-                          : 'border-[#E2E8F0] bg-[#F8FAFC] hover:bg-white text-slate-600'
+                          ? 'border-[#00153D] bg-blue-50/50 shadow-xs'
+                          : 'border-slate-200 bg-white hover:bg-slate-50 text-slate-600'
                       }`}
                     >
                       <div className="flex items-center justify-between w-full mb-1.5">
-                        <div className={`p-2 rounded-xl ${intention === 'Tenant' ? 'bg-[#00153D] text-white' : 'bg-slate-200 text-slate-700'}`}>
+                        <div className={`p-2 rounded-lg ${intention === 'Tenant' ? 'bg-[#00153D] text-white' : 'bg-slate-100 text-slate-700'}`}>
                           <Home className="w-4 h-4" />
                         </div>
                         {intention === 'Tenant' && <Check className="w-4 h-4 text-[#00153D]" />}
@@ -417,17 +417,17 @@ export default function AuthPage() {
                     <button
                       type="button"
                       onClick={() => setIntention('Landlord')}
-                      className={`p-3.5 rounded-[14px] border text-left transition-all duration-150 flex flex-col justify-between ${
+                      className={`p-3.5 rounded-xl border text-left transition-all duration-150 flex flex-col justify-between ${
                         intention === 'Landlord'
-                          ? 'border-[#00153D] bg-emerald-50/40 shadow-clay-card'
-                          : 'border-[#E2E8F0] bg-[#F8FAFC] hover:bg-white text-slate-600'
+                          ? 'border-emerald-600 bg-emerald-50/50 shadow-xs'
+                          : 'border-slate-200 bg-white hover:bg-slate-50 text-slate-600'
                       }`}
                     >
                       <div className="flex items-center justify-between w-full mb-1.5">
-                        <div className={`p-2 rounded-xl ${intention === 'Landlord' ? 'bg-[#00153D] text-white' : 'bg-slate-200 text-slate-700'}`}>
+                        <div className={`p-2 rounded-lg ${intention === 'Landlord' ? 'bg-emerald-600 text-white' : 'bg-slate-100 text-slate-700'}`}>
                           <Building2 className="w-4 h-4" />
                         </div>
-                        {intention === 'Landlord' && <Check className="w-4 h-4 text-[#00153D]" />}
+                        {intention === 'Landlord' && <Check className="w-4 h-4 text-emerald-600" />}
                       </div>
                       <div>
                         <div className="text-caption font-bold text-[#0F172A]">Chủ trọ</div>

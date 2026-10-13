@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import { createPortal } from 'react-dom';
 import { Link, useNavigate } from 'react-router-dom';
 import { appointmentsApi } from '../../services/api';
 import RentalApplicationModal from '../../components/transaction/RentalApplicationModal';
@@ -54,6 +55,14 @@ export default function TenantViewings() {
 
   useEffect(() => {
     fetchAppointments();
+  }, []);
+
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') setReschedulingItem(null);
+    };
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
   }, []);
 
   const handleCancel = async (id: string) => {
@@ -399,93 +408,100 @@ export default function TenantViewings() {
       )}
 
       {/* Reschedule Modal */}
-      <AnimatePresence>
-        {reschedulingItem && (
-          <motion.div
-            variants={modalBackdropVariants}
-            initial="initial"
-            animate="animate"
-            exit="exit"
-            className="fixed inset-0 z-50 flex items-center justify-center bg-[#0F172A]/50 backdrop-blur-sm p-4"
-          >
-            <motion.div
-              variants={modalContentVariants}
-              initial="initial"
-              animate="animate"
-              exit="exit"
-              className="bg-white rounded-2xl shadow-clay-primary max-w-md w-full p-6 space-y-5"
-            >
-              <div className="flex justify-between items-center border-b border-[#E2E8F0] pb-3">
-                <h3 className="font-bold text-base text-[#0F172A] flex items-center gap-2">
-                  <CalendarClock className="w-5 h-5 text-indigo-600" />
-                  Đổi lịch xem phòng
-                </h3>
-                <button onClick={() => setReschedulingItem(null)} className="text-[#94A3B8] hover:text-[#0F172A]">
-                  <X className="w-5 h-5" />
-                </button>
-              </div>
-
-              <form onSubmit={handleConfirmReschedule} className="space-y-4 text-xs">
-                <div>
-                  <label className="block font-semibold text-[#475569] uppercase mb-1">Chọn ngày hẹn mới</label>
-                  <input
-                    type="date"
-                    required
-                    min={new Date().toISOString().split('T')[0]}
-                    value={newDate}
-                    onChange={e => setNewDate(e.target.value)}
-                    className="w-full px-3.5 py-2.5 bg-[#F8FAFC] border border-[#CBD5E1] rounded-xl text-sm outline-none"
-                  />
+      {createPortal(
+        <AnimatePresence>
+          {reschedulingItem && (
+            <div className="fixed inset-0 z-[100] flex items-center justify-center bg-[#0F172A]/60 backdrop-blur-xs p-4 overflow-y-auto">
+              <motion.div
+                variants={modalBackdropVariants}
+                initial="hidden"
+                animate="visible"
+                exit="exit"
+                onClick={() => setReschedulingItem(null)}
+                className="fixed inset-0"
+              />
+              <motion.div
+                variants={modalContentVariants}
+                initial="hidden"
+                animate="visible"
+                exit="exit"
+                role="dialog"
+                aria-modal="true"
+                className="relative my-auto bg-white rounded-2xl shadow-xl max-w-md w-full p-6 space-y-5 border border-[#E2E8F0]"
+              >
+                <div className="flex justify-between items-center border-b border-[#E2E8F0] pb-3">
+                  <h3 className="font-bold text-base text-[#0F172A] flex items-center gap-2">
+                    <CalendarClock className="w-5 h-5 text-indigo-600" />
+                    Đổi lịch xem phòng
+                  </h3>
+                  <button onClick={() => setReschedulingItem(null)} className="text-[#94A3B8] hover:text-[#0F172A] p-1 rounded-lg">
+                    <X className="w-5 h-5" />
+                  </button>
                 </div>
 
-                <div>
-                  <label className="block font-semibold text-[#475569] uppercase mb-1">Khung giờ mới</label>
-                  <div className="grid grid-cols-2 gap-2">
-                    {['09:00', '10:30', '14:00', '16:00', '18:00'].map(t => (
-                      <button
-                        key={t}
-                        type="button"
-                        onClick={() => setNewTime(t)}
-                        className={`py-2 rounded-lg font-semibold border ${newTime === t ? 'bg-[#00153D] text-white border-[#00153D]' : 'bg-[#F8FAFC] text-[#0F172A] border-[#E2E8F0]'}`}
-                      >
-                        {t}
-                      </button>
-                    ))}
+                <form onSubmit={handleConfirmReschedule} className="space-y-4 text-xs">
+                  <div>
+                    <label className="block font-semibold text-[#475569] uppercase mb-1">Chọn ngày hẹn mới</label>
+                    <input
+                      type="date"
+                      required
+                      min={new Date().toISOString().split('T')[0]}
+                      value={newDate}
+                      onChange={e => setNewDate(e.target.value)}
+                      className="w-full px-3.5 py-2.5 bg-[#F8FAFC] border border-[#CBD5E1] rounded-xl text-sm outline-none"
+                    />
                   </div>
-                </div>
 
-                <div>
-                  <label className="block font-semibold text-[#475569] uppercase mb-1">Lý do dời lịch (tùy chọn)</label>
-                  <input
-                    type="text"
-                    placeholder="VD: Bận việc đột xuất vào giờ cũ..."
-                    value={rescheduleReason}
-                    onChange={e => setRescheduleReason(e.target.value)}
-                    className="w-full px-3.5 py-2.5 bg-[#F8FAFC] border border-[#CBD5E1] rounded-xl text-sm outline-none"
-                  />
-                </div>
+                  <div>
+                    <label className="block font-semibold text-[#475569] uppercase mb-1">Khung giờ mới</label>
+                    <div className="grid grid-cols-2 gap-2">
+                      {['09:00', '10:30', '14:00', '16:00', '18:00'].map(t => (
+                        <button
+                          key={t}
+                          type="button"
+                          onClick={() => setNewTime(t)}
+                          className={`py-2 rounded-lg font-semibold border ${newTime === t ? 'bg-[#00153D] text-white border-[#00153D]' : 'bg-[#F8FAFC] text-[#0F172A] border-[#E2E8F0]'}`}
+                        >
+                          {t}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
 
-                <div className="flex justify-end gap-3 pt-3 border-t border-[#E2E8F0]">
-                  <button
-                    type="button"
-                    onClick={() => setReschedulingItem(null)}
-                    className="px-4 py-2 border border-[#CBD5E1] text-[#475569] font-semibold rounded-xl"
-                  >
-                    Hủy
-                  </button>
-                  <button
-                    type="submit"
-                    disabled={savingReschedule}
-                    className="px-5 py-2 bg-[#00153D] text-white font-semibold rounded-xl hover:bg-[#002266] disabled:opacity-50"
-                  >
-                    {savingReschedule ? 'Đang cập nhật...' : 'Xác nhận dời lịch'}
-                  </button>
-                </div>
-              </form>
-            </motion.div>
-          </motion.div>
-        )}
-      </AnimatePresence>
+                  <div>
+                    <label className="block font-semibold text-[#475569] uppercase mb-1">Lý do dời lịch (tùy chọn)</label>
+                    <input
+                      type="text"
+                      placeholder="VD: Bận việc đột xuất vào giờ cũ..."
+                      value={rescheduleReason}
+                      onChange={e => setRescheduleReason(e.target.value)}
+                      className="w-full px-3.5 py-2.5 bg-[#F8FAFC] border border-[#CBD5E1] rounded-xl text-sm outline-none"
+                    />
+                  </div>
+
+                  <div className="flex justify-end gap-3 pt-3 border-t border-[#E2E8F0]">
+                    <button
+                      type="button"
+                      onClick={() => setReschedulingItem(null)}
+                      className="px-4 py-2 border border-[#CBD5E1] text-[#475569] font-semibold rounded-xl hover:bg-slate-50 transition-colors"
+                    >
+                      Hủy
+                    </button>
+                    <button
+                      type="submit"
+                      disabled={savingReschedule}
+                      className="px-5 py-2 bg-[#00153D] text-white font-semibold rounded-xl hover:bg-[#002266] disabled:opacity-50 transition-colors"
+                    >
+                      {savingReschedule ? 'Đang cập nhật...' : 'Xác nhận dời lịch'}
+                    </button>
+                  </div>
+                </form>
+              </motion.div>
+            </div>
+          )}
+        </AnimatePresence>,
+        document.body
+      )}
 
       {/* Rental Application Modal (opened from Completed viewing) */}
       {selectedRoomForApply && (

@@ -66,31 +66,41 @@ export function RoomCard({
     }
   };
 
-  // ponytail: Apple-grade tactile room card (1.01 subtle hover scale, GPU-only transitions, 1->1.15->0.98->1 favorite spring)
+  const [imgSrc, setImgSrc] = useState(room.image);
+  const fallbackImage = 'https://images.unsplash.com/photo-1522771739844-6a9f6d5f14af?auto=format&fit=crop&w=600&q=80';
+
+  useEffect(() => {
+    setImgSrc(room.image || fallbackImage);
+  }, [room.image]);
+
+  // ponytail: Apple-grade tactile room card with fallback image handling
   return (
     <Link 
       to={`/room/${room.id}`}
-      className="bg-white rounded-[18px] shadow-clay-soft p-3 overflow-hidden flex flex-col transition-[transform,box-shadow] duration-200 ease-[cubic-bezier(0.22,1,0.36,1)] hover:-translate-y-[2px] hover:scale-[1.01] hover:shadow-clay-primary active:scale-[0.99] group motion-gpu"
+      className="bg-white rounded-[18px] border border-slate-200/90 shadow-xs hover:shadow-md p-3 overflow-hidden flex flex-col transition-[transform,box-shadow] duration-200 ease-[cubic-bezier(0.22,1,0.36,1)] hover:-translate-y-[2px] active:scale-[0.99] group motion-gpu"
     >
-      <div className="aspect-[4/3] w-full rounded-[14px] overflow-hidden bg-[#EEF2F6] relative">
+      <div className="aspect-[4/3] w-full rounded-[14px] overflow-hidden bg-slate-100 relative">
         <img 
-          src={room.image} 
+          src={imgSrc} 
           alt={room.title} 
           loading="lazy"
-          className="w-full h-full object-cover transition-transform duration-200 ease-[cubic-bezier(0.22,1,0.36,1)] group-hover:scale-[1.02]"
+          onError={() => setImgSrc(fallbackImage)}
+          className="w-full h-full object-cover transition-transform duration-300 ease-[cubic-bezier(0.22,1,0.36,1)] group-hover:scale-[1.03]"
         />
         
         {/* Verification Signal */}
         {room.verified && (
-          <div className="absolute top-3 left-3 bg-white/95 backdrop-blur-xs text-[#16803C] border border-[#DCFCE7] text-caption font-bold px-2.5 py-1 rounded-full flex items-center gap-1 shadow-xs select-none">
-            <CheckCircle className="w-4 h-4" /> Đã xác minh
+          <div className="absolute top-3 left-3 bg-white/95 backdrop-blur-xs text-emerald-700 border border-emerald-200/80 text-caption font-bold px-2.5 py-1 rounded-full flex items-center gap-1 shadow-xs select-none">
+            <CheckCircle className="w-3.5 h-3.5 text-emerald-600" />
+            <span>Đã xác minh</span>
           </div>
         )}
 
         {/* Boosted / Nổi bật Badge */}
         {room.isBoosted && (
-          <div className="absolute bottom-3 left-3 bg-gradient-to-r from-amber-500 to-orange-500 text-white text-caption font-bold px-2.5 py-1 rounded-full flex items-center gap-1 shadow-md select-none">
-            <Flame className="w-3.5 h-3.5 fill-white text-white" /> Nổi bật
+          <div className="absolute bottom-3 left-3 bg-[#00153D] text-amber-400 border border-amber-400/30 text-caption font-bold px-2.5 py-1 rounded-full flex items-center gap-1 shadow-xs select-none">
+            <Flame className="w-3.5 h-3.5 fill-amber-400 text-amber-400" />
+            <span>Nổi bật</span>
           </div>
         )}
 
@@ -99,28 +109,28 @@ export function RoomCard({
           type="button"
           onClick={toggleFavorite}
           aria-label={isSaved ? "Bỏ lưu phòng" : "Lưu phòng"}
-          className={`absolute top-3 right-3 w-10 h-10 rounded-full flex items-center justify-center transition-[background-color,color,box-shadow,transform] duration-150 ease-[cubic-bezier(0.22,1,0.36,1)] active:scale-95 ${
+          className={`absolute top-3 right-3 w-9 h-9 rounded-full flex items-center justify-center transition-all duration-150 active:scale-90 ${
             isPulsing ? 'favorite-heart-pulse' : ''
           } ${
             isSaved 
-              ? 'bg-[#FEF2F2] text-[#C62828] shadow-xs' 
-              : 'bg-white/90 text-[#64748B] hover:text-[#C62828] hover:bg-white shadow-xs'
+              ? 'bg-rose-50 text-rose-600 shadow-xs' 
+              : 'bg-white/90 text-slate-500 hover:text-rose-600 hover:bg-white shadow-xs'
           }`}
         >
-          <Heart className={`w-5 h-5 transition-colors duration-150 ${isSaved ? 'fill-current' : ''}`} />
+          <Heart className={`w-4 h-4 transition-colors duration-150 ${isSaved ? 'fill-current' : ''}`} />
         </button>
       </div>
 
-      <div className="pt-4 px-2 pb-2 flex flex-col gap-2 flex-1 justify-between">
-        <div className="space-y-1.5">
+      <div className="pt-3.5 px-1.5 pb-1 flex flex-col gap-1.5 flex-1 justify-between">
+        <div className="space-y-1">
           {/* Price First Hierarchy */}
           <p className="text-h3 font-bold text-[#00153D]">
             {room.price}
           </p>
-          <h3 className="text-body font-bold text-[#0F172A] line-clamp-1 group-hover:text-[#00153D] transition-colors duration-150 leading-snug">
+          <h3 className="text-body font-semibold text-slate-800 line-clamp-1 group-hover:text-[#00153D] transition-colors duration-150 leading-snug">
             {room.title}
           </h3>
-          <p className="text-caption text-[#64748B] font-medium">
+          <p className="text-caption text-slate-500 font-medium">
             {room.location} · {room.area}
           </p>
         </div>

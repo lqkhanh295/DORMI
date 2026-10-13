@@ -93,7 +93,7 @@ export default function AdminDashboard() {
       {/* Header */}
       <div className="bg-white p-6 rounded-2xl border border-slate-200 shadow-sm flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
         <div>
-          <h1 className="text-2xl font-bold text-slate-900">Bảng điều khiển Quản trị viên</h1>
+          <h1 className="text-2xl font-bold text-slate-900">Quản trị Hệ thống DORMI</h1>
           <p className="text-sm text-slate-500 mt-1">Theo dõi hoạt động kiểm duyệt và số liệu thời gian thực của hệ thống.</p>
         </div>
       </div>

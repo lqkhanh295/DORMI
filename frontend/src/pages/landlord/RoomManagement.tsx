@@ -1,4 +1,5 @@
 import { useState, useEffect, useRef } from 'react';
+import { createPortal } from 'react-dom';
 import { useNavigate } from 'react-router-dom';
 import { Card } from '../../components/ui/Card';
 import { Button } from '../../components/ui/Button';
@@ -61,12 +62,21 @@ export default function RoomManagement() {
       loadRooms();
     };
 
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') {
+        setIsAdding(false);
+        setEditingRoom(null);
+      }
+    };
+
     window.addEventListener('room-status-updated', handleRoomStatusUpdate);
     window.addEventListener('room-status-changed', handleRoomStatusUpdate);
+    window.addEventListener('keydown', handleKeyDown);
 
     return () => {
       window.removeEventListener('room-status-updated', handleRoomStatusUpdate);
       window.removeEventListener('room-status-changed', handleRoomStatusUpdate);
+      window.removeEventListener('keydown', handleKeyDown);
     };
   }, []);
 
@@ -346,11 +356,11 @@ export default function RoomManagement() {
   };
 
   return (
-    <PageMotion className="space-y-6 relative bg-[#F5F7FA]">
+    <PageMotion className="space-y-6 relative bg-[#F8FAFC]">
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-h2 font-bold text-[#0F172A]">Phòng của tôi (API Connected)</h1>
-          <p className="text-body text-[#64748B]">Quản lý danh sách phòng trọ, ẩn/hiện tin đăng và xóa phòng.</p>
+          <h1 className="text-2xl font-black text-[#00153D]">Quản lý phòng trọ</h1>
+          <p className="text-body text-[#64748B]">Theo dõi danh sách phòng, trạng thái duyệt và quản lý gói đẩy tin.</p>
         </div>
         <Button onClick={() => setIsAdding(true)}>+ Thêm phòng mới</Button>
       </div>
@@ -359,8 +369,8 @@ export default function RoomManagement() {
         {loading ? (
           <div className="space-y-4">
             {[1, 2, 3].map(i => (
-              <div key={i} className="flex flex-col md:flex-row p-4 gap-6 items-center bg-white rounded-[18px] shadow-clay-soft">
-                <div className="w-full h-48 md:w-48 md:h-32 rounded-[14px] skeleton-shimmer shrink-0" />
+              <div key={i} className="flex flex-col md:flex-row p-4 gap-6 items-center bg-white rounded-2xl border border-slate-200 shadow-xs">
+                <div className="w-full h-48 md:w-48 md:h-32 rounded-xl skeleton-shimmer shrink-0" />
                 <div className="flex-1 space-y-3 w-full">
                   <div className="h-6 w-1/2 rounded-md skeleton-shimmer" />
                   <div className="h-4 w-3/4 rounded-md skeleton-shimmer" />
@@ -373,8 +383,8 @@ export default function RoomManagement() {
           myRooms.map(room => {
             const primaryImg = room.images?.[0]?.imageUrl || 'https://images.unsplash.com/photo-1522708323590-d24dbb6b0267?auto=format&fit=crop&w=400&q=80';
             return (
-              <Card key={room.id} className="flex flex-col md:flex-row p-4 gap-6 items-center bg-white rounded-[18px] shadow-clay-soft border-none motion-gpu transition-[box-shadow,transform] duration-200 ease-out hover:shadow-clay-primary hover:-translate-y-0.5">
-                <div className="w-full h-48 md:w-48 md:h-32 bg-[#EEF2F6] rounded-[14px] overflow-hidden shrink-0">
+              <Card key={room.id} className="flex flex-col md:flex-row p-4 gap-6 items-center bg-white rounded-2xl border border-slate-200/90 shadow-xs hover:shadow-md transition-shadow">
+                <div className="w-full h-48 md:w-48 md:h-32 bg-slate-100 rounded-xl overflow-hidden shrink-0">
                   <img 
                     src={primaryImg} 
                     className="w-full h-full object-cover" 
@@ -453,28 +463,33 @@ export default function RoomManagement() {
       </div>
 
       {/* Add New Room Modal */}
-      <AnimatePresence>
-        {isAdding && (
-          <motion.div
-            variants={modalBackdropVariants}
-            initial="initial"
-            animate="animate"
-            exit="exit"
-            className="fixed inset-0 bg-[#0F172A]/40 backdrop-blur-xs flex items-center justify-center z-50 p-4 overflow-y-auto"
-          >
-            <motion.div
-              variants={modalContentVariants}
-              initial="initial"
-              animate="animate"
-              exit="exit"
-              className="w-full max-w-2xl p-6 md:p-8 bg-white rounded-[18px] shadow-clay-primary border-none max-h-[90vh] overflow-y-auto space-y-6"
-            >
-              <div className="flex justify-between items-center pb-3 border-b border-[#E2E8F0]">
-                <h2 className="text-h2 font-bold text-[#0F172A]">Thêm phòng trọ mới (Tối ưu ảnh tức thì)</h2>
-                <button onClick={() => setIsAdding(false)} className="text-[#64748B] hover:text-[#0F172A] p-1">
-                  <X className="w-5 h-5" />
-                </button>
-              </div>
+      {createPortal(
+        <AnimatePresence>
+          {isAdding && (
+            <div className="fixed inset-0 z-[100] flex items-center justify-center bg-[#0F172A]/60 backdrop-blur-xs p-4 overflow-y-auto">
+              <motion.div
+                variants={modalBackdropVariants}
+                initial="hidden"
+                animate="visible"
+                exit="exit"
+                onClick={() => setIsAdding(false)}
+                className="fixed inset-0"
+              />
+              <motion.div
+                variants={modalContentVariants}
+                initial="hidden"
+                animate="visible"
+                exit="exit"
+                role="dialog"
+                aria-modal="true"
+                className="relative my-auto w-full max-w-2xl p-6 md:p-8 bg-white rounded-2xl shadow-xl border border-[#E2E8F0] max-h-[min(90vh,800px)] overflow-y-auto space-y-6"
+              >
+                <div className="flex justify-between items-center pb-3 border-b border-[#E2E8F0]">
+                  <h2 className="text-h2 font-bold text-[#0F172A]">Thêm phòng trọ mới (Tối ưu ảnh tức thì)</h2>
+                  <button onClick={() => setIsAdding(false)} className="text-[#64748B] hover:text-[#0F172A] p-1 rounded-lg">
+                    <X className="w-5 h-5" />
+                  </button>
+                </div>
 
             <form onSubmit={handleAddNew} className="space-y-5">
               <div>
@@ -556,7 +571,7 @@ export default function RoomManagement() {
                         onClick={() => toggleUtility(util)}
                         className={`px-3 py-1.5 rounded-[10px] text-caption font-semibold transition-[background-color,color,box-shadow,transform] duration-150 ease-out active:scale-95 inline-flex items-center gap-1 ${
                           active 
-                            ? 'btn-clay-primary' 
+                            ? 'btn-clay-primary text-white' 
                             : 'bg-[#F5F7FA] text-[#64748B] border border-[#E2E8F0] hover:bg-white hover:text-[#0F172A]'
                         }`}
                       >
@@ -572,7 +587,7 @@ export default function RoomManagement() {
                         key={customUtil}
                         type="button"
                         onClick={() => toggleUtility(customUtil)}
-                        className="px-3 py-1.5 rounded-[10px] text-caption font-semibold btn-clay-primary inline-flex items-center gap-1"
+                        className="px-3 py-1.5 rounded-[10px] text-caption font-semibold btn-clay-primary text-white inline-flex items-center gap-1"
                       >
                         <Check className="w-3.5 h-3.5" /> {customUtil}
                         <X className="w-3 h-3 hover:text-red-300 ml-0.5" />
@@ -668,33 +683,40 @@ export default function RoomManagement() {
               </div>
             </form>
             </motion.div>
-          </motion.div>
-        )}
-      </AnimatePresence>
+            </div>
+          )}
+        </AnimatePresence>,
+        document.body
+      )}
 
       {/* Edit Room Modal */}
-      <AnimatePresence>
-        {editingRoom && (
-          <motion.div
-            variants={modalBackdropVariants}
-            initial="initial"
-            animate="animate"
-            exit="exit"
-            className="fixed inset-0 bg-[#0F172A]/40 backdrop-blur-xs flex items-center justify-center z-50 p-4 overflow-y-auto"
-          >
-            <motion.div
-              variants={modalContentVariants}
-              initial="initial"
-              animate="animate"
-              exit="exit"
-              className="w-full max-w-2xl p-6 md:p-8 bg-white rounded-[18px] shadow-clay-primary border-none max-h-[90vh] overflow-y-auto space-y-6"
-            >
-              <div className="flex justify-between items-center pb-3 border-b border-[#E2E8F0]">
-                <h2 className="text-h2 font-bold text-[#0F172A]">Chỉnh sửa bài đăng phòng trọ</h2>
-                <button onClick={() => setEditingRoom(null)} className="text-[#64748B] hover:text-[#0F172A] p-1">
-                  <X className="w-5 h-5" />
-                </button>
-              </div>
+      {createPortal(
+        <AnimatePresence>
+          {editingRoom && (
+            <div className="fixed inset-0 z-[100] flex items-center justify-center bg-[#0F172A]/60 backdrop-blur-xs p-4 overflow-y-auto">
+              <motion.div
+                variants={modalBackdropVariants}
+                initial="hidden"
+                animate="visible"
+                exit="exit"
+                onClick={() => setEditingRoom(null)}
+                className="fixed inset-0"
+              />
+              <motion.div
+                variants={modalContentVariants}
+                initial="hidden"
+                animate="visible"
+                exit="exit"
+                role="dialog"
+                aria-modal="true"
+                className="relative my-auto w-full max-w-2xl p-6 md:p-8 bg-white rounded-2xl shadow-xl border border-[#E2E8F0] max-h-[min(90vh,800px)] overflow-y-auto space-y-6"
+              >
+                <div className="flex justify-between items-center pb-3 border-b border-[#E2E8F0]">
+                  <h2 className="text-h2 font-bold text-[#0F172A]">Chỉnh sửa bài đăng phòng trọ</h2>
+                  <button onClick={() => setEditingRoom(null)} className="text-[#64748B] hover:text-[#0F172A] p-1 rounded-lg">
+                    <X className="w-5 h-5" />
+                  </button>
+                </div>
 
             <form onSubmit={handleSaveEdit} className="space-y-5">
               <div>
@@ -781,7 +803,7 @@ export default function RoomManagement() {
                         onClick={() => toggleUtility(util, true)}
                         className={`px-3 py-1.5 rounded-[10px] text-caption font-semibold transition-[background-color,color,box-shadow,transform] duration-150 ease-out active:scale-95 inline-flex items-center gap-1 ${
                           active 
-                            ? 'btn-clay-primary' 
+                            ? 'btn-clay-primary text-white' 
                             : 'bg-[#F5F7FA] text-[#64748B] border border-[#E2E8F0] hover:bg-white hover:text-[#0F172A]'
                         }`}
                       >
@@ -797,7 +819,7 @@ export default function RoomManagement() {
                         key={customUtil}
                         type="button"
                         onClick={() => toggleUtility(customUtil, true)}
-                        className="px-3 py-1.5 rounded-[10px] text-caption font-semibold btn-clay-primary inline-flex items-center gap-1"
+                        className="px-3 py-1.5 rounded-[10px] text-caption font-semibold btn-clay-primary text-white inline-flex items-center gap-1"
                       >
                         <Check className="w-3.5 h-3.5" /> {customUtil}
                         <X className="w-3 h-3 hover:text-red-300 ml-0.5" />
@@ -880,9 +902,11 @@ export default function RoomManagement() {
               </div>
             </form>
             </motion.div>
-          </motion.div>
-        )}
-      </AnimatePresence>
+            </div>
+          )}
+        </AnimatePresence>,
+        document.body
+      )}
     </PageMotion>
   );
 }

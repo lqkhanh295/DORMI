@@ -57,13 +57,13 @@ export default function LandlordDashboard() {
   }, []);
 
   return (
-    <div className="space-y-8 pb-12 bg-[#F5F7FA]">
-      <div className="bg-white p-6 md:p-8 rounded-[18px] shadow-clay-soft flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
+    <div className="space-y-8 pb-12 bg-[#F8FAFC]">
+      <div className="bg-white p-6 md:p-8 rounded-2xl border border-slate-200/90 shadow-sm flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
         <div>
-          <h1 className="text-[32px] font-bold text-[#0F172A] tracking-tight leading-[1.1]">Tổng quan Chủ trọ</h1>
-          <p className="text-body text-[#64748B] mt-1">Hệ điều hành cho thuê: Quản lý khách, hợp đồng lưu trú và phê duyệt hồ sơ thuê.</p>
+          <h1 className="text-2xl md:text-3xl font-black text-[#00153D] tracking-tight">Tổng quan Quản lý Trọ</h1>
+          <p className="text-sm text-slate-500 mt-1">Quản lý tin đăng, hợp đồng điện tử và phê duyệt hồ sơ người thuê phòng.</p>
         </div>
-        <div className="flex items-center gap-3">
+        <div className="flex flex-wrap items-center gap-2.5">
           <Link to="/landlord/leases">
             <Button variant="secondary" className="flex items-center gap-2">
               <FileCheck className="w-4 h-4 text-emerald-600" /> Hợp đồng thuê
@@ -74,7 +74,7 @@ export default function LandlordDashboard() {
             variant="secondary" 
             className="flex items-center gap-2"
           >
-            <UserCheck className="w-4 h-4 text-[#2563EB]" /> Đánh giá khách thuê
+            <UserCheck className="w-4 h-4 text-blue-600" /> Đánh giá khách thuê
           </Button>
           <Link to="/landlord/listing/new">
             <Button variant="primary" className="flex items-center gap-2">
@@ -89,29 +89,29 @@ export default function LandlordDashboard() {
         onClose={() => setShowRateModal(false)} 
       />
 
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5">
         <Link to="/landlord/rooms">
-          <Card className="p-6 bg-white rounded-[18px] shadow-clay-soft hover:scale-[1.01] hover:shadow-clay-primary active:scale-[0.99] transition-[transform,box-shadow] duration-200 ease-out cursor-pointer h-full motion-gpu">
-            <h3 className="text-caption font-semibold text-[#64748B] uppercase tracking-wider mb-3">Phòng hoạt động</h3>
+          <Card className="p-6 bg-white rounded-2xl border border-slate-200/90 shadow-xs hover:shadow-md hover:border-slate-300 transition-all cursor-pointer h-full">
+            <h3 className="text-caption font-semibold text-slate-500 uppercase tracking-wider mb-2">Phòng hoạt động</h3>
             <div className="flex items-baseline gap-2">
               {loading ? (
                 <div className="h-10 w-16 skeleton-shimmer rounded-lg" />
               ) : (
-                <p className="text-[40px] font-bold text-[#00153D] leading-none">{analytics.activeListings}</p>
+                <p className="text-3xl font-black text-[#00153D] leading-none">{analytics.activeListings}</p>
               )}
-              <span className="text-body font-medium text-[#64748B]">/ {analytics.totalListings} tổng</span>
+              <span className="text-sm font-medium text-slate-500">/ {analytics.totalListings} tổng</span>
             </div>
           </Card>
         </Link>
         
         <Link to="/landlord/applications">
-          <Card className="p-6 bg-white rounded-[18px] shadow-clay-soft hover:scale-[1.01] hover:shadow-clay-primary active:scale-[0.99] transition-[transform,box-shadow] duration-200 ease-out cursor-pointer h-full border-l-4 border-l-indigo-600 motion-gpu">
-            <h3 className="text-caption font-semibold text-indigo-700 uppercase tracking-wider mb-3">Hồ sơ ứng tuyển</h3>
+          <Card className="p-6 bg-white rounded-2xl border border-slate-200/90 shadow-xs hover:shadow-md hover:border-indigo-300 transition-all cursor-pointer h-full border-l-4 border-l-indigo-600">
+            <h3 className="text-caption font-semibold text-indigo-700 uppercase tracking-wider mb-2">Hồ sơ ứng tuyển</h3>
             <div className="flex items-baseline gap-2">
               {loading ? (
                 <div className="h-10 w-16 skeleton-shimmer rounded-lg" />
               ) : (
-                <p className="text-[40px] font-bold text-[#00153D] leading-none">{pendingApplications}</p>
+                <p className="text-3xl font-black text-[#00153D] leading-none">{pendingApplications}</p>
               )}
               <span className="text-caption font-bold text-indigo-600">cần xét duyệt</span>
             </div>
@@ -119,60 +119,60 @@ export default function LandlordDashboard() {
         </Link>
         
         <Link to="/landlord/viewings">
-          <Card className="p-6 bg-white rounded-[18px] shadow-clay-soft hover:scale-[1.01] hover:shadow-clay-primary active:scale-[0.99] transition-[transform,box-shadow] duration-200 ease-out cursor-pointer h-full border-l-4 border-l-emerald-600 motion-gpu">
-            <h3 className="text-caption font-semibold text-emerald-700 uppercase tracking-wider mb-3">Lịch hẹn xem phòng</h3>
+          <Card className="p-6 bg-white rounded-2xl border border-slate-200/90 shadow-xs hover:shadow-md hover:border-emerald-300 transition-all cursor-pointer h-full border-l-4 border-l-emerald-600">
+            <h3 className="text-caption font-semibold text-emerald-700 uppercase tracking-wider mb-2">Lịch hẹn xem phòng</h3>
             <div className="flex items-baseline gap-2">
               {loading ? (
                 <div className="h-10 w-16 skeleton-shimmer rounded-lg" />
               ) : (
-                <p className="text-[40px] font-bold text-[#00153D] leading-none">{analytics.totalAppointments}</p>
+                <p className="text-3xl font-black text-[#00153D] leading-none">{analytics.totalAppointments}</p>
               )}
-              <span className="text-caption font-medium text-[#C62828]">{analytics.pendingAppointments} chờ duyệt</span>
+              <span className="text-caption font-medium text-rose-600">{analytics.pendingAppointments} chờ duyệt</span>
             </div>
           </Card>
         </Link>
 
         <Link to="/landlord/analytics">
-          <Card className="p-6 bg-white rounded-[18px] shadow-clay-soft hover:scale-[1.01] hover:shadow-clay-primary active:scale-[0.99] transition-[transform,box-shadow] duration-200 ease-out cursor-pointer h-full motion-gpu">
-            <h3 className="text-caption font-semibold text-[#64748B] uppercase tracking-wider mb-3">Lượt xem tin đăng</h3>
+          <Card className="p-6 bg-white rounded-2xl border border-slate-200/90 shadow-xs hover:shadow-md hover:border-slate-300 transition-all cursor-pointer h-full">
+            <h3 className="text-caption font-semibold text-slate-500 uppercase tracking-wider mb-2">Lượt xem tin đăng</h3>
             <div className="flex items-baseline gap-2">
               {loading ? (
                 <div className="h-10 w-16 skeleton-shimmer rounded-lg" />
               ) : (
-                <p className="text-[40px] font-bold text-[#00153D] leading-none">{analytics.totalViews}</p>
+                <p className="text-3xl font-black text-[#00153D] leading-none">{analytics.totalViews}</p>
               )}
-              <span className="text-caption font-bold text-[#16803C]">Phễu quan tâm</span>
+              <span className="text-caption font-bold text-emerald-700">Phễu quan tâm</span>
             </div>
           </Card>
         </Link>
       </div>
 
-      <Card className="p-6 md:p-8 rounded-[18px] bg-white shadow-clay-soft hover:shadow-clay-primary transition-[box-shadow] duration-200 ease-out">
-        <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-8 border-b border-[#E2E8F0] pb-5">
+      <Card className="p-6 md:p-8 rounded-2xl bg-white border border-slate-200/90 shadow-sm">
+        <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-6 border-b border-slate-100 pb-4">
           <div>
-            <h3 className="text-h2 font-bold text-[#0F172A] tracking-tight">Phễu phân tích chuyển đổi API</h3>
-            <p className="text-[#64748B] mt-1">Hiệu quả chuyển đổi thực tế</p>
+            <h3 className="text-lg font-bold text-[#0F172A] tracking-tight">Hiệu quả chuyển đổi người thuê</h3>
+            <p className="text-xs text-slate-500 mt-0.5">Tỷ lệ tương tác từ lượt xem sang lịch hẹn thực tế</p>
           </div>
         </div>
         
-        <div className="space-y-6">
+        <div className="space-y-5">
           <div>
-            <div className="flex justify-between text-body font-semibold mb-2">
-              <span className="text-[#64748B]">Tổng lượt xem</span>
-              <span className="text-[#0F172A] font-bold">{analytics.totalViews}</span>
+            <div className="flex justify-between text-sm font-semibold mb-1.5">
+              <span className="text-slate-600">Tổng lượt xem tin</span>
+              <span className="text-[#0F172A] font-bold">{analytics.totalViews} lượt</span>
             </div>
-            <div className="w-full bg-[#F5F7FA] rounded-full h-3 overflow-hidden border border-[#E2E8F0]">
+            <div className="w-full bg-slate-100 rounded-full h-2.5 overflow-hidden">
               <div className="bg-[#00153D] h-full rounded-full transition-[width] duration-500 ease-out" style={{width: '100%'}}></div>
             </div>
           </div>
           
           <div>
-            <div className="flex justify-between text-body font-semibold mb-2">
-              <span className="text-[#64748B]">Yêu cầu xem phòng</span>
-              <span className="text-[#0F172A] font-bold">{analytics.totalAppointments}</span>
+            <div className="flex justify-between text-sm font-semibold mb-1.5">
+              <span className="text-slate-600">Yêu cầu xem phòng thực tế</span>
+              <span className="text-[#0F172A] font-bold">{analytics.totalAppointments} cuộc hẹn</span>
             </div>
-            <div className="w-full bg-[#F5F7FA] rounded-full h-3 overflow-hidden border border-[#E2E8F0]">
-              <div className="bg-[#16803C] h-full rounded-full transition-[width] duration-500 ease-out" style={{width: `${Math.min(100, analytics.conversionRate * 5)}%`}}></div>
+            <div className="w-full bg-slate-100 rounded-full h-2.5 overflow-hidden">
+              <div className="bg-emerald-600 h-full rounded-full transition-[width] duration-500 ease-out" style={{width: `${Math.min(100, analytics.conversionRate * 5)}%`}}></div>
             </div>
           </div>
         </div>

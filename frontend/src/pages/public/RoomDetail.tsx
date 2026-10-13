@@ -70,6 +70,18 @@ export default function RoomDetail() {
     }
   }, [id, currentUser]);
 
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') {
+        setShowGallery(false);
+        setShowVerificationModal(false);
+        setShowScheduler(false);
+      }
+    };
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, []);
+
   const photos = (roomData?.images && roomData.images.length > 0)
     ? roomData.images.map(img => img.imageUrl) 
     : [];
@@ -298,44 +310,44 @@ export default function RoomDetail() {
               <p className="text-body text-[#64748B]">{roomData?.address || 'Địa chỉ phòng trọ'}</p>
             </div>
 
-            <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 pt-6 border-t border-[#E2E8F0]">
-              <div className="bg-[#F5F7FA] shadow-clay-inset p-4 rounded-[12px]">
-                <p className="text-[#64748B] text-caption font-semibold uppercase mb-1">Loại phòng</p>
+            <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 pt-6 border-t border-slate-200">
+              <div className="bg-slate-50 border border-slate-200/80 p-3.5 rounded-xl">
+                <p className="text-slate-500 text-caption font-semibold uppercase tracking-wider mb-1">Loại phòng</p>
                 <p className="font-bold text-[#0F172A] text-body">{roomData?.roomType || 'Studio'}</p>
               </div>
-              <div className="bg-[#F5F7FA] shadow-clay-inset p-4 rounded-[12px]">
-                <p className="text-[#64748B] text-caption font-semibold uppercase mb-1">Trạng thái</p>
+              <div className="bg-slate-50 border border-slate-200/80 p-3.5 rounded-xl">
+                <p className="text-slate-500 text-caption font-semibold uppercase tracking-wider mb-1">Trạng thái</p>
                 <p className="font-bold text-[#0F172A] text-body">{roomData?.status === 0 ? 'Còn trống' : 'Đã thuê'}</p>
               </div>
-              <div className="bg-[#F5F7FA] shadow-clay-inset p-4 rounded-[12px]">
-                <p className="text-[#64748B] text-caption font-semibold uppercase mb-1">Diện tích</p>
+              <div className="bg-slate-50 border border-slate-200/80 p-3.5 rounded-xl">
+                <p className="text-slate-500 text-caption font-semibold uppercase tracking-wider mb-1">Diện tích</p>
                 <p className="font-bold text-[#0F172A] text-body">{roomData?.area ? `${roomData.area} m²` : '25 m²'}</p>
               </div>
-              <div className="bg-[#F5F7FA] shadow-clay-inset p-4 rounded-[12px]">
-                <p className="text-[#64748B] text-caption font-semibold uppercase mb-1">Số tiện ích</p>
+              <div className="bg-slate-50 border border-slate-200/80 p-3.5 rounded-xl">
+                <p className="text-slate-500 text-caption font-semibold uppercase tracking-wider mb-1">Số tiện ích</p>
                 <p className="font-bold text-[#0F172A] text-body">
                   {roomData?.utilities ? `${roomData.utilities.split(',').filter(Boolean).length} tiện ích` : 'Đầy đủ'}
                 </p>
               </div>
             </div>
 
-            <div className="space-y-4 pt-4 border-t border-[#E2E8F0]">
+            <div className="space-y-4 pt-4 border-t border-slate-200">
               <h2 className="text-h2 font-bold text-[#0F172A]">Mô tả phòng</h2>
-              <p className="text-[#64748B] text-body leading-relaxed whitespace-pre-line">
+              <p className="text-slate-600 text-body leading-relaxed whitespace-pre-line">
                 {roomData?.description || 'Phòng trọ tiện nghi, thiết kế hiện đại, không gian thoáng mát.'}
               </p>
             </div>
 
-            <div className="space-y-4 pt-6 border-t border-[#E2E8F0]">
+            <div className="space-y-4 pt-6 border-t border-slate-200">
               <h2 className="text-h2 font-bold text-[#0F172A]">Tiện ích đi kèm</h2>
-              <div className="flex flex-wrap gap-2.5">
+              <div className="flex flex-wrap gap-2">
                 {(roomData?.utilities ? roomData.utilities.split(',') : ['Wifi', 'Máy lạnh', 'Tủ lạnh', 'Ban công', 'Bãi giữ xe']).map((util, i) => {
                   const name = util.trim();
                   if (!name) return null;
                   return (
-                    <span key={i} className="px-3.5 py-2 rounded-[12px] bg-[#F5F7FA] text-[#00153D] border border-[#E2E8F0] text-body font-semibold flex items-center gap-2 shadow-clay-inset">
-                      <CheckCircle className="w-4.5 h-4.5 text-[#16803C]" />
-                      {name}
+                    <span key={i} className="px-3.5 py-1.5 rounded-lg bg-slate-50 text-slate-800 border border-slate-200 text-sm font-medium flex items-center gap-1.5">
+                      <CheckCircle className="w-4 h-4 text-emerald-600" />
+                      <span>{name}</span>
                     </span>
                   );
                 })}
@@ -362,29 +374,29 @@ export default function RoomDetail() {
                 </div>
               </div>
 
-              <div className="p-4 rounded-[14px] bg-[#F5F7FA] border border-[#E2E8F0] space-y-3 shadow-clay-inset">
-                <div className="w-full bg-[#E2E8F0] h-2.5 rounded-full overflow-hidden">
+              <div className="p-4 rounded-xl bg-slate-50 border border-slate-200/90 space-y-3">
+                <div className="w-full bg-slate-200 h-2 rounded-full overflow-hidden">
                   <div 
-                    className="h-full bg-gradient-to-r from-[#2563EB] to-[#16803C] rounded-full transition-[width] duration-500 ease-out" 
+                    className="h-full bg-gradient-to-r from-blue-600 to-emerald-600 rounded-full transition-[width] duration-500 ease-out" 
                     style={{ width: `${trustScore ? trustScore.totalScore : (roomData?.isVerifiedLandlord ? 85 : 70)}%` }}
                   ></div>
                 </div>
 
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 text-caption text-[#475569] pt-1">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 text-caption text-slate-600 pt-1">
                   <div className="flex items-center gap-1.5">
-                    <Check className="w-4 h-4 text-[#16803C] shrink-0" />
+                    <Check className="w-4 h-4 text-emerald-600 shrink-0" />
                     <span>{roomData?.isVerifiedLandlord ? 'CCCD chủ trọ đã xác thực (+20đ)' : 'Tài khoản chủ trọ chưa KYC'}</span>
                   </div>
                   <div className="flex items-center gap-1.5">
-                    <Check className={`w-4 h-4 shrink-0 ${roomData?.isPropertyVerified ? 'text-[#16803C]' : 'text-slate-400'}`} />
+                    <Check className={`w-4 h-4 shrink-0 ${roomData?.isPropertyVerified ? 'text-emerald-600' : 'text-slate-400'}`} />
                     <span>{roomData?.isPropertyVerified ? 'Chủ quyền phòng (Sổ đỏ) đã xác thực (+20đ)' : 'Chưa nộp hồ sơ chủ quyền phòng'}</span>
                   </div>
                   <div className="flex items-center gap-1.5">
-                    <Check className="w-4 h-4 text-[#16803C] shrink-0" />
+                    <Check className="w-4 h-4 text-emerald-600 shrink-0" />
                     <span>{roomData?.images && roomData.images.length >= 3 ? 'Ảnh chụp thực tế đạt chuẩn (+15đ)' : 'Hình ảnh phòng cơ bản'}</span>
                   </div>
                   <div className="flex items-center gap-1.5">
-                    <Check className="w-4 h-4 text-[#16803C] shrink-0" />
+                    <Check className="w-4 h-4 text-emerald-600 shrink-0" />
                     <span>Địa chỉ & Tọa độ phòng định vị rõ ràng (+15đ)</span>
                   </div>
                 </div>
@@ -392,17 +404,17 @@ export default function RoomDetail() {
             </div>
 
             {/* AI Photo Freshness & Anti-Fake Guarantee */}
-            <div className="p-4 rounded-[14px] bg-gradient-to-r from-blue-50 to-indigo-50 border border-blue-200/80 space-y-2">
+            <div className="p-4 rounded-xl bg-blue-50/70 border border-blue-200/80 space-y-2">
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-2 text-[#00153D] font-bold text-caption">
                   <Camera className="w-4 h-4 text-[#2563EB]" />
                   <span>Xác thực ảnh chụp thực tế & Cam kết chống ảnh ảo</span>
                 </div>
-                <span className="text-[11px] font-semibold text-[#2563EB] bg-white px-2 py-0.5 rounded-md border border-blue-200">
+                <span className="text-[11px] font-semibold text-blue-700 bg-white px-2 py-0.5 rounded-md border border-blue-200">
                   Chu kỳ: 5 - 8 tháng
                 </span>
               </div>
-              <p className="text-caption text-[#475569] leading-relaxed">
+              <p className="text-caption text-slate-600 leading-relaxed">
                 DORMI áp dụng công nghệ rà soát ảnh để ngăn chặn ảnh photoshop quá đà hoặc ảnh 3D không thực tế. Chủ phòng được khuyến cáo định kỳ cập nhật ảnh chụp mới mỗi 5 - 8 tháng để đảm bảo phòng giống 100% so với thực tế khi khách đến xem.
               </p>
             </div>
@@ -410,12 +422,12 @@ export default function RoomDetail() {
         </div>
 
         <div className="lg:col-span-4 flex flex-col">
-          <Card className="p-6 bg-white shadow-clay-primary rounded-[18px] lg:sticky lg:top-20 border-none space-y-6">
+          <Card className="p-6 bg-white border border-slate-200/90 shadow-md rounded-2xl lg:sticky lg:top-20 space-y-6">
             <div>
-              <p className="text-[36px] font-bold text-[#00153D] leading-none mb-2">
-                {roomData ? `${Number(roomData.price).toLocaleString('vi-VN')}đ` : '0đ'} <span className="text-caption text-[#64748B] font-normal">/ tháng</span>
+              <p className="text-[34px] font-bold text-[#00153D] leading-none mb-2">
+                {roomData ? `${Number(roomData.price).toLocaleString('vi-VN')}đ` : '0đ'} <span className="text-caption text-slate-500 font-normal">/ tháng</span>
               </p>
-              <p className="text-caption text-[#64748B]">Giá thuê niêm yết chủ nhà</p>
+              <p className="text-caption text-slate-500 font-medium">Giá thuê niêm yết chủ nhà</p>
             </div>
 
             <div className="space-y-3">
@@ -427,10 +439,10 @@ export default function RoomDetail() {
                   if (!currentUser) navigate('/auth');
                   else setShowApplicationModal(true);
                 }}
-                className="flex items-center justify-center gap-2 shadow-clay-primary"
+                className="flex items-center justify-center gap-2 shadow-clay-primary text-white"
               >
-                <FileText className="w-5 h-5" />
-                Nộp hồ sơ thuê ngay
+                <FileText className="w-5 h-5 text-white" />
+                <span>Nộp hồ sơ thuê ngay</span>
               </Button>
 
               <Button 
@@ -538,114 +550,126 @@ export default function RoomDetail() {
 
       </div>
 
-      {/* Gallery Modal with Apple-grade Physics */}
-      <AnimatePresence>
-        {showGallery && (
-          <motion.div 
-            variants={modalBackdropVariants}
-            initial="hidden"
-            animate="visible"
-            exit="exit"
-            className="fixed inset-0 z-50 bg-[#0F172A]/90 backdrop-blur-md flex flex-col p-6 overflow-y-auto"
-          >
-            <div className="flex justify-between items-center mb-6 max-w-5xl mx-auto w-full">
-              <h3 className="text-h2 font-bold text-white">Hình ảnh căn hộ ({photos.length})</h3>
-              <button 
-                onClick={() => setShowGallery(false)} 
-                className="text-white hover:text-[#EEF2F6] p-2 rounded-full hover:bg-white/10 transition-colors"
-                aria-label="Đóng thư viện ảnh"
-              >
-                <X className="w-6 h-6" />
-              </button>
-            </div>
+      {/* Gallery Modal */}
+      {createPortal(
+        <AnimatePresence>
+          {showGallery && (
             <motion.div 
-              variants={modalContentVariants}
+              variants={modalBackdropVariants}
               initial="hidden"
               animate="visible"
               exit="exit"
-              className="grid grid-cols-1 md:grid-cols-2 gap-4 max-w-5xl mx-auto w-full motion-gpu"
+              role="dialog"
+              aria-modal="true"
+              className="fixed inset-0 z-[100] bg-[#0F172A]/90 backdrop-blur-md flex flex-col p-6 overflow-y-auto"
             >
-              {photos.map((photo, i) => (
-                <img key={i} src={photo} alt={`Photo ${i}`} className="w-full h-64 object-cover rounded-[14px] shadow-lg" />
-              ))}
-            </motion.div>
-          </motion.div>
-        )}
-      </AnimatePresence>
-
-      {/* Verification Details Modal */}
-      <AnimatePresence>
-        {showVerificationModal && (
-          <motion.div 
-            variants={modalBackdropVariants}
-            initial="hidden"
-            animate="visible"
-            exit="exit"
-            onClick={() => setShowVerificationModal(false)}
-            className="fixed inset-0 z-50 flex items-center justify-center bg-[#0F172A]/40 backdrop-blur-xs p-4"
-          >
-            <motion.div 
-              variants={modalContentVariants}
-              initial="hidden"
-              animate="visible"
-              exit="exit"
-              onClick={e => e.stopPropagation()}
-              className="bg-white rounded-[20px] shadow-clay-primary max-w-md w-full p-6 space-y-6 overflow-hidden border border-[#E2E8F0] motion-gpu"
-            >
-              <div className="flex justify-between items-center border-b border-[#E2E8F0] pb-4">
-                <div className="flex items-center gap-2 text-[#16803C]">
-                  <CheckCircle className="w-6 h-6" />
-                  <h3 className="text-h3 font-bold text-[#0F172A]">Thông tin đã xác minh</h3>
-                </div>
+              <div className="flex justify-between items-center mb-6 max-w-5xl mx-auto w-full">
+                <h3 className="text-h2 font-bold text-white">Hình ảnh căn hộ ({photos.length})</h3>
                 <button 
-                  onClick={() => setShowVerificationModal(false)} 
-                  className="text-[#64748B] hover:text-[#0F172A] p-1 rounded-full hover:bg-slate-100 transition-colors"
-                  aria-label="Đóng"
+                  onClick={() => setShowGallery(false)} 
+                  className="text-white hover:text-[#EEF2F6] p-2 rounded-full hover:bg-white/10 transition-colors"
+                  aria-label="Đóng thư viện ảnh"
                 >
-                  <X className="w-5 h-5" />
+                  <X className="w-6 h-6" />
                 </button>
               </div>
-
-              <div className="space-y-3 text-body text-[#0F172A]">
-                <div className="flex items-center gap-3 p-3 bg-[#F5F7FA] rounded-[12px] shadow-clay-inset">
-                  <CheckCircle className="w-5 h-5 text-[#16803C]" />
-                  <span>Danh tính người đăng đã đối soát CCCD</span>
-                </div>
-                <div className="flex items-center gap-3 p-3 bg-[#F5F7FA] rounded-[12px] shadow-clay-inset">
-                  <CheckCircle className="w-5 h-5 text-[#16803C]" />
-                  <span>Hình ảnh phòng trọ chụp thực tế</span>
-                </div>
-              </div>
-
-              <div className="text-caption text-[#64748B] border-t border-[#E2E8F0] pt-4 text-center">
-                Lần đối soát kiểm duyệt gần nhất: <span className="font-semibold text-[#0F172A]">12/08/2026</span>
-              </div>
+              <motion.div 
+                variants={modalContentVariants}
+                initial="hidden"
+                animate="visible"
+                exit="exit"
+                className="grid grid-cols-1 md:grid-cols-2 gap-4 max-w-5xl mx-auto w-full motion-gpu my-auto"
+              >
+                {photos.map((photo, i) => (
+                  <img key={i} src={photo} alt={`Photo ${i}`} className="w-full h-64 object-cover rounded-xl shadow-lg border border-white/10" />
+                ))}
+              </motion.div>
             </motion.div>
-          </motion.div>
-        )}
-      </AnimatePresence>
+          )}
+        </AnimatePresence>,
+        document.body
+      )}
+
+      {/* Verification Details Modal */}
+      {createPortal(
+        <AnimatePresence>
+          {showVerificationModal && (
+            <div className="fixed inset-0 z-[100] flex items-center justify-center bg-[#0F172A]/60 backdrop-blur-xs p-4 overflow-y-auto">
+              <motion.div 
+                variants={modalBackdropVariants}
+                initial="hidden"
+                animate="visible"
+                exit="exit"
+                onClick={() => setShowVerificationModal(false)}
+                className="fixed inset-0"
+              />
+              <motion.div 
+                variants={modalContentVariants}
+                initial="hidden"
+                animate="visible"
+                exit="exit"
+                role="dialog"
+                aria-modal="true"
+                className="relative my-auto bg-white rounded-2xl shadow-xl max-w-md w-full p-6 space-y-6 overflow-hidden border border-[#E2E8F0]"
+              >
+                <div className="flex justify-between items-center border-b border-[#E2E8F0] pb-4">
+                  <div className="flex items-center gap-2 text-[#16803C]">
+                    <CheckCircle className="w-6 h-6" />
+                    <h3 className="text-h3 font-bold text-[#0F172A]">Thông tin đã xác minh</h3>
+                  </div>
+                  <button 
+                    onClick={() => setShowVerificationModal(false)} 
+                    className="text-[#64748B] hover:text-[#0F172A] p-1 rounded-full hover:bg-slate-100 transition-colors"
+                    aria-label="Đóng"
+                  >
+                    <X className="w-5 h-5" />
+                  </button>
+                </div>
+
+                <div className="space-y-3 text-body text-[#0F172A]">
+                  <div className="flex items-center gap-3 p-3 bg-[#F5F7FA] rounded-xl border border-[#E2E8F0]">
+                    <CheckCircle className="w-5 h-5 text-[#16803C]" />
+                    <span>Danh tính người đăng đã đối soát CCCD</span>
+                  </div>
+                  <div className="flex items-center gap-3 p-3 bg-[#F5F7FA] rounded-xl border border-[#E2E8F0]">
+                    <CheckCircle className="w-5 h-5 text-[#16803C]" />
+                    <span>Hình ảnh phòng trọ chụp thực tế</span>
+                  </div>
+                </div>
+
+                <div className="text-caption text-[#64748B] border-t border-[#E2E8F0] pt-4 text-center">
+                  Lần đối soát kiểm duyệt gần nhất: <span className="font-semibold text-[#0F172A]">12/08/2026</span>
+                </div>
+              </motion.div>
+            </div>
+          )}
+        </AnimatePresence>,
+        document.body
+      )}
 
       {/* Scheduler Modal */}
       {createPortal(
         <AnimatePresence>
           {showScheduler && (
-          <motion.div 
-            variants={modalBackdropVariants}
-            initial="hidden"
-            animate="visible"
-            exit="exit"
-            onClick={() => setShowScheduler(false)}
-            className="fixed inset-0 z-50 flex items-center justify-center bg-[#0F172A]/40 backdrop-blur-xs p-4"
-          >
-            <motion.div 
-              variants={modalContentVariants}
-              initial="hidden"
-              animate="visible"
-              exit="exit"
-              onClick={e => e.stopPropagation()}
-              className="bg-white rounded-[20px] shadow-clay-primary max-w-md w-full p-6 space-y-6 overflow-hidden border border-[#E2E8F0] motion-gpu"
-            >
-              <div className="flex justify-between items-center border-b border-[#E2E8F0] pb-4">
+            <div className="fixed inset-0 z-[100] flex items-center justify-center bg-[#0F172A]/60 backdrop-blur-xs p-4 overflow-y-auto">
+              <motion.div 
+                variants={modalBackdropVariants}
+                initial="hidden"
+                animate="visible"
+                exit="exit"
+                onClick={() => setShowScheduler(false)}
+                className="fixed inset-0"
+              />
+              <motion.div 
+                variants={modalContentVariants}
+                initial="hidden"
+                animate="visible"
+                exit="exit"
+                role="dialog"
+                aria-modal="true"
+                className="relative my-auto bg-white rounded-2xl shadow-xl max-w-md w-full p-6 space-y-6 overflow-hidden border border-[#E2E8F0]"
+              >
+                <div className="flex justify-between items-center border-b border-[#E2E8F0] pb-4">
                 <h3 className="text-h3 font-bold text-[#0F172A] flex items-center gap-2">
                   {schedulerStep === 3 ? (
                     <>
@@ -687,7 +711,7 @@ export default function RoomDetail() {
                             key={slot}
                             type="button"
                             onClick={() => setSelectedTime(slot)}
-                            className={`py-2.5 rounded-[12px] text-caption font-semibold transition-[background-color,color,border-color] duration-150 active:scale-95 ${selectedTime === slot ? 'btn-clay-primary' : 'bg-[#F5F7FA] border border-[#E2E8F0] text-[#0F172A]'}`}
+                            className={`py-2.5 rounded-[12px] text-caption font-semibold transition-[background-color,color,border-color] duration-150 active:scale-95 ${selectedTime === slot ? 'btn-clay-primary text-white border-[#00153D]' : 'bg-[#F5F7FA] border border-[#E2E8F0] text-[#0F172A]'}`}
                           >
                             {slot}
                           </button>
@@ -733,7 +757,7 @@ export default function RoomDetail() {
                 </div>
               )}
             </motion.div>
-          </motion.div>
+          </div>
         )}
         </AnimatePresence>,
         document.body

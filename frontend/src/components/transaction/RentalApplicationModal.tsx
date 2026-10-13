@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { createPortal } from 'react-dom';
 import { useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
@@ -56,6 +56,15 @@ export default function RentalApplicationModal({
   const [uploadingDoc, setUploadingDoc] = useState(false);
   const [submitting, setSubmitting] = useState(false);
   const [submittedSuccess, setSubmittedSuccess] = useState(false);
+
+  useEffect(() => {
+    if (!isOpen) return;
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') onClose();
+    };
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [isOpen, onClose]);
 
   const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>, docType: string) => {
     const file = e.target.files?.[0];
@@ -131,7 +140,7 @@ export default function RentalApplicationModal({
           animate="visible"
           exit="exit"
           onClick={onClose}
-          className="fixed inset-0 z-50 flex items-center justify-center bg-[#0F172A]/40 backdrop-blur-xs p-4 overflow-y-auto"
+          className="fixed inset-0 z-[100] flex items-center justify-center bg-[#0F172A]/40 backdrop-blur-xs p-4 overflow-y-auto"
         >
           <motion.div 
             variants={modalContentVariants}
@@ -139,17 +148,20 @@ export default function RentalApplicationModal({
             animate="visible"
             exit="exit"
             onClick={e => e.stopPropagation()}
-            className="bg-white rounded-[20px] shadow-clay-primary max-w-2xl w-full my-8 overflow-hidden border border-[#E2E8F0] motion-gpu"
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="rental-app-title"
+            className="bg-white rounded-2xl shadow-xl max-w-2xl w-full flex flex-col max-h-[min(90vh,760px)] overflow-hidden border border-[#E2E8F0] motion-gpu my-auto"
           >
             
             {/* Modal Header */}
-            <div className="p-6 bg-gradient-to-r from-[#00153D] to-[#1E3A8A] text-white flex justify-between items-start">
+            <div className="p-6 bg-gradient-to-r from-[#00153D] to-[#073372] text-white flex justify-between items-start shrink-0">
               <div>
                 <div className="flex items-center gap-2 mb-1">
                   <FileText className="w-5 h-5 text-indigo-300" />
                   <span className="text-xs uppercase tracking-wider font-semibold text-indigo-200">Rental Application</span>
                 </div>
-                <h2 className="text-xl font-bold">Nộp hồ sơ thuê phòng</h2>
+                <h2 id="rental-app-title" className="text-xl font-bold">Nộp hồ sơ thuê phòng</h2>
                 <p className="text-xs text-indigo-100 mt-1 line-clamp-1">
                   {roomTitle} — {roomPrice.toLocaleString()} VNĐ/tháng
                 </p>
@@ -201,10 +213,10 @@ export default function RentalApplicationModal({
             </div>
           </div>
         ) : (
-          <form onSubmit={handleSubmit} className="p-6 space-y-6">
-            
-            {/* Trust Banner */}
-            <div className="p-3.5 bg-blue-50/70 border border-blue-100 rounded-xl flex items-start gap-3 text-xs text-blue-900">
+          <form onSubmit={handleSubmit} className="flex flex-col flex-1 min-h-0">
+            <div className="flex-1 overflow-y-auto p-6 space-y-6">
+              {/* Trust Banner */}
+              <div className="p-3.5 bg-blue-50/70 border border-blue-100 rounded-xl flex items-start gap-3 text-xs text-blue-900">
               <ShieldCheck className="w-5 h-5 text-blue-600 shrink-0 mt-0.5" />
               <div>
                 <p className="font-semibold">Hồ sơ được bảo mật theo tiêu chuẩn DORMI Trust</p>
@@ -385,37 +397,38 @@ export default function RentalApplicationModal({
                 </div>
               )}
             </div>
+          </div>
 
-            {/* Modal Actions */}
-            <div className="flex items-center justify-end gap-3 pt-4 border-t border-[#E2E8F0]">
-              <button
-                type="button"
-                onClick={onClose}
-                className="px-5 py-2.5 rounded-xl border border-[#CBD5E1] text-[#475569] font-semibold text-sm hover:bg-[#F1F5F9] transition-colors"
-              >
-                Hủy bỏ
-              </button>
-              <button
-                type="submit"
-                disabled={submitting || uploadingDoc}
-                className="px-6 py-2.5 rounded-xl bg-[#00153D] hover:bg-[#002266] text-white font-semibold text-sm transition-colors shadow-sm disabled:opacity-50 flex items-center gap-2"
-              >
-                {submitting ? (
-                  <>
-                    <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
-                    <span>Đang nộp hồ sơ...</span>
-                  </>
-                ) : (
-                  <>
-                    <FileText className="w-4 h-4" />
-                    <span>Nộp hồ sơ thuê</span>
-                  </>
-                )}
-              </button>
-            </div>
+          {/* Modal Actions */}
+          <div className="px-6 py-4 bg-[#F8FAFC] border-t border-[#E2E8F0] flex items-center justify-end gap-3 shrink-0">
+                <button
+                  type="button"
+                  onClick={onClose}
+                  className="px-5 py-2.5 rounded-xl border border-[#CBD5E1] text-[#475569] font-semibold text-sm hover:bg-white transition-colors"
+                >
+                  Hủy bỏ
+                </button>
+                <button
+                  type="submit"
+                  disabled={submitting || uploadingDoc}
+                  className="px-6 py-2.5 rounded-xl bg-[#00153D] hover:bg-[#073372] text-white font-semibold text-sm transition-colors shadow-sm disabled:opacity-50 flex items-center gap-2"
+                >
+                  {submitting ? (
+                    <>
+                      <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                      <span>Đang nộp hồ sơ...</span>
+                    </>
+                  ) : (
+                    <>
+                      <FileText className="w-4 h-4" />
+                      <span>Nộp hồ sơ thuê</span>
+                    </>
+                  )}
+                </button>
+              </div>
 
-          </form>
-        )}
+            </form>
+          )}
 
           </motion.div>
         </motion.div>

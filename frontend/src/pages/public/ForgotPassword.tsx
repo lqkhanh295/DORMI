@@ -108,7 +108,7 @@ export default function ForgotPassword() {
 
   return (
     <PageMotion className="min-h-[calc(100vh-64px)] flex items-center justify-center bg-[#F8FAFC] px-4 py-12">
-      <Card className="w-full max-w-md p-8 bg-white shadow-clay-soft rounded-[20px]">
+      <Card className="w-full max-w-md p-8 bg-white border border-slate-200/90 shadow-sm rounded-2xl">
         {/* Step Indicator */}
         {!success && (
           <div className="flex items-center justify-center gap-2 mb-6">

@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import { createPortal } from 'react-dom';
 import { Card } from '../../components/ui/Card';
 import { Button } from '../../components/ui/Button';
 import { landlordApi } from '../../services/api';
@@ -29,6 +30,17 @@ export default function LeadAnalytics() {
   const [boostCheckout, setBoostCheckout] = useState<any | null>(null);
   const [isSubmittingBoost, setIsSubmittingBoost] = useState(false);
   const [isVerifyingBoost, setIsVerifyingBoost] = useState(false);
+
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') {
+        setBoostingRoom(null);
+        setBoostCheckout(null);
+      }
+    };
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, []);
 
   const fetchAnalytics = async () => {
     try {
@@ -490,163 +502,177 @@ export default function LeadAnalytics() {
       )}
 
       {/* Boost Modal */}
-      {boostingRoom && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-[#0F172A]/50 backdrop-blur-sm p-4 overflow-y-auto">
-          <div className="bg-white rounded-2xl shadow-xl max-w-md w-full p-6 space-y-4 my-8">
-            <div className="flex justify-between items-center border-b border-[#E2E8F0] pb-3">
-              <div className="flex items-center gap-2">
-                <Flame className="w-5 h-5 text-amber-600" />
-                <h3 className="font-bold text-base text-[#0F172A]">Đẩy tin nổi bật (Listing Boost)</h3>
+      {createPortal(
+        boostingRoom && (
+          <div className="fixed inset-0 z-[100] flex items-center justify-center bg-[#0F172A]/60 backdrop-blur-xs p-4 overflow-y-auto">
+            <div 
+              className="fixed inset-0"
+              onClick={() => {
+                setBoostingRoom(null);
+                setBoostCheckout(null);
+              }}
+            />
+            <div 
+              role="dialog"
+              aria-modal="true"
+              className="relative my-auto bg-white rounded-2xl shadow-xl max-w-md w-full p-6 space-y-4 border border-[#E2E8F0] max-h-[min(90vh,680px)] overflow-y-auto"
+            >
+              <div className="flex justify-between items-center border-b border-[#E2E8F0] pb-3">
+                <div className="flex items-center gap-2">
+                  <Flame className="w-5 h-5 text-amber-600" />
+                  <h3 className="font-bold text-base text-[#0F172A]">Đẩy tin nổi bật (Listing Boost)</h3>
+                </div>
+                <button 
+                  onClick={() => {
+                    setBoostingRoom(null);
+                    setBoostCheckout(null);
+                  }}
+                  className="text-[#94A3B8] hover:text-[#0F172A] p-1 rounded-lg"
+                >
+                  <X className="w-5 h-5" />
+                </button>
               </div>
-              <button 
-                onClick={() => {
-                  setBoostingRoom(null);
-                  setBoostCheckout(null);
-                }}
-                className="text-[#94A3B8] hover:text-[#0F172A]"
-              >
-                <X className="w-5 h-5" />
-              </button>
+
+              <p className="text-xs text-[#64748B]">
+                Phòng: <span className="font-bold text-[#0F172A]">{boostingRoom.title}</span>
+              </p>
+
+              {!boostCheckout ? (
+                <form onSubmit={handleInitiateBoost} className="space-y-4 text-xs">
+                  <div className="space-y-2">
+                    <label className="font-bold text-[#0F172A] block">Chọn gói đẩy tin phù hợp:</label>
+
+                    <label className={`flex items-start gap-3 p-3 rounded-xl border cursor-pointer transition-[border-color,background-color,box-shadow,transform] duration-150 ease-out active:scale-[0.99] ${
+                      selectedBoostType === '24h' ? 'border-amber-500 bg-amber-50/50 shadow-sm' : 'border-[#E2E8F0] hover:bg-[#F8FAFC]'
+                    }`}>
+                      <input 
+                        type="radio" 
+                        name="boostType" 
+                        value="24h" 
+                        checked={selectedBoostType === '24h'}
+                        onChange={() => setSelectedBoostType('24h')}
+                        className="mt-1 text-amber-600"
+                      />
+                      <div className="flex-1">
+                        <div className="flex justify-between items-center">
+                          <span className="font-bold text-[#0F172A]">Đẩy tin 24 Giờ</span>
+                          <span className="font-black text-amber-700">50.000₫</span>
+                        </div>
+                        <p className="text-[11px] text-[#64748B] mt-0.5">Ưu tiên đẩy lên đầu trang tìm kiếm trong 24h.</p>
+                      </div>
+                    </label>
+
+                    <label className={`flex items-start gap-3 p-3 rounded-xl border cursor-pointer transition-[border-color,background-color,box-shadow,transform] duration-150 ease-out active:scale-[0.99] ${
+                      selectedBoostType === '3days' ? 'border-amber-500 bg-amber-50/50 shadow-sm ring-1 ring-amber-500' : 'border-[#E2E8F0] hover:bg-[#F8FAFC]'
+                    }`}>
+                      <input 
+                        type="radio" 
+                        name="boostType" 
+                        value="3days" 
+                        checked={selectedBoostType === '3days'}
+                        onChange={() => setSelectedBoostType('3days')}
+                        className="mt-1 text-amber-600"
+                      />
+                      <div className="flex-1">
+                        <div className="flex justify-between items-center">
+                          <span className="font-bold text-[#0F172A] flex items-center gap-1.5">
+                            Đẩy tin 3 Ngày
+                            <span className="bg-amber-500 text-white text-[10px] px-1.5 py-0.2 rounded font-bold">Phổ biến</span>
+                          </span>
+                          <span className="font-black text-amber-700">120.000₫</span>
+                        </div>
+                        <p className="text-[11px] text-[#64748B] mt-0.5">Huy hiệu Nổi bật + Ưu tiên hiển thị top 3 ngày liên tục.</p>
+                      </div>
+                    </label>
+
+                    <label className={`flex items-start gap-3 p-3 rounded-xl border cursor-pointer transition-[border-color,background-color,box-shadow,transform] duration-150 ease-out active:scale-[0.99] ${
+                      selectedBoostType === '7days' ? 'border-amber-500 bg-amber-50/50 shadow-sm' : 'border-[#E2E8F0] hover:bg-[#F8FAFC]'
+                    }`}>
+                      <input 
+                        type="radio" 
+                        name="boostType" 
+                        value="7days" 
+                        checked={selectedBoostType === '7days'}
+                        onChange={() => setSelectedBoostType('7days')}
+                        className="mt-1 text-amber-600"
+                      />
+                      <div className="flex-1">
+                        <div className="flex justify-between items-center">
+                          <span className="font-bold text-[#0F172A]">Đẩy tin 7 Ngày</span>
+                          <span className="font-black text-amber-700">250.000₫</span>
+                        </div>
+                        <p className="text-[11px] text-[#64748B] mt-0.5">Xuất hiện mục đề xuất trang chủ + Đẩy top 7 ngày.</p>
+                      </div>
+                    </label>
+                  </div>
+
+                  <div className="flex justify-end gap-2.5 pt-3 border-t border-[#E2E8F0]">
+                    <button
+                      type="button"
+                      onClick={() => setBoostingRoom(null)}
+                      disabled={isSubmittingBoost}
+                      className="px-4 py-2 border border-[#CBD5E1] text-[#475569] font-semibold rounded-xl hover:bg-[#F8FAFC] transition-colors"
+                    >
+                      Hủy
+                    </button>
+                    <button
+                      type="submit"
+                      disabled={isSubmittingBoost}
+                      className="px-5 py-2 bg-amber-600 hover:bg-amber-700 text-white font-bold rounded-xl shadow-sm transition-[background-color,box-shadow,transform] duration-150 ease-out active:scale-[0.98] flex items-center gap-2"
+                    >
+                      {isSubmittingBoost ? (
+                        <>
+                          <div className="w-3.5 h-3.5 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                          Đang tạo đơn...
+                        </>
+                      ) : (
+                        <>
+                          <Sparkles className="w-3.5 h-3.5" />
+                          Thanh toán & Kích hoạt
+                        </>
+                      )}
+                    </button>
+                  </div>
+                </form>
+              ) : (
+                <div className="space-y-4 text-xs text-center">
+                  <div className="p-3 bg-amber-50 rounded-xl border border-amber-200 text-amber-900">
+                    <p className="font-bold">Mã giao dịch: {boostCheckout.transactionRef}</p>
+                    <p className="text-[11px] mt-0.5">Số tiền: {Number(boostCheckout.amount).toLocaleString('vi-VN')}₫</p>
+                  </div>
+
+                  <div className="flex justify-center p-3 bg-slate-50 rounded-xl border border-slate-200">
+                    <img 
+                      src={boostCheckout.qrUrl} 
+                      alt="Mã thanh toán QR" 
+                      className="w-44 h-44 object-contain rounded-lg"
+                    />
+                  </div>
+
+                  <div className="flex flex-col gap-2 pt-2">
+                    <Button
+                      variant="primary"
+                      fullWidth
+                      disabled={isVerifyingBoost}
+                      onClick={handleVerifyBoost}
+                      className="bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs"
+                    >
+                      {isVerifyingBoost ? 'Đang kiểm tra...' : 'Xác nhận đã thanh toán (Hoàn tất)'}
+                    </Button>
+                    <button
+                      type="button"
+                      onClick={() => setBoostCheckout(null)}
+                      className="text-[11px] text-[#64748B] hover:text-[#0F172A] py-1"
+                    >
+                      Chọn lại gói khác
+                    </button>
+                  </div>
+                </div>
+              )}
             </div>
-
-            <p className="text-xs text-[#64748B]">
-              Phòng: <span className="font-bold text-[#0F172A]">{boostingRoom.title}</span>
-            </p>
-
-            {!boostCheckout ? (
-              <form onSubmit={handleInitiateBoost} className="space-y-4 text-xs">
-                <div className="space-y-2">
-                  <label className="font-bold text-[#0F172A] block">Chọn gói đẩy tin phù hợp:</label>
-
-                  <label className={`flex items-start gap-3 p-3 rounded-xl border cursor-pointer transition-[border-color,background-color,box-shadow,transform] duration-150 ease-out active:scale-[0.99] ${
-                    selectedBoostType === '24h' ? 'border-amber-500 bg-amber-50/50 shadow-sm' : 'border-[#E2E8F0] hover:bg-[#F8FAFC]'
-                  }`}>
-                    <input 
-                      type="radio" 
-                      name="boostType" 
-                      value="24h" 
-                      checked={selectedBoostType === '24h'}
-                      onChange={() => setSelectedBoostType('24h')}
-                      className="mt-1 text-amber-600"
-                    />
-                    <div className="flex-1">
-                      <div className="flex justify-between items-center">
-                        <span className="font-bold text-[#0F172A]">Đẩy tin 24 Giờ</span>
-                        <span className="font-black text-amber-700">50.000₫</span>
-                      </div>
-                      <p className="text-[11px] text-[#64748B] mt-0.5">Ưu tiên đẩy lên đầu trang tìm kiếm trong 24h.</p>
-                    </div>
-                  </label>
-
-                  <label className={`flex items-start gap-3 p-3 rounded-xl border cursor-pointer transition-[border-color,background-color,box-shadow,transform] duration-150 ease-out active:scale-[0.99] ${
-                    selectedBoostType === '3days' ? 'border-amber-500 bg-amber-50/50 shadow-sm ring-1 ring-amber-500' : 'border-[#E2E8F0] hover:bg-[#F8FAFC]'
-                  }`}>
-                    <input 
-                      type="radio" 
-                      name="boostType" 
-                      value="3days" 
-                      checked={selectedBoostType === '3days'}
-                      onChange={() => setSelectedBoostType('3days')}
-                      className="mt-1 text-amber-600"
-                    />
-                    <div className="flex-1">
-                      <div className="flex justify-between items-center">
-                        <span className="font-bold text-[#0F172A] flex items-center gap-1.5">
-                          Đẩy tin 3 Ngày
-                          <span className="bg-amber-500 text-white text-[10px] px-1.5 py-0.2 rounded font-bold">Phổ biến</span>
-                        </span>
-                        <span className="font-black text-amber-700">120.000₫</span>
-                      </div>
-                      <p className="text-[11px] text-[#64748B] mt-0.5">Huy hiệu Nổi bật + Ưu tiên hiển thị top 3 ngày liên tục.</p>
-                    </div>
-                  </label>
-
-                  <label className={`flex items-start gap-3 p-3 rounded-xl border cursor-pointer transition-[border-color,background-color,box-shadow,transform] duration-150 ease-out active:scale-[0.99] ${
-                    selectedBoostType === '7days' ? 'border-amber-500 bg-amber-50/50 shadow-sm' : 'border-[#E2E8F0] hover:bg-[#F8FAFC]'
-                  }`}>
-                    <input 
-                      type="radio" 
-                      name="boostType" 
-                      value="7days" 
-                      checked={selectedBoostType === '7days'}
-                      onChange={() => setSelectedBoostType('7days')}
-                      className="mt-1 text-amber-600"
-                    />
-                    <div className="flex-1">
-                      <div className="flex justify-between items-center">
-                        <span className="font-bold text-[#0F172A]">Đẩy tin 7 Ngày</span>
-                        <span className="font-black text-amber-700">250.000₫</span>
-                      </div>
-                      <p className="text-[11px] text-[#64748B] mt-0.5">Xuất hiện mục đề xuất trang chủ + Đẩy top 7 ngày.</p>
-                    </div>
-                  </label>
-                </div>
-
-                <div className="flex justify-end gap-2.5 pt-3 border-t border-[#E2E8F0]">
-                  <button
-                    type="button"
-                    onClick={() => setBoostingRoom(null)}
-                    disabled={isSubmittingBoost}
-                    className="px-4 py-2 border border-[#CBD5E1] text-[#475569] font-semibold rounded-xl hover:bg-[#F8FAFC]"
-                  >
-                    Hủy
-                  </button>
-                  <button
-                    type="submit"
-                    disabled={isSubmittingBoost}
-                    className="px-5 py-2 bg-amber-600 hover:bg-amber-700 text-white font-bold rounded-xl shadow-sm transition-[background-color,box-shadow,transform] duration-150 ease-out active:scale-[0.98] flex items-center gap-2"
-                  >
-                    {isSubmittingBoost ? (
-                      <>
-                        <div className="w-3.5 h-3.5 border-2 border-white/30 border-t-white rounded-full animate-spin" />
-                        Đang tạo đơn...
-                      </>
-                    ) : (
-                      <>
-                        <Sparkles className="w-3.5 h-3.5" />
-                        Thanh toán & Kích hoạt
-                      </>
-                    )}
-                  </button>
-                </div>
-              </form>
-            ) : (
-              <div className="space-y-4 text-xs text-center">
-                <div className="p-3 bg-amber-50 rounded-xl border border-amber-200 text-amber-900">
-                  <p className="font-bold">Mã giao dịch: {boostCheckout.transactionRef}</p>
-                  <p className="text-[11px] mt-0.5">Số tiền: {Number(boostCheckout.amount).toLocaleString('vi-VN')}₫</p>
-                </div>
-
-                <div className="flex justify-center p-3 bg-slate-50 rounded-xl border border-slate-200">
-                  <img 
-                    src={boostCheckout.qrUrl} 
-                    alt="Mã thanh toán QR" 
-                    className="w-44 h-44 object-contain rounded-lg"
-                  />
-                </div>
-
-                <div className="flex flex-col gap-2 pt-2">
-                  <Button
-                    variant="primary"
-                    fullWidth
-                    disabled={isVerifyingBoost}
-                    onClick={handleVerifyBoost}
-                    className="bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs"
-                  >
-                    {isVerifyingBoost ? 'Đang kiểm tra...' : 'Xác nhận đã thanh toán (Hoàn tất)'}
-                  </Button>
-                  <button
-                    type="button"
-                    onClick={() => setBoostCheckout(null)}
-                    className="text-[11px] text-[#64748B] hover:text-[#0F172A] py-1"
-                  >
-                    Chọn lại gói khác
-                  </button>
-                </div>
-              </div>
-            )}
           </div>
-        </div>
+        ),
+        document.body
       )}
 
     </div>

@@ -1,4 +1,5 @@
 import { useState, useEffect, useRef } from 'react';
+import { createPortal } from 'react-dom';
 import { Card } from '../../components/ui/Card';
 import { Button } from '../../components/ui/Button';
 import { Input } from '../../components/ui/Input';
@@ -56,6 +57,17 @@ export default function TenantProfile() {
     { name: 'Cú đêm', active: true },
     { name: 'Dậy sớm', active: false },
   ]);
+
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') {
+        setIsAddTagModalOpen(false);
+        setIsAvatarUrlModalOpen(false);
+      }
+    };
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, []);
 
   useEffect(() => {
     const parseName = (rawName: string) => {
@@ -415,7 +427,7 @@ export default function TenantProfile() {
                     onClick={() => toggleTag(index)}
                     className={`px-3.5 py-2 rounded-[12px] text-caption font-semibold transition-[background-color,color,box-shadow,transform] duration-150 ease-out active:scale-95 flex items-center gap-1.5 ${
                       tag.active 
-                        ? 'btn-clay-primary' 
+                        ? 'btn-clay-primary text-white' 
                         : 'bg-[#F5F7FA] text-[#64748B] shadow-clay-soft hover:bg-white hover:text-[#0F172A]'
                     }`}
                   >
@@ -450,219 +462,229 @@ export default function TenantProfile() {
       </div>
 
       {/* Khung thêm thẻ phong cách sống (Add Tag Modal) */}
-      <AnimatePresence>
-        {isAddTagModalOpen && (
-          <motion.div
-            key="add-tag-modal-backdrop"
-            variants={modalBackdropVariants}
-            initial="hidden"
-            animate="visible"
-            exit="exit"
-            onClick={() => setIsAddTagModalOpen(false)}
-            className="fixed inset-0 z-50 flex items-center justify-center bg-[#0F172A]/50 p-4 backdrop-blur-xs"
-          >
-            <motion.div
-              key="add-tag-modal-content"
-              variants={modalContentVariants}
-              initial="hidden"
-              animate="visible"
-              exit="exit"
-              onClick={(e) => e.stopPropagation()}
-              className="bg-white rounded-[20px] shadow-clay-primary max-w-md w-full p-6 space-y-5 overflow-hidden"
-            >
-              {/* Header */}
-              <div className="flex justify-between items-center pb-3 border-b border-[#E2E8F0]">
-                <div className="flex items-center gap-2.5">
-                  <div className="w-9 h-9 rounded-xl bg-blue-50 text-[#00153D] flex items-center justify-center">
-                    <Tag className="w-5 h-5" />
+      {createPortal(
+        <AnimatePresence>
+          {isAddTagModalOpen && (
+            <div className="fixed inset-0 z-[100] flex items-center justify-center bg-[#0F172A]/60 p-4 backdrop-blur-xs overflow-y-auto">
+              <motion.div
+                key="add-tag-modal-backdrop"
+                variants={modalBackdropVariants}
+                initial="hidden"
+                animate="visible"
+                exit="exit"
+                onClick={() => setIsAddTagModalOpen(false)}
+                className="fixed inset-0"
+              />
+              <motion.div
+                key="add-tag-modal-content"
+                variants={modalContentVariants}
+                initial="hidden"
+                animate="visible"
+                exit="exit"
+                role="dialog"
+                aria-modal="true"
+                className="relative my-auto bg-white rounded-2xl shadow-xl max-w-md w-full p-6 space-y-5 border border-[#E2E8F0] overflow-hidden"
+              >
+                {/* Header */}
+                <div className="flex justify-between items-center pb-3 border-b border-[#E2E8F0]">
+                  <div className="flex items-center gap-2.5">
+                    <div className="w-9 h-9 rounded-xl bg-blue-50 text-[#00153D] flex items-center justify-center">
+                      <Tag className="w-5 h-5" />
+                    </div>
+                    <div>
+                      <h3 className="text-h3 font-bold text-[#0F172A]">Thêm thẻ phong cách sống</h3>
+                      <p className="text-caption text-[#64748B]">Tạo thẻ mô tả thói quen hoặc sở thích của bạn</p>
+                    </div>
                   </div>
-                  <div>
-                    <h3 className="text-h3 font-bold text-[#0F172A]">Thêm thẻ phong cách sống</h3>
-                    <p className="text-caption text-[#64748B]">Tạo thẻ mô tả thói quen hoặc sở thích của bạn</p>
-                  </div>
-                </div>
-                <button
-                  type="button"
-                  onClick={() => setIsAddTagModalOpen(false)}
-                  className="p-1.5 rounded-full text-[#64748B] hover:text-[#0F172A] hover:bg-slate-100 transition-colors"
-                >
-                  <X className="w-5 h-5" />
-                </button>
-              </div>
-
-              {/* Form */}
-              <form onSubmit={handleConfirmAddTag} className="space-y-4">
-                <div className="space-y-1.5">
-                  <label className="text-caption font-semibold text-[#0F172A]">
-                    Tên thẻ
-                  </label>
-                  <input
-                    ref={newTagInputRef}
-                    type="text"
-                    maxLength={30}
-                    value={newTagInput}
-                    onChange={(e) => setNewTagInput(e.target.value)}
-                    placeholder="VD: Thích nấu ăn, Dậy sớm, Nuôi mèo..."
-                    className="w-full bg-[#F5F7FA] shadow-clay-inset border border-[#E2E8F0] rounded-[12px] px-3.5 py-2.5 text-body text-[#0F172A] focus:outline-none focus:ring-1 focus:ring-[#00153D] focus:bg-white"
-                    autoFocus
-                  />
-                  <div className="flex justify-between text-[11px] text-[#94A3B8]">
-                    <span>Nhấn Enter để thêm nhanh</span>
-                    <span>{newTagInput.trim().length}/30 ký tự</span>
-                  </div>
-                </div>
-
-                {/* Popular Presets */}
-                <div className="space-y-2">
-                  <label className="text-caption font-semibold text-[#64748B] flex items-center gap-1.5">
-                    <Sparkles className="w-3.5 h-3.5 text-amber-500" />
-                    <span>Gợi ý phổ biến</span>
-                  </label>
-                  <div className="flex flex-wrap gap-1.5 max-h-36 overflow-y-auto pr-1">
-                    {SUGGESTED_LIFESTYLE_TAGS.map((suggested) => {
-                      const isAlreadyAdded = tags.some(t => t.name.toLowerCase() === suggested.toLowerCase());
-                      return (
-                        <button
-                          key={suggested}
-                          type="button"
-                          disabled={isAlreadyAdded}
-                          onClick={() => {
-                            if (!isAlreadyAdded) {
-                              handleAddPresetTag(suggested);
-                            }
-                          }}
-                          className={`px-2.5 py-1 rounded-[10px] text-[12px] font-medium transition-all duration-150 flex items-center gap-1 ${
-                            isAlreadyAdded
-                              ? 'bg-slate-100 text-slate-400 cursor-not-allowed border border-slate-200'
-                              : 'bg-[#F1F5F9] text-[#334155] hover:bg-[#E2E8F0] hover:text-[#0F172A] border border-[#E2E8F0] active:scale-95'
-                          }`}
-                        >
-                          {isAlreadyAdded ? <Check className="w-3 h-3 text-emerald-600" /> : <Plus className="w-3 h-3 text-[#64748B]" />}
-                          <span>{suggested}</span>
-                        </button>
-                      );
-                    })}
-                  </div>
-                </div>
-
-                {/* Actions */}
-                <div className="flex items-center justify-end gap-3 pt-3 border-t border-[#E2E8F0]">
                   <button
                     type="button"
                     onClick={() => setIsAddTagModalOpen(false)}
-                    className="px-4 py-2 rounded-[12px] text-caption font-semibold text-[#64748B] hover:text-[#0F172A] hover:bg-slate-100 transition-colors"
+                    className="p-1.5 rounded-full text-[#64748B] hover:text-[#0F172A] hover:bg-slate-100 transition-colors"
                   >
-                    Hủy
+                    <X className="w-5 h-5" />
                   </button>
-                  <Button
-                    type="submit"
-                    disabled={!newTagInput.trim()}
-                    className="px-5 py-2 inline-flex items-center gap-1.5"
-                  >
-                    <Plus className="w-4 h-4" />
-                    <span>Thêm thẻ</span>
-                  </Button>
-                </div>
-              </form>
-            </motion.div>
-          </motion.div>
-        )}
-      </AnimatePresence>
-
-      {/* Khung dán URL ảnh đại diện (Avatar URL Modal) */}
-      <AnimatePresence>
-        {isAvatarUrlModalOpen && (
-          <motion.div
-            key="avatar-url-modal-backdrop"
-            variants={modalBackdropVariants}
-            initial="hidden"
-            animate="visible"
-            exit="exit"
-            onClick={() => setIsAvatarUrlModalOpen(false)}
-            className="fixed inset-0 z-50 flex items-center justify-center bg-[#0F172A]/50 p-4 backdrop-blur-xs"
-          >
-            <motion.div
-              key="avatar-url-modal-content"
-              variants={modalContentVariants}
-              initial="hidden"
-              animate="visible"
-              exit="exit"
-              onClick={(e) => e.stopPropagation()}
-              className="bg-white rounded-[20px] shadow-clay-primary max-w-md w-full p-6 space-y-5 overflow-hidden"
-            >
-              {/* Header */}
-              <div className="flex justify-between items-center pb-3 border-b border-[#E2E8F0]">
-                <div className="flex items-center gap-2.5">
-                  <div className="w-9 h-9 rounded-xl bg-blue-50 text-[#00153D] flex items-center justify-center">
-                    <LinkIcon className="w-5 h-5" />
-                  </div>
-                  <div>
-                    <h3 className="text-h3 font-bold text-[#0F172A]">Dán URL ảnh đại diện</h3>
-                    <p className="text-caption text-[#64748B]">Sử dụng đường dẫn ảnh trực tiếp từ internet</p>
-                  </div>
-                </div>
-                <button
-                  type="button"
-                  onClick={() => setIsAvatarUrlModalOpen(false)}
-                  className="p-1.5 rounded-full text-[#64748B] hover:text-[#0F172A] hover:bg-slate-100 transition-colors"
-                >
-                  <X className="w-5 h-5" />
-                </button>
-              </div>
-
-              {/* Form */}
-              <form onSubmit={handleConfirmAvatarUrl} className="space-y-4">
-                <div className="space-y-1.5">
-                  <label className="text-caption font-semibold text-[#0F172A]">
-                    Đường dẫn ảnh (URL)
-                  </label>
-                  <input
-                    type="url"
-                    value={avatarUrlInput}
-                    onChange={(e) => setAvatarUrlInput(e.target.value)}
-                    placeholder="https://images.unsplash.com/..."
-                    className="w-full bg-[#F5F7FA] shadow-clay-inset border border-[#E2E8F0] rounded-[12px] px-3.5 py-2.5 text-body text-[#0F172A] focus:outline-none focus:ring-1 focus:ring-[#00153D] focus:bg-white"
-                    autoFocus
-                  />
                 </div>
 
-                {avatarUrlInput.trim() && (
-                  <div className="p-3 bg-[#F8FAFC] rounded-[12px] border border-[#E2E8F0] flex items-center gap-3">
-                    <img
-                      src={avatarUrlInput.trim()}
-                      alt="Preview"
-                      onError={(e) => { (e.currentTarget as HTMLImageElement).style.display = 'none'; }}
-                      className="w-12 h-12 rounded-full object-cover border border-slate-200"
+                {/* Form */}
+                <form onSubmit={handleConfirmAddTag} className="space-y-4">
+                  <div className="space-y-1.5">
+                    <label className="text-caption font-semibold text-[#0F172A]">
+                      Tên thẻ
+                    </label>
+                    <input
+                      ref={newTagInputRef}
+                      type="text"
+                      maxLength={30}
+                      value={newTagInput}
+                      onChange={(e) => setNewTagInput(e.target.value)}
+                      placeholder="VD: Thích nấu ăn, Dậy sớm, Nuôi mèo..."
+                      className="w-full bg-[#F5F7FA] border border-[#E2E8F0] rounded-xl px-3.5 py-2.5 text-body text-[#0F172A] focus:outline-none focus:ring-1 focus:ring-[#00153D] focus:bg-white"
+                      autoFocus
                     />
-                    <div className="text-caption text-[#64748B] overflow-hidden truncate">
-                      Xem trước ảnh đại diện
+                    <div className="flex justify-between text-[11px] text-[#94A3B8]">
+                      <span>Nhấn Enter để thêm nhanh</span>
+                      <span>{newTagInput.trim().length}/30 ký tự</span>
                     </div>
                   </div>
-                )}
 
-                {/* Actions */}
-                <div className="flex items-center justify-end gap-3 pt-3 border-t border-[#E2E8F0]">
+                  {/* Popular Presets */}
+                  <div className="space-y-2">
+                    <label className="text-caption font-semibold text-[#64748B] flex items-center gap-1.5">
+                      <Sparkles className="w-3.5 h-3.5 text-amber-500" />
+                      <span>Gợi ý phổ biến</span>
+                    </label>
+                    <div className="flex flex-wrap gap-1.5 max-h-36 overflow-y-auto pr-1">
+                      {SUGGESTED_LIFESTYLE_TAGS.map((suggested) => {
+                        const isAlreadyAdded = tags.some(t => t.name.toLowerCase() === suggested.toLowerCase());
+                        return (
+                          <button
+                            key={suggested}
+                            type="button"
+                            disabled={isAlreadyAdded}
+                            onClick={() => {
+                              if (!isAlreadyAdded) {
+                                handleAddPresetTag(suggested);
+                              }
+                            }}
+                            className={`px-2.5 py-1 rounded-[10px] text-[12px] font-medium transition-all duration-150 flex items-center gap-1 ${
+                              isAlreadyAdded
+                                ? 'bg-slate-100 text-slate-400 cursor-not-allowed border border-slate-200'
+                                : 'bg-[#F1F5F9] text-[#334155] hover:bg-[#E2E8F0] hover:text-[#0F172A] border border-[#E2E8F0] active:scale-95'
+                            }`}
+                          >
+                            {isAlreadyAdded ? <Check className="w-3 h-3 text-emerald-600" /> : <Plus className="w-3 h-3 text-[#64748B]" />}
+                            <span>{suggested}</span>
+                          </button>
+                        );
+                      })}
+                    </div>
+                  </div>
+
+                  {/* Actions */}
+                  <div className="flex items-center justify-end gap-3 pt-3 border-t border-[#E2E8F0]">
+                    <button
+                      type="button"
+                      onClick={() => setIsAddTagModalOpen(false)}
+                      className="px-4 py-2 rounded-xl text-caption font-semibold text-[#64748B] hover:text-[#0F172A] hover:bg-slate-100 transition-colors"
+                    >
+                      Hủy
+                    </button>
+                    <Button
+                      type="submit"
+                      disabled={!newTagInput.trim()}
+                      className="px-5 py-2 inline-flex items-center gap-1.5"
+                    >
+                      <Plus className="w-4 h-4" />
+                      <span>Thêm thẻ</span>
+                    </Button>
+                  </div>
+                </form>
+              </motion.div>
+            </div>
+          )}
+        </AnimatePresence>,
+        document.body
+      )}
+
+      {/* Khung dán URL ảnh đại diện (Avatar URL Modal) */}
+      {createPortal(
+        <AnimatePresence>
+          {isAvatarUrlModalOpen && (
+            <div className="fixed inset-0 z-[100] flex items-center justify-center bg-[#0F172A]/60 p-4 backdrop-blur-xs overflow-y-auto">
+              <motion.div
+                key="avatar-url-modal-backdrop"
+                variants={modalBackdropVariants}
+                initial="hidden"
+                animate="visible"
+                exit="exit"
+                onClick={() => setIsAvatarUrlModalOpen(false)}
+                className="fixed inset-0"
+              />
+              <motion.div
+                key="avatar-url-modal-content"
+                variants={modalContentVariants}
+                initial="hidden"
+                animate="visible"
+                exit="exit"
+                role="dialog"
+                aria-modal="true"
+                className="relative my-auto bg-white rounded-2xl shadow-xl max-w-md w-full p-6 space-y-5 border border-[#E2E8F0] overflow-hidden"
+              >
+                {/* Header */}
+                <div className="flex justify-between items-center pb-3 border-b border-[#E2E8F0]">
+                  <div className="flex items-center gap-2.5">
+                    <div className="w-9 h-9 rounded-xl bg-blue-50 text-[#00153D] flex items-center justify-center">
+                      <LinkIcon className="w-5 h-5" />
+                    </div>
+                    <div>
+                      <h3 className="text-h3 font-bold text-[#0F172A]">Dán URL ảnh đại diện</h3>
+                      <p className="text-caption text-[#64748B]">Sử dụng đường dẫn ảnh trực tiếp từ internet</p>
+                    </div>
+                  </div>
                   <button
                     type="button"
                     onClick={() => setIsAvatarUrlModalOpen(false)}
-                    className="px-4 py-2 rounded-[12px] text-caption font-semibold text-[#64748B] hover:text-[#0F172A] hover:bg-slate-100 transition-colors"
+                    className="p-1.5 rounded-full text-[#64748B] hover:text-[#0F172A] hover:bg-slate-100 transition-colors"
                   >
-                    Hủy
+                    <X className="w-5 h-5" />
                   </button>
-                  <Button
-                    type="submit"
-                    disabled={!avatarUrlInput.trim()}
-                    className="px-5 py-2 inline-flex items-center gap-1.5"
-                  >
-                    <Check className="w-4 h-4" />
-                    <span>Áp dụng ảnh</span>
-                  </Button>
                 </div>
-              </form>
-            </motion.div>
-          </motion.div>
-        )}
-      </AnimatePresence>
+
+                {/* Form */}
+                <form onSubmit={handleConfirmAvatarUrl} className="space-y-4">
+                  <div className="space-y-1.5">
+                    <label className="text-caption font-semibold text-[#0F172A]">
+                      Đường dẫn ảnh (URL)
+                    </label>
+                    <input
+                      type="url"
+                      value={avatarUrlInput}
+                      onChange={(e) => setAvatarUrlInput(e.target.value)}
+                      placeholder="https://images.unsplash.com/..."
+                      className="w-full bg-[#F5F7FA] border border-[#E2E8F0] rounded-xl px-3.5 py-2.5 text-body text-[#0F172A] focus:outline-none focus:ring-1 focus:ring-[#00153D] focus:bg-white"
+                      autoFocus
+                    />
+                  </div>
+
+                  {avatarUrlInput.trim() && (
+                    <div className="p-3 bg-[#F8FAFC] rounded-xl border border-[#E2E8F0] flex items-center gap-3">
+                      <img
+                        src={avatarUrlInput.trim()}
+                        alt="Preview"
+                        onError={(e) => { (e.currentTarget as HTMLImageElement).style.display = 'none'; }}
+                        className="w-12 h-12 rounded-full object-cover border border-slate-200"
+                      />
+                      <div className="text-caption text-[#64748B] overflow-hidden truncate">
+                        Xem trước ảnh đại diện
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Actions */}
+                  <div className="flex items-center justify-end gap-3 pt-3 border-t border-[#E2E8F0]">
+                    <button
+                      type="button"
+                      onClick={() => setIsAvatarUrlModalOpen(false)}
+                      className="px-4 py-2 rounded-xl text-caption font-semibold text-[#64748B] hover:text-[#0F172A] hover:bg-slate-100 transition-colors"
+                    >
+                      Hủy
+                    </button>
+                    <Button
+                      type="submit"
+                      disabled={!avatarUrlInput.trim()}
+                      className="px-5 py-2 inline-flex items-center gap-1.5"
+                    >
+                      <Check className="w-4 h-4" />
+                      <span>Áp dụng ảnh</span>
+                    </Button>
+                  </div>
+                </form>
+              </motion.div>
+            </div>
+          )}
+        </AnimatePresence>,
+        document.body
+      )}
     </div>
   );
 }

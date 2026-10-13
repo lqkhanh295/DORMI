@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import { createPortal } from 'react-dom';
 import { Link, useNavigate } from 'react-router-dom';
 import { appointmentsApi } from '../../services/api';
 import { toast } from 'sonner';
@@ -51,6 +52,17 @@ export default function LandlordViewings() {
   useEffect(() => {
     fetchAppointments();
   }, []);
+
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Escape' && selectedApp) {
+        setSelectedApp(null);
+        setActionType(null);
+      }
+    };
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [selectedApp]);
 
   const handleUpdateStatus = async (id: string, status: string, reason?: string) => {
     try {
@@ -411,102 +423,112 @@ export default function LandlordViewings() {
       )}
 
       {/* Action Modal (Reschedule / Reject) */}
-      <AnimatePresence>
-        {selectedApp && actionType && (
-          <motion.div
-            variants={modalBackdropVariants}
-            initial="initial"
-            animate="animate"
-            exit="exit"
-            className="fixed inset-0 z-50 flex items-center justify-center bg-[#0F172A]/50 backdrop-blur-sm p-4"
-          >
+      {createPortal(
+        <AnimatePresence>
+          {selectedApp && actionType && (
             <motion.div
-              variants={modalContentVariants}
-              initial="initial"
-              animate="animate"
+              variants={modalBackdropVariants}
+              initial="hidden"
+              animate="visible"
               exit="exit"
-              className="bg-white rounded-2xl shadow-clay-primary max-w-md w-full p-6 space-y-4"
+              onClick={() => { setSelectedApp(null); setActionType(null); }}
+              className="fixed inset-0 z-[100] flex items-center justify-center bg-[#0F172A]/60 backdrop-blur-xs p-4 overflow-y-auto"
             >
-              <div className="flex justify-between items-center border-b border-[#E2E8F0] pb-3">
-                <h3 className="font-bold text-base text-[#0F172A]">
-                  {actionType === 'reschedule' ? 'Đề xuất đổi lịch xem phòng' : 'Từ chối lịch hẹn xem phòng'}
-                </h3>
-                <button 
-                  onClick={() => { setSelectedApp(null); setActionType(null); }} 
-                  className="text-[#94A3B8] hover:text-[#0F172A]"
-                >
-                  <X className="w-5 h-5" />
-                </button>
-              </div>
-
-              <form onSubmit={handleConfirmModalAction} className="space-y-4 text-xs">
-                {actionType === 'reschedule' && (
-                  <>
-                    <div>
-                      <label className="block font-semibold text-[#475569] uppercase mb-1">Ngày hẹn mới</label>
-                      <input
-                        type="date"
-                        required
-                        min={new Date().toISOString().split('T')[0]}
-                        value={newDate}
-                        onChange={e => setNewDate(e.target.value)}
-                        className="w-full px-3.5 py-2.5 bg-[#F8FAFC] border border-[#CBD5E1] rounded-xl text-sm outline-none"
-                      />
-                    </div>
-                    <div>
-                      <label className="block font-semibold text-[#475569] uppercase mb-1">Khung giờ mới</label>
-                      <div className="grid grid-cols-2 gap-2">
-                        {['09:00', '10:30', '14:00', '16:00', '18:00'].map(t => (
-                          <button
-                            key={t}
-                            type="button"
-                            onClick={() => setNewTime(t)}
-                            className={`py-2 rounded-lg font-semibold border ${newTime === t ? 'bg-[#00153D] text-white border-[#00153D]' : 'bg-[#F8FAFC] text-[#0F172A] border-[#E2E8F0]'}`}
-                          >
-                            {t}
-                          </button>
-                        ))}
-                      </div>
-                    </div>
-                  </>
-                )}
-
-                <div>
-                  <label className="block font-semibold text-[#475569] uppercase mb-1">
-                    {actionType === 'reschedule' ? 'Lý do đổi lịch (gửi tới khách)' : 'Lý do từ chối'}
-                  </label>
-                  <textarea
-                    rows={2}
-                    placeholder="Ghi chú thêm..."
-                    value={actionReason}
-                    onChange={e => setActionReason(e.target.value)}
-                    className="w-full p-3 bg-[#F8FAFC] border border-[#CBD5E1] rounded-xl text-sm outline-none resize-none"
-                  />
-                </div>
-
-                <div className="flex justify-end gap-3 pt-3 border-t border-[#E2E8F0]">
-                  <button
+              <motion.div
+                variants={modalContentVariants}
+                initial="hidden"
+                animate="visible"
+                exit="exit"
+                onClick={e => e.stopPropagation()}
+                role="dialog"
+                aria-modal="true"
+                aria-labelledby="viewing-action-title"
+                className="bg-white rounded-2xl shadow-xl border border-[#E2E8F0] max-w-md w-full p-6 space-y-4 my-auto"
+              >
+                <div className="flex justify-between items-center border-b border-[#E2E8F0] pb-3">
+                  <h3 id="viewing-action-title" className="font-bold text-base text-[#00153D]">
+                    {actionType === 'reschedule' ? 'Đề xuất đổi lịch xem phòng' : 'Từ chối lịch hẹn xem phòng'}
+                  </h3>
+                  <button 
                     type="button"
-                    onClick={() => { setSelectedApp(null); setActionType(null); }}
-                    className="px-4 py-2 border border-[#CBD5E1] text-[#475569] font-semibold rounded-xl"
+                    onClick={() => { setSelectedApp(null); setActionType(null); }} 
+                    className="p-1 rounded-lg text-[#94A3B8] hover:text-[#00153D] hover:bg-[#F1F5F9] transition-colors"
+                    aria-label="Đóng"
                   >
-                    Hủy
-                  </button>
-                  <button
-                    type="submit"
-                    disabled={submittingAction}
-                    className={`px-5 py-2 text-white font-semibold rounded-xl disabled:opacity-50 ${
-                      actionType === 'reschedule' ? 'bg-[#00153D] hover:bg-[#002266]' : 'bg-rose-600 hover:bg-rose-700'
-                    }`}
-                  >
-                    {submittingAction ? 'Đang xử lý...' : 'Xác nhận'}
+                    <X className="w-5 h-5" />
                   </button>
                 </div>
-              </form>
+
+                <form onSubmit={handleConfirmModalAction} className="space-y-4 text-xs">
+                  {actionType === 'reschedule' && (
+                    <>
+                      <div>
+                        <label className="block font-semibold text-[#475569] uppercase mb-1">Ngày hẹn mới</label>
+                        <input
+                          type="date"
+                          required
+                          min={new Date().toISOString().split('T')[0]}
+                          value={newDate}
+                          onChange={e => setNewDate(e.target.value)}
+                          className="w-full px-3.5 py-2.5 bg-[#F8FAFC] border border-[#CBD5E1] rounded-xl text-sm outline-none"
+                        />
+                      </div>
+                      <div>
+                        <label className="block font-semibold text-[#475569] uppercase mb-1">Khung giờ mới</label>
+                        <div className="grid grid-cols-2 gap-2">
+                          {['09:00', '10:30', '14:00', '16:00', '18:00'].map(t => (
+                            <button
+                              key={t}
+                              type="button"
+                              onClick={() => setNewTime(t)}
+                              className={`py-2 rounded-lg font-semibold border ${newTime === t ? 'bg-[#00153D] text-white border-[#00153D]' : 'bg-[#F8FAFC] text-[#0F172A] border-[#E2E8F0]'}`}
+                            >
+                              {t}
+                            </button>
+                          ))}
+                        </div>
+                      </div>
+                    </>
+                  )}
+
+                  <div>
+                    <label className="block font-semibold text-[#475569] uppercase mb-1">
+                      {actionType === 'reschedule' ? 'Lý do đổi lịch (gửi tới khách)' : 'Lý do từ chối'}
+                    </label>
+                    <textarea
+                      rows={2}
+                      placeholder="Ghi chú thêm..."
+                      value={actionReason}
+                      onChange={e => setActionReason(e.target.value)}
+                      className="w-full p-3 bg-[#F8FAFC] border border-[#CBD5E1] rounded-xl text-sm outline-none resize-none"
+                    />
+                  </div>
+
+                  <div className="flex justify-end gap-3 pt-3 border-t border-[#E2E8F0]">
+                    <button
+                      type="button"
+                      onClick={() => { setSelectedApp(null); setActionType(null); }}
+                      className="px-4 py-2 border border-[#CBD5E1] text-[#475569] font-semibold rounded-xl"
+                    >
+                      Hủy
+                    </button>
+                    <button
+                      type="submit"
+                      disabled={submittingAction}
+                      className={`px-5 py-2 text-white font-semibold rounded-xl disabled:opacity-50 ${
+                        actionType === 'reschedule' ? 'bg-[#00153D] hover:bg-[#002266]' : 'bg-rose-600 hover:bg-rose-700'
+                      }`}
+                    >
+                      {submittingAction ? 'Đang xử lý...' : 'Xác nhận'}
+                    </button>
+                  </div>
+                </form>
+              </motion.div>
             </motion.div>
-          </motion.div>
-        )}
-      </AnimatePresence>
+          )}
+        </AnimatePresence>,
+        document.body
+      )}
 
     </PageMotion>
   );

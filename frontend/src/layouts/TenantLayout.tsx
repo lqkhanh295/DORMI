@@ -1,5 +1,6 @@
 import { Outlet, Link, useLocation } from 'react-router-dom';
 import { GlobalNav } from '../components/ui/GlobalNav';
+import { GlobalFooter } from '../components/ui/GlobalFooter';
 import { 
   Home, 
   FileText, 
@@ -52,11 +53,13 @@ export default function TenantLayout() {
         </div>
       </div>
 
-      <main className="flex-1 p-4 md:p-6 lg:p-8 w-full max-w-7xl 2xl:max-w-[1536px] mx-auto mb-20 md:mb-8">
+      <main className="flex-1 p-4 md:p-6 lg:p-8 w-full max-w-7xl 2xl:max-w-[1536px] mx-auto mb-12 md:mb-4">
         <div key={location.pathname} className="page-transition">
           <Outlet />
         </div>
       </main>
+
+      <GlobalFooter />
     </div>
   );
 }

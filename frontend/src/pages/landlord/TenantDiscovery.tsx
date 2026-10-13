@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import { createPortal } from 'react-dom';
 import { Card } from '../../components/ui/Card';
 import { Button } from '../../components/ui/Button';
 import { useNavigate } from 'react-router-dom';
@@ -22,6 +23,14 @@ export default function TenantDiscovery() {
   const [selectedRoomId, setSelectedRoomId] = useState<string>('');
   const [inviteMessage, setInviteMessage] = useState<string>('');
   const [inviting, setInviting] = useState<boolean>(false);
+
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') setSelectedTenant(null);
+    };
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, []);
 
   useEffect(() => {
     setLoading(true);
@@ -261,92 +270,103 @@ export default function TenantDiscovery() {
       )}
 
       {/* INVITE TENANT MODAL */}
-      {selectedTenant && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4 animate-in fade-in duration-200">
-          <div className="bg-white rounded-[20px] shadow-2xl max-w-lg w-full p-6 space-y-5">
-            <div className="flex items-center justify-between border-b border-slate-100 pb-3">
-              <div className="flex items-center gap-2">
-                <Home className="w-5 h-5 text-blue-600" />
-                <h3 className="text-base font-bold text-slate-900">Mời khách thuê xem phòng</h3>
+      {createPortal(
+        selectedTenant && (
+          <div className="fixed inset-0 z-[100] flex items-center justify-center bg-[#0F172A]/60 backdrop-blur-xs p-4 overflow-y-auto">
+            <div 
+              className="fixed inset-0" 
+              onClick={() => setSelectedTenant(null)} 
+            />
+            <div 
+              role="dialog"
+              aria-modal="true"
+              className="relative my-auto bg-white rounded-2xl shadow-xl max-w-lg w-full p-6 space-y-5 border border-[#E2E8F0] max-h-[min(90vh,600px)] overflow-y-auto"
+            >
+              <div className="flex items-center justify-between border-b border-slate-100 pb-3">
+                <div className="flex items-center gap-2">
+                  <Home className="w-5 h-5 text-blue-600" />
+                  <h3 className="text-base font-bold text-slate-900">Mời khách thuê xem phòng</h3>
+                </div>
+                <button
+                  onClick={() => setSelectedTenant(null)}
+                  className="p-1 rounded-lg text-slate-400 hover:text-slate-600 hover:bg-slate-100"
+                >
+                  <X className="w-5 h-5" />
+                </button>
               </div>
-              <button
-                onClick={() => setSelectedTenant(null)}
-                className="p-1 rounded-lg text-slate-400 hover:text-slate-600 hover:bg-slate-100"
-              >
-                <X className="w-5 h-5" />
-              </button>
-            </div>
 
-            <div className="space-y-4 text-xs">
-              <div className="p-3 bg-slate-50 rounded-xl flex items-center gap-3">
-                {selectedTenant.avatarUrl ? (
-                  <img src={selectedTenant.avatarUrl} alt={selectedTenant.fullName} className="w-10 h-10 rounded-full object-cover" />
-                ) : (
-                  <div className="w-10 h-10 rounded-full bg-blue-600 text-white flex items-center justify-center font-bold">
-                    {selectedTenant.fullName.charAt(0)}
+              <div className="space-y-4 text-xs">
+                <div className="p-3 bg-slate-50 rounded-xl flex items-center gap-3 border border-slate-100">
+                  {selectedTenant.avatarUrl ? (
+                    <img src={selectedTenant.avatarUrl} alt={selectedTenant.fullName} className="w-10 h-10 rounded-full object-cover" />
+                  ) : (
+                    <div className="w-10 h-10 rounded-full bg-blue-600 text-white flex items-center justify-center font-bold">
+                      {selectedTenant.fullName.charAt(0)}
+                    </div>
+                  )}
+                  <div>
+                    <h4 className="font-bold text-slate-900 text-sm">{selectedTenant.fullName}</h4>
+                    <p className="text-slate-500">Độ tương thích: <span className="font-bold text-blue-600">{selectedTenant.matchScore}%</span> · Ngân sách: {selectedTenant.budgetRange}</p>
                   </div>
-                )}
+                </div>
+
                 <div>
-                  <h4 className="font-bold text-slate-900 text-sm">{selectedTenant.fullName}</h4>
-                  <p className="text-slate-500">Độ tương thích: <span className="font-bold text-blue-600">{selectedTenant.matchScore}%</span> · Ngân sách: {selectedTenant.budgetRange}</p>
+                  <label className="block font-semibold text-slate-700 mb-1.5">
+                    Chọn phòng trọ bạn muốn giới thiệu:
+                  </label>
+                  {myRooms.length > 0 ? (
+                    <select
+                      value={selectedRoomId}
+                      onChange={e => setSelectedRoomId(e.target.value)}
+                      className="w-full p-2.5 rounded-xl border border-slate-200 bg-slate-50 text-slate-900 font-medium outline-none focus:ring-2 focus:ring-blue-500 text-xs"
+                    >
+                      {myRooms.map(room => (
+                        <option key={room.id} value={room.id}>
+                          {room.title} - {Number(room.price).toLocaleString('vi-VN')}đ/tháng ({room.address})
+                        </option>
+                      ))}
+                    </select>
+                  ) : (
+                    <p className="text-rose-600 italic">Bạn chưa có phòng trọ nào còn trống để gửi lời mời.</p>
+                  )}
+                </div>
+
+                <div>
+                  <label className="block font-semibold text-slate-700 mb-1.5">
+                    Lời nhắn gửi kèm:
+                  </label>
+                  <textarea
+                    rows={4}
+                    value={inviteMessage}
+                    onChange={e => setInviteMessage(e.target.value)}
+                    placeholder="Ghi lời nhắn mời khách thuê..."
+                    className="w-full p-3 rounded-xl border border-slate-200 bg-slate-50 text-slate-900 outline-none focus:ring-2 focus:ring-blue-500 text-xs"
+                  />
                 </div>
               </div>
 
-              <div>
-                <label className="block font-semibold text-slate-700 mb-1.5">
-                  Chọn phòng trọ bạn muốn giới thiệu:
-                </label>
-                {myRooms.length > 0 ? (
-                  <select
-                    value={selectedRoomId}
-                    onChange={e => setSelectedRoomId(e.target.value)}
-                    className="w-full p-2.5 rounded-xl border border-slate-200 bg-slate-50 text-slate-900 font-medium outline-none focus:ring-2 focus:ring-blue-500 text-xs"
-                  >
-                    {myRooms.map(room => (
-                      <option key={room.id} value={room.id}>
-                        {room.title} - {Number(room.price).toLocaleString('vi-VN')}đ/tháng ({room.address})
-                      </option>
-                    ))}
-                  </select>
-                ) : (
-                  <p className="text-rose-600 italic">Bạn chưa có phòng trọ nào còn trống để gửi lời mời.</p>
-                )}
+              <div className="flex items-center justify-end gap-3 pt-3 border-t border-slate-100">
+                <Button
+                  variant="secondary"
+                  disabled={inviting}
+                  onClick={() => setSelectedTenant(null)}
+                >
+                  Hủy bỏ
+                </Button>
+                <Button
+                  variant="primary"
+                  disabled={inviting || !selectedRoomId}
+                  onClick={handleSendInvite}
+                  className="flex items-center gap-1.5 shadow-sm"
+                >
+                  <Send className="w-4 h-4" />
+                  {inviting ? 'Đang gửi...' : 'Gửi lời mời & Mở Chat'}
+                </Button>
               </div>
-
-              <div>
-                <label className="block font-semibold text-slate-700 mb-1.5">
-                  Lời nhắn gửi kèm:
-                </label>
-                <textarea
-                  rows={4}
-                  value={inviteMessage}
-                  onChange={e => setInviteMessage(e.target.value)}
-                  placeholder="Ghi lời nhắn mời khách thuê..."
-                  className="w-full p-3 rounded-xl border border-slate-200 bg-slate-50 text-slate-900 outline-none focus:ring-2 focus:ring-blue-500 text-xs"
-                />
-              </div>
-            </div>
-
-            <div className="flex items-center justify-end gap-3 pt-3 border-t border-slate-100">
-              <Button
-                variant="secondary"
-                disabled={inviting}
-                onClick={() => setSelectedTenant(null)}
-              >
-                Hủy bỏ
-              </Button>
-              <Button
-                variant="primary"
-                disabled={inviting || !selectedRoomId}
-                onClick={handleSendInvite}
-                className="flex items-center gap-1.5 shadow-sm"
-              >
-                <Send className="w-4 h-4" />
-                {inviting ? 'Đang gửi...' : 'Gửi lời mời & Mở Chat'}
-              </Button>
             </div>
           </div>
-        </div>
+        ),
+        document.body
       )}
     </div>
   );

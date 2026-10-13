@@ -129,7 +129,7 @@ export default function CreateRoommatePost() {
         </div>
       )}
 
-      <Card className="bg-white rounded-[18px] shadow-clay-soft p-8 border-none">
+      <Card className="bg-white rounded-2xl border border-slate-200/90 shadow-sm p-6 md:p-8">
         <form onSubmit={handleSubmit} className="space-y-6">
           {/* Title */}
           <div className="space-y-1.5">
@@ -142,7 +142,7 @@ export default function CreateRoommatePost() {
               value={title}
               onChange={e => setTitle(e.target.value)}
               placeholder="Ví dụ: Sinh viên Bách Khoa tìm bạn nam ở ghép phòng Q10 sạch sẽ"
-              className="w-full bg-[#F5F7FA] shadow-clay-inset border border-[#E2E8F0] rounded-[12px] px-4 py-2.5 text-body text-[#0F172A] placeholder-[#94A3B8] focus:outline-none focus:ring-1 focus:ring-[#00153D] focus:bg-white min-h-[44px]"
+              className="w-full bg-white border border-slate-200 rounded-xl px-4 py-2.5 text-body text-[#0F172A] placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-[#00153D]/10 focus:border-[#00153D] transition-colors min-h-[44px]"
             />
           </div>
 
@@ -150,12 +150,12 @@ export default function CreateRoommatePost() {
             {/* Location */}
             <div className="space-y-1.5">
               <label className="text-caption font-semibold text-[#0F172A] flex items-center gap-1.5">
-                <MapPin className="w-4 h-4 text-[#64748B]" /> Khu vực mong muốn
+                <MapPin className="w-4 h-4 text-slate-500" /> Khu vực mong muốn
               </label>
               <select 
                 value={district}
                 onChange={e => setDistrict(e.target.value)}
-                className="w-full bg-[#F5F7FA] shadow-clay-inset border border-[#E2E8F0] rounded-[12px] px-4 py-2.5 text-body text-[#0F172A] focus:outline-none focus:ring-1 focus:ring-[#00153D] focus:bg-white min-h-[44px]"
+                className="w-full bg-white border border-slate-200 rounded-xl px-4 py-2.5 text-body text-[#0F172A] focus:outline-none focus:ring-2 focus:ring-[#00153D]/10 focus:border-[#00153D] transition-colors min-h-[44px]"
               >
                 <option value="Quận 1">Quận 1</option>
                 <option value="Quận 3">Quận 3</option>
@@ -173,7 +173,7 @@ export default function CreateRoommatePost() {
             {/* Budget */}
             <div className="space-y-1.5">
               <label className="text-caption font-semibold text-[#0F172A] flex items-center gap-1.5">
-                <DollarSign className="w-4 h-4 text-[#64748B]" /> Ngân sách tối đa (VND/tháng) <span className="text-rose-500">*</span>
+                <DollarSign className="w-4 h-4 text-slate-500" /> Ngân sách tối đa (VND/tháng) <span className="text-rose-500">*</span>
               </label>
               <input 
                 type="number"
@@ -183,9 +183,9 @@ export default function CreateRoommatePost() {
                 onChange={e => setBudget(e.target.value)}
                 placeholder="Ví dụ: 3500000"
                 required
-                className="w-full bg-[#F5F7FA] shadow-clay-inset border border-[#E2E8F0] rounded-[12px] px-4 py-2.5 text-body text-[#0F172A] placeholder-[#94A3B8] focus:outline-none focus:ring-1 focus:ring-[#00153D] focus:bg-white min-h-[44px]"
+                className="w-full bg-white border border-slate-200 rounded-xl px-4 py-2.5 text-body text-[#0F172A] placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-[#00153D]/10 focus:border-[#00153D] transition-colors min-h-[44px]"
               />
-              <p className="text-[11px] text-[#64748B]">
+              <p className="text-[11px] text-slate-500">
                 = {Number(budget || 0).toLocaleString('vi-VN')} đ/tháng
               </p>
             </div>
@@ -195,7 +195,7 @@ export default function CreateRoommatePost() {
             {/* Move-in Date */}
             <div className="space-y-1.5">
               <label className="text-caption font-semibold text-[#0F172A] flex items-center gap-1.5">
-                <Calendar className="w-4 h-4 text-[#64748B]" /> Ngày dự kiến dọn vào
+                <Calendar className="w-4 h-4 text-slate-500" /> Ngày dự kiến dọn vào
               </label>
               <input
                 type="date"
@@ -203,19 +203,19 @@ export default function CreateRoommatePost() {
                 value={moveInDate}
                 onChange={e => setMoveInDate(e.target.value)}
                 required
-                className="w-full bg-[#F5F7FA] shadow-clay-inset border border-[#E2E8F0] rounded-[12px] px-4 py-2.5 text-body text-[#0F172A] focus:outline-none focus:ring-1 focus:ring-[#00153D] focus:bg-white min-h-[44px]"
+                className="w-full bg-white border border-slate-200 rounded-xl px-4 py-2.5 text-body text-[#0F172A] focus:outline-none focus:ring-2 focus:ring-[#00153D]/10 focus:border-[#00153D] transition-colors min-h-[44px]"
               />
             </div>
 
             {/* Gender Preference */}
             <div className="space-y-1.5">
               <label className="text-caption font-semibold text-[#0F172A] flex items-center gap-1.5">
-                <Users className="w-4 h-4 text-[#64748B]" /> Ưu tiên giới tính
+                <Users className="w-4 h-4 text-slate-500" /> Ưu tiên giới tính
               </label>
               <select
                 value={genderPreference}
                 onChange={e => setGenderPreference(e.target.value)}
-                className="w-full bg-[#F5F7FA] shadow-clay-inset border border-[#E2E8F0] rounded-[12px] px-4 py-2.5 text-body text-[#0F172A] focus:outline-none focus:ring-1 focus:ring-[#00153D] focus:bg-white min-h-[44px]"
+                className="w-full bg-white border border-slate-200 rounded-xl px-4 py-2.5 text-body text-[#0F172A] focus:outline-none focus:ring-2 focus:ring-[#00153D]/10 focus:border-[#00153D] transition-colors min-h-[44px]"
               >
                 <option value="Any">Không yêu cầu (Nam / Nữ đều được)</option>
                 <option value="Male">Nam</option>
@@ -237,10 +237,10 @@ export default function CreateRoommatePost() {
                     key={trait}
                     type="button"
                     onClick={() => toggleTrait(trait)}
-                    className={`px-3.5 py-1.5 rounded-full text-caption font-semibold transition-[background-color,color,box-shadow,transform] duration-150 ease-out active:scale-95 flex items-center gap-1.5 ${
+                    className={`px-3.5 py-1.5 rounded-full text-caption font-semibold transition-all duration-150 active:scale-95 flex items-center gap-1.5 ${
                       isSelected
-                        ? 'bg-[#00153D] text-white shadow-sm'
-                        : 'bg-[#F5F7FA] border border-[#E2E8F0] text-[#64748B] hover:text-[#0F172A]'
+                        ? 'bg-[#00153D] text-white shadow-xs'
+                        : 'bg-slate-100 hover:bg-slate-200/80 border border-slate-200 text-slate-700'
                     }`}
                   >
                     {isSelected && <Check className="w-3.5 h-3.5" />}
@@ -261,12 +261,12 @@ export default function CreateRoommatePost() {
               placeholder="Chia sẻ về tính cách của bạn, giờ giấc đi làm/học, đồ đạc mang theo, hoặc yêu cầu đặc biệt..."
               value={bio}
               onChange={e => setBio(e.target.value)}
-              className="w-full bg-[#F5F7FA] shadow-clay-inset border border-[#E2E8F0] rounded-[12px] p-4 text-body text-[#0F172A] placeholder-[#94A3B8] focus:outline-none focus:ring-1 focus:ring-[#00153D] focus:bg-white"
+              className="w-full bg-white border border-slate-200 rounded-xl p-4 text-body text-[#0F172A] placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-[#00153D]/10 focus:border-[#00153D] transition-colors"
               required
             />
           </div>
 
-          <div className="flex justify-end gap-3 pt-4 border-t border-[#E2E8F0]">
+          <div className="flex justify-end gap-3 pt-4 border-t border-slate-200">
             <Button type="button" variant="secondary" onClick={() => navigate(-1)}>
               Hủy
             </Button>

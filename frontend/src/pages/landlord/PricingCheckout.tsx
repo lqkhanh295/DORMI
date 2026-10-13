@@ -60,6 +60,14 @@ export default function PricingCheckout() {
     }
   }, [activeTab, searchParams]);
 
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') setCheckoutData(null);
+    };
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, []);
+
   const handleUpgrade = async (plan: string) => {
     try {
       setInitiating(true);
@@ -152,11 +160,11 @@ export default function PricingCheckout() {
   };
 
   return (
-    <div className="max-w-6xl 2xl:max-w-7xl mx-auto space-y-8 bg-[#F5F7FA] pb-12">
+    <div className="max-w-6xl 2xl:max-w-7xl mx-auto space-y-8 bg-[#F8FAFC] pb-12">
       {/* Header */}
       <div className="text-center space-y-3">
-        <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full text-xs font-bold uppercase tracking-wider bg-blue-100 text-blue-800">
-          <ShieldCheck className="w-3.5 h-3.5" /> Dịch vụ Bổ Trợ Chủ Trọ
+        <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full text-xs font-bold uppercase tracking-wider bg-blue-50 text-blue-800 border border-blue-200">
+          <ShieldCheck className="w-3.5 h-3.5 text-blue-600" /> Dịch vụ Bổ Trợ Chủ Trọ
         </div>
         <h1 className="text-3xl font-black text-[#0F172A] tracking-tight">
           Nâng cấp Gói Hội viên & Đẩy tin Nổi bật
@@ -166,14 +174,14 @@ export default function PricingCheckout() {
         </p>
 
         {/* Tab switch */}
-        <div className="inline-flex p-1 bg-white rounded-2xl border border-[#E2E8F0] shadow-sm mt-3">
+        <div className="inline-flex p-1 bg-white rounded-2xl border border-slate-200 shadow-xs mt-3">
           <button
             type="button"
             onClick={() => setActiveTab('plans')}
-            className={`px-6 py-2 rounded-xl text-xs font-bold transition-[background-color,color,box-shadow,transform] duration-150 ease-out active:scale-[0.98] ${
+            className={`px-6 py-2 rounded-xl text-xs font-bold transition-all duration-150 active:scale-[0.98] ${
               activeTab === 'plans' 
-                ? 'bg-[#00153D] text-white shadow-sm' 
-                : 'text-[#64748B] hover:text-[#0F172A]'
+                ? 'bg-[#00153D] text-white shadow-xs' 
+                : 'text-slate-500 hover:text-slate-900'
             }`}
           >
             Gói Hội Viên Chủ Trọ
@@ -181,10 +189,10 @@ export default function PricingCheckout() {
           <button
             type="button"
             onClick={() => setActiveTab('boosts')}
-            className={`inline-flex items-center gap-1.5 px-6 py-2 rounded-xl text-xs font-bold transition-[background-color,color,box-shadow,transform] duration-150 ease-out active:scale-[0.98] ${
+            className={`inline-flex items-center gap-1.5 px-6 py-2 rounded-xl text-xs font-bold transition-all duration-150 active:scale-[0.98] ${
               activeTab === 'boosts' 
-                ? 'bg-amber-600 text-white shadow-sm' 
-                : 'text-[#64748B] hover:text-[#0F172A]'
+                ? 'bg-amber-600 text-white shadow-xs' 
+                : 'text-slate-500 hover:text-slate-900'
             }`}
           >
             <Flame className="w-3.5 h-3.5" />
@@ -197,7 +205,7 @@ export default function PricingCheckout() {
       {activeTab === 'plans' && (
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6 items-stretch">
           {/* Free Tier */}
-          <Card className="bg-white rounded-2xl shadow-clay-soft p-7 flex flex-col justify-between space-y-6 border border-[#E2E8F0]">
+          <Card className="bg-white rounded-2xl shadow-xs p-7 flex flex-col justify-between space-y-6 border border-slate-200">
             <div className="space-y-4">
               <h3 className="text-lg font-bold text-[#0F172A]">Gói Miễn Phí (Free)</h3>
               <p className="text-xs text-[#64748B]">Dành cho chủ trọ cá nhân có 1 - 2 phòng trọ nhỏ.</p>
@@ -205,7 +213,7 @@ export default function PricingCheckout() {
                 <span className="text-3xl font-black text-[#0F172A]">0₫</span>
                 <span className="text-xs text-[#64748B]"> / tháng</span>
               </div>
-              <ul className="space-y-2.5 text-xs text-[#64748B] pt-4 border-t border-[#E2E8F0]">
+              <ul className="space-y-2.5 text-xs text-[#64748B] pt-4 border-t border-slate-100">
                 <li className="flex items-center gap-2"><Check className="w-4 h-4 text-emerald-600 shrink-0" /><span>Đăng tối đa 2 tin phòng hoạt động</span></li>
                 <li className="flex items-center gap-2"><Check className="w-4 h-4 text-emerald-600 shrink-0" /><span>Nhận tin nhắn & hẹn xem phòng</span></li>
                 <li className="flex items-center gap-2"><Check className="w-4 h-4 text-emerald-600 shrink-0" /><span>Tiếp nhận hồ sơ ứng tuyển cơ bản</span></li>
@@ -216,8 +224,8 @@ export default function PricingCheckout() {
           </Card>
 
           {/* Pro Tier */}
-          <Card className="bg-white rounded-2xl shadow-clay-primary p-7 flex flex-col justify-between space-y-6 border-2 border-blue-600 relative">
-            <div className="absolute -top-3 left-1/2 -translate-x-1/2 bg-blue-600 text-white text-[11px] font-black uppercase tracking-wider px-3.5 py-0.5 rounded-full shadow-sm">
+          <Card className="bg-white rounded-2xl shadow-sm p-7 flex flex-col justify-between space-y-6 border-2 border-blue-600 relative">
+            <div className="absolute -top-3 left-1/2 -translate-x-1/2 bg-blue-600 text-white text-[11px] font-black uppercase tracking-wider px-3.5 py-0.5 rounded-full shadow-xs">
               Khuyên Dùng
             </div>
             <div className="space-y-4 pt-1">
@@ -430,12 +438,14 @@ export default function PricingCheckout() {
       {/* Payment QR Modal */}
       {checkoutData && createPortal(
         <div 
-          className="fixed inset-0 z-[100] bg-black/60 flex items-center justify-center p-3 sm:p-4 backdrop-blur-sm animate-in fade-in duration-200"
+          className="fixed inset-0 z-[100] bg-[#0F172A]/60 flex items-center justify-center p-3 sm:p-4 backdrop-blur-xs overflow-y-auto"
           onClick={() => setCheckoutData(null)}
         >
           <div 
+            role="dialog"
+            aria-modal="true"
             onClick={(e) => e.stopPropagation()}
-            className="bg-white rounded-2xl max-w-md w-full p-5 sm:p-6 space-y-3.5 sm:space-y-4 shadow-2xl border border-slate-100 relative max-h-[90vh] overflow-y-auto"
+            className="relative my-auto bg-white rounded-2xl max-w-md w-full p-5 sm:p-6 space-y-3.5 sm:space-y-4 shadow-xl border border-slate-100 max-h-[min(90vh,680px)] overflow-y-auto"
           >
             <button 
               onClick={() => setCheckoutData(null)}

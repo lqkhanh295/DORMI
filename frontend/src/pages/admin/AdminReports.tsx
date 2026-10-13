@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import { createPortal } from 'react-dom';
 import { Link } from 'react-router-dom';
 import { Card } from '../../components/ui/Card';
 import { Button } from '../../components/ui/Button';
@@ -39,6 +40,14 @@ export default function AdminReports() {
   const [modalAction, setModalAction] = useState<string>('RoomHidden');
   const [moderatorNotes, setModeratorNotes] = useState('');
   const [resolving, setResolving] = useState(false);
+
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') setSelectedReport(null);
+    };
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, []);
 
   // Audit log state
   const [auditLogs, setAuditLogs] = useState<AuditLogItem[]>([]);
@@ -479,89 +488,96 @@ export default function AdminReports() {
       )}
 
       {/* RESOLVE ACTION MODAL */}
-      <AnimatePresence>
-        {selectedReport && (
-          <motion.div
-            variants={modalBackdropVariants}
-            initial="initial"
-            animate="animate"
-            exit="exit"
-            className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-xs p-4"
-          >
-            <motion.div
-              variants={modalContentVariants}
-              initial="initial"
-              animate="animate"
-              exit="exit"
-              className="bg-white rounded-2xl shadow-xl max-w-lg w-full p-6 space-y-5"
-            >
-              <div className="flex items-center justify-between border-b border-slate-100 pb-3">
-                <div className="flex items-center gap-2">
-                  <ShieldCheck className="w-5 h-5 text-indigo-600" />
-                  <h3 className="text-base font-bold text-slate-900">Xử lý báo cáo vi phạm</h3>
-                </div>
-                <button
-                  onClick={() => setSelectedReport(null)}
-                  className="p-1 rounded-lg text-slate-400 hover:text-slate-600 hover:bg-slate-100"
-                >
-                  <X className="w-5 h-5" />
-                </button>
-              </div>
-
-              <div className="space-y-4 text-xs">
-                <div>
-                  <p className="text-slate-500">Tin đăng bị phản ánh:</p>
-                  <p className="font-bold text-slate-900 text-sm mt-0.5">{selectedReport.roomTitle}</p>
-                  <p className="text-slate-600 mt-0.5">Lý do: <span className="text-rose-600 font-medium">{selectedReport.reason}</span></p>
-                </div>
-
-                <div>
-                  <label className="block font-semibold text-slate-700 mb-1.5">Chọn hành động xử lý:</label>
-                  <select
-                    value={modalAction}
-                    onChange={e => setModalAction(e.target.value)}
-                    className="w-full p-2.5 rounded-xl border border-slate-200 bg-slate-50 text-slate-900 font-medium outline-none focus:ring-2 focus:ring-indigo-500"
+      {createPortal(
+        <AnimatePresence>
+          {selectedReport && (
+            <div className="fixed inset-0 z-[100] flex items-center justify-center bg-[#0F172A]/60 backdrop-blur-xs p-4 overflow-y-auto">
+              <motion.div
+                variants={modalBackdropVariants}
+                initial="hidden"
+                animate="visible"
+                exit="exit"
+                onClick={() => setSelectedReport(null)}
+                className="fixed inset-0"
+              />
+              <motion.div
+                variants={modalContentVariants}
+                initial="hidden"
+                animate="visible"
+                exit="exit"
+                role="dialog"
+                aria-modal="true"
+                className="relative my-auto bg-white rounded-2xl shadow-xl max-w-lg w-full p-6 space-y-5 border border-[#E2E8F0] max-h-[min(90vh,650px)] overflow-y-auto"
+              >
+                <div className="flex items-center justify-between border-b border-slate-100 pb-3">
+                  <div className="flex items-center gap-2">
+                    <ShieldCheck className="w-5 h-5 text-indigo-600" />
+                    <h3 className="text-base font-bold text-slate-900">Xử lý báo cáo vi phạm</h3>
+                  </div>
+                  <button
+                    onClick={() => setSelectedReport(null)}
+                    className="p-1 rounded-lg text-slate-400 hover:text-slate-600 hover:bg-slate-100"
                   >
-                    <option value="RoomHidden">Ẩn tin đăng khỏi danh sách tìm kiếm (RoomHidden)</option>
-                    <option value="WarningIssued">Gửi cảnh cáo vi phạm đến chủ trọ (WarningIssued)</option>
-                    <option value="LandlordBanned">Khóa vĩnh viễn tài khoản chủ trọ (LandlordBanned)</option>
-                    <option value="Dismissed">Bác bỏ báo cáo / Tin hợp lệ (Dismissed)</option>
-                  </select>
+                    <X className="w-5 h-5" />
+                  </button>
                 </div>
 
-                <div>
-                  <label className="block font-semibold text-slate-700 mb-1.5">Ghi chú của kiểm duyệt viên (Lưu vết Audit Log):</label>
-                  <textarea
-                    rows={3}
-                    value={moderatorNotes}
-                    onChange={e => setModeratorNotes(e.target.value)}
-                    placeholder="Ghi rõ lý do xử lý, điều khoản vi phạm hoặc lý do bác bỏ..."
-                    className="w-full p-3 rounded-xl border border-slate-200 bg-slate-50 text-slate-900 outline-none focus:ring-2 focus:ring-indigo-500"
-                  />
-                </div>
-              </div>
+                <div className="space-y-4 text-xs">
+                  <div>
+                    <p className="text-slate-500">Tin đăng bị phản ánh:</p>
+                    <p className="font-bold text-slate-900 text-sm mt-0.5">{selectedReport.roomTitle}</p>
+                    <p className="text-slate-600 mt-0.5">Lý do: <span className="text-rose-600 font-medium">{selectedReport.reason}</span></p>
+                  </div>
 
-              <div className="flex items-center justify-end gap-3 pt-3 border-t border-slate-100">
-                <Button
-                  variant="secondary"
-                  disabled={resolving}
-                  onClick={() => setSelectedReport(null)}
-                >
-                  Hủy bỏ
-                </Button>
-                <Button
-                  variant="primary"
-                  disabled={resolving}
-                  onClick={handleConfirmResolve}
-                  className="bg-indigo-600 hover:bg-indigo-700 text-white shadow-sm"
-                >
-                  {resolving ? 'Đang thực hiện...' : 'Xác nhận xử lý & Ghi log'}
-                </Button>
-              </div>
-            </motion.div>
-          </motion.div>
-        )}
-      </AnimatePresence>
+                  <div>
+                    <label className="block font-semibold text-slate-700 mb-1.5">Chọn hành động xử lý:</label>
+                    <select
+                      value={modalAction}
+                      onChange={e => setModalAction(e.target.value)}
+                      className="w-full p-2.5 rounded-xl border border-slate-200 bg-slate-50 text-slate-900 font-medium outline-none focus:ring-2 focus:ring-indigo-500"
+                    >
+                      <option value="RoomHidden">Ẩn tin đăng khỏi danh sách tìm kiếm (RoomHidden)</option>
+                      <option value="WarningIssued">Gửi cảnh cáo vi phạm đến chủ trọ (WarningIssued)</option>
+                      <option value="LandlordBanned">Khóa vĩnh viễn tài khoản chủ trọ (LandlordBanned)</option>
+                      <option value="Dismissed">Bác bỏ báo cáo / Tin hợp lệ (Dismissed)</option>
+                    </select>
+                  </div>
+
+                  <div>
+                    <label className="block font-semibold text-slate-700 mb-1.5">Ghi chú của kiểm duyệt viên (Lưu vết Audit Log):</label>
+                    <textarea
+                      rows={3}
+                      value={moderatorNotes}
+                      onChange={e => setModeratorNotes(e.target.value)}
+                      placeholder="Ghi rõ lý do xử lý, điều khoản vi phạm hoặc lý do bác bỏ..."
+                      className="w-full p-3 rounded-xl border border-slate-200 bg-slate-50 text-slate-900 outline-none focus:ring-2 focus:ring-indigo-500"
+                    />
+                  </div>
+                </div>
+
+                <div className="flex items-center justify-end gap-3 pt-3 border-t border-slate-100">
+                  <Button
+                    variant="secondary"
+                    disabled={resolving}
+                    onClick={() => setSelectedReport(null)}
+                  >
+                    Hủy bỏ
+                  </Button>
+                  <Button
+                    variant="primary"
+                    disabled={resolving}
+                    onClick={handleConfirmResolve}
+                    className="bg-indigo-600 hover:bg-indigo-700 text-white shadow-sm"
+                  >
+                    {resolving ? 'Đang thực hiện...' : 'Xác nhận xử lý & Ghi log'}
+                  </Button>
+                </div>
+              </motion.div>
+            </div>
+          )}
+        </AnimatePresence>,
+        document.body
+      )}
     </PageMotion>
   );
 }

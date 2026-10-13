@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import { createPortal } from 'react-dom';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { leasesApi, type LeaseContractResponse, type CreateLeasePayload } from '../../services/api';
 import { toast } from 'sonner';
@@ -88,6 +89,18 @@ export default function LandlordLeases() {
   useEffect(() => {
     fetchLeases();
   }, []);
+
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') {
+        if (isCreateOpen) setIsCreateOpen(false);
+        if (terminatingLease) setTerminatingLease(null);
+        if (viewingLease) setViewingLease(null);
+      }
+    };
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [isCreateOpen, terminatingLease, viewingLease]);
 
   // Handle prefill from location state (e.g. from Approved Application)
   useEffect(() => {
@@ -498,30 +511,34 @@ export default function LandlordLeases() {
       )}
 
       {/* Create Lease Modal */}
-      <AnimatePresence>
-        {isCreateOpen && (
-          <motion.div
-            key="create-lease-modal"
-            variants={modalBackdropVariants}
-            initial="hidden"
-            animate="visible"
-            exit="exit"
-            onClick={() => setIsCreateOpen(false)}
-            className="fixed inset-0 z-50 flex items-center justify-center bg-[#0F172A]/50 backdrop-blur-sm p-4 overflow-y-auto"
-          >
+      {createPortal(
+        <AnimatePresence>
+          {isCreateOpen && (
             <motion.div
-              variants={modalContentVariants}
+              key="create-lease-modal"
+              variants={modalBackdropVariants}
               initial="hidden"
               animate="visible"
               exit="exit"
-              onClick={(e) => e.stopPropagation()}
-              className="bg-white rounded-2xl shadow-xl max-w-2xl w-full p-6 space-y-4 my-8 motion-gpu"
+              onClick={() => setIsCreateOpen(false)}
+              className="fixed inset-0 z-[100] flex items-center justify-center bg-[#0F172A]/60 backdrop-blur-xs p-4 overflow-y-auto"
             >
-            <div className="flex justify-between items-center border-b border-[#E2E8F0] pb-3">
-              <div className="flex items-center gap-2">
-                <FileText className="w-5 h-5 text-[#00153D]" />
-                <h3 className="font-bold text-base text-[#0F172A]">Tạo hợp đồng thuê mới</h3>
-              </div>
+              <motion.div
+                variants={modalContentVariants}
+                initial="hidden"
+                animate="visible"
+                exit="exit"
+                onClick={(e) => e.stopPropagation()}
+                role="dialog"
+                aria-modal="true"
+                aria-labelledby="create-lease-title"
+                className="bg-white rounded-2xl shadow-2xl max-w-2xl w-full p-6 space-y-4 my-auto motion-gpu"
+              >
+              <div className="flex justify-between items-center border-b border-[#E2E8F0] pb-3">
+                <div className="flex items-center gap-2">
+                  <FileText className="w-5 h-5 text-[#00153D]" />
+                  <h3 id="create-lease-title" className="font-bold text-base text-[#00153D]">Tạo hợp đồng thuê mới</h3>
+                </div>
               <button 
                 onClick={() => setIsCreateOpen(false)}
                 className="text-[#94A3B8] hover:text-[#0F172A]"
@@ -696,33 +713,39 @@ export default function LandlordLeases() {
             </motion.div>
           </motion.div>
         )}
-      </AnimatePresence>
+      </AnimatePresence>,
+      document.body
+    )}
 
       {/* Terminate Modal */}
-      <AnimatePresence>
-        {terminatingLease && (
-          <motion.div
-            key="terminate-lease-modal"
-            variants={modalBackdropVariants}
-            initial="hidden"
-            animate="visible"
-            exit="exit"
-            onClick={() => setTerminatingLease(null)}
-            className="fixed inset-0 z-50 flex items-center justify-center bg-[#0F172A]/50 backdrop-blur-sm p-4"
-          >
+      {createPortal(
+        <AnimatePresence>
+          {terminatingLease && (
             <motion.div
-              variants={modalContentVariants}
+              key="terminate-lease-modal"
+              variants={modalBackdropVariants}
               initial="hidden"
               animate="visible"
               exit="exit"
-              onClick={(e) => e.stopPropagation()}
-              className="bg-white rounded-2xl shadow-xl max-w-md w-full p-6 space-y-4 motion-gpu"
+              onClick={() => setTerminatingLease(null)}
+              className="fixed inset-0 z-[100] flex items-center justify-center bg-[#0F172A]/60 backdrop-blur-xs p-4 overflow-y-auto"
             >
-            <div className="flex justify-between items-center border-b border-[#E2E8F0] pb-3">
-              <div className="flex items-center gap-2">
-                <Ban className="w-5 h-5 text-rose-600" />
-                <h3 className="font-bold text-base text-[#0F172A]">Chấm dứt hợp đồng thuê</h3>
-              </div>
+              <motion.div
+                variants={modalContentVariants}
+                initial="hidden"
+                animate="visible"
+                exit="exit"
+                onClick={(e) => e.stopPropagation()}
+                role="dialog"
+                aria-modal="true"
+                aria-labelledby="terminate-lease-title"
+                className="bg-white rounded-2xl shadow-2xl max-w-md w-full p-6 space-y-4 my-auto motion-gpu"
+              >
+              <div className="flex justify-between items-center border-b border-[#E2E8F0] pb-3">
+                <div className="flex items-center gap-2">
+                  <Ban className="w-5 h-5 text-rose-600" />
+                  <h3 id="terminate-lease-title" className="font-bold text-base text-[#00153D]">Chấm dứt hợp đồng thuê</h3>
+                </div>
               <button 
                 onClick={() => setTerminatingLease(null)}
                 className="text-[#94A3B8] hover:text-[#0F172A]"
@@ -776,33 +799,39 @@ export default function LandlordLeases() {
             </motion.div>
           </motion.div>
         )}
-      </AnimatePresence>
+      </AnimatePresence>,
+      document.body
+    )}
 
       {/* Viewing Details Modal */}
-      <AnimatePresence>
-        {viewingLease && (
-          <motion.div
-            key="view-lease-modal"
-            variants={modalBackdropVariants}
-            initial="hidden"
-            animate="visible"
-            exit="exit"
-            onClick={() => setViewingLease(null)}
-            className="fixed inset-0 z-50 flex items-center justify-center bg-[#0F172A]/50 backdrop-blur-sm p-4 overflow-y-auto"
-          >
+      {createPortal(
+        <AnimatePresence>
+          {viewingLease && (
             <motion.div
-              variants={modalContentVariants}
+              key="view-lease-modal"
+              variants={modalBackdropVariants}
               initial="hidden"
               animate="visible"
               exit="exit"
-              onClick={(e) => e.stopPropagation()}
-              className="bg-white rounded-2xl shadow-xl max-w-2xl w-full p-6 space-y-4 my-8 motion-gpu"
+              onClick={() => setViewingLease(null)}
+              className="fixed inset-0 z-[100] flex items-center justify-center bg-[#0F172A]/60 backdrop-blur-xs p-4 overflow-y-auto"
             >
-            <div className="flex justify-between items-center border-b border-[#E2E8F0] pb-3">
-              <div className="flex items-center gap-2">
-                <FileText className="w-5 h-5 text-blue-600" />
-                <h3 className="font-bold text-base text-[#0F172A]">Chi tiết hợp đồng #{viewingLease.id.slice(0, 8)}</h3>
-              </div>
+              <motion.div
+                variants={modalContentVariants}
+                initial="hidden"
+                animate="visible"
+                exit="exit"
+                onClick={(e) => e.stopPropagation()}
+                role="dialog"
+                aria-modal="true"
+                aria-labelledby="viewing-lease-title"
+                className="bg-white rounded-2xl shadow-2xl max-w-2xl w-full p-6 space-y-4 my-auto motion-gpu"
+              >
+              <div className="flex justify-between items-center border-b border-[#E2E8F0] pb-3">
+                <div className="flex items-center gap-2">
+                  <FileText className="w-5 h-5 text-[#073372]" />
+                  <h3 id="viewing-lease-title" className="font-bold text-base text-[#00153D]">Chi tiết hợp đồng #{viewingLease.id.slice(0, 8)}</h3>
+                </div>
               <button 
                 onClick={() => setViewingLease(null)}
                 className="text-[#94A3B8] hover:text-[#0F172A]"
@@ -913,7 +942,9 @@ export default function LandlordLeases() {
             </motion.div>
           </motion.div>
         )}
-      </AnimatePresence>
+      </AnimatePresence>,
+      document.body
+    )}
 
       {/* Post-Rental Management Modal */}
       <AnimatePresence>

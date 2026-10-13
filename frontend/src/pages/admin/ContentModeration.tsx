@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import { createPortal } from 'react-dom';
 import { Card } from '../../components/ui/Card';
 import { Button } from '../../components/ui/Button';
 import { adminApi } from '../../services/api';
@@ -54,6 +55,17 @@ export default function ContentModeration() {
   const [filterStatus, setFilterStatus] = useState<'all' | number>('all');
   const [previewAvatar, setPreviewAvatar] = useState<string | null>(null);
   const [previewImage, setPreviewImage] = useState<string | null>(null);
+
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') {
+        setPreviewAvatar(null);
+        setPreviewImage(null);
+      }
+    };
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, []);
 
   // Roommate posts state
   const [roommatePosts, setRoommatePosts] = useState<ModerationRoommatePost[]>([]);
@@ -592,66 +604,76 @@ export default function ContentModeration() {
       )}
 
       {/* Avatar Preview Modal Overlay */}
-      <AnimatePresence>
-        {previewAvatar && (
-          <motion.div 
-            variants={modalBackdropVariants}
-            initial="initial"
-            animate="animate"
-            exit="exit"
-            className="fixed inset-0 z-50 bg-black/60 flex items-center justify-center p-4 backdrop-blur-xs"
-            onClick={() => setPreviewAvatar(null)}
-          >
-            <motion.div 
-              variants={modalContentVariants}
-              initial="initial"
-              animate="animate"
-              exit="exit"
-              className="bg-white rounded-[24px] p-6 max-w-sm w-full flex flex-col items-center space-y-4 shadow-2xl relative" 
-              onClick={e => e.stopPropagation()}
-            >
-              <button 
-                onClick={() => setPreviewAvatar(null)} 
-                className="absolute top-4 right-4 text-[#64748B] hover:text-[#0F172A] w-8 h-8 flex items-center justify-center rounded-full bg-[#F5F7FA]"
-                aria-label="Đóng"
+      {createPortal(
+        <AnimatePresence>
+          {previewAvatar && (
+            <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/60 backdrop-blur-xs p-4 overflow-y-auto">
+              <motion.div 
+                variants={modalBackdropVariants}
+                initial="hidden"
+                animate="visible"
+                exit="exit"
+                className="fixed inset-0"
+                onClick={() => setPreviewAvatar(null)}
+              />
+              <motion.div 
+                variants={modalContentVariants}
+                initial="hidden"
+                animate="visible"
+                exit="exit"
+                role="dialog"
+                aria-modal="true"
+                className="relative my-auto bg-white rounded-2xl p-6 max-w-sm w-full flex flex-col items-center space-y-4 shadow-2xl border border-slate-200" 
               >
-                <X className="w-5 h-5" />
-              </button>
-              <h3 className="font-bold text-h3 text-[#0F172A]">Chân dung Chủ trọ</h3>
-              <div className="w-48 h-48 rounded-full overflow-hidden border-4 border-[#00153D] shadow-lg bg-[#F5F7FA]">
-                <img src={previewAvatar} alt="Chân dung chủ nhà" className="w-full h-full object-cover" />
-              </div>
-              <p className="text-caption text-[#64748B] font-semibold">{selectedRoom?.landlordName}</p>
-              <Button variant="secondary" size="sm" onClick={() => setPreviewAvatar(null)} className="w-full">Đóng</Button>
-            </motion.div>
-          </motion.div>
-        )}
-      </AnimatePresence>
+                <button 
+                  onClick={() => setPreviewAvatar(null)} 
+                  className="absolute top-4 right-4 text-[#64748B] hover:text-[#0F172A] w-8 h-8 flex items-center justify-center rounded-full bg-[#F5F7FA]"
+                  aria-label="Đóng"
+                >
+                  <X className="w-5 h-5" />
+                </button>
+                <h3 className="font-bold text-h3 text-[#0F172A]">Chân dung Chủ trọ</h3>
+                <div className="w-48 h-48 rounded-full overflow-hidden border-4 border-[#00153D] shadow-lg bg-[#F5F7FA]">
+                  <img src={previewAvatar} alt="Chân dung chủ nhà" className="w-full h-full object-cover" />
+                </div>
+                <p className="text-caption text-[#64748B] font-semibold">{selectedRoom?.landlordName}</p>
+                <Button variant="secondary" size="sm" onClick={() => setPreviewAvatar(null)} className="w-full">Đóng</Button>
+              </motion.div>
+            </div>
+          )}
+        </AnimatePresence>,
+        document.body
+      )}
 
       {/* Room Image Preview Modal */}
-      <AnimatePresence>
-        {previewImage && (
-          <motion.div 
-            variants={modalBackdropVariants}
-            initial="initial"
-            animate="animate"
-            exit="exit"
-            className="fixed inset-0 z-50 bg-black/70 flex items-center justify-center p-4 backdrop-blur-xs"
-            onClick={() => setPreviewImage(null)}
-          >
-            <motion.div 
-              variants={modalContentVariants}
-              initial="initial"
-              animate="animate"
-              exit="exit"
-              className="max-w-3xl max-h-[85vh] rounded-2xl overflow-hidden shadow-2xl" 
-              onClick={e => e.stopPropagation()}
-            >
-              <img src={previewImage} alt="Ảnh phòng trọ" className="w-full h-full object-contain" />
-            </motion.div>
-          </motion.div>
-        )}
-      </AnimatePresence>
+      {createPortal(
+        <AnimatePresence>
+          {previewImage && (
+            <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/75 backdrop-blur-xs p-4 overflow-y-auto">
+              <motion.div 
+                variants={modalBackdropVariants}
+                initial="hidden"
+                animate="visible"
+                exit="exit"
+                className="fixed inset-0"
+                onClick={() => setPreviewImage(null)}
+              />
+              <motion.div 
+                variants={modalContentVariants}
+                initial="hidden"
+                animate="visible"
+                exit="exit"
+                role="dialog"
+                aria-modal="true"
+                className="relative my-auto max-w-3xl max-h-[85vh] rounded-2xl overflow-hidden shadow-2xl border border-white/10" 
+              >
+                <img src={previewImage} alt="Ảnh phòng trọ" className="w-full h-full object-contain" />
+              </motion.div>
+            </div>
+          )}
+        </AnimatePresence>,
+        document.body
+      )}
     </PageMotion>
   );
 }

@@ -1,62 +1,79 @@
-import { CheckCircle } from 'lucide-react';
+import { ShieldCheck, Camera, FileCheck, CheckCircle2 } from 'lucide-react';
 
 export function VerificationSection() {
-  // ponytail: Consolidated single card container for Verification Section (replacing 3 separate horizontal cards)
   return (
-    <section className="py-16 md:py-24 bg-[#F5F7FA]">
+    <section className="py-16 md:py-24 bg-white border-t border-[#E2E8F0]">
       <div className="container-dormi">
-        <div className="bg-white rounded-[18px] shadow-clay-soft p-8 md:p-12 max-w-4xl mx-auto space-y-8">
-          <div className="space-y-2 text-center md:text-left">
-            <h2 className="text-h2 text-[#0F172A]">
-              Trước khi bạn đến xem phòng, DORMI kiểm tra gì?
-            </h2>
-            <p className="text-body text-[#64748B]">
-              Quy trình xác minh 3 bước minh bạch mang lại sự an tâm tuyệt đối khi thuê phòng.
-            </p>
+        <div className="max-w-2xl mb-12">
+          <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-emerald-50 border border-emerald-200/80 text-emerald-800 text-caption font-bold mb-3">
+            <CheckCircle2 className="w-3.5 h-3.5 text-emerald-600" />
+            <span>Cam kết minh bạch từ DORMI</span>
+          </div>
+          <h2 className="text-h2 text-[#0F172A] tracking-tight">
+            Trước khi bạn đến xem phòng, DORMI kiểm tra những gì?
+          </h2>
+          <p className="text-body text-[#64748B] mt-2">
+            Loại bỏ nỗi lo phòng ảo, lừa đảo cọc hay ảnh phóng đại. Mỗi phòng đăng tải trên nền tảng đều trải qua quy trình xác minh 3 lớp.
+          </p>
+        </div>
+
+        {/* 3 Verification Pillars Grid */}
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 lg:gap-8">
+          
+          {/* Pillar 01 */}
+          <div className="bg-[#F8FAFC] border border-slate-200/80 rounded-2xl p-6 lg:p-7 flex flex-col justify-between transition-colors hover:border-slate-300">
+            <div>
+              <div className="flex items-center justify-between mb-5">
+                <div className="w-11 h-11 rounded-xl bg-[#00153D] text-white flex items-center justify-center shadow-xs">
+                  <ShieldCheck className="w-5 h-5 text-amber-400" />
+                </div>
+                <span className="text-xs font-mono font-bold text-slate-400">01</span>
+              </div>
+              <h3 className="text-h3 text-[#0F172A] mb-2 font-bold">
+                Xác thực chủ nhà & người đăng
+              </h3>
+              <p className="text-body text-[#64748B] leading-relaxed text-sm">
+                Xác nhận CCCD và quyền quản lý phòng trọ trước khi duyệt tin. Ngăn chặn triệt để môi giới trung gian thu phí trái phép.
+              </p>
+            </div>
           </div>
 
-          <div className="space-y-6 pt-2">
-            
-            {/* Step 1 */}
-            <div className="flex items-start gap-4 p-4 rounded-[14px] bg-[#F5F7FA] shadow-clay-inset">
-              <div className="w-8 h-8 rounded-full bg-[#F0FDF4] text-[#16803C] flex items-center justify-center flex-shrink-0 mt-0.5">
-                <CheckCircle className="w-5 h-5" />
+          {/* Pillar 02 */}
+          <div className="bg-[#F8FAFC] border border-slate-200/80 rounded-2xl p-6 lg:p-7 flex flex-col justify-between transition-colors hover:border-slate-300">
+            <div>
+              <div className="flex items-center justify-between mb-5">
+                <div className="w-11 h-11 rounded-xl bg-[#00153D] text-white flex items-center justify-center shadow-xs">
+                  <Camera className="w-5 h-5 text-amber-400" />
+                </div>
+                <span className="text-xs font-mono font-bold text-slate-400">02</span>
               </div>
-              <div className="space-y-1">
-                <h3 className="text-h3 text-[#0F172A]">Người đăng được xác minh</h3>
-                <p className="text-body text-[#64748B]">
-                  Xác nhận danh tính chính chủ hoặc đại diện quản lý nhà trọ trước khi tin được duyệt đăng.
-                </p>
-              </div>
+              <h3 className="text-h3 text-[#0F172A] mb-2 font-bold">
+                Đối chiếu hình ảnh thực tế
+              </h3>
+              <p className="text-body text-[#64748B] leading-relaxed text-sm">
+                Kiểm duyệt hình ảnh và không gian thực của từng phòng trọ. Cam kết không dùng ảnh render 3D ảo làm giả phòng thực tế.
+              </p>
             </div>
-
-            {/* Step 2 */}
-            <div className="flex items-start gap-4 p-4 rounded-[14px] bg-[#F5F7FA] shadow-clay-inset">
-              <div className="w-8 h-8 rounded-full bg-[#F0FDF4] text-[#16803C] flex items-center justify-center flex-shrink-0 mt-0.5">
-                <CheckCircle className="w-5 h-5" />
-              </div>
-              <div className="space-y-1">
-                <h3 className="text-h3 text-[#0F172A]">Hình ảnh được kiểm tra</h3>
-                <p className="text-body text-[#64748B]">
-                  Đối chiếu hình ảnh thực tế căn phòng để ngăn chặn ảnh ảo hoặc thông tin sai lệch.
-                </p>
-              </div>
-            </div>
-
-            {/* Step 3 */}
-            <div className="flex items-start gap-4 p-4 rounded-[14px] bg-[#F5F7FA] shadow-clay-inset">
-              <div className="w-8 h-8 rounded-full bg-[#F0FDF4] text-[#16803C] flex items-center justify-center flex-shrink-0 mt-0.5">
-                <CheckCircle className="w-5 h-5" />
-              </div>
-              <div className="space-y-1">
-                <h3 className="text-h3 text-[#0F172A]">Thông tin rõ ràng</h3>
-                <p className="text-body text-[#64748B]">
-                  Giá thuê hàng tháng, diện tích, tiền điện nước và vị trí được hiển thị niêm yết công khai.
-                </p>
-              </div>
-            </div>
-
           </div>
+
+          {/* Pillar 03 */}
+          <div className="bg-[#F8FAFC] border border-slate-200/80 rounded-2xl p-6 lg:p-7 flex flex-col justify-between transition-colors hover:border-slate-300">
+            <div>
+              <div className="flex items-center justify-between mb-5">
+                <div className="w-11 h-11 rounded-xl bg-[#00153D] text-white flex items-center justify-center shadow-xs">
+                  <FileCheck className="w-5 h-5 text-amber-400" />
+                </div>
+                <span className="text-xs font-mono font-bold text-slate-400">03</span>
+              </div>
+              <h3 className="text-h3 text-[#0F172A] mb-2 font-bold">
+                Niêm yết giá & phụ phí rõ ràng
+              </h3>
+              <p className="text-body text-[#64748B] leading-relaxed text-sm">
+                Giá thuê, tiền cọc, chi phí điện nước và các loại phí dịch vụ được ghi rõ ràng trong hợp đồng, tuyệt đối không phát sinh phụ phí ẩn.
+              </p>
+            </div>
+          </div>
+
         </div>
       </div>
     </section>

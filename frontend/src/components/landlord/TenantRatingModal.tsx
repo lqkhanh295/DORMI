@@ -35,6 +35,11 @@ export function TenantRatingModal({
   useEffect(() => {
     if (!isOpen) return;
 
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') onClose();
+    };
+    window.addEventListener('keydown', handleKeyDown);
+
     setLoadingLeases(true);
     tenantReviewsApi.getMyLeases()
       .then(res => {
@@ -51,7 +56,9 @@ export function TenantRatingModal({
       .finally(() => {
         setLoadingLeases(false);
       });
-  }, [isOpen, initialLeaseId]);
+
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [isOpen, initialLeaseId, onClose]);
 
   const currentLease = leases.find(l => l.id === selectedLeaseId) || leases[0];
 
@@ -100,7 +107,7 @@ export function TenantRatingModal({
           animate="visible"
           exit="exit"
           onClick={onClose}
-          className="fixed inset-0 z-50 flex items-center justify-center bg-[#0F172A]/50 p-4 backdrop-blur-xs"
+          className="fixed inset-0 z-[100] flex items-center justify-center bg-[#0F172A]/50 p-4 backdrop-blur-xs overflow-y-auto"
         >
           <motion.div
             key="tenant-rating-content"
@@ -109,23 +116,27 @@ export function TenantRatingModal({
             animate="visible"
             exit="exit"
             onClick={(e) => e.stopPropagation()}
-            className="bg-white rounded-[20px] shadow-clay-primary max-w-lg w-full p-6 space-y-6 overflow-hidden max-h-[90vh] flex flex-col motion-gpu"
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="tenant-rating-title"
+            className="bg-white rounded-2xl shadow-xl border border-[#E2E8F0] max-w-lg w-full p-6 space-y-6 overflow-hidden max-h-[90vh] flex flex-col motion-gpu my-auto"
           >
             {/* Header */}
             <div className="flex justify-between items-center pb-4 border-b border-[#E2E8F0]">
               <div>
-                <h3 className="text-h3 font-bold text-[#0F172A] flex items-center gap-2">
-                  <UserCheck className="w-6 h-6 text-[#2563EB]" />
+                <h3 id="tenant-rating-title" className="text-base font-bold text-[#00153D] flex items-center gap-2">
+                  <UserCheck className="w-5 h-5 text-[#073372]" />
                   Đánh giá uy tín khách thuê
                 </h3>
-                <p className="text-caption text-[#64748B] mt-0.5">
+                <p className="text-xs text-[#64748B] mt-0.5">
                   Góp phần xây dựng cộng đồng thuê trọ minh bạch và an toàn.
                 </p>
               </div>
               <button 
                 type="button" 
                 onClick={onClose} 
-                className="text-[#64748B] hover:text-[#0F172A] p-1.5 rounded-full hover:bg-slate-100 transition-colors"
+                className="text-[#94A3B8] hover:text-[#00153D] p-1.5 rounded-lg hover:bg-slate-100 transition-colors"
+                aria-label="Đóng"
               >
                 <X className="w-5 h-5" />
               </button>
@@ -134,9 +145,9 @@ export function TenantRatingModal({
             {/* Content */}
             <form onSubmit={handleSubmit} className="space-y-5 overflow-y-auto flex-1 pr-1">
               {loadingLeases ? (
-                <div className="py-8 text-center text-caption text-[#64748B]">Đang tải danh sách hợp đồng thuê...</div>
+                <div className="py-8 text-center text-xs text-[#64748B]">Đang tải danh sách hợp đồng thuê...</div>
               ) : leases.length === 0 ? (
-                <div className="p-4 bg-amber-50 rounded-[12px] border border-amber-200 text-caption text-amber-800 flex items-start gap-2">
+                <div className="p-4 bg-amber-50 rounded-xl border border-amber-200 text-xs text-amber-800 flex items-start gap-2">
                   <AlertCircle className="w-5 h-5 text-amber-600 shrink-0 mt-0.5" />
                   <div>
                     <p className="font-bold">Chưa có hợp đồng thuê phòng</p>
@@ -149,13 +160,13 @@ export function TenantRatingModal({
                 <>
                   {/* Lease Select */}
                   <div className="space-y-1.5">
-                    <label className="text-caption font-semibold text-[#0F172A] block">
+                    <label className="text-xs font-semibold text-[#00153D] block">
                       Chọn khách thuê / Hợp đồng
                     </label>
                     <select
                       value={selectedLeaseId}
                       onChange={e => setSelectedLeaseId(e.target.value)}
-                      className="w-full bg-[#F5F7FA] shadow-clay-inset border border-[#E2E8F0] rounded-[12px] px-3.5 py-2.5 text-body text-[#0F172A] focus:outline-none focus:ring-1 focus:ring-[#00153D] focus:bg-white"
+                      className="w-full bg-white border border-[#CBD5E1] rounded-xl px-3.5 py-2.5 text-xs font-medium text-[#00153D] focus:outline-none focus:border-[#00153D] focus:ring-1 focus:ring-[#00153D]"
                     >
                       {leases.map(l => (
                         <option key={l.id} value={l.id}>
@@ -256,7 +267,7 @@ export function TenantRatingModal({
 
               {/* Comment */}
               <div className="space-y-1.5 pt-2 border-t border-[#E2E8F0]">
-                <label className="text-caption font-semibold text-[#0F172A] block">
+                <label className="text-xs font-semibold text-[#00153D] block">
                   Nhận xét khách quan <span className="text-rose-500">*</span>
                 </label>
                 <textarea
@@ -265,7 +276,7 @@ export function TenantRatingModal({
                   value={comment}
                   onChange={e => setComment(e.target.value)}
                   placeholder="Ví dụ: Khách đóng tiền phòng rất đúng hẹn, giữ gìn phòng sạch sẽ và hòa đồng với mọi người..."
-                  className="w-full bg-[#F5F7FA] shadow-clay-inset border border-[#E2E8F0] rounded-[12px] p-3 text-body text-[#0F172A] placeholder-[#94A3B8] focus:outline-none focus:ring-1 focus:ring-[#00153D] focus:bg-white text-caption"
+                  className="w-full bg-white border border-[#CBD5E1] rounded-xl p-3 text-xs text-[#00153D] placeholder-[#94A3B8] focus:outline-none focus:border-[#00153D] focus:ring-1 focus:ring-[#00153D] resize-none"
                 />
               </div>
 

@@ -107,6 +107,14 @@ export default function PostRentalModal({ lease, isLandlord, onClose, onRefresh 
     loadData();
   }, [lease.id]);
 
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') onClose();
+    };
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [onClose]);
+
   // Handlers
   const handleCreatePayment = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -330,7 +338,7 @@ export default function PostRentalModal({ lease, isLandlord, onClose, onRefresh 
       animate="visible"
       exit="exit"
       onClick={onClose}
-      className="fixed inset-0 z-50 bg-[#0F172A]/50 backdrop-blur-xs flex items-center justify-center p-3 md:p-6 overflow-y-auto"
+      className="fixed inset-0 z-[100] bg-[#0F172A]/50 backdrop-blur-xs flex items-center justify-center p-3 md:p-6 overflow-y-auto"
     >
       <motion.div
         variants={modalContentVariants}
@@ -338,7 +346,10 @@ export default function PostRentalModal({ lease, isLandlord, onClose, onRefresh 
         animate="visible"
         exit="exit"
         onClick={(e) => e.stopPropagation()}
-        className="bg-white rounded-2xl md:rounded-3xl shadow-clay-primary border border-[#E2E8F0] w-full max-w-4xl max-h-[92vh] flex flex-col overflow-hidden motion-gpu"
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="post-rental-title"
+        className="bg-white rounded-2xl md:rounded-3xl shadow-xl border border-[#E2E8F0] w-full max-w-4xl max-h-[92vh] flex flex-col overflow-hidden motion-gpu my-auto"
       >
         
         {/* Header */}
@@ -349,7 +360,7 @@ export default function PostRentalModal({ lease, isLandlord, onClose, onRefresh 
             </div>
             <div>
               <div className="flex items-center gap-2">
-                <h2 className="text-base md:text-lg font-bold text-[#0F172A]">
+                <h2 id="post-rental-title" className="text-base md:text-lg font-bold text-[#00153D]">
                   Vận hành & Hậu thuê: {lease.roomTitle}
                 </h2>
                 <span className={`px-2.5 py-0.5 rounded-full text-xs font-bold ${lease.status === 'Active' ? 'bg-emerald-50 text-emerald-700 border border-emerald-200' : 'bg-slate-100 text-slate-700'}`}>
@@ -656,8 +667,8 @@ export default function PostRentalModal({ lease, isLandlord, onClose, onRefresh 
 
                   {/* Modal Record Payment */}
                   {payingSchedule && (
-                    <div className="fixed inset-0 z-50 bg-[#0F172A]/40 flex items-center justify-center p-4">
-                      <div className="bg-white rounded-2xl p-6 max-w-md w-full shadow-clay-primary space-y-4">
+                    <div className="fixed inset-0 z-[110] bg-[#0F172A]/60 backdrop-blur-xs flex items-center justify-center p-4 overflow-y-auto">
+                      <div className="relative my-auto bg-white rounded-2xl p-6 max-w-md w-full shadow-xl space-y-4 border border-[#E2E8F0] max-h-[min(90vh,650px)] overflow-y-auto">
                         <h4 className="font-bold text-base text-[#0F172A]">
                           {isLandlord ? 'Xác nhận đã nhận tiền:' : 'Báo đã chuyển khoản:'} {payingSchedule.title}
                         </h4>
@@ -691,14 +702,14 @@ export default function PostRentalModal({ lease, isLandlord, onClose, onRefresh 
                           <button
                             type="button"
                             onClick={() => setPayingSchedule(null)}
-                            className="px-3 py-1.5 text-xs text-[#64748B] hover:bg-slate-100 rounded-lg"
+                            className="px-3 py-1.5 text-xs text-[#64748B] hover:bg-slate-100 rounded-lg transition-colors"
                           >
                             Hủy
                           </button>
                           <button
                             type="button"
                             onClick={() => handleRecordPayment(payingSchedule.id)}
-                            className="px-4 py-1.5 bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs rounded-lg"
+                            className="px-4 py-1.5 bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs rounded-lg transition-colors"
                           >
                             {isLandlord ? 'Xác nhận nhận tiền vào tài khoản' : 'Gửi xác nhận chuyển khoản'}
                           </button>
@@ -709,11 +720,11 @@ export default function PostRentalModal({ lease, isLandlord, onClose, onRefresh 
 
                   {/* Modal Add Payment Schedule */}
                   {isAddingPayment && (
-                    <div className="fixed inset-0 z-50 bg-[#0F172A]/40 flex items-center justify-center p-4">
-                      <div className="bg-white rounded-2xl p-6 max-w-md w-full shadow-clay-primary space-y-4">
+                    <div className="fixed inset-0 z-[110] bg-[#0F172A]/60 backdrop-blur-xs flex items-center justify-center p-4 overflow-y-auto">
+                      <div className="relative my-auto bg-white rounded-2xl p-6 max-w-md w-full shadow-xl space-y-4 border border-[#E2E8F0] max-h-[min(90vh,650px)] overflow-y-auto">
                         <div className="flex justify-between items-center pb-2 border-b border-[#E2E8F0]">
                           <h4 className="font-bold text-base text-[#0F172A]">Tạo hóa đơn dịch vụ mới</h4>
-                          <button onClick={() => setIsAddingPayment(false)} className="text-[#64748B]">
+                          <button onClick={() => setIsAddingPayment(false)} className="text-[#64748B] hover:text-[#0F172A] p-1 rounded-lg">
                             <X className="w-4 h-4" />
                           </button>
                         </div>
@@ -775,13 +786,13 @@ export default function PostRentalModal({ lease, isLandlord, onClose, onRefresh 
                             <button
                               type="button"
                               onClick={() => setIsAddingPayment(false)}
-                              className="px-3 py-1.5 text-xs text-[#64748B] hover:bg-slate-100 rounded-lg"
+                              className="px-3 py-1.5 text-xs text-[#64748B] hover:bg-slate-100 rounded-lg transition-colors"
                             >
                               Hủy
                             </button>
                             <button
                               type="submit"
-                              className="px-4 py-1.5 bg-[#00153D] hover:bg-[#002266] text-white font-bold text-xs rounded-lg"
+                              className="px-4 py-1.5 bg-[#00153D] hover:bg-[#002266] text-white font-bold text-xs rounded-lg transition-colors"
                             >
                               Phát hành hóa đơn
                             </button>
@@ -932,11 +943,11 @@ export default function PostRentalModal({ lease, isLandlord, onClose, onRefresh 
 
                   {/* Modal Add Maintenance */}
                   {isAddingMaintenance && (
-                    <div className="fixed inset-0 z-50 bg-[#0F172A]/40 flex items-center justify-center p-4">
-                      <div className="bg-white rounded-2xl p-6 max-w-md w-full shadow-clay-primary space-y-4">
+                    <div className="fixed inset-0 z-[110] bg-[#0F172A]/60 backdrop-blur-xs flex items-center justify-center p-4 overflow-y-auto">
+                      <div className="relative my-auto bg-white rounded-2xl p-6 max-w-md w-full shadow-xl space-y-4 border border-[#E2E8F0] max-h-[min(90vh,650px)] overflow-y-auto">
                         <div className="flex justify-between items-center pb-2 border-b border-[#E2E8F0]">
                           <h4 className="font-bold text-base text-[#0F172A]">Gửi phiếu báo sự cố phòng</h4>
-                          <button onClick={() => setIsAddingMaintenance(false)} className="text-[#64748B]">
+                          <button onClick={() => setIsAddingMaintenance(false)} className="text-[#64748B] hover:text-[#0F172A] p-1 rounded-lg">
                             <X className="w-4 h-4" />
                           </button>
                         </div>
@@ -995,13 +1006,13 @@ export default function PostRentalModal({ lease, isLandlord, onClose, onRefresh 
                             <button
                               type="button"
                               onClick={() => setIsAddingMaintenance(false)}
-                              className="px-3 py-1.5 text-xs text-[#64748B] hover:bg-slate-100 rounded-lg"
+                              className="px-3 py-1.5 text-xs text-[#64748B] hover:bg-slate-100 rounded-lg transition-colors"
                             >
                               Hủy
                             </button>
                             <button
                               type="submit"
-                              className="px-4 py-1.5 bg-amber-600 hover:bg-amber-700 text-white font-bold text-xs rounded-lg"
+                              className="px-4 py-1.5 bg-amber-600 hover:bg-amber-700 text-white font-bold text-xs rounded-lg transition-colors"
                             >
                               Gửi phiếu báo
                             </button>
@@ -1013,8 +1024,8 @@ export default function PostRentalModal({ lease, isLandlord, onClose, onRefresh 
 
                   {/* Modal Action Ticket for Landlord */}
                   {actioningTicket && (
-                    <div className="fixed inset-0 z-50 bg-[#0F172A]/40 flex items-center justify-center p-4">
-                      <div className="bg-white rounded-2xl p-6 max-w-md w-full shadow-clay-primary space-y-4">
+                    <div className="fixed inset-0 z-[110] bg-[#0F172A]/60 backdrop-blur-xs flex items-center justify-center p-4 overflow-y-auto">
+                      <div className="relative my-auto bg-white rounded-2xl p-6 max-w-md w-full shadow-xl space-y-4 border border-[#E2E8F0] max-h-[min(90vh,650px)] overflow-y-auto">
                         <h4 className="font-bold text-base text-[#0F172A]">
                           Xử lý sự cố: {actioningTicket.title}
                         </h4>
@@ -1033,10 +1044,10 @@ export default function PostRentalModal({ lease, isLandlord, onClose, onRefresh 
                               />
                             </div>
                             <div className="flex justify-end gap-2">
-                              <button onClick={() => setActioningTicket(null)} className="px-3 py-1.5 text-xs text-[#64748B]">Hủy</button>
+                              <button onClick={() => setActioningTicket(null)} className="px-3 py-1.5 text-xs text-[#64748B] hover:bg-slate-100 rounded-lg transition-colors">Hủy</button>
                               <button
                                 onClick={() => handleUpdateMaintenanceStatus('ASSIGNED')}
-                                className="px-4 py-1.5 bg-amber-600 text-white font-bold text-xs rounded-lg"
+                                className="px-4 py-1.5 bg-amber-600 hover:bg-amber-700 text-white font-bold text-xs rounded-lg transition-colors"
                               >
                                 Xác nhận phân công
                               </button>
@@ -1068,10 +1079,10 @@ export default function PostRentalModal({ lease, isLandlord, onClose, onRefresh 
                               />
                             </div>
                             <div className="flex justify-end gap-2">
-                              <button onClick={() => setActioningTicket(null)} className="px-3 py-1.5 text-xs text-[#64748B]">Hủy</button>
+                              <button onClick={() => setActioningTicket(null)} className="px-3 py-1.5 text-xs text-[#64748B] hover:bg-slate-100 rounded-lg transition-colors">Hủy</button>
                               <button
                                 onClick={() => handleUpdateMaintenanceStatus('RESOLVED')}
-                                className="px-4 py-1.5 bg-emerald-600 text-white font-bold text-xs rounded-lg"
+                                className="px-4 py-1.5 bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs rounded-lg transition-colors"
                               >
                                 Đánh dấu đã sửa xong
                               </button>
@@ -1084,8 +1095,8 @@ export default function PostRentalModal({ lease, isLandlord, onClose, onRefresh 
 
                   {/* Modal Confirm Ticket for Tenant */}
                   {confirmingTicket && (
-                    <div className="fixed inset-0 z-50 bg-[#0F172A]/40 flex items-center justify-center p-4">
-                      <div className="bg-white rounded-2xl p-6 max-w-md w-full shadow-clay-primary space-y-4">
+                    <div className="fixed inset-0 z-[110] bg-[#0F172A]/60 backdrop-blur-xs flex items-center justify-center p-4 overflow-y-auto">
+                      <div className="relative my-auto bg-white rounded-2xl p-6 max-w-md w-full shadow-xl space-y-4 border border-[#E2E8F0] max-h-[min(90vh,650px)] overflow-y-auto">
                         <h4 className="font-bold text-base text-[#0F172A]">
                           Nghiệm thu sự cố: {confirmingTicket.title}
                         </h4>
@@ -1099,7 +1110,7 @@ export default function PostRentalModal({ lease, isLandlord, onClose, onRefresh 
                                 key={st}
                                 type="button"
                                 onClick={() => setTenantRating(st)}
-                                className={`p-1.5 rounded-lg border ${tenantRating >= st ? 'bg-amber-100 border-amber-300 text-amber-600' : 'bg-slate-50 text-slate-400'}`}
+                                className={`p-1.5 rounded-lg border transition-colors ${tenantRating >= st ? 'bg-amber-100 border-amber-300 text-amber-600' : 'bg-slate-50 text-slate-400'}`}
                               >
                                 <Star className={`w-5 h-5 ${tenantRating >= st ? 'fill-amber-400' : ''}`} />
                               </button>
@@ -1119,10 +1130,10 @@ export default function PostRentalModal({ lease, isLandlord, onClose, onRefresh 
                           />
                         </div>
                         <div className="flex justify-end gap-2">
-                          <button onClick={() => setConfirmingTicket(null)} className="px-3 py-1.5 text-xs text-[#64748B]">Hủy</button>
+                          <button onClick={() => setConfirmingTicket(null)} className="px-3 py-1.5 text-xs text-[#64748B] hover:bg-slate-100 rounded-lg transition-colors">Hủy</button>
                           <button
                             onClick={handleConfirmMaintenance}
-                            className="px-4 py-1.5 bg-emerald-600 text-white font-bold text-xs rounded-lg"
+                            className="px-4 py-1.5 bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs rounded-lg transition-colors"
                           >
                             Xác nhận hoàn tất
                           </button>

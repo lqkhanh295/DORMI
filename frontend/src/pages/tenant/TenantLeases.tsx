@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import { createPortal } from 'react-dom';
 import { useNavigate } from 'react-router-dom';
 import { leasesApi, type LeaseContractResponse } from '../../services/api';
 import { toast } from 'sonner';
@@ -55,6 +56,17 @@ export default function TenantLeases() {
   useEffect(() => {
     fetchLeases();
   }, []);
+
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') {
+        if (signingLease) setSigningLease(null);
+        if (viewingLease) setViewingLease(null);
+      }
+    };
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [signingLease, viewingLease]);
 
   const handleOpenSign = (lease: LeaseContractResponse) => {
     setSigningLease(lease);
@@ -395,98 +407,105 @@ export default function TenantLeases() {
       )}
 
       {/* Signing Modal */}
-      <AnimatePresence>
-        {signingLease && (
-          <motion.div
-            key="signing-lease-modal"
-            variants={modalBackdropVariants}
-            initial="hidden"
-            animate="visible"
-            exit="exit"
-            onClick={() => setSigningLease(null)}
-            className="fixed inset-0 z-50 flex items-center justify-center bg-[#0F172A]/50 backdrop-blur-sm p-4 overflow-y-auto"
-          >
+      {createPortal(
+        <AnimatePresence>
+          {signingLease && (
             <motion.div
-              variants={modalContentVariants}
+              key="signing-lease-modal"
+              variants={modalBackdropVariants}
               initial="hidden"
               animate="visible"
               exit="exit"
-              onClick={(e) => e.stopPropagation()}
-              className="bg-white rounded-2xl shadow-xl max-w-xl w-full p-6 space-y-4 my-8 motion-gpu"
+              onClick={() => setSigningLease(null)}
+              className="fixed inset-0 z-[100] flex items-center justify-center bg-[#0F172A]/60 backdrop-blur-xs p-4 overflow-y-auto"
             >
-              <div className="flex justify-between items-center border-b border-[#E2E8F0] pb-3">
-                <div className="flex items-center gap-2">
-                  <FileCheck className="w-5 h-5 text-emerald-600" />
-                  <h3 className="font-bold text-base text-[#0F172A]">Ký kết hợp đồng thuê phòng</h3>
-                </div>
-                <button 
-                  onClick={() => setSigningLease(null)}
-                  className="text-[#94A3B8] hover:text-[#0F172A]"
-                >
-                  <X className="w-5 h-5" />
-                </button>
-              </div>
-
-              <div className="space-y-3 text-xs text-[#475569]">
-                <div className="p-3 bg-[#F8FAFC] rounded-xl border border-[#E2E8F0] space-y-1.5">
-                  <p><span className="font-semibold text-[#0F172A]">Phòng thuê:</span> {signingLease.roomTitle}</p>
-                  <p><span className="font-semibold text-[#0F172A]">Địa chỉ:</span> {signingLease.roomAddress}</p>
-                  <p><span className="font-semibold text-[#0F172A]">Bên cho thuê (Chủ nhà):</span> {signingLease.landlordName}</p>
-                  <p><span className="font-semibold text-[#0F172A]">Giá thuê hàng tháng:</span> <span className="font-bold text-emerald-700">{signingLease.monthlyRent.toLocaleString('vi-VN')} đ/tháng</span></p>
-                  <p><span className="font-semibold text-[#0F172A]">Tiền đặt cọc:</span> {signingLease.deposit.toLocaleString('vi-VN')} đ</p>
-                  <p><span className="font-semibold text-[#0F172A]">Thời hạn thuê:</span> {formatDate(signingLease.startDate)} đến {formatDate(signingLease.endDate)}</p>
-                </div>
-
-                {signingLease.termsAndConditions && (
-                  <div className="p-3 bg-slate-50 rounded-xl border border-slate-200">
-                    <p className="font-bold text-[#0F172A] mb-1">Điều khoản & Quy định của chủ nhà:</p>
-                    <p className="whitespace-pre-line text-[#64748B] max-h-36 overflow-y-auto pr-2">{signingLease.termsAndConditions}</p>
+              <motion.div
+                variants={modalContentVariants}
+                initial="hidden"
+                animate="visible"
+                exit="exit"
+                onClick={(e) => e.stopPropagation()}
+                role="dialog"
+                aria-modal="true"
+                aria-labelledby="signing-lease-title"
+                className="bg-white rounded-2xl shadow-2xl max-w-xl w-full flex flex-col max-h-[min(90vh,680px)] overflow-hidden border border-[#E2E8F0] motion-gpu my-auto"
+              >
+                <div className="flex justify-between items-center px-6 py-4 border-b border-[#E2E8F0] bg-white shrink-0">
+                  <div className="flex items-center gap-2">
+                    <FileCheck className="w-5 h-5 text-emerald-600" />
+                    <h3 id="signing-lease-title" className="font-bold text-base text-[#00153D]">Ký kết hợp đồng thuê phòng</h3>
                   </div>
-                )}
+                  <button 
+                    type="button"
+                    onClick={() => setSigningLease(null)}
+                    className="p-1 rounded-lg text-[#94A3B8] hover:text-[#00153D] hover:bg-[#F1F5F9] transition-colors"
+                    aria-label="Đóng"
+                  >
+                    <X className="w-5 h-5" />
+                  </button>
+                </div>
 
-                <form onSubmit={handleSignConfirm} className="space-y-4 pt-2">
-                  <div className="space-y-1">
-                    <label className="font-bold text-[#0F172A] block">
-                      Chữ ký điện tử (Nhập đầy đủ Họ và Tên):
+                <form onSubmit={handleSignConfirm} className="flex flex-col flex-1 min-h-0">
+                  <div className="flex-1 overflow-y-auto px-6 py-4 space-y-4 text-xs text-[#475569]">
+                    <div className="p-3.5 bg-[#F8FAFC] rounded-xl border border-[#E2E8F0] space-y-2">
+                      <p><span className="font-semibold text-[#00153D]">Phòng thuê:</span> {signingLease.roomTitle}</p>
+                      <p><span className="font-semibold text-[#00153D]">Địa chỉ:</span> {signingLease.roomAddress}</p>
+                      <p><span className="font-semibold text-[#00153D]">Bên cho thuê (Chủ nhà):</span> {signingLease.landlordName}</p>
+                      <p><span className="font-semibold text-[#00153D]">Giá thuê hàng tháng:</span> <span className="font-bold text-emerald-700">{signingLease.monthlyRent.toLocaleString('vi-VN')} đ/tháng</span></p>
+                      <p><span className="font-semibold text-[#00153D]">Tiền đặt cọc:</span> {signingLease.deposit.toLocaleString('vi-VN')} đ</p>
+                      <p><span className="font-semibold text-[#00153D]">Thời hạn thuê:</span> {formatDate(signingLease.startDate)} đến {formatDate(signingLease.endDate)}</p>
+                    </div>
+
+                    {signingLease.termsAndConditions && (
+                      <div className="p-3.5 bg-slate-50 rounded-xl border border-slate-200">
+                        <p className="font-bold text-[#00153D] mb-1.5">Điều khoản & Quy định của chủ nhà:</p>
+                        <p className="whitespace-pre-line text-[#64748B] max-h-36 overflow-y-auto pr-1">{signingLease.termsAndConditions}</p>
+                      </div>
+                    )}
+
+                    <div className="space-y-1.5 pt-1">
+                      <label className="font-bold text-[#00153D] block">
+                        Chữ ký điện tử (Nhập đầy đủ Họ và Tên):
+                      </label>
+                      <input
+                        type="text"
+                        required
+                        value={signatureName}
+                        onChange={(e) => setSignatureName(e.target.value)}
+                        placeholder="Ví dụ: Nguyễn Văn A"
+                        className="w-full px-3.5 py-2.5 border border-[#CBD5E1] rounded-xl font-semibold text-sm focus:outline-none focus:border-[#00153D] focus:ring-1 focus:ring-[#00153D]"
+                      />
+                      <p className="text-[11px] text-[#94A3B8]">
+                        Bằng việc nhập họ tên và xác nhận, chữ ký điện tử của bạn sẽ được lưu vết kèm mốc thời gian và địa chỉ IP.
+                      </p>
+                    </div>
+
+                    <label className="flex items-start gap-2.5 cursor-pointer pt-1">
+                      <input
+                        type="checkbox"
+                        checked={agreedTerms}
+                        onChange={(e) => setAgreedTerms(e.target.checked)}
+                        className="w-4 h-4 rounded text-[#00153D] mt-0.5"
+                      />
+                      <span className="text-[11px] text-[#475569]">
+                        Tôi xác nhận đã đọc, hiểu rõ quyền và nghĩa vụ và đồng ý tuân thủ toàn bộ các điều khoản trong hợp đồng thuê phòng trên nền tảng DORMI.
+                      </span>
                     </label>
-                    <input
-                      type="text"
-                      required
-                      value={signatureName}
-                      onChange={(e) => setSignatureName(e.target.value)}
-                      placeholder="Ví dụ: Nguyễn Văn A"
-                      className="w-full px-3 py-2 border border-[#CBD5E1] rounded-xl font-semibold text-sm focus:outline-none focus:border-blue-600 focus:ring-1 focus:ring-blue-600"
-                    />
-                    <p className="text-[11px] text-[#94A3B8]">
-                      Bằng việc nhập họ tên và xác nhận, chữ ký điện tử của bạn sẽ được lưu vết kèm mốc thời gian và địa chỉ IP.
-                    </p>
                   </div>
 
-                  <label className="flex items-start gap-2.5 cursor-pointer pt-1">
-                    <input
-                      type="checkbox"
-                      checked={agreedTerms}
-                      onChange={(e) => setAgreedTerms(e.target.checked)}
-                      className="w-4 h-4 rounded text-blue-600 mt-0.5"
-                    />
-                    <span className="text-[11px] text-[#475569]">
-                      Tôi xác nhận đã đọc, hiểu rõ quyền và nghĩa vụ và đồng ý tuân thủ toàn bộ các điều khoản trong hợp đồng thuê phòng trên nền tảng DORMI.
-                    </span>
-                  </label>
-
-                  <div className="flex justify-end gap-2.5 pt-3 border-t border-[#E2E8F0]">
+                  <div className="px-6 py-3.5 bg-[#F8FAFC] border-t border-[#E2E8F0] flex items-center justify-end gap-2.5 shrink-0">
                     <button
                       type="button"
                       onClick={() => setSigningLease(null)}
                       disabled={isSubmittingSign}
-                      className="px-4 py-2 border border-[#CBD5E1] text-[#475569] font-semibold rounded-xl hover:bg-[#F8FAFC]"
+                      className="px-4 py-2 border border-[#CBD5E1] text-[#475569] font-semibold text-xs rounded-xl hover:bg-white transition-colors"
                     >
                       Hủy bỏ
                     </button>
                     <button
                       type="submit"
                       disabled={isSubmittingSign || !agreedTerms}
-                      className="px-5 py-2 bg-emerald-600 hover:bg-emerald-700 disabled:opacity-50 text-white font-bold rounded-xl shadow-sm transition-[background-color,box-shadow,transform] duration-150 ease-out active:scale-[0.98] flex items-center gap-2"
+                      className="px-5 py-2 bg-emerald-600 hover:bg-emerald-700 disabled:opacity-50 text-white font-bold text-xs rounded-xl shadow-sm transition-[background-color,box-shadow,transform] duration-150 ease-out active:scale-[0.98] flex items-center gap-2"
                     >
                       {isSubmittingSign ? (
                         <>
@@ -502,143 +521,152 @@ export default function TenantLeases() {
                     </button>
                   </div>
                 </form>
-              </div>
+              </motion.div>
             </motion.div>
-          </motion.div>
-        )}
-      </AnimatePresence>
+          )}
+        </AnimatePresence>,
+        document.body
+      )}
 
       {/* Viewing Details Modal */}
-      <AnimatePresence>
-        {viewingLease && (
-          <motion.div
-            key="view-lease-modal"
-            variants={modalBackdropVariants}
-            initial="hidden"
-            animate="visible"
-            exit="exit"
-            onClick={() => setViewingLease(null)}
-            className="fixed inset-0 z-50 flex items-center justify-center bg-[#0F172A]/50 backdrop-blur-sm p-4 overflow-y-auto"
-          >
+      {createPortal(
+        <AnimatePresence>
+          {viewingLease && (
             <motion.div
-              variants={modalContentVariants}
+              key="view-lease-modal"
+              variants={modalBackdropVariants}
               initial="hidden"
               animate="visible"
               exit="exit"
-              onClick={(e) => e.stopPropagation()}
-              className="bg-white rounded-2xl shadow-xl max-w-2xl w-full p-6 space-y-4 my-8 motion-gpu"
+              onClick={() => setViewingLease(null)}
+              className="fixed inset-0 z-[100] flex items-center justify-center bg-[#0F172A]/60 backdrop-blur-xs p-4 overflow-y-auto"
             >
-              <div className="flex justify-between items-center border-b border-[#E2E8F0] pb-3">
-                <div className="flex items-center gap-2">
-                  <FileText className="w-5 h-5 text-blue-600" />
-                  <h3 className="font-bold text-base text-[#0F172A]">Chi tiết hợp đồng #{viewingLease.id.slice(0, 8)}</h3>
-                </div>
-                <button 
-                  onClick={() => setViewingLease(null)}
-                  className="text-[#94A3B8] hover:text-[#0F172A]"
-                >
-                  <X className="w-5 h-5" />
-                </button>
-              </div>
-
-              <div className="space-y-4 text-xs text-[#475569] max-h-[70vh] overflow-y-auto pr-1">
-                <div className="flex items-center justify-between p-3 bg-[#F8FAFC] rounded-xl border border-[#E2E8F0]">
-                  <div>
-                    <span className="text-[11px] text-[#64748B] block">Trạng thái hợp đồng</span>
-                    <div className="mt-1">{getStatusBadge(viewingLease.status)}</div>
+              <motion.div
+                variants={modalContentVariants}
+                initial="hidden"
+                animate="visible"
+                exit="exit"
+                onClick={(e) => e.stopPropagation()}
+                role="dialog"
+                aria-modal="true"
+                aria-labelledby="viewing-lease-title"
+                className="bg-white rounded-2xl shadow-2xl max-w-2xl w-full flex flex-col max-h-[min(90vh,720px)] overflow-hidden border border-[#E2E8F0] motion-gpu my-auto"
+              >
+                <div className="flex justify-between items-center px-6 py-4 border-b border-[#E2E8F0] bg-white shrink-0">
+                  <div className="flex items-center gap-2">
+                    <FileText className="w-5 h-5 text-[#073372]" />
+                    <h3 id="viewing-lease-title" className="font-bold text-base text-[#00153D]">Chi tiết hợp đồng #{viewingLease.id.slice(0, 8)}</h3>
                   </div>
-                  <div className="text-right">
-                    <span className="text-[11px] text-[#64748B] block">Ngày tạo</span>
-                    <span className="font-semibold text-[#0F172A]">{formatDate(viewingLease.createdAt)}</span>
-                  </div>
-                </div>
-
-                {/* Parties */}
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-                  <div className="p-3 bg-slate-50 rounded-xl border border-slate-200">
-                    <span className="font-bold text-[#0F172A] block mb-1">Bên A: Bên Cho Thuê (Chủ nhà)</span>
-                    <p><span className="text-[#64748B]">Họ tên:</span> {viewingLease.landlordName}</p>
-                    <p><span className="text-[#64748B]">Email:</span> {viewingLease.landlordEmail}</p>
-                    <p><span className="text-[#64748B]">Số điện thoại:</span> {viewingLease.landlordPhone || 'Chưa cung cấp'}</p>
-                    <p className="mt-1 text-[11px] text-emerald-700 font-medium">
-                      {viewingLease.landlordSigned ? `Chủ nhà đã ký (${formatDate(viewingLease.landlordSignedAt || '')})` : 'Chưa ký'}
-                    </p>
-                  </div>
-
-                  <div className="p-3 bg-slate-50 rounded-xl border border-slate-200">
-                    <span className="font-bold text-[#0F172A] block mb-1">Bên B: Bên Thuê (Khách thuê)</span>
-                    <p><span className="text-[#64748B]">Họ tên:</span> {viewingLease.tenantName}</p>
-                    <p><span className="text-[#64748B]">Email:</span> {viewingLease.tenantEmail}</p>
-                    <p><span className="text-[#64748B]">Số điện thoại:</span> {viewingLease.tenantPhone || 'Chưa cung cấp'}</p>
-                    <p className="mt-1 text-[11px] font-medium">
-                      {viewingLease.tenantSigned ? (
-                        <span className="text-emerald-700">Đã ký điện tử: {viewingLease.tenantSignatureData} ({formatDate(viewingLease.tenantSignedAt || '')})</span>
-                      ) : (
-                        <span className="text-amber-700">Chưa ký</span>
-                      )}
-                    </p>
-                  </div>
+                  <button 
+                    type="button"
+                    onClick={() => setViewingLease(null)}
+                    className="p-1 rounded-lg text-[#94A3B8] hover:text-[#00153D] hover:bg-[#F1F5F9] transition-colors"
+                    aria-label="Đóng"
+                  >
+                    <X className="w-5 h-5" />
+                  </button>
                 </div>
 
-                {/* Room & Terms */}
-                <div className="p-3 bg-[#F8FAFC] rounded-xl border border-[#E2E8F0] space-y-1.5">
-                  <span className="font-bold text-[#0F172A] block">Thông tin phòng & Chi phí:</span>
-                  <p><span className="text-[#64748B]">Phòng thuê:</span> {viewingLease.roomTitle}</p>
-                  <p><span className="text-[#64748B]">Địa chỉ:</span> {viewingLease.roomAddress}</p>
-                  <p><span className="text-[#64748B]">Tiền thuê:</span> <span className="font-bold text-emerald-700">{viewingLease.monthlyRent.toLocaleString('vi-VN')} đ/tháng</span></p>
-                  <p><span className="text-[#64748B]">Tiền cọc:</span> {viewingLease.deposit.toLocaleString('vi-VN')} đ</p>
-                  <p><span className="text-[#64748B]">Chu kỳ thanh toán:</span> {viewingLease.paymentCycleMonths} tháng / lần</p>
-                  <p><span className="text-[#64748B]">Thời gian thuê:</span> {formatDate(viewingLease.startDate)} - {formatDate(viewingLease.endDate)}</p>
-                  {viewingLease.utilitiesDescription && (
-                    <p><span className="text-[#64748B]">Chi phí dịch vụ (Điện, nước, internet):</span> {viewingLease.utilitiesDescription}</p>
+                <div className="flex-1 overflow-y-auto px-6 py-4 space-y-4 text-xs text-[#475569]">
+                  <div className="flex items-center justify-between p-3.5 bg-[#F8FAFC] rounded-xl border border-[#E2E8F0]">
+                    <div>
+                      <span className="text-[11px] text-[#64748B] block">Trạng thái hợp đồng</span>
+                      <div className="mt-1">{getStatusBadge(viewingLease.status)}</div>
+                    </div>
+                    <div className="text-right">
+                      <span className="text-[11px] text-[#64748B] block">Ngày tạo</span>
+                      <span className="font-semibold text-[#00153D]">{formatDate(viewingLease.createdAt)}</span>
+                    </div>
+                  </div>
+
+                  {/* Parties */}
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                    <div className="p-3.5 bg-slate-50 rounded-xl border border-slate-200">
+                      <span className="font-bold text-[#00153D] block mb-1">Bên A: Bên Cho Thuê (Chủ nhà)</span>
+                      <p><span className="text-[#64748B]">Họ tên:</span> {viewingLease.landlordName}</p>
+                      <p><span className="text-[#64748B]">Email:</span> {viewingLease.landlordEmail}</p>
+                      <p><span className="text-[#64748B]">Số điện thoại:</span> {viewingLease.landlordPhone || 'Chưa cung cấp'}</p>
+                      <p className="mt-1.5 text-[11px] text-emerald-700 font-medium">
+                        {viewingLease.landlordSigned ? `Chủ nhà đã ký (${formatDate(viewingLease.landlordSignedAt || '')})` : 'Chưa ký'}
+                      </p>
+                    </div>
+
+                    <div className="p-3.5 bg-slate-50 rounded-xl border border-slate-200">
+                      <span className="font-bold text-[#00153D] block mb-1">Bên B: Bên Thuê (Khách thuê)</span>
+                      <p><span className="text-[#64748B]">Họ tên:</span> {viewingLease.tenantName}</p>
+                      <p><span className="text-[#64748B]">Email:</span> {viewingLease.tenantEmail}</p>
+                      <p><span className="text-[#64748B]">Số điện thoại:</span> {viewingLease.tenantPhone || 'Chưa cung cấp'}</p>
+                      <p className="mt-1.5 text-[11px] font-medium">
+                        {viewingLease.tenantSigned ? (
+                          <span className="text-emerald-700">Đã ký điện tử: {viewingLease.tenantSignatureData} ({formatDate(viewingLease.tenantSignedAt || '')})</span>
+                        ) : (
+                          <span className="text-amber-700">Chưa ký</span>
+                        )}
+                      </p>
+                    </div>
+                  </div>
+
+                  {/* Room & Terms */}
+                  <div className="p-3.5 bg-[#F8FAFC] rounded-xl border border-[#E2E8F0] space-y-1.5">
+                    <span className="font-bold text-[#00153D] block">Thông tin phòng & Chi phí:</span>
+                    <p><span className="text-[#64748B]">Phòng thuê:</span> {viewingLease.roomTitle}</p>
+                    <p><span className="text-[#64748B]">Địa chỉ:</span> {viewingLease.roomAddress}</p>
+                    <p><span className="text-[#64748B]">Tiền thuê:</span> <span className="font-bold text-emerald-700">{viewingLease.monthlyRent.toLocaleString('vi-VN')} đ/tháng</span></p>
+                    <p><span className="text-[#64748B]">Tiền cọc:</span> {viewingLease.deposit.toLocaleString('vi-VN')} đ</p>
+                    <p><span className="text-[#64748B]">Chu kỳ thanh toán:</span> {viewingLease.paymentCycleMonths} tháng / lần</p>
+                    <p><span className="text-[#64748B]">Thời gian thuê:</span> {formatDate(viewingLease.startDate)} - {formatDate(viewingLease.endDate)}</p>
+                    {viewingLease.utilitiesDescription && (
+                      <p><span className="text-[#64748B]">Chi phí dịch vụ (Điện, nước, internet):</span> {viewingLease.utilitiesDescription}</p>
+                    )}
+                  </div>
+
+                  {viewingLease.termsAndConditions && (
+                    <div className="p-3.5 bg-slate-50 rounded-xl border border-slate-200">
+                      <span className="font-bold text-[#00153D] block mb-1">Điều khoản & Nội quy:</span>
+                      <p className="whitespace-pre-line text-[#64748B]">{viewingLease.termsAndConditions}</p>
+                    </div>
+                  )}
+
+                  {/* Documents */}
+                  {viewingLease.documents && viewingLease.documents.length > 0 && (
+                    <div className="space-y-2">
+                      <span className="font-bold text-[#00153D] block">Tài liệu & Tệp hợp đồng đính kèm:</span>
+                      <div className="space-y-1.5">
+                        {viewingLease.documents.map((doc, idx) => (
+                          <a
+                            key={doc.id || idx}
+                            href={doc.fileUrl}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="flex items-center justify-between p-2.5 bg-white border border-[#CBD5E1] rounded-xl hover:bg-[#F8FAFC] transition-colors"
+                          >
+                            <div className="flex items-center gap-2">
+                              <Paperclip className="w-4 h-4 text-[#073372]" />
+                              <span className="font-medium text-[#00153D]">{doc.title || doc.documentType}</span>
+                            </div>
+                            <ExternalLink className="w-3.5 h-3.5 text-[#94A3B8]" />
+                          </a>
+                        ))}
+                      </div>
+                    </div>
                   )}
                 </div>
 
-                {viewingLease.termsAndConditions && (
-                  <div className="p-3 bg-slate-50 rounded-xl border border-slate-200">
-                    <span className="font-bold text-[#0F172A] block mb-1">Điều khoản & Nội quy:</span>
-                    <p className="whitespace-pre-line text-[#64748B]">{viewingLease.termsAndConditions}</p>
-                  </div>
-                )}
-
-                {/* Documents */}
-                {viewingLease.documents && viewingLease.documents.length > 0 && (
-                  <div className="space-y-2">
-                    <span className="font-bold text-[#0F172A] block">Tài liệu & Tệp hợp đồng đính kèm:</span>
-                    <div className="space-y-1.5">
-                      {viewingLease.documents.map((doc, idx) => (
-                        <a
-                          key={doc.id || idx}
-                          href={doc.fileUrl}
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          className="flex items-center justify-between p-2.5 bg-white border border-[#CBD5E1] rounded-xl hover:bg-[#F8FAFC] transition-colors"
-                        >
-                          <div className="flex items-center gap-2">
-                            <Paperclip className="w-4 h-4 text-blue-600" />
-                            <span className="font-medium text-[#0F172A]">{doc.title || doc.documentType}</span>
-                          </div>
-                          <ExternalLink className="w-3.5 h-3.5 text-[#94A3B8]" />
-                        </a>
-                      ))}
-                    </div>
-                  </div>
-                )}
-              </div>
-
-              <div className="flex justify-end pt-3 border-t border-[#E2E8F0]">
-                <button
-                  type="button"
-                  onClick={() => setViewingLease(null)}
-                  className="px-4 py-2 bg-[#00153D] text-white font-semibold rounded-xl text-xs hover:bg-[#002266]"
-                >
-                  Đóng
-                </button>
-              </div>
+                <div className="px-6 py-3.5 bg-[#F8FAFC] border-t border-[#E2E8F0] flex justify-end shrink-0">
+                  <button
+                    type="button"
+                    onClick={() => setViewingLease(null)}
+                    className="px-5 py-2 bg-[#00153D] text-white font-semibold rounded-xl text-xs hover:bg-[#073372] transition-colors"
+                  >
+                    Đóng
+                  </button>
+                </div>
+              </motion.div>
             </motion.div>
-          </motion.div>
-        )}
-      </AnimatePresence>
+          )}
+        </AnimatePresence>,
+        document.body
+      )}
 
       {/* Post-Rental Lifecycle Management Modal */}
       <AnimatePresence>

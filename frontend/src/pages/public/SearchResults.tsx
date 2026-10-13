@@ -1,4 +1,5 @@
-import { useState, useMemo, useEffect } from 'react';
+import { useState, useMemo, useEffect, useRef } from 'react';
+import { createPortal } from 'react-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Button } from '../../components/ui/Button';
 import { Input } from '../../components/ui/Input';
@@ -37,6 +38,14 @@ export default function SearchResults() {
   const [searchParams] = useSearchParams();
 
   useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') setShowMobileFilter(false);
+    };
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, []);
+
+  useEffect(() => {
     let mounted = true;
     setIsLoading(true);
     fetchListings().finally(() => {
@@ -67,6 +76,19 @@ export default function SearchResults() {
   const [showMobileFilter, setShowMobileFilter] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
   const [selectedRoomId, setSelectedRoomId] = useState<string | null>(null);
+  const [hoveredRoomId, setHoveredRoomId] = useState<string | null>(null);
+
+  // Prevent hover re-renders and jitter during active mouse wheel scrolling
+  const isScrollingRef = useRef(false);
+  const scrollTimerRef = useRef<any>(null);
+
+  const handleListScroll = () => {
+    isScrollingRef.current = true;
+    if (scrollTimerRef.current) clearTimeout(scrollTimerRef.current);
+    scrollTimerRef.current = setTimeout(() => {
+      isScrollingRef.current = false;
+    }, 150);
+  };
 
   const priceLabels: Record<string, string> = {
     under3m: 'Dưới 3 triệu',
@@ -189,23 +211,23 @@ export default function SearchResults() {
 
   // ponytail: SearchResults with Active Filter Pills, Sort Dropdown, Dynamic Filter CTA, Skeleton Loaders & Recovery Empty State
   return (
-    <div className="flex h-[calc(100vh-56px)] overflow-hidden bg-[#F5F7FA]">
+    <div className="flex h-[calc(100vh-56px)] overflow-hidden bg-[#F8FAFC]">
       {/* Left Panel: Filters & List */}
-      <div className={`flex flex-col bg-[#F5F7FA] border-r border-[#E2E8F0] transition-[width] duration-300 ease-out ${showMap ? 'w-full lg:w-1/2' : 'w-full'}`}>
+      <div className={`flex flex-col bg-[#F8FAFC] border-r border-[#E2E8F0] transition-[width] duration-300 ease-out ${showMap ? 'w-full lg:w-1/2' : 'w-full'}`}>
         
         {/* Top Bar: Search Input & Controls */}
-        <div className="p-6 bg-white rounded-b-[18px] shadow-clay-primary space-y-4 z-10">
-          <div className="flex items-center gap-3">
+        <div className="p-4 lg:p-5 bg-white border-b border-slate-200/90 shadow-xs space-y-3.5 z-10">
+          <div className="flex items-center gap-2.5">
             <button 
               type="button"
               onClick={() => navigate(-1)} 
-              className="w-11 h-11 bg-white hover:bg-[#F5F7FA] text-[#0F172A] border border-[#E2E8F0] rounded-[12px] shadow-clay-soft flex items-center justify-center shrink-0 transition-[background-color,border-color,box-shadow,transform] duration-150 ease-out touch-target active:scale-95"
+              className="w-10 h-10 bg-white hover:bg-slate-100 text-slate-700 border border-slate-200 rounded-xl flex items-center justify-center shrink-0 transition-colors duration-150 active:scale-95"
               aria-label="Quay lại"
             >
-              <ArrowLeft className="w-5 h-5 text-[#0F172A]" />
+              <ArrowLeft className="w-5 h-5" />
             </button>
             <Input 
-              placeholder="Tìm kiếm khu vực, tên đường..." 
+              placeholder="Tìm kiếm khu vực, tên đường, trường ĐH..." 
               className="flex-1"
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
@@ -213,7 +235,7 @@ export default function SearchResults() {
             <button 
               type="button"
               onClick={() => setShowMobileFilter(true)}
-              className="h-11 px-4 bg-white hover:bg-[#F5F7FA] text-[#0F172A] border border-[#E2E8F0] rounded-[12px] shadow-clay-soft flex items-center gap-2 shrink-0 text-caption font-semibold whitespace-nowrap transition-[background-color,border-color,box-shadow,transform] duration-150 ease-out touch-target active:scale-95"
+              className="h-10 px-3.5 bg-white hover:bg-slate-50 text-[#00153D] border border-slate-200 rounded-xl flex items-center gap-2 shrink-0 text-caption font-semibold whitespace-nowrap transition-colors duration-150 active:scale-95 shadow-xs"
             >
               <SlidersHorizontal className="w-4 h-4 text-[#00153D]" />
               <span>Bộ lọc</span>
@@ -221,26 +243,30 @@ export default function SearchResults() {
             <button 
               type="button"
               onClick={() => setShowMap(!showMap)}
-              className={`h-11 px-4 rounded-[12px] shadow-clay-soft border hidden lg:flex items-center gap-2 shrink-0 text-caption font-semibold whitespace-nowrap transition-[background-color,border-color,box-shadow,transform] duration-150 ease-out touch-target active:scale-95 ${
+              className={`h-10 px-3.5 rounded-xl border hidden lg:flex items-center gap-2 shrink-0 text-caption font-semibold whitespace-nowrap transition-colors duration-150 active:scale-95 shadow-xs ${
                 showMap 
-                  ? 'bg-[#00153D] text-white border-[#00153D] hover:bg-[#0A2558]' 
-                  : 'bg-white text-[#0F172A] border-[#E2E8F0] hover:bg-[#F5F7FA]'
+                  ? 'bg-[#00153D] text-white border-[#00153D] hover:bg-[#073372]' 
+                  : 'bg-white text-[#00153D] border-slate-200 hover:bg-slate-50'
               }`}
             >
               <MapTrifold className="w-4 h-4" />
-              <span>{showMap ? 'Ẩn bản đồ' : 'Hiện bản đồ'}</span>
+              <span>{showMap ? 'Ẩn bản đồ' : 'Bản đồ'}</span>
             </button>
           </div>
           
           {/* District Pills */}
           <div className="flex gap-2 overflow-x-auto pb-1 scrollbar-none">
-            {['Quận 1', 'Quận 3', 'Quận 7', 'Quận 10', 'Bình Thạnh', 'Tân Bình'].map(district => {
+            {['Quận 1', 'Quận 3', 'Quận 7', 'Quận 10', 'Bình Thạnh', 'Tân Bình', 'Thủ Đức'].map(district => {
               const isActive = selectedDistrict === district;
               return (
                 <button 
                   key={district} 
                   type="button"
-                  className={`px-4 py-2 text-caption font-semibold rounded-[12px] whitespace-nowrap transition-[background-color,color,box-shadow,transform] duration-150 ease-out active:scale-95 touch-target ${isActive ? 'btn-clay-primary' : 'bg-[#F5F7FA] shadow-clay-soft text-[#64748B] hover:text-[#0F172A]'}`}
+                  className={`px-3.5 py-1.5 text-caption font-semibold rounded-full whitespace-nowrap transition-all duration-150 active:scale-95 ${
+                    isActive 
+                      ? 'bg-[#00153D] text-white shadow-xs' 
+                      : 'bg-slate-100 hover:bg-slate-200/80 text-slate-700'
+                  }`}
                   onClick={() => setSelectedDistrict(isActive ? null : district)}
                 >
                   {district}
@@ -259,11 +285,11 @@ export default function SearchResults() {
             
             {/* Sort Dropdown */}
             <div className="flex items-center gap-2">
-              <span className="text-caption font-semibold text-[#64748B]">Sắp xếp:</span>
+              <span className="text-caption font-semibold text-slate-500">Sắp xếp:</span>
               <select 
                 value={sortBy}
                 onChange={e => setSortBy(e.target.value)}
-                className="bg-white shadow-clay-soft border border-[#E2E8F0] rounded-[10px] px-3 py-1.5 text-caption font-semibold text-[#00153D] outline-none min-h-[44px] cursor-pointer"
+                className="bg-white border border-slate-200 rounded-xl px-3 py-1.5 text-caption font-semibold text-[#00153D] outline-none min-h-[40px] cursor-pointer hover:border-slate-300 transition-colors shadow-xs"
               >
                 <option value="relevant">Phù hợp nhất</option>
                 <option value="newest">Mới nhất</option>
@@ -301,7 +327,7 @@ export default function SearchResults() {
         </div>
         
         {/* Results Grid Container */}
-        <div className="flex-1 overflow-y-auto p-6 pt-2">
+        <div className="flex-1 overflow-y-auto p-6 pt-2" onScroll={handleListScroll}>
           
           <AnimatePresence mode="wait">
             {/* Skeleton Loading State */}
@@ -353,30 +379,46 @@ export default function SearchResults() {
                 animate="visible"
                 className={`grid grid-cols-1 ${!showMap ? 'sm:grid-cols-2 lg:grid-cols-3' : 'sm:grid-cols-2'} gap-6`}
               >
-                {filteredListings.map(room => (
-                  <motion.div 
-                    key={room.id}
-                    variants={staggerListItem}
-                    onClick={() => setSelectedRoomId(room.id)}
-                    className={`cursor-pointer rounded-[18px] transition-[box-shadow,transform] duration-150 ease-[cubic-bezier(0.22,1,0.36,1)] ${
-                      selectedRoomId === room.id ? 'ring-2 ring-[#00153D] shadow-clay-primary scale-[1.008]' : ''
-                    }`}
-                  >
-                    <RoomCard 
-                      room={{
-                        id: room.id,
-                        title: room.title,
-                        price: `${room.price.toLocaleString('vi-VN')}đ / tháng`,
-                        location: room.address.split(',')[0],
-                        area: room.area ? `${room.area}m²` : '25m²',
-                        image: room.image,
-                        verified: !!room.isVerifiedLandlord,
-                        isBoosted: !!room.isBoosted,
-                        boostType: room.boostType
-                      }} 
-                    />
-                  </motion.div>
-                ))}
+                {filteredListings.map(room => {
+                  const isHovered = hoveredRoomId === room.id;
+                  const isSelected = selectedRoomId === room.id;
+
+                  return (
+                    <motion.div 
+                      key={room.id}
+                      id={`room-card-${room.id}`}
+                      variants={staggerListItem}
+                      onMouseEnter={() => {
+                        if (!isScrollingRef.current) {
+                          setHoveredRoomId(room.id);
+                        }
+                      }}
+                      onMouseLeave={() => setHoveredRoomId(prev => (prev === room.id ? null : prev))}
+                      onClick={() => setSelectedRoomId(room.id)}
+                      className={`cursor-pointer rounded-[18px] transition-[box-shadow] duration-150 ease-out ${
+                        isSelected 
+                          ? 'ring-2 ring-[#00153D] shadow-md' 
+                          : isHovered 
+                            ? 'ring-1.5 ring-slate-400 shadow-md' 
+                            : ''
+                      }`}
+                    >
+                      <RoomCard 
+                        room={{
+                          id: room.id,
+                          title: room.title,
+                          price: `${room.price.toLocaleString('vi-VN')}đ / tháng`,
+                          location: room.address.split(',')[0],
+                          area: room.area ? `${room.area}m²` : '25m²',
+                          image: room.image,
+                          verified: !!room.isVerifiedLandlord,
+                          isBoosted: !!room.isBoosted,
+                          boostType: room.boostType
+                        }} 
+                      />
+                    </motion.div>
+                  );
+                })}
               </motion.div>
             )}
           </AnimatePresence>
@@ -389,144 +431,151 @@ export default function SearchResults() {
           <RoomMapView 
             rooms={filteredListings} 
             selectedRoomId={selectedRoomId}
+            hoveredRoomId={hoveredRoomId}
             onSelectRoom={setSelectedRoomId}
+            onHoverRoom={setHoveredRoomId}
           />
         </div>
       )}
 
       {/* Mobile Filter Bottom Sheet with Native Apple Spring Physics */}
-      <AnimatePresence>
-        {showMobileFilter && (
-          <motion.div 
-            variants={modalBackdropVariants}
-            initial="hidden"
-            animate="visible"
-            exit="exit"
-            onClick={() => setShowMobileFilter(false)}
-            className="fixed inset-0 bg-[#0F172A]/40 z-50 flex flex-col justify-end backdrop-blur-xs"
-          >
+      {createPortal(
+        <AnimatePresence>
+          {showMobileFilter && (
             <motion.div 
-              variants={bottomSheetVariants}
+              variants={modalBackdropVariants}
               initial="hidden"
               animate="visible"
               exit="exit"
-              onClick={e => e.stopPropagation()}
-              className="bg-white rounded-t-[20px] shadow-clay-primary max-h-[85vh] flex flex-col overflow-hidden motion-gpu"
+              role="dialog"
+              aria-modal="true"
+              onClick={() => setShowMobileFilter(false)}
+              className="fixed inset-0 bg-[#0F172A]/40 z-[100] flex flex-col justify-end backdrop-blur-xs"
             >
-              <div className="p-4 border-b border-[#E2E8F0] flex justify-between items-center bg-white">
-                <div className="flex items-center gap-2">
-                  <div className="w-8 h-1 bg-slate-300 rounded-full mx-auto absolute top-2 left-1/2 -translate-x-1/2" />
-                  <h3 className="text-h3 font-bold text-[#0F172A]">Bộ lọc tìm kiếm</h3>
-                </div>
-                <button 
-                  onClick={() => setShowMobileFilter(false)} 
-                  className="text-[#64748B] hover:text-[#0F172A] p-2 rounded-full hover:bg-slate-100 transition-colors"
-                  aria-label="Đóng bộ lọc"
-                >
-                  <X className="w-5 h-5" />
-                </button>
-              </div>
-              
-              <div className="p-6 space-y-6 overflow-y-auto flex-1">
-                {/* Khu vực */}
-                <div className="space-y-2">
-                  <label className="text-caption font-semibold text-[#0F172A]">Khu vực</label>
-                  <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
-                    {['Quận 1', 'Quận 3', 'Quận 5', 'Quận 7', 'Quận 10', 'Bình Thạnh', 'Tân Bình', 'Thủ Đức'].map(d => (
-                      <button
-                        key={d}
-                        type="button"
-                        onClick={() => setSelectedDistrict(selectedDistrict === d ? null : d)}
-                        className={`py-2 px-3 rounded-[10px] text-caption font-semibold border transition-[background-color,color,border-color] duration-150 active:scale-95 ${selectedDistrict === d ? 'btn-clay-primary' : 'bg-[#F5F7FA] text-[#64748B] border-[#E2E8F0] hover:text-[#0F172A]'}`}
-                      >
-                        {d}
-                      </button>
-                    ))}
+              <motion.div 
+                variants={bottomSheetVariants}
+                initial="hidden"
+                animate="visible"
+                exit="exit"
+                onClick={e => e.stopPropagation()}
+                className="bg-white rounded-t-[20px] shadow-2xl max-h-[85vh] flex flex-col overflow-hidden motion-gpu"
+              >
+                <div className="p-4 border-b border-[#E2E8F0] flex justify-between items-center bg-white relative">
+                  <div className="flex items-center gap-2">
+                    <div className="w-8 h-1 bg-slate-300 rounded-full mx-auto absolute top-2 left-1/2 -translate-x-1/2" />
+                    <h3 className="text-h3 font-bold text-[#0F172A]">Bộ lọc tìm kiếm</h3>
                   </div>
+                  <button 
+                    onClick={() => setShowMobileFilter(false)} 
+                    className="text-[#64748B] hover:text-[#0F172A] p-2 rounded-full hover:bg-slate-100 transition-colors"
+                    aria-label="Đóng bộ lọc"
+                  >
+                    <X className="w-5 h-5" />
+                  </button>
                 </div>
-
-                {/* Khoảng giá */}
-                <div className="space-y-2">
-                  <label className="text-caption font-semibold text-[#0F172A]">Khoảng giá thuê</label>
-                  <div className="grid grid-cols-2 gap-2">
-                    {[
-                      { id: 'under3m', label: 'Dưới 3 triệu' },
-                      { id: '3mTo5m', label: '3 - 5 triệu' },
-                      { id: '5mTo8m', label: '5 - 8 triệu' },
-                      { id: 'above8m', label: 'Trên 8 triệu' }
-                    ].map(p => (
-                      <button
-                        key={p.id}
-                        type="button"
-                        onClick={() => setSelectedPrice(selectedPrice === p.id ? null : p.id)}
-                        className={`py-2 px-3 rounded-[10px] text-caption font-semibold border transition-[background-color,color,border-color] duration-150 active:scale-95 ${selectedPrice === p.id ? 'btn-clay-primary' : 'bg-[#F5F7FA] text-[#64748B] border-[#E2E8F0] hover:text-[#0F172A]'}`}
-                      >
-                        {p.label}
-                      </button>
-                    ))}
-                  </div>
-                </div>
-
-                {/* Khoảng diện tích */}
-                <div className="space-y-2">
-                  <label className="text-caption font-semibold text-[#0F172A]">Diện tích căn phòng</label>
-                  <div className="grid grid-cols-2 gap-2">
-                    {[
-                      { id: 'under20', label: 'Dưới 20 m²' },
-                      { id: '20to30', label: '20 - 30 m²' },
-                      { id: '30to45', label: '30 - 45 m²' },
-                      { id: 'above45', label: 'Trên 45 m²' }
-                    ].map(a => (
-                      <button
-                        key={a.id}
-                        type="button"
-                        onClick={() => setSelectedArea(selectedArea === a.id ? null : a.id)}
-                        className={`py-2 px-3 rounded-[10px] text-caption font-semibold border transition-[background-color,color,border-color] duration-150 active:scale-95 ${selectedArea === a.id ? 'btn-clay-primary' : 'bg-[#F5F7FA] text-[#64748B] border-[#E2E8F0] hover:text-[#0F172A]'}`}
-                      >
-                        {a.label}
-                      </button>
-                    ))}
-                  </div>
-                </div>
-
-                {/* Tiện ích */}
-                <div className="space-y-2">
-                  <label className="text-caption font-semibold text-[#0F172A]">Tiện ích mong muốn (Chọn nhiều)</label>
-                  <div className="flex flex-wrap gap-2">
-                    {['Wifi', 'Máy lạnh', 'Tủ lạnh', 'Máy giặt', 'Ban công', 'Bếp riêng', 'Thang máy', 'Giờ giấc tự do', 'Bãi giữ xe'].map(util => {
-                      const isSelected = selectedUtilities.includes(util);
-                      return (
+                
+                <div className="p-6 space-y-6 overflow-y-auto flex-1">
+                  {/* Khu vực */}
+                  <div className="space-y-2">
+                    <label className="text-caption font-semibold text-[#0F172A]">Khu vực</label>
+                    <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
+                      {['Quận 1', 'Quận 3', 'Quận 5', 'Quận 7', 'Quận 10', 'Bình Thạnh', 'Tân Bình', 'Thủ Đức'].map(d => (
                         <button
-                          key={util}
+                          key={d}
                           type="button"
-                          onClick={() => {
-                            setSelectedUtilities(prev => 
-                              isSelected ? prev.filter(u => u !== util) : [...prev, util]
-                            );
-                          }}
-                          className={`py-1.5 px-3 rounded-full text-caption font-semibold border transition-[background-color,color,border-color] duration-150 active:scale-95 ${isSelected ? 'bg-[#00153D] text-white border-[#00153D]' : 'bg-[#F5F7FA] text-[#64748B] border-[#E2E8F0] hover:text-[#0F172A]'}`}
+                          onClick={() => setSelectedDistrict(selectedDistrict === d ? null : d)}
+                          className={`py-2 px-3 rounded-[10px] text-caption font-semibold border transition-[background-color,color,border-color] duration-150 active:scale-95 ${selectedDistrict === d ? 'btn-clay-primary text-white border-[#00153D]' : 'bg-[#F5F7FA] text-[#64748B] border-[#E2E8F0] hover:text-[#0F172A]'}`}
                         >
-                          {util}
+                          {d}
                         </button>
-                      );
-                    })}
+                      ))}
+                    </div>
+                  </div>
+
+                  {/* Khoảng giá */}
+                  <div className="space-y-2">
+                    <label className="text-caption font-semibold text-[#0F172A]">Khoảng giá thuê</label>
+                    <div className="grid grid-cols-2 gap-2">
+                      {[
+                        { id: 'under3m', label: 'Dưới 3 triệu' },
+                        { id: '3mTo5m', label: '3 - 5 triệu' },
+                        { id: '5mTo8m', label: '5 - 8 triệu' },
+                        { id: 'above8m', label: 'Trên 8 triệu' }
+                      ].map(p => (
+                        <button
+                          key={p.id}
+                          type="button"
+                          onClick={() => setSelectedPrice(selectedPrice === p.id ? null : p.id)}
+                          className={`py-2 px-3 rounded-[10px] text-caption font-semibold border transition-[background-color,color,border-color] duration-150 active:scale-95 ${selectedPrice === p.id ? 'btn-clay-primary text-white border-[#00153D]' : 'bg-[#F5F7FA] text-[#64748B] border-[#E2E8F0] hover:text-[#0F172A]'}`}
+                        >
+                          {p.label}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+
+                  {/* Khoảng diện tích */}
+                  <div className="space-y-2">
+                    <label className="text-caption font-semibold text-[#0F172A]">Diện tích căn phòng</label>
+                    <div className="grid grid-cols-2 gap-2">
+                      {[
+                        { id: 'under20', label: 'Dưới 20 m²' },
+                        { id: '20to30', label: '20 - 30 m²' },
+                        { id: '30to45', label: '30 - 45 m²' },
+                        { id: 'above45', label: 'Trên 45 m²' }
+                      ].map(a => (
+                        <button
+                          key={a.id}
+                          type="button"
+                          onClick={() => setSelectedArea(selectedArea === a.id ? null : a.id)}
+                          className={`py-2 px-3 rounded-[10px] text-caption font-semibold border transition-[background-color,color,border-color] duration-150 active:scale-95 ${selectedArea === a.id ? 'btn-clay-primary text-white border-[#00153D]' : 'bg-[#F5F7FA] text-[#64748B] border-[#E2E8F0] hover:text-[#0F172A]'}`}
+                        >
+                          {a.label}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+
+                  {/* Tiện ích */}
+                  <div className="space-y-2">
+                    <label className="text-caption font-semibold text-[#0F172A]">Tiện ích mong muốn (Chọn nhiều)</label>
+                    <div className="flex flex-wrap gap-2">
+                      {['Wifi', 'Máy lạnh', 'Tủ lạnh', 'Máy giặt', 'Ban công', 'Bếp riêng', 'Thang máy', 'Giờ giấc tự do', 'Bãi giữ xe'].map(util => {
+                        const isSelected = selectedUtilities.includes(util);
+                        return (
+                          <button
+                            key={util}
+                            type="button"
+                            onClick={() => {
+                              setSelectedUtilities(prev => 
+                                isSelected ? prev.filter(u => u !== util) : [...prev, util]
+                              );
+                            }}
+                            className={`py-1.5 px-3 rounded-full text-caption font-semibold border transition-[background-color,color,border-color] duration-150 active:scale-95 ${isSelected ? 'bg-[#00153D] text-white border-[#00153D]' : 'bg-[#F5F7FA] text-[#64748B] border-[#E2E8F0] hover:text-[#0F172A]'}`}
+                          >
+                            {util}
+                          </button>
+                        );
+                      })}
+                    </div>
                   </div>
                 </div>
-              </div>
 
-              {/* Dynamic Filter CTA Footers */}
-              <div className="p-4 border-t border-[#E2E8F0] bg-white flex items-center justify-between gap-3">
-                <button onClick={clearAllFilters} className="text-caption font-semibold text-[#64748B] hover:underline px-4">
-                  Xóa tất cả
-                </button>
-                <Button onClick={() => setShowMobileFilter(false)} className="flex-1">
-                  Xem {filteredListings.length} phòng
-                </Button>
-              </div>
+                {/* Dynamic Filter CTA Footers */}
+                <div className="p-4 border-t border-[#E2E8F0] bg-white flex items-center justify-between gap-3">
+                  <button onClick={clearAllFilters} className="text-caption font-semibold text-[#64748B] hover:underline px-4">
+                    Xóa tất cả
+                  </button>
+                  <Button onClick={() => setShowMobileFilter(false)} className="flex-1">
+                    Xem {filteredListings.length} phòng
+                  </Button>
+                </div>
+              </motion.div>
             </motion.div>
-          </motion.div>
-        )}
-      </AnimatePresence>
+          )}
+        </AnimatePresence>,
+        document.body
+      )}
     </div>
   );
 }

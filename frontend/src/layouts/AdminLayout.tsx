@@ -1,6 +1,7 @@
 import { Outlet, Link, useNavigate, useLocation } from 'react-router-dom';
 import { useStore } from '../store/useStore';
 import { LayoutDashboard, UserCheck, Home, Users, AlertTriangle } from 'lucide-react';
+import { GlobalFooter } from '../components/ui/GlobalFooter';
 
 export default function AdminLayout() {
   const { currentUser, logout } = useStore();
@@ -61,6 +62,7 @@ export default function AdminLayout() {
             <Outlet />
           </div>
         </main>
+        <GlobalFooter />
       </div>
     </div>
   );
