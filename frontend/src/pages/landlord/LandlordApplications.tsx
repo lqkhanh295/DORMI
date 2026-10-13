@@ -74,16 +74,24 @@ export default function LandlordApplications() {
         landlordNotes.trim() || undefined
       );
 
-      toast.success(
-        reviewAction === 'Approve' 
-          ? 'Đã phê duyệt hồ sơ thuê phòng! Bạn có thể bắt đầu tạo hợp đồng.'
-          : reviewAction === 'Reject'
-          ? 'Đã từ chối hồ sơ.'
-          : 'Đã gửi yêu cầu bổ sung thông tin tới khách thuê.'
-      );
-
+      const approvedApp = reviewingApp;
       setReviewingApp(null);
       fetchApplications();
+
+      if (reviewAction === 'Approve') {
+        toast.success('Đã phê duyệt hồ sơ thuê phòng thành công!', {
+          action: {
+            label: 'Tạo hợp đồng ngay',
+            onClick: () => navigate('/landlord/leases', { state: { prefillApp: approvedApp } })
+          }
+        });
+      } else {
+        toast.success(
+          reviewAction === 'Reject'
+            ? 'Đã từ chối hồ sơ.'
+            : 'Đã gửi yêu cầu bổ sung thông tin tới khách thuê.'
+        );
+      }
     } catch (err: any) {
       toast.error(err?.message || 'Không thể xử lý hồ sơ.');
     } finally {

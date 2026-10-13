@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { applicationsApi, type RentalApplicationResponse, ApplicationStatus } from '../../services/api';
+import { applicationsApi, type RentalApplicationResponse, ApplicationStatus, leasesApi, type LeaseContractResponse } from '../../services/api';
 import { toast } from 'sonner';
 import { 
   FileText, 
@@ -12,13 +12,15 @@ import {
   Building2, 
   MessageSquare, 
   Search, 
-  RefreshCw 
+  RefreshCw,
+  PenTool
 } from 'lucide-react';
 import { PageMotion } from '../../components/common/Motion';
 
 export default function TenantApplications() {
   const navigate = useNavigate();
   const [applications, setApplications] = useState<RentalApplicationResponse[]>([]);
+  const [leases, setLeases] = useState<LeaseContractResponse[]>([]);
   const [loading, setLoading] = useState(true);
   const [activeTab, setActiveTab] = useState<'all' | 'pending' | 'approved' | 'rejected'>('all');
   const [withdrawingId, setWithdrawingId] = useState<string | null>(null);
@@ -26,9 +28,15 @@ export default function TenantApplications() {
   const fetchApplications = async () => {
     try {
       setLoading(true);
-      const res = await applicationsApi.getMyApplications();
-      if (Array.isArray(res)) {
-        setApplications(res);
+      const [appsRes, leasesRes] = await Promise.all([
+        applicationsApi.getMyApplications().catch(() => []),
+        leasesApi.getMyLeases().catch(() => [])
+      ]);
+      if (Array.isArray(appsRes)) {
+        setApplications(appsRes);
+      }
+      if (Array.isArray(leasesRes)) {
+        setLeases(leasesRes);
       }
     } catch (err: any) {
       toast.error(err?.message || 'Không thể tải danh sách hồ sơ thuê phòng.');
@@ -238,9 +246,14 @@ export default function TenantApplications() {
         </div>
       ) : (
         <div className="space-y-4">
-          {filteredApps.map(app => (
-            <div
-              key={app.id}
+          {filteredApps.map(app => {
+            const relatedLease = leases.find(l => l.rentalApplicationId === app.id || l.roomId === app.roomId);
+            const isNeedSign = relatedLease && (relatedLease.status === 'PendingSignature' || relatedLease.status === 'Draft');
+            const isActiveLease = relatedLease && relatedLease.status === 'Active';
+
+            return (
+              <div
+                key={app.id}
               className="bg-white rounded-2xl border border-[#E2E8F0] shadow-sm p-5 md:p-6 motion-gpu transition-[transform,box-shadow] duration-200 ease-out hover:shadow-md hover:-translate-y-0.5"
             >
               <div className="flex flex-col md:flex-row md:items-start justify-between gap-4 pb-4 border-b border-[#F1F5F9]">
@@ -329,30 +342,87 @@ export default function TenantApplications() {
 
               {/* NEXT-ACTION BANNER */}
               {app.status === ApplicationStatus.Approved && (
-                <div className="p-4 bg-emerald-50 border border-emerald-200 rounded-xl flex flex-col sm:flex-row sm:items-center justify-between gap-3 text-xs text-emerald-900 mt-3">
+                <div className={`p-4 rounded-xl flex flex-col md:flex-row md:items-center justify-between gap-3 text-xs mt-3 ${
+                  isNeedSign 
+                    ? 'bg-amber-50 border border-amber-200 text-amber-950'
+                    : isActiveLease
+                    ? 'bg-emerald-50 border border-emerald-200 text-emerald-950'
+                    : 'bg-blue-50 border border-blue-200 text-blue-950'
+                }`}>
                   <div className="flex items-start gap-2.5">
-                    <CheckCircle2 className="w-5 h-5 text-emerald-600 shrink-0 mt-0.5" />
+                    {isNeedSign ? (
+                      <PenTool className="w-5 h-5 text-amber-600 shrink-0 mt-0.5" />
+                    ) : isActiveLease ? (
+                      <CheckCircle2 className="w-5 h-5 text-emerald-600 shrink-0 mt-0.5" />
+                    ) : (
+                      <CheckCircle2 className="w-5 h-5 text-blue-600 shrink-0 mt-0.5" />
+                    )}
                     <div>
-                      <p className="font-bold text-sm text-emerald-950">Hồ sơ đã được phê duyệt thành công!</p>
-                      <p className="text-emerald-800 mt-0.5">
-                        Chủ nhà đã đồng ý cho bạn thuê phòng. Bước tiếp theo: Ký hợp đồng thuê điện tử và chuyển tiền đặt cọc.
+                      <p className="font-bold text-sm">
+                        {isNeedSign 
+                          ? 'Chủ nhà đã gửi hợp đồng thuê điện tử!'
+                          : isActiveLease
+                          ? 'Hợp đồng thuê phòng đang có hiệu lực'
+                          : 'Hồ sơ đã được phê duyệt thành công!'}
+                      </p>
+                      <p className="mt-0.5 opacity-90">
+                        {isNeedSign
+                          ? 'Hợp đồng đã được chủ nhà soạn thảo và chờ bạn ký nhận. Hãy kiểm tra các điều khoản và ký hợp đồng điện tử để kích hoạt hợp đồng thuê phòng.'
+                          : isActiveLease
+                          ? 'Bạn đã hoàn tất ký hợp đồng điện tử. Bạn có thể xem lại hợp đồng và theo dõi các khoản thanh toán tiền cọc, tiền thuê tại mục Hợp đồng.'
+                          : 'Chủ nhà đã đồng ý duyệt hồ sơ của bạn! Hệ thống đang chờ chủ nhà khởi tạo hợp đồng thuê điện tử. Bạn có thể nhắn tin nhắc chủ nhà hoặc kiểm tra mục Hợp đồng.'}
                       </p>
                     </div>
                   </div>
-                  <button
-                    type="button"
-                    onClick={() => navigate('/tenant/chat', {
-                      state: {
-                        targetUserId: app.landlordId,
-                        targetUserName: app.landlordName,
-                        targetUserRole: 'Landlord'
-                      }
-                    })}
-                    className="inline-flex items-center justify-center gap-1.5 px-4 py-2 bg-emerald-700 hover:bg-emerald-800 text-white font-bold rounded-lg transition-colors whitespace-nowrap shadow-sm shrink-0"
-                  >
-                    <span>Liên hệ ký hợp đồng</span>
-                    <ArrowRight className="w-3.5 h-3.5" />
-                  </button>
+
+                  <div className="flex flex-wrap items-center gap-2 shrink-0">
+                    {isNeedSign ? (
+                      <button
+                        type="button"
+                        onClick={() => navigate('/tenant/leases')}
+                        className="inline-flex items-center justify-center gap-1.5 px-4 py-2 bg-amber-600 hover:bg-amber-700 text-white font-bold rounded-lg transition-colors whitespace-nowrap shadow-sm"
+                      >
+                        <PenTool className="w-3.5 h-3.5" />
+                        <span>Ký hợp đồng điện tử ngay</span>
+                        <ArrowRight className="w-3.5 h-3.5" />
+                      </button>
+                    ) : isActiveLease ? (
+                      <button
+                        type="button"
+                        onClick={() => navigate('/tenant/leases')}
+                        className="inline-flex items-center justify-center gap-1.5 px-4 py-2 bg-emerald-700 hover:bg-emerald-800 text-white font-bold rounded-lg transition-colors whitespace-nowrap shadow-sm"
+                      >
+                        <FileText className="w-3.5 h-3.5" />
+                        <span>Xem hợp đồng & Hóa đơn</span>
+                        <ArrowRight className="w-3.5 h-3.5" />
+                      </button>
+                    ) : (
+                      <>
+                        <button
+                          type="button"
+                          onClick={() => navigate('/tenant/chat', {
+                            state: {
+                              targetUserId: app.landlordId,
+                              targetUserName: app.landlordName,
+                              targetUserRole: 'Landlord'
+                            }
+                          })}
+                          className="inline-flex items-center justify-center gap-1.5 px-3.5 py-2 bg-[#00153D] hover:bg-[#002266] text-white font-bold rounded-lg transition-colors whitespace-nowrap shadow-sm"
+                        >
+                          <MessageSquare className="w-3.5 h-3.5" />
+                          <span>Nhắn tin cho chủ nhà</span>
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => navigate('/tenant/leases')}
+                          className="inline-flex items-center justify-center gap-1.5 px-3 py-2 bg-white border border-blue-300 hover:bg-blue-100 text-blue-900 font-semibold rounded-lg transition-colors whitespace-nowrap shadow-xs"
+                        >
+                          <FileText className="w-3.5 h-3.5" />
+                          <span>Hợp đồng của tôi</span>
+                        </button>
+                      </>
+                    )}
+                  </div>
                 </div>
               )}
 
@@ -379,7 +449,8 @@ export default function TenantApplications() {
               )}
 
             </div>
-          ))}
+          );
+        })}
         </div>
       )}
 

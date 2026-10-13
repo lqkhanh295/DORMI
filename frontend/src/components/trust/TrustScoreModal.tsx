@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react';
+import { createPortal } from 'react-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import { X, ShieldCheck, CheckCircle2, AlertCircle, Info, ShieldAlert, Award } from 'lucide-react';
 import { trustSafetyApi, type TrustScoreBreakdown } from '../../services/api';
@@ -47,7 +48,7 @@ export default function TrustScoreModal({ isOpen, onClose, roomId, roomTitle }: 
     return 'bg-rose-50 text-rose-700 border-rose-200';
   };
 
-  return (
+  return createPortal(
     <AnimatePresence>
       {isOpen && (
         <motion.div 
@@ -196,6 +197,7 @@ export default function TrustScoreModal({ isOpen, onClose, roomId, roomTitle }: 
           </motion.div>
         </motion.div>
       )}
-    </AnimatePresence>
+    </AnimatePresence>,
+    document.body
   );
 }

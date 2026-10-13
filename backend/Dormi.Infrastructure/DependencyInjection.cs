@@ -90,6 +90,15 @@ public static class DependencyInjection
         services.AddScoped<IImageService, CloudinaryService>();
         services.AddScoped<IJwtTokenGenerator, JwtTokenGenerator>();
 
+        // Register PayOS Payment Gateway
+        var payOsClientId = configuration["PayOS:ClientId"] ?? configuration["PAYOS_CLIENT_ID"];
+        var payOsApiKey = configuration["PayOS:ApiKey"] ?? configuration["PAYOS_API_KEY"];
+        var payOsChecksumKey = configuration["PayOS:ChecksumKey"] ?? configuration["PAYOS_CHECKSUM_KEY"];
+        if (!string.IsNullOrWhiteSpace(payOsClientId) && !string.IsNullOrWhiteSpace(payOsApiKey) && !string.IsNullOrWhiteSpace(payOsChecksumKey))
+        {
+            services.AddSingleton(new PayOS.PayOSClient(payOsClientId, payOsApiKey, payOsChecksumKey));
+        }
+
         // Register Application Business Services
         services.AddScoped<IAuthService, AuthService>();
         services.AddScoped<IRoomService, RoomService>();

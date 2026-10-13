@@ -1,55 +1,64 @@
-import { Outlet, Link, useNavigate, useLocation } from 'react-router-dom';
-import { useStore } from '../store/useStore';
-import { FloatingNav, type NavItem } from '../components/shared/FloatingNav';
-import { LayoutDashboard, Home, BarChart3, MessageCircle, FileText, Calendar, FileCheck } from 'lucide-react';
-import { NotificationBell } from '../components/common/NotificationBell';
+import { Outlet, Link, useLocation } from 'react-router-dom';
+import { GlobalNav } from '../components/ui/GlobalNav';
+import { 
+  LayoutDashboard, 
+  Home, 
+  FileText, 
+  FileCheck, 
+  Calendar, 
+  BarChart3, 
+  MessageCircle 
+} from 'lucide-react';
 
 export default function LandlordLayout() {
-  const { currentUser, logout } = useStore();
-  const navigate = useNavigate();
   const location = useLocation();
 
-  const handleLogout = () => {
-    logout();
-    navigate('/');
-  };
-
-  const navItems: NavItem[] = [
-    { name: 'Tổng quan', path: '/landlord', icon: <LayoutDashboard size={20} strokeWidth={2} /> },
-    { name: 'Hồ sơ thuê', path: '/landlord/applications', icon: <FileText size={20} strokeWidth={2} /> },
-    { name: 'Lịch xem', path: '/landlord/viewings', icon: <Calendar size={20} strokeWidth={2} /> },
-    { name: 'Hợp đồng', path: '/landlord/leases', icon: <FileCheck size={20} strokeWidth={2} /> },
-    { name: 'Phòng của tôi', path: '/landlord/rooms', icon: <Home size={20} strokeWidth={2} /> },
-    { name: 'Phân tích', path: '/landlord/analytics', icon: <BarChart3 size={20} strokeWidth={2} /> },
-    { name: 'Tin nhắn', path: '/landlord/chat', icon: <MessageCircle size={20} strokeWidth={2} /> }
+  const subNavItems = [
+    { name: 'Tổng quan', path: '/landlord', icon: LayoutDashboard },
+    { name: 'Phòng của tôi', path: '/landlord/rooms', icon: Home },
+    { name: 'Hồ sơ thuê', path: '/landlord/applications', icon: FileText },
+    { name: 'Hợp đồng', path: '/landlord/leases', icon: FileCheck },
+    { name: 'Lịch hẹn xem', path: '/landlord/viewings', icon: Calendar },
+    { name: 'Phân tích', path: '/landlord/analytics', icon: BarChart3 },
+    { name: 'Tin nhắn', path: '/landlord/chat', icon: MessageCircle },
   ];
 
   return (
-    <div className="min-h-screen bg-[#F8FAFC] text-[#1F2937] flex flex-col font-sans">
-      <FloatingNav items={navItems} onLogout={handleLogout} />
+    <div className="min-h-screen bg-[#F8FAFC] text-[#1F2937] flex flex-col font-sans pt-[56px]">
+      <GlobalNav />
 
-      {/* Main Content */}
-      <div className="flex-1 flex flex-col min-h-screen">
-        <header className="h-[56px] bg-white shadow-[0_10px_20px_-10px_rgba(99,102,241,0.10),inset_0_-4px_0_0_rgba(0,0,0,0.02),inset_0_1px_2px_rgba(255,255,255,0.9)] flex items-center justify-between px-4 md:px-6 gap-4 sticky top-0 z-40">
-          <div>
-            <Link to="/" className="text-xl font-black tracking-widest text-[#1F2937]">
-              DORMI<span className="text-[#6366F1]">.</span> <span className="text-xs font-bold text-[#6B7280] ml-1 hidden sm:inline-block">CHỦ NHÀ</span>
-            </Link>
-          </div>
-          <div className="flex items-center gap-3">
-            <NotificationBell />
-            <span className="text-sm font-semibold hidden md:block text-[#4B5563]">{currentUser?.name}</span>
-            <div className="w-9 h-9 rounded-full bg-[#F3F4F6] flex items-center justify-center text-[#1F2937] font-bold overflow-hidden border-2 border-[#6366F1]/20 cursor-pointer shadow-sm hover:border-[#6366F1] transition-colors">
-              {currentUser?.avatar ? <img src={currentUser.avatar} alt="avatar" className="w-full h-full object-cover" /> : 'L'}
-            </div>
-          </div>
-        </header>
-        <main className="flex-1 p-4 md:p-6 w-full max-w-7xl mx-auto mt-4 md:mt-10 mb-20 md:mb-0">
-          <div key={location.pathname} className="page-transition">
-            <Outlet />
-          </div>
-        </main>
+      {/* Landlord Workspace Sub-Navigation Strip */}
+      <div className="bg-white border-b border-[#E2E8F0] sticky top-[56px] z-30 shadow-2xs">
+        <div className="container-dormi flex items-center gap-1 sm:gap-2 overflow-x-auto py-2 scrollbar-none">
+          {subNavItems.map((item) => {
+            const Icon = item.icon;
+            const isActive = item.path === '/landlord'
+              ? location.pathname === '/landlord'
+              : location.pathname.startsWith(item.path);
+
+            return (
+              <Link
+                key={item.path}
+                to={item.path}
+                className={`px-3 py-1.5 rounded-lg text-xs font-semibold whitespace-nowrap transition-colors flex items-center gap-1.5 shrink-0 ${
+                  isActive
+                    ? 'bg-blue-50 text-blue-700 font-bold border border-blue-200/80'
+                    : 'text-[#64748B] hover:text-[#0F172A] hover:bg-slate-50'
+                }`}
+              >
+                <Icon className={`w-3.5 h-3.5 shrink-0 ${isActive ? 'text-blue-600' : 'text-[#64748B]'}`} />
+                <span>{item.name}</span>
+              </Link>
+            );
+          })}
+        </div>
       </div>
+
+      <main className="flex-1 p-4 md:p-6 lg:p-8 w-full max-w-7xl 2xl:max-w-[1536px] mx-auto mb-20 md:mb-8">
+        <div key={location.pathname} className="page-transition">
+          <Outlet />
+        </div>
+      </main>
     </div>
   );
 }

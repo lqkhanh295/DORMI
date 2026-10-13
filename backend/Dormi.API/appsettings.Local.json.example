@@ -9,5 +9,10 @@
   },
   "JwtSettings": {
     "SecretKey": "YOUR_JWT_SECRET_KEY_MIN_32_CHARS_LONG"
+  },
+  "PayOS": {
+    "ClientId": "YOUR_PAYOS_CLIENT_ID",
+    "ApiKey": "YOUR_PAYOS_API_KEY",
+    "ChecksumKey": "YOUR_PAYOS_CHECKSUM_KEY"
   }
 }

@@ -268,6 +268,57 @@ public class BackendLogicTests
     }
 
     [Fact]
+    public void PayOSClient_ShouldInitializeSuccessfully()
+    {
+        var client = new PayOS.PayOSClient(
+            "730eb904-a5fb-4691-8ff2-3325d5e47060",
+            "3929c2cc-5021-4049-970a-32fe5f185137",
+            "56819d8221058ef46ccae6cf31a35f386816a2a4b9d4d6d2eea9b7e1031e2e03"
+        );
+        Assert.NotNull(client);
+        Assert.Equal("730eb904-a5fb-4691-8ff2-3325d5e47060", client.ClientId);
+        Assert.Equal("3929c2cc-5021-4049-970a-32fe5f185137", client.ApiKey);
+        Assert.Equal("56819d8221058ef46ccae6cf31a35f386816a2a4b9d4d6d2eea9b7e1031e2e03", client.ChecksumKey);
+    }
+
+    [Fact]
+    public async Task LandlordDashboardService_CheckoutSubscription_ShouldCreatePayOSTransaction()
+    {
+        var options = new DbContextOptionsBuilder<DormiDbContext>()
+            .UseInMemoryDatabase(databaseName: Guid.NewGuid().ToString())
+            .Options;
+
+        using var db = new DormiDbContext(options);
+        var landlordId = Guid.NewGuid();
+        db.Users.Add(new User
+        {
+            Id = landlordId,
+            Email = "landlord@dormi.vn",
+            FullName = "Landlord Test",
+            Role = UserRole.Landlord
+        });
+        await db.SaveChangesAsync();
+
+        var config = new ConfigurationBuilder().Build();
+        var env = new TestWebHostEnvironment { EnvironmentName = "Development" };
+        var service = new LandlordDashboardService(db, config, env);
+
+        var res = await service.CheckoutSubscriptionAsync(landlordId, new CheckoutDto
+        {
+            PlanName = "Pro",
+            PaymentMethod = "PayOS"
+        }, "127.0.0.1");
+
+        Assert.True(res.Success);
+        Assert.NotNull(res.Data);
+        var json = System.Text.Json.JsonSerializer.Serialize(res.Data);
+        using var doc = System.Text.Json.JsonDocument.Parse(json);
+        Assert.Equal("Pro", doc.RootElement.GetProperty("planName").GetString());
+        Assert.Equal("PayOS", doc.RootElement.GetProperty("paymentMethod").GetString());
+        Assert.Equal(299000m, doc.RootElement.GetProperty("amount").GetDecimal());
+    }
+
+    [Fact]
     public async Task Notification_MarkAsReadShouldUpdateStatus()
     {
         var options = new DbContextOptionsBuilder<DormiDbContext>()

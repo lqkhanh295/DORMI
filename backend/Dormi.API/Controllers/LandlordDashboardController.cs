@@ -109,6 +109,29 @@ public class LandlordDashboardController : BaseApiController
         return Redirect(result.Data!);
     }
 
+    [HttpPost("payment/payos-webhook")]
+    [HttpPost("/api/payos/webhook")]
+    [HttpPost("/api/payment/payos-webhook")]
+    [AllowAnonymous]
+    public async Task<IActionResult> PayOSWebhook([FromBody] PayOS.Models.Webhooks.Webhook webhook)
+    {
+        var result = await _dashboardService.ProcessPayOSWebhookAsync(webhook);
+        return HandleResult(result);
+    }
+
+    [HttpPost("payment/payos-confirm-webhook")]
+    [HttpPost("/api/payos/confirm-webhook")]
+    [Authorize]
+    public async Task<IActionResult> ConfirmPayOSWebhook([FromBody] ConfirmPayOSWebhookDto dto)
+    {
+        if (string.IsNullOrWhiteSpace(dto?.WebhookUrl))
+        {
+            return BadRequest(new { message = "WebhookUrl không được để trống." });
+        }
+        var result = await _dashboardService.ConfirmPayOSWebhookUrlAsync(dto.WebhookUrl);
+        return HandleResult(result);
+    }
+
     [HttpGet("discover-tenants")]
     public async Task<IActionResult> DiscoverTenants()
     {

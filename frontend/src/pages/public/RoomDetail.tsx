@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import { createPortal } from 'react-dom';
 import { useNavigate, useParams } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Card } from '../../components/ui/Card';
@@ -625,8 +626,9 @@ export default function RoomDetail() {
       </AnimatePresence>
 
       {/* Scheduler Modal */}
-      <AnimatePresence>
-        {showScheduler && (
+      {createPortal(
+        <AnimatePresence>
+          {showScheduler && (
           <motion.div 
             variants={modalBackdropVariants}
             initial="hidden"
@@ -733,7 +735,9 @@ export default function RoomDetail() {
             </motion.div>
           </motion.div>
         )}
-      </AnimatePresence>
+        </AnimatePresence>,
+        document.body
+      )}
 
       {/* Rental Application Modal */}
       {roomData && (

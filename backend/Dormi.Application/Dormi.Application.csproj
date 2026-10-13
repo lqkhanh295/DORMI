@@ -8,6 +8,10 @@
     <ProjectReference Include="..\Dormi.Domain\Dormi.Domain.csproj" />
   </ItemGroup>
 
+  <ItemGroup>
+    <PackageReference Include="payOS" Version="2.1.0" />
+  </ItemGroup>
+
   <PropertyGroup>
     <TargetFramework>net10.0</TargetFramework>
     <ImplicitUsings>enable</ImplicitUsings>

@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import { createPortal } from 'react-dom';
 import { 
   X, 
   CheckCircle2, 
@@ -146,9 +147,13 @@ export default function PostRentalModal({ lease, isLandlord, onClose, onRefresh 
       await postRentalApi.recordPayment(scheduleId, {
         paymentMethod: 'BankTransfer',
         paymentReference: paymentRefCode.trim() || 'Chuyển khoản ngân hàng',
-        markAsPaid: true
+        markAsPaid: isLandlord ? true : false
       });
-      toast.success('Đã ghi nhận thanh toán thành công!');
+      toast.success(
+        isLandlord
+          ? 'Đã xác nhận thanh toán thành công!'
+          : 'Đã gửi thông tin chuyển khoản! Vui lòng chờ chủ nhà xác nhận.'
+      );
       setPayingSchedule(null);
       setPaymentRefCode('');
       loadData();
@@ -318,7 +323,7 @@ export default function PostRentalModal({ lease, isLandlord, onClose, onRefresh 
 
   const calculatedSettlement = Math.max(0, lease.deposit - (Number(deductionsAmount) || 0));
 
-  return (
+  return createPortal(
     <motion.div
       variants={modalBackdropVariants}
       initial="hidden"
@@ -558,11 +563,12 @@ export default function PostRentalModal({ lease, isLandlord, onClose, onRefresh 
                     <div className="space-y-3">
                       {payments.map(sch => {
                         const isPaid = sch.status === 'Paid';
+                        const isPendingConfirm = sch.status === 'PendingConfirmation';
                         return (
                           <div 
                             key={sch.id}
                             className={`p-4 rounded-xl border transition-colors duration-150 flex flex-col sm:flex-row sm:items-center justify-between gap-4 ${
-                              isPaid ? 'bg-white border-[#E2E8F0]' : 'bg-amber-50/50 border-amber-200'
+                              isPaid ? 'bg-white border-[#E2E8F0]' : isPendingConfirm ? 'bg-blue-50/60 border-blue-200' : 'bg-amber-50/50 border-amber-200'
                             }`}
                           >
                             <div className="space-y-1">
@@ -580,6 +586,10 @@ export default function PostRentalModal({ lease, isLandlord, onClose, onRefresh 
                                   <span className="px-2 py-0.5 rounded-full text-[11px] font-bold bg-emerald-100 text-emerald-800 flex items-center gap-1">
                                     <Check className="w-3 h-3" /> Đã thanh toán
                                   </span>
+                                ) : isPendingConfirm ? (
+                                  <span className="px-2 py-0.5 rounded-full text-[11px] font-bold bg-blue-100 text-blue-800 flex items-center gap-1">
+                                    <Clock className="w-3 h-3" /> Chờ chủ nhà xác nhận
+                                  </span>
                                 ) : (
                                   <span className="px-2 py-0.5 rounded-full text-[11px] font-bold bg-amber-100 text-amber-800 flex items-center gap-1">
                                     <Clock className="w-3 h-3" /> Chưa thanh toán
@@ -594,7 +604,7 @@ export default function PostRentalModal({ lease, isLandlord, onClose, onRefresh 
                                 <p className="text-xs text-[#475569] italic">Ghi chú: {sch.landlordNotes}</p>
                               )}
                               {sch.paymentReference && (
-                                <p className="text-xs text-[#64748B]">Mã giao dịch / đối soát: {sch.paymentReference}</p>
+                                <p className="text-xs text-[#64748B]">Mã giao dịch / đối soát: <span className="font-medium text-[#0F172A]">{sch.paymentReference}</span></p>
                               )}
                             </div>
 
@@ -607,13 +617,35 @@ export default function PostRentalModal({ lease, isLandlord, onClose, onRefresh 
                               </div>
 
                               {!isPaid && (
-                                <button
-                                  type="button"
-                                  onClick={() => setPayingSchedule(sch)}
-                                  className="px-3.5 py-1.5 bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold rounded-lg transition-colors shadow-xs"
-                                >
-                                  {isLandlord ? 'Xác nhận đã nhận' : 'Xác nhận đã trả'}
-                                </button>
+                                isPendingConfirm ? (
+                                  isLandlord ? (
+                                    <button
+                                      type="button"
+                                      onClick={() => {
+                                        setPayingSchedule(sch);
+                                        setPaymentRefCode(sch.paymentReference || '');
+                                      }}
+                                      className="px-3.5 py-1.5 bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold rounded-lg transition-colors shadow-xs"
+                                    >
+                                      Xác nhận đã nhận tiền
+                                    </button>
+                                  ) : (
+                                    <span className="text-xs text-blue-700 font-semibold px-2.5 py-1 bg-blue-50 rounded-lg border border-blue-200">
+                                      Đã báo chuyển khoản
+                                    </span>
+                                  )
+                                ) : (
+                                  <button
+                                    type="button"
+                                    onClick={() => {
+                                      setPayingSchedule(sch);
+                                      setPaymentRefCode('');
+                                    }}
+                                    className="px-3.5 py-1.5 bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold rounded-lg transition-colors shadow-xs"
+                                  >
+                                    {isLandlord ? 'Xác nhận đã nhận' : 'Báo đã chuyển khoản'}
+                                  </button>
+                                )
                               )}
                             </div>
                           </div>
@@ -627,18 +659,29 @@ export default function PostRentalModal({ lease, isLandlord, onClose, onRefresh 
                     <div className="fixed inset-0 z-50 bg-[#0F172A]/40 flex items-center justify-center p-4">
                       <div className="bg-white rounded-2xl p-6 max-w-md w-full shadow-clay-primary space-y-4">
                         <h4 className="font-bold text-base text-[#0F172A]">
-                          Xác nhận thanh toán: {payingSchedule.title}
+                          {isLandlord ? 'Xác nhận đã nhận tiền:' : 'Báo đã chuyển khoản:'} {payingSchedule.title}
                         </h4>
-                        <p className="text-xs text-[#64748B]">
-                          Số tiền: <span className="font-bold text-sm text-[#00153D]">{payingSchedule.amount.toLocaleString('vi-VN')} đ</span>
-                        </p>
+                        <div className="p-3 bg-[#F8FAFC] rounded-xl border border-[#E2E8F0] text-xs space-y-1">
+                          <p className="text-[#64748B]">
+                            Số tiền: <span className="font-bold text-sm text-[#00153D]">{payingSchedule.amount.toLocaleString('vi-VN')} đ</span>
+                          </p>
+                          {isLandlord ? (
+                            <p className="text-emerald-800 mt-1">
+                              Vui lòng kiểm tra tài khoản ngân hàng của bạn. Khi bấm xác nhận, hệ thống sẽ ghi nhận đợt thanh toán này là "Đã thanh toán" và gửi thông báo tới khách thuê.
+                            </p>
+                          ) : (
+                            <p className="text-slate-600 mt-1">
+                              Vui lòng chuyển khoản tiền tới chủ nhà ({lease.landlordName}{lease.landlordPhone ? ` - SĐT: ${lease.landlordPhone}` : ''}), sau đó nhập mã giao dịch ngân hàng bên dưới để chủ nhà đối soát.
+                            </p>
+                          )}
+                        </div>
                         <div>
                           <label className="text-xs font-semibold text-[#0F172A] block mb-1">
-                            Mã ủy nhiệm chi / Chuyển khoản hoặc ghi chú đối soát
+                            {isLandlord ? 'Ghi chú đối soát / Mã giao dịch nhận' : 'Mã giao dịch / Nội dung chuyển khoản ngân hàng'}
                           </label>
                           <input
                             type="text"
-                            placeholder="VD: MBBANK12345678 hoặc Tiền mặt"
+                            placeholder={isLandlord ? "VD: MB12345678 hoặc Tiền mặt..." : "VD: Mã giao dịch FT24... hoặc MBBANK..."}
                             value={paymentRefCode}
                             onChange={(e) => setPaymentRefCode(e.target.value)}
                             className="w-full px-3 py-2 border rounded-xl text-xs focus:ring-2 focus:ring-blue-500 outline-none"
@@ -657,7 +700,7 @@ export default function PostRentalModal({ lease, isLandlord, onClose, onRefresh 
                             onClick={() => handleRecordPayment(payingSchedule.id)}
                             className="px-4 py-1.5 bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs rounded-lg"
                           >
-                            Lưu xác nhận thanh toán
+                            {isLandlord ? 'Xác nhận nhận tiền vào tài khoản' : 'Gửi xác nhận chuyển khoản'}
                           </button>
                         </div>
                       </div>
@@ -1336,6 +1379,7 @@ export default function PostRentalModal({ lease, isLandlord, onClose, onRefresh 
         </div>
 
       </motion.div>
-    </motion.div>
+    </motion.div>,
+    document.body
   );
 }

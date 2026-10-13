@@ -32,7 +32,7 @@ public class JwtTokenGenerator : IJwtTokenGenerator
         }
         var issuer = _config["JwtSettings:Issuer"] ?? "DormiAPI";
         var audience = _config["JwtSettings:Audience"] ?? "DormiUsers";
-        var expiryMinutes = int.TryParse(_config["JwtSettings:ExpiryMinutes"], out var exp) ? exp : 1440;
+        var expiryMinutes = int.TryParse(_config["JwtSettings:ExpiryMinutes"], out var exp) ? exp : 43200;
 
         var key = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(secretKey));
         var creds = new SigningCredentials(key, SecurityAlgorithms.HmacSha256);

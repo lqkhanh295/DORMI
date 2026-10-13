@@ -166,17 +166,14 @@
   /* DORMI Page Transition (200ms subtle entrance, Apple-standard feel) */
   .page-transition {
     animation: pageFadeIn var(--duration-standard) var(--ease-enter) forwards;
-    will-change: opacity, transform;
   }
 
   @keyframes pageFadeIn {
     0% {
       opacity: 0;
-      transform: translateY(4px);
     }
     100% {
       opacity: 1;
-      transform: translateY(0);
     }
   }
 

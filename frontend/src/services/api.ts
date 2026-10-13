@@ -93,6 +93,25 @@ async function request<T>(endpoint: string, options: RequestInit = {}): Promise<
   });
 
   if (!response.ok) {
+    if (response.status === 401) {
+      removeAuthToken();
+      try {
+        const storeKey = localStorage.getItem('dormi-storage-v5') ? 'dormi-storage-v5' : 'dormi-storage';
+        const rawStore = localStorage.getItem(storeKey);
+        if (rawStore) {
+          const parsed = JSON.parse(rawStore);
+          if (parsed?.state?.currentUser) {
+            parsed.state.currentUser = null;
+            localStorage.setItem(storeKey, JSON.stringify(parsed));
+          }
+        }
+      } catch {}
+
+      const error: any = new Error('Phiên đăng nhập đã hết hạn. Vui lòng đăng nhập lại để tiếp tục.');
+      error.status = 401;
+      throw error;
+    }
+
     const errorData = await response.json().catch(() => ({ message: 'API request failed' }));
     const error: any = new Error(errorData.message || `HTTP error! Status: ${response.status}`);
     error.data = errorData;
@@ -656,7 +675,7 @@ export const landlordApi = {
     });
   },
 
-  verifyPayment: async (transactionRef: string, paymentMethod: string = 'VNPay') => {
+  verifyPayment: async (transactionRef: string, paymentMethod: string = 'PayOS') => {
     return request<any>('/landlord/payment/verify', {
       method: 'POST',
       body: JSON.stringify({ transactionRef, paymentMethod })

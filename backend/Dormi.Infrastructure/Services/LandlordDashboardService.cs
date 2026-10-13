@@ -16,6 +16,10 @@ using Microsoft.Extensions.Caching.Distributed;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Hosting;
 using System.Text.Json;
+using PayOS;
+using PayOS.Models.V2.PaymentRequests;
+using PayOS.Models.Webhooks;
+using PaymentTransaction = Dormi.Domain.Entities.PaymentTransaction;
 
 namespace Dormi.Infrastructure.Services;
 
@@ -25,17 +29,20 @@ public class LandlordDashboardService : ILandlordDashboardService
     private readonly IConfiguration _configuration;
     private readonly IWebHostEnvironment _env;
     private readonly IDistributedCache? _cache;
+    private readonly PayOSClient? _payOS;
 
     public LandlordDashboardService(
         DormiDbContext db, 
         IConfiguration configuration, 
         IWebHostEnvironment env,
-        IDistributedCache? cache = null)
+        IDistributedCache? cache = null,
+        PayOSClient? payOS = null)
     {
         _db = db;
         _configuration = configuration;
         _env = env;
         _cache = cache;
+        _payOS = payOS;
     }
 
     private string GetVnpaySecret() => 
@@ -289,7 +296,9 @@ public class LandlordDashboardService : ILandlordDashboardService
             return ServiceResult<object>.Fail("Bạn cần là Chủ trọ để đăng ký gói dịch vụ.", 400);
         }
 
-        decimal price = dto.PlanName.Equals("Enterprise", StringComparison.OrdinalIgnoreCase) ? 499000m : 199000m;
+        decimal price = dto.PlanName.Equals("Enterprise", StringComparison.OrdinalIgnoreCase) || dto.PlanName.Equals("Business", StringComparison.OrdinalIgnoreCase)
+            ? 799000m 
+            : 299000m;
 
         var newSubscription = new LandlordSubscription
         {
@@ -302,15 +311,17 @@ public class LandlordDashboardService : ILandlordDashboardService
             IsActive = false
         };
 
+        long orderCode = long.Parse(DateTime.UtcNow.ToString("yyMMddHHmmss") + Random.Shared.Next(10, 99));
+
         var transaction = new PaymentTransaction
         {
             Id = Guid.NewGuid(),
             UserId = landlordId,
             SubscriptionId = newSubscription.Id,
             Amount = price,
-            PaymentMethod = string.IsNullOrWhiteSpace(dto.PaymentMethod) ? "VNPay" : dto.PaymentMethod,
-            TransactionRef = $"TXN-{DateTime.UtcNow:yyyyMMddHHmmss}-{Random.Shared.Next(1000, 9999)}",
-            Description = $"Nâng cấp gói {dto.PlanName} 30 ngày",
+            PaymentMethod = "PayOS",
+            TransactionRef = orderCode.ToString(),
+            Description = $"Gói {dto.PlanName} 30 ngày",
             Status = "Pending",
             CreatedAt = DateTime.UtcNow
         };
@@ -319,38 +330,60 @@ public class LandlordDashboardService : ILandlordDashboardService
         _db.PaymentTransactions.Add(transaction);
         await _db.SaveChangesAsync();
 
-        var vnpParams = new SortedDictionary<string, string>
-        {
-            { "vnp_Amount", ((long)(price * 100)).ToString() },
-            { "vnp_Command", "pay" },
-            { "vnp_CreateDate", DateTime.UtcNow.ToString("yyyyMMddHHmmss") },
-            { "vnp_CurrCode", "VND" },
-            { "vnp_IpAddr", string.IsNullOrWhiteSpace(clientIp) ? "127.0.0.1" : clientIp },
-            { "vnp_Locale", "vn" },
-            { "vnp_OrderInfo", $"Thanh toan goi {dto.PlanName} Dormi" },
-            { "vnp_OrderType", "other" },
-            { "vnp_ReturnUrl", "http://localhost:5173/landlord/billing" },
-            { "vnp_TmnCode", "DORMI01" },
-            { "vnp_TxnRef", transaction.TransactionRef },
-            { "vnp_Version", "2.1.0" }
-        };
+        string paymentUrl = "";
+        string qrUrl = "";
+        string? accountNumber = null;
+        string? accountName = null;
+        string? bin = null;
 
-        var signData = string.Join("&", vnpParams.Select(kvp => $"{kvp.Key}={Uri.EscapeDataString(kvp.Value)}"));
-        var secureHash = ComputeHmacSha512(GetVnpaySecret(), signData);
-        var paymentUrl = $"https://sandbox.vnpayment.vn/paymentv2/vpcpay.html?{signData}&vnp_SecureHash={secureHash}";
-        var qrUrl = $"https://api.qrserver.com/v1/create-qr-code/?size=250x250&data={Uri.EscapeDataString(paymentUrl)}";
+        if (_payOS != null)
+        {
+            var frontendUrl = _configuration["App:FrontendUrl"] ?? "http://localhost:5173";
+            var returnUrl = $"{frontendUrl}/landlord/billing?payment=success&orderCode={orderCode}";
+            var cancelUrl = $"{frontendUrl}/landlord/billing?payment=cancel&orderCode={orderCode}";
+
+            string desc = $"DORMI {dto.PlanName}";
+            if (desc.Length > 25) desc = desc[..25];
+
+            var request = new CreatePaymentLinkRequest
+            {
+                OrderCode = orderCode,
+                Amount = (long)price,
+                Description = desc,
+                ReturnUrl = returnUrl,
+                CancelUrl = cancelUrl
+            };
+
+            var payOsRes = await _payOS.PaymentRequests.CreateAsync(request);
+            paymentUrl = payOsRes.CheckoutUrl;
+            accountNumber = payOsRes.AccountNumber;
+            accountName = payOsRes.AccountName;
+            bin = payOsRes.Bin;
+            qrUrl = !string.IsNullOrWhiteSpace(payOsRes.QrCode)
+                ? $"https://api.qrserver.com/v1/create-qr-code/?size=300x300&data={Uri.EscapeDataString(payOsRes.QrCode)}"
+                : $"https://api.qrserver.com/v1/create-qr-code/?size=300x300&data={Uri.EscapeDataString(paymentUrl)}";
+        }
+        else
+        {
+            paymentUrl = $"https://pay.payos.vn/web/demo/{orderCode}";
+            qrUrl = $"https://api.qrserver.com/v1/create-qr-code/?size=300x300&data={Uri.EscapeDataString(paymentUrl)}";
+        }
 
         return ServiceResult<object>.Ok(new
         {
             subscriptionId = newSubscription.Id,
             transactionRef = transaction.TransactionRef,
+            orderCode = orderCode,
             planName = newSubscription.PlanName,
             amount = transaction.Amount,
             paymentMethod = transaction.PaymentMethod,
             status = "PendingPayment",
             paymentUrl = paymentUrl,
             qrUrl = qrUrl,
-            message = $"Khởi tạo thanh toán gói {newSubscription.PlanName} thành công. Vui lòng quét mã để kích hoạt."
+            accountNumber = accountNumber,
+            accountName = accountName,
+            bin = bin,
+            message = $"Khởi tạo thanh toán PayOS gói {newSubscription.PlanName} thành công. Vui lòng quét mã VietQR hoặc mở cổng thanh toán để kích hoạt."
         });
     }
 
@@ -361,6 +394,27 @@ public class LandlordDashboardService : ILandlordDashboardService
             .FirstOrDefaultAsync(t => t.TransactionRef == transactionRef && t.UserId == landlordId);
 
         if (transaction == null) return ServiceResult<object>.NotFound("Không tìm thấy giao dịch.");
+
+        if (transaction.Status == "Pending" && _payOS != null && long.TryParse(transaction.TransactionRef, out var orderCode))
+        {
+            try
+            {
+                var payOsInfo = await _payOS.PaymentRequests.GetAsync(orderCode);
+                if (payOsInfo != null && payOsInfo.Status.ToString().Equals("PAID", StringComparison.OrdinalIgnoreCase))
+                {
+                    await ActivateTransactionBenefitsAsync(transaction);
+                }
+                else if (payOsInfo != null && payOsInfo.Status.ToString().Equals("CANCELLED", StringComparison.OrdinalIgnoreCase))
+                {
+                    transaction.Status = "Cancelled";
+                    await _db.SaveChangesAsync();
+                }
+            }
+            catch
+            {
+                // Fallback to existing transaction state if API lookup fails
+            }
+        }
 
         return ServiceResult<object>.Ok(new
         {
@@ -390,44 +444,7 @@ public class LandlordDashboardService : ILandlordDashboardService
             return ServiceResult<object>.Ok(new { message = "Giao dịch này đã được hoàn tất trước đó.", status = "Completed" });
         }
 
-        transaction.Status = "Completed";
-        transaction.CompletedAt = DateTime.UtcNow;
-
-        if (transaction.Subscription != null)
-        {
-            var olderSubs = await _db.LandlordSubscriptions
-                .Where(s => s.LandlordId == landlordId && s.Id != transaction.Subscription.Id && s.IsActive)
-                .ToListAsync();
-            foreach (var old in olderSubs) old.IsActive = false;
-
-            transaction.Subscription.IsActive = true;
-        }
-
-        if (transaction.RoomId.HasValue)
-        {
-            var room = await _db.Rooms.FindAsync(transaction.RoomId.Value);
-            if (room != null)
-            {
-                var durationDays = transaction.Description.Contains("7days") ? 7 : (transaction.Description.Contains("3days") ? 3 : 1);
-                var boostType = transaction.Description.Contains("7days") ? "7days" : (transaction.Description.Contains("3days") ? "3days" : "24h");
-                room.IsBoosted = true;
-                room.BoostType = boostType;
-                room.BoostExpiresAt = DateTime.UtcNow.AddDays(durationDays);
-            }
-        }
-
-        _db.Notifications.Add(new Notification
-        {
-            Id = Guid.NewGuid(),
-            UserId = landlordId,
-            Title = "Thanh toán thành công",
-            Message = $"Giao dịch {transaction.TransactionRef} ({transaction.Amount:N0}đ) đã hoàn tất. {transaction.Description} đã được kích hoạt.",
-            Type = "System",
-            LinkUrl = transaction.RoomId.HasValue ? "/landlord/rooms" : "/landlord/billing",
-            CreatedAt = DateTime.UtcNow
-        });
-
-        await _db.SaveChangesAsync();
+        await ActivateTransactionBenefitsAsync(transaction);
         return ServiceResult<object>.Ok(new { message = "Xác nhận thanh toán thành công! Dịch vụ của bạn đã được kích hoạt.", status = "Completed" });
     }
 
@@ -438,21 +455,9 @@ public class LandlordDashboardService : ILandlordDashboardService
             return ServiceResult<object>.Fail("Mã tham chiếu giao dịch không hợp lệ.", 400);
         }
 
-        if (string.IsNullOrWhiteSpace(dto.SecureHash))
+        if (_payOS == null && string.IsNullOrWhiteSpace(dto.SecureHash))
         {
             return ServiceResult<object>.Fail("Yêu cầu chữ ký bảo mật xác thực giao dịch (SecureHash).", 400);
-        }
-
-        var secret = GetVnpaySecret();
-        var expectedHash = ComputeHmacSha512(secret, $"vnp_ResponseCode={dto.ResponseCode ?? "00"}&vnp_TxnRef={dto.TransactionRef}");
-        if (!string.Equals(expectedHash, dto.SecureHash, StringComparison.OrdinalIgnoreCase))
-        {
-            return ServiceResult<object>.Fail("Chữ ký xác thực thanh toán không hợp lệ (HMAC signature mismatch).", 400);
-        }
-
-        if (dto.ResponseCode != "00")
-        {
-            return ServiceResult<object>.Fail($"Giao dịch thanh toán chưa hoàn tất thành công từ cổng đối tác (Mã phản hồi: {dto.ResponseCode}).", 400);
         }
 
         var transaction = await _db.PaymentTransactions
@@ -466,13 +471,112 @@ public class LandlordDashboardService : ILandlordDashboardService
             return ServiceResult<object>.Ok(new { message = "Giao dịch này đã được xác nhận thanh toán trước đó.", transactionId = transaction.Id, status = "Completed" });
         }
 
+        // 1. Verify with PayOS API if available
+        if (_payOS != null && long.TryParse(dto.TransactionRef, out var orderCode))
+        {
+            try
+            {
+                var payOsInfo = await _payOS.PaymentRequests.GetAsync(orderCode);
+                if (payOsInfo != null && payOsInfo.Status.ToString().Equals("PAID", StringComparison.OrdinalIgnoreCase))
+                {
+                    await ActivateTransactionBenefitsAsync(transaction);
+                    return ServiceResult<object>.Ok(new { message = "Xác nhận thanh toán PayOS thành công! Dịch vụ của bạn đã được kích hoạt.", status = "Completed" });
+                }
+            }
+            catch (Exception ex)
+            {
+                return ServiceResult<object>.Fail($"Lỗi xác thực giao dịch PayOS: {ex.Message}", 400);
+            }
+        }
+
+        // 2. Legacy hash verification fallback
+        if (!string.IsNullOrWhiteSpace(dto.SecureHash))
+        {
+            var secret = GetVnpaySecret();
+            var expectedHash = ComputeHmacSha512(secret, $"vnp_ResponseCode={dto.ResponseCode ?? "00"}&vnp_TxnRef={dto.TransactionRef}");
+            if (string.Equals(expectedHash, dto.SecureHash, StringComparison.OrdinalIgnoreCase) && dto.ResponseCode == "00")
+            {
+                await ActivateTransactionBenefitsAsync(transaction);
+                return ServiceResult<object>.Ok(new { message = "Xác nhận thanh toán thành công! Dịch vụ của bạn đã được kích hoạt.", status = "Completed" });
+            }
+        }
+
+        return ServiceResult<object>.Fail("Giao dịch chưa được thanh toán thành công trên cổng PayOS.", 400);
+    }
+
+    public async Task<ServiceResult<object>> ProcessPayOSWebhookAsync(Webhook webhook)
+    {
+        if (_payOS == null)
+        {
+            return ServiceResult<object>.Fail("Cổng thanh toán PayOS chưa được cấu hình.", 500);
+        }
+
+        try
+        {
+            var verifiedData = await _payOS.Webhooks.VerifyAsync(webhook);
+            if (verifiedData == null)
+            {
+                return ServiceResult<object>.Fail("Dữ liệu webhook không hợp lệ.", 400);
+            }
+
+            // Webhook registration ping from PayOS
+            if (verifiedData.OrderCode == 0 || verifiedData.OrderCode == 123)
+            {
+                return ServiceResult<object>.Ok(new { message = "Webhook ping verification successful." });
+            }
+
+            var refStr = verifiedData.OrderCode.ToString();
+            var transaction = await _db.PaymentTransactions
+                .Include(t => t.Subscription)
+                .FirstOrDefaultAsync(t => t.TransactionRef == refStr);
+
+            if (transaction == null)
+            {
+                return ServiceResult<object>.Ok(new { message = $"OrderCode {refStr} không tìm thấy trong cơ sở dữ liệu." });
+            }
+
+            if (transaction.Status != "Completed")
+            {
+                await ActivateTransactionBenefitsAsync(transaction);
+            }
+
+            return ServiceResult<object>.Ok(new { message = "Thanh toán PayOS được xác thực và xử lý thành công.", orderCode = verifiedData.OrderCode });
+        }
+        catch (Exception ex)
+        {
+            return ServiceResult<object>.Fail($"Lỗi xác thực chữ ký PayOS Webhook: {ex.Message}", 400);
+        }
+    }
+
+    public async Task<ServiceResult<string>> ConfirmPayOSWebhookUrlAsync(string webhookUrl)
+    {
+        if (_payOS == null)
+        {
+            return ServiceResult<string>.Fail("Cổng thanh toán PayOS chưa được cấu hình.", 500);
+        }
+
+        try
+        {
+            await _payOS.Webhooks.ConfirmAsync(webhookUrl);
+            return ServiceResult<string>.Ok($"Đăng ký Webhook URL '{webhookUrl}' thành công với PayOS.");
+        }
+        catch (Exception ex)
+        {
+            return ServiceResult<string>.Fail($"Không thể xác nhận webhook với PayOS: {ex.Message}", 400);
+        }
+    }
+
+    private async Task ActivateTransactionBenefitsAsync(PaymentTransaction transaction)
+    {
+        if (transaction.Status == "Completed") return;
+
         transaction.Status = "Completed";
         transaction.CompletedAt = DateTime.UtcNow;
 
         if (transaction.Subscription != null)
         {
             var olderSubs = await _db.LandlordSubscriptions
-                .Where(s => s.LandlordId == landlordId && s.Id != transaction.Subscription.Id && s.IsActive)
+                .Where(s => s.LandlordId == transaction.UserId && s.Id != transaction.Subscription.Id && s.IsActive)
                 .ToListAsync();
             foreach (var old in olderSubs) old.IsActive = false;
 
@@ -495,7 +599,7 @@ public class LandlordDashboardService : ILandlordDashboardService
         _db.Notifications.Add(new Notification
         {
             Id = Guid.NewGuid(),
-            UserId = landlordId,
+            UserId = transaction.UserId,
             Title = "Thanh toán thành công",
             Message = $"Giao dịch {transaction.TransactionRef} ({transaction.Amount:N0}đ) đã hoàn tất. {transaction.Description} đã được kích hoạt.",
             Type = "System",
@@ -504,7 +608,6 @@ public class LandlordDashboardService : ILandlordDashboardService
         });
 
         await _db.SaveChangesAsync();
-        return ServiceResult<object>.Ok(new { message = "Xác nhận thanh toán thành công! Dịch vụ của bạn đã được kích hoạt.", status = "Completed" });
     }
 
     public async Task<ServiceResult<string>> ProcessVnpayReturnAsync(IDictionary<string, string> queryParams, string vnp_TxnRef, string vnp_ResponseCode, string vnp_SecureHash)
@@ -700,15 +803,17 @@ public class LandlordDashboardService : ILandlordDashboardService
             _ => 50000m
         };
 
+        long orderCode = long.Parse(DateTime.UtcNow.ToString("yyMMddHHmmss") + Random.Shared.Next(10, 99));
+
         var transaction = new PaymentTransaction
         {
             Id = Guid.NewGuid(),
             UserId = landlordId,
             RoomId = roomId,
             Amount = price,
-            PaymentMethod = string.IsNullOrWhiteSpace(dto.PaymentMethod) ? "VNPay" : dto.PaymentMethod,
-            TransactionRef = $"BOOST-{DateTime.UtcNow:yyyyMMddHHmmss}-{Random.Shared.Next(1000, 9999)}",
-            Description = $"Đẩy tin nổi bật ({dto.BoostType}) phòng '{room.Title}'",
+            PaymentMethod = "PayOS",
+            TransactionRef = orderCode.ToString(),
+            Description = $"Đẩy tin {dto.BoostType} '{room.Title}'",
             Status = "Pending",
             CreatedAt = DateTime.UtcNow
         };
@@ -716,26 +821,44 @@ public class LandlordDashboardService : ILandlordDashboardService
         _db.PaymentTransactions.Add(transaction);
         await _db.SaveChangesAsync();
 
-        var vnpParams = new SortedDictionary<string, string>
-        {
-            { "vnp_Amount", ((long)(price * 100)).ToString() },
-            { "vnp_Command", "pay" },
-            { "vnp_CreateDate", DateTime.UtcNow.ToString("yyyyMMddHHmmss") },
-            { "vnp_CurrCode", "VND" },
-            { "vnp_IpAddr", string.IsNullOrWhiteSpace(clientIp) ? "127.0.0.1" : clientIp },
-            { "vnp_Locale", "vn" },
-            { "vnp_OrderInfo", $"Thanh toan day tin {dto.BoostType} phong {room.Title}" },
-            { "vnp_OrderType", "other" },
-            { "vnp_ReturnUrl", "http://localhost:5173/landlord/billing" },
-            { "vnp_TmnCode", "DORMI01" },
-            { "vnp_TxnRef", transaction.TransactionRef },
-            { "vnp_Version", "2.1.0" }
-        };
+        string paymentUrl = "";
+        string qrUrl = "";
+        string? accountNumber = null;
+        string? accountName = null;
+        string? bin = null;
 
-        var signData = string.Join("&", vnpParams.Select(kvp => $"{kvp.Key}={Uri.EscapeDataString(kvp.Value)}"));
-        var secureHash = ComputeHmacSha512(GetVnpaySecret(), signData);
-        var paymentUrl = $"https://sandbox.vnpayment.vn/paymentv2/vpcpay.html?{signData}&vnp_SecureHash={secureHash}";
-        var qrUrl = $"https://api.qrserver.com/v1/create-qr-code/?size=250x250&data={Uri.EscapeDataString(paymentUrl)}";
+        if (_payOS != null)
+        {
+            var frontendUrl = _configuration["App:FrontendUrl"] ?? "http://localhost:5173";
+            var returnUrl = $"{frontendUrl}/landlord/billing?payment=success&orderCode={orderCode}";
+            var cancelUrl = $"{frontendUrl}/landlord/billing?payment=cancel&orderCode={orderCode}";
+
+            string desc = $"DORMI BOOST {dto.BoostType}";
+            if (desc.Length > 25) desc = desc[..25];
+
+            var request = new CreatePaymentLinkRequest
+            {
+                OrderCode = orderCode,
+                Amount = (long)price,
+                Description = desc,
+                ReturnUrl = returnUrl,
+                CancelUrl = cancelUrl
+            };
+
+            var payOsRes = await _payOS.PaymentRequests.CreateAsync(request);
+            paymentUrl = payOsRes.CheckoutUrl;
+            accountNumber = payOsRes.AccountNumber;
+            accountName = payOsRes.AccountName;
+            bin = payOsRes.Bin;
+            qrUrl = !string.IsNullOrWhiteSpace(payOsRes.QrCode)
+                ? $"https://api.qrserver.com/v1/create-qr-code/?size=300x300&data={Uri.EscapeDataString(payOsRes.QrCode)}"
+                : $"https://api.qrserver.com/v1/create-qr-code/?size=300x300&data={Uri.EscapeDataString(paymentUrl)}";
+        }
+        else
+        {
+            paymentUrl = $"https://pay.payos.vn/web/demo/{orderCode}";
+            qrUrl = $"https://api.qrserver.com/v1/create-qr-code/?size=300x300&data={Uri.EscapeDataString(paymentUrl)}";
+        }
 
         return ServiceResult<object>.Ok(new
         {
@@ -743,12 +866,16 @@ public class LandlordDashboardService : ILandlordDashboardService
             roomTitle = room.Title,
             boostType = dto.BoostType,
             transactionRef = transaction.TransactionRef,
+            orderCode = orderCode,
             amount = transaction.Amount,
             paymentMethod = transaction.PaymentMethod,
             status = "PendingPayment",
             paymentUrl = paymentUrl,
             qrUrl = qrUrl,
-            message = $"Khởi tạo thanh toán đẩy tin nổi bật ({dto.BoostType}) thành công. Vui lòng quét mã để kích hoạt."
+            accountNumber = accountNumber,
+            accountName = accountName,
+            bin = bin,
+            message = $"Khởi tạo thanh toán PayOS đẩy tin nổi bật ({dto.BoostType}) thành công. Vui lòng quét mã VietQR để kích hoạt."
         });
     }
 

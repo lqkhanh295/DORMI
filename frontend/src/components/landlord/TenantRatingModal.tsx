@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import { createPortal } from 'react-dom';
 import { Button } from '../ui/Button';
 import { tenantReviewsApi } from '../../services/api';
 import { toast } from 'sonner';
@@ -89,7 +90,7 @@ export function TenantRatingModal({
     }
   };
 
-  return (
+  return createPortal(
     <AnimatePresence>
       {isOpen && (
         <motion.div
@@ -299,6 +300,7 @@ export function TenantRatingModal({
           </motion.div>
         </motion.div>
       )}
-    </AnimatePresence>
+    </AnimatePresence>,
+    document.body
   );
 }

@@ -207,6 +207,11 @@ public class PaymentVerifyDto
     public bool Success { get; set; } = true;
 }
 
+public class ConfirmPayOSWebhookDto
+{
+    public string WebhookUrl { get; set; } = string.Empty;
+}
+
 public class PaymentTransactionDto
 {
     public Guid Id { get; set; }
