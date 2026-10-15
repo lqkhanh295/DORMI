@@ -1,9 +1,10 @@
 import { useState } from 'react';
+import { Link } from 'react-router-dom';
 import { Card } from '../../components/ui/Card';
 import { Button } from '../../components/ui/Button';
 import { Input } from '../../components/ui/Input';
 import { toast } from 'sonner';
-import { Lock, Bell, Shield, AlertTriangle } from 'lucide-react';
+import { Lock, Bell, Shield, AlertTriangle, ShieldCheck } from 'lucide-react';
 import { useStore } from '../../store/useStore';
 import { authApi } from '../../services/api';
 
@@ -282,6 +283,16 @@ export default function TenantSettings() {
                       <div className={`w-5 h-5 bg-white rounded-full transition-transform absolute top-0.5 ${allowMatching ? 'translate-x-6' : 'translate-x-0.5'}`}></div>
                     </button>
                   </div>
+                </div>
+
+                <div className="p-4 bg-slate-50 border border-slate-200 rounded-xl flex items-center justify-between text-xs">
+                  <div className="flex items-center gap-2 text-slate-700">
+                    <ShieldCheck className="w-4 h-4 text-emerald-600 shrink-0" />
+                    <span>Tìm hiểu cách DORMI bảo vệ và mã hóa dữ liệu cá nhân của bạn.</span>
+                  </div>
+                  <Link to="/privacy" target="_blank" className="text-blue-600 font-semibold hover:underline shrink-0">
+                    Xem Chính sách bảo mật
+                  </Link>
                 </div>
 
                 <Button onClick={handleSavePrivacy}>Lưu cài đặt quyền riêng tư</Button>

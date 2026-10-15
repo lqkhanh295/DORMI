@@ -112,10 +112,10 @@ export function GlobalFooter() {
         <div className="pt-6 flex flex-col sm:flex-row items-center justify-between gap-3 text-xs text-[#64748B]">
           <p>© 2026 DORMI. Nền tảng kết nối phòng trọ & người ở ghép.</p>
           <div className="flex items-center gap-6">
-            <Link to="/tenant/settings" className="hover:text-[#00153D] transition-colors">
+            <Link to="/terms" className="hover:text-[#00153D] transition-colors">
               Điều khoản dịch vụ
             </Link>
-            <Link to="/tenant/settings" className="hover:text-[#00153D] transition-colors">
+            <Link to="/privacy" className="hover:text-[#00153D] transition-colors">
               Chính sách bảo mật
             </Link>
           </div>

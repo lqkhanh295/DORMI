@@ -13,6 +13,8 @@ import SearchResults from '../pages/public/SearchResults';
 import RoomDetail from '../pages/public/RoomDetail';
 import AuthPage from '../pages/public/AuthPage';
 import ForgotPassword from '../pages/public/ForgotPassword';
+import TermsOfService from '../pages/public/TermsOfService';
+import PrivacyPolicy from '../pages/public/PrivacyPolicy';
 import NotFound from '../pages/public/NotFound';
 
 // Tenant Pages
@@ -60,6 +62,12 @@ export default function AppRoutes() {
         <Route path="/login" element={<Navigate to="/auth" replace />} />
         <Route path="/register" element={<Navigate to="/auth?tab=register" replace />} />
         <Route path="/auth/reset" element={<ForgotPassword />} />
+        <Route path="/terms" element={<TermsOfService />} />
+        <Route path="/privacy" element={<PrivacyPolicy />} />
+        <Route path="/terms-of-service" element={<Navigate to="/terms" replace />} />
+        <Route path="/privacy-policy" element={<Navigate to="/privacy" replace />} />
+        <Route path="/dieu-khoan" element={<Navigate to="/terms" replace />} />
+        <Route path="/chinh-sach-bao-mat" element={<Navigate to="/privacy" replace />} />
         
         {/* Legacy Redirects */}
         <Route path="/customer/matcher" element={<Navigate to="/tenant/match" replace />} />

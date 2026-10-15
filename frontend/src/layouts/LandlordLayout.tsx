@@ -8,7 +8,9 @@ import {
   FileCheck, 
   Calendar, 
   BarChart3, 
-  MessageCircle 
+  MessageCircle,
+  Zap,
+  Settings
 } from 'lucide-react';
 
 export default function LandlordLayout() {
@@ -21,7 +23,9 @@ export default function LandlordLayout() {
     { name: 'Hợp đồng', path: '/landlord/leases', icon: FileCheck },
     { name: 'Lịch hẹn xem', path: '/landlord/viewings', icon: Calendar },
     { name: 'Phân tích', path: '/landlord/analytics', icon: BarChart3 },
+    { name: 'Gói dịch vụ', path: '/landlord/pricing', icon: Zap },
     { name: 'Tin nhắn', path: '/landlord/chat', icon: MessageCircle },
+    { name: 'Cài đặt', path: '/landlord/settings', icon: Settings },
   ];
 
   return (
