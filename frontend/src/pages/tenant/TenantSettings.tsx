@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { Card } from '../../components/ui/Card';
 import { Button } from '../../components/ui/Button';
@@ -6,7 +6,7 @@ import { Input } from '../../components/ui/Input';
 import { toast } from 'sonner';
 import { Lock, Bell, Shield, AlertTriangle, ShieldCheck } from 'lucide-react';
 import { useStore } from '../../store/useStore';
-import { authApi } from '../../services/api';
+import { authApi, profilesApi } from '../../services/api';
 
 type TabType = 'notifications' | 'security' | 'privacy' | 'danger';
 
@@ -25,10 +25,28 @@ export default function TenantSettings() {
   // Privacy tab state
   const [showPhone, setShowPhone] = useState(true);
   const [allowMatching, setAllowMatching] = useState(true);
+  const [savingPrivacy, setSavingPrivacy] = useState(false);
 
   const logout = useStore(state => state.logout);
 
+  useEffect(() => {
+    let isMounted = true;
+    profilesApi.getCustomerProfile()
+      .then((res: any) => {
+        if (!isMounted || !res) return;
+        if (typeof res.isLookingForRoommate === 'boolean') {
+          setAllowMatching(res.isLookingForRoommate);
+        }
+      })
+      .catch((err) => {
+        console.warn('profilesApi.getCustomerProfile failed:', err);
+      });
+
+    return () => { isMounted = false; };
+  }, []);
+
   const handleSaveNotifications = () => {
+    localStorage.setItem('dormi_notifications_settings', JSON.stringify({ matchNotify, chatNotify, promoNotify }));
     toast.success('Đã lưu cấu hình thông báo thành công!');
   };
 
@@ -60,8 +78,18 @@ export default function TenantSettings() {
     }
   };
 
-  const handleSavePrivacy = () => {
-    toast.success('Đã cập nhật tùy chọn quyền riêng tư!');
+  const handleSavePrivacy = async () => {
+    try {
+      setSavingPrivacy(true);
+      await profilesApi.updateCustomerProfile({
+        isLookingForRoommate: allowMatching
+      });
+      toast.success('Đã lưu tùy chọn quyền riêng tư lên hệ thống thành công!');
+    } catch (err: any) {
+      toast.error(err?.message || 'Không thể lưu cài đặt quyền riêng tư.');
+    } finally {
+      setSavingPrivacy(false);
+    }
   };
 
   const handleDeactivate = () => {
@@ -295,7 +323,9 @@ export default function TenantSettings() {
                   </Link>
                 </div>
 
-                <Button onClick={handleSavePrivacy}>Lưu cài đặt quyền riêng tư</Button>
+                <Button onClick={handleSavePrivacy} disabled={savingPrivacy}>
+                  {savingPrivacy ? 'Đang lưu...' : 'Lưu cài đặt quyền riêng tư'}
+                </Button>
               </div>
             )}
 
