@@ -4,8 +4,10 @@ import { type LeaseContractResponse, roomsApi } from '../../services/api';
 import { 
   Printer, 
   X, 
-  ShieldCheck
+  ShieldCheck,
+  FileDown
 } from 'lucide-react';
+import { toast } from 'sonner';
 
 interface PrintContractModalProps {
   lease: LeaseContractResponse;
@@ -172,6 +174,22 @@ export default function PrintContractModal({ lease, onClose, initialLeaveBlank }
     calculateSha256(rawData).then(hash => setChecksum(hash));
   }, [lease]);
 
+  const handleExportPdf = () => {
+    const originalTitle = document.title;
+    const cleanFileName = `Hop_Dong_Thue_DORMI_${lease.id.slice(0, 8).toUpperCase()}`;
+    document.title = cleanFileName;
+
+    toast.info('Tại hộp thoại in, hãy chọn mục đích "Lưu dưới dạng PDF" (Save as PDF) để tải tệp về máy.', {
+      duration: 4000,
+    });
+
+    window.print();
+
+    setTimeout(() => {
+      document.title = originalTitle;
+    }, 1000);
+  };
+
   const handlePrint = () => {
     window.print();
   };
@@ -231,7 +249,7 @@ export default function PrintContractModal({ lease, onClose, initialLeaveBlank }
         </div>
 
         {/* Options & Print Buttons */}
-        <div className="flex flex-wrap items-center gap-3">
+        <div className="flex flex-wrap items-center gap-2 sm:gap-3">
           {/* Toggle Option: Chừa ô ký để ký tay */}
           <label className="flex items-center gap-2 px-3 py-1.5 rounded-xl border border-slate-200 bg-slate-50 hover:bg-slate-100 cursor-pointer select-none transition-colors">
             <input
@@ -247,11 +265,22 @@ export default function PrintContractModal({ lease, onClose, initialLeaveBlank }
 
           <button
             type="button"
-            onClick={handlePrint}
+            onClick={handleExportPdf}
             className="px-4 py-2 bg-[#00153D] hover:bg-[#073372] text-white rounded-xl text-xs font-bold flex items-center gap-2 shadow-xs transition-colors active:scale-95"
+            title="Tải hoặc lưu hợp đồng dưới dạng tệp PDF"
           >
-            <Printer className="w-4 h-4" />
-            <span>In hợp đồng ngay</span>
+            <FileDown className="w-4 h-4 text-[#F2A900]" />
+            <span>Xuất file PDF</span>
+          </button>
+
+          <button
+            type="button"
+            onClick={handlePrint}
+            className="px-4 py-2 bg-white hover:bg-slate-100 text-[#00153D] border border-slate-300 rounded-xl text-xs font-bold flex items-center gap-2 shadow-xs transition-colors active:scale-95"
+            title="In trực tiếp ra máy in"
+          >
+            <Printer className="w-4 h-4 text-[#00153D]" />
+            <span>In hợp đồng</span>
           </button>
 
           <button
@@ -500,9 +529,7 @@ export default function PrintContractModal({ lease, onClose, initialLeaveBlank }
 
                 {leaveBlankSignatures ? (
                   /* Option: Chừa trống ô để ký tay */
-                  <div className="h-28 flex items-end justify-center border-b border-dashed border-slate-400 print:border-black mx-6 mb-2">
-                    <span className="text-[10px] text-slate-400 italic mb-1 no-print">[Chừa trống để ký bút mực]</span>
-                  </div>
+                  <div className="h-28 border-b border-dashed border-slate-400 print:border-black mx-6 mb-2" />
                 ) : (
                   /* Option: Đã ký điện tử trên hệ thống */
                   <div className="h-28 flex flex-col items-center justify-center py-2">
@@ -527,9 +554,7 @@ export default function PrintContractModal({ lease, onClose, initialLeaveBlank }
 
                 {leaveBlankSignatures || !lease.tenantSigned ? (
                   /* Option: Chừa trống ô để ký tay */
-                  <div className="h-28 flex items-end justify-center border-b border-dashed border-slate-400 print:border-black mx-6 mb-2">
-                    <span className="text-[10px] text-slate-400 italic mb-1 no-print">[Chừa trống để ký bút mực]</span>
-                  </div>
+                  <div className="h-28 border-b border-dashed border-slate-400 print:border-black mx-6 mb-2" />
                 ) : (
                   /* Option: Đã ký điện tử trên hệ thống */
                   <div className="h-28 flex flex-col items-center justify-center py-2">
@@ -628,9 +653,7 @@ export default function PrintContractModal({ lease, onClose, initialLeaveBlank }
                   <p className="text-[11px] italic text-slate-700">(Đã đọc và đồng ý - Ký và ghi rõ họ tên)</p>
 
                   {leaveBlankSignatures ? (
-                    <div className="h-24 flex items-end justify-center border-b border-dashed border-slate-400 print:border-black mx-6 mb-2">
-                      <span className="text-[10px] text-slate-400 italic mb-1 no-print">[Chừa trống để ký bút mực]</span>
-                    </div>
+                    <div className="h-24 border-b border-dashed border-slate-400 print:border-black mx-6 mb-2" />
                   ) : (
                     <div className="h-24 flex flex-col items-center justify-center py-2">
                       <div className="px-3 py-1 bg-emerald-50 text-emerald-800 border border-emerald-300 rounded text-[11px] font-bold tracking-wider uppercase mb-1">
@@ -648,9 +671,7 @@ export default function PrintContractModal({ lease, onClose, initialLeaveBlank }
                   <p className="text-[11px] italic text-slate-700">(Đã đọc và đồng ý - Ký và ghi rõ họ tên)</p>
 
                   {leaveBlankSignatures || !lease.tenantSigned ? (
-                    <div className="h-24 flex items-end justify-center border-b border-dashed border-slate-400 print:border-black mx-6 mb-2">
-                      <span className="text-[10px] text-slate-400 italic mb-1 no-print">[Chừa trống để ký bút mực]</span>
-                    </div>
+                    <div className="h-24 border-b border-dashed border-slate-400 print:border-black mx-6 mb-2" />
                   ) : (
                     <div className="h-24 flex flex-col items-center justify-center py-2">
                       {lease.tenantSignatureData && lease.tenantSignatureData.startsWith('data:image') ? (

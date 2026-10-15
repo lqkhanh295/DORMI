@@ -19,7 +19,7 @@ import {
   RefreshCw,
   UserCheck,
   Wrench,
-  Printer
+  FileDown
 } from 'lucide-react';
 import PostRentalModal from '../../components/transaction/PostRentalModal';
 import PrintContractModal from '../../components/transaction/PrintContractModal';
@@ -463,10 +463,10 @@ export default function LandlordLeases() {
                       type="button"
                       onClick={() => setPrintingLease(lease)}
                       className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-blue-50 hover:bg-blue-100 text-blue-900 border border-blue-200 text-xs font-semibold rounded-lg transition-colors"
-                      title="In hợp đồng hoặc xuất file A4 / PDF"
+                      title="Xuất file PDF hoặc in hợp đồng"
                     >
-                      <Printer className="w-3.5 h-3.5 text-blue-700" />
-                      In hợp đồng
+                      <FileDown className="w-3.5 h-3.5 text-blue-700" />
+                      Xuất PDF / In
                     </button>
                     <button
                       type="button"
@@ -946,8 +946,8 @@ export default function LandlordLeases() {
                 }}
                 className="px-4 py-2 bg-white hover:bg-slate-50 text-[#00153D] border border-slate-300 font-semibold rounded-xl text-xs flex items-center gap-2 shadow-xs transition-colors"
               >
-                <Printer className="w-4 h-4 text-[#00153D]" />
-                <span>In hợp đồng (Bản in A4 / PDF)</span>
+                <FileDown className="w-4 h-4 text-[#00153D]" />
+                <span>Xuất file PDF / In hợp đồng</span>
               </button>
               <button
                 type="button"
