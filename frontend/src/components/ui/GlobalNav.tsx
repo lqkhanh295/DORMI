@@ -99,7 +99,7 @@ export function GlobalNav() {
             </button>
           )}
           <Link 
-            to={currentUser?.role === 'Tenant' ? '/search' : currentUser?.role === 'Landlord' ? '/landlord' : currentUser?.role === 'Admin' ? '/admin' : '/'} 
+            to="/" 
             className="text-[22px] font-black tracking-wider text-[#00153D] flex items-center select-none"
           >
             DORMI<span className="text-[#F2A900] ml-0.5">.</span>
