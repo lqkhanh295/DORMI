@@ -1,130 +1,230 @@
-import { useState } from 'react';
-import { useNavigate, Link } from 'react-router-dom';
-import { Search, MapPin, Coins, CheckCircle, ArrowRight } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
+import { Search, MapPin, Coins, ShieldCheck, Map, X } from 'lucide-react';
 
-export function HeroSearch() {
+interface HeroSearchProps {
+  district: string;
+  onDistrictChange: (d: string) => void;
+  price: string;
+  onPriceChange: (p: string) => void;
+  query: string;
+  onQueryChange: (q: string) => void;
+  verifiedOnly?: boolean;
+  onVerifiedOnlyChange?: (v: boolean) => void;
+  onResetFilters?: () => void;
+}
+
+export function HeroSearch({
+  district,
+  onDistrictChange,
+  price,
+  onPriceChange,
+  query,
+  onQueryChange,
+  verifiedOnly = false,
+  onVerifiedOnlyChange,
+  onResetFilters
+}: HeroSearchProps) {
   const navigate = useNavigate();
-  const [district, setDistrict] = useState('');
-  const [price, setPrice] = useState('');
 
-  const handleSearch = (e: React.FormEvent) => {
-    e.preventDefault();
-    const query = new URLSearchParams();
-    if (district) query.set('district', district);
-    if (price) query.set('price', price);
-    navigate(`/search?${query.toString()}`);
+  const handleOpenMap = () => {
+    const params = new URLSearchParams();
+    if (district) params.set('district', district);
+    if (price) params.set('price', price);
+    if (query) params.set('query', query);
+    navigate(`/search?${params.toString()}`);
   };
 
+  const hasActiveFilters = Boolean(district || price || query || verifiedOnly);
+
+  const quickDistricts = ['Bình Thạnh', 'Quận 7', 'Thủ Đức', 'Quận 10', 'Tân Bình'];
+
   return (
-    <section className="py-12 md:py-20 bg-[#F8FAFC]">
-      <div className="container-dormi">
-        <div className="grid grid-cols-1 lg:grid-cols-12 gap-10 lg:gap-12 items-center">
-          
-          {/* Left Column (6 cols) */}
-          <div className="lg:col-span-6 space-y-6">
-            <div className="space-y-3">
-              <h1 className="text-2xl sm:text-3xl md:text-4xl lg:text-[38px] xl:text-[42px] font-black text-[#00153D] tracking-tight leading-[1.2]">
-                <span className="inline-block whitespace-nowrap">Tìm phòng đúng giá.</span>{' '}
-                <span className="inline-block whitespace-nowrap">Tìm bạn đúng gu.</span>
-              </h1>
-              <p className="text-body text-[#475569] max-w-[44ch] leading-relaxed">
-                Minh bạch giá cả, hình ảnh thực tế được kiểm tra tại chỗ và kết nối người ở ghép dựa trên thói quen sinh hoạt.
-              </p>
+    <section className="pt-6 pb-4 bg-gradient-to-b from-[#F8FAFC] to-white border-b border-slate-200/80">
+      <div className="container-dormi space-y-4">
+        
+        {/* Compact Header Title */}
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+          <div>
+            <div className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-blue-50 text-blue-700 text-xs font-semibold border border-blue-200/60 mb-1.5">
+              <ShieldCheck className="w-3.5 h-3.5 text-blue-600 shrink-0" />
+              <span>Hệ thống phòng trọ đã xác minh thực tế tại TP.HCM</span>
             </div>
+            <h1 className="text-xl sm:text-2xl lg:text-[26px] font-black text-[#00153D] tracking-tight">
+              Tìm phòng trọ đang cho thuê
+            </h1>
+          </div>
 
-            {/* Clean Elevated Search Form */}
-            <form 
-              onSubmit={handleSearch}
-              className="bg-white rounded-2xl border border-[#E2E8F0] shadow-sm p-5 sm:p-6 space-y-4"
+          <div className="flex items-center gap-2">
+            <button
+              type="button"
+              onClick={handleOpenMap}
+              className="inline-flex items-center gap-1.5 px-3.5 py-2 text-xs font-bold text-[#00153D] bg-white hover:bg-slate-50 border border-slate-300 rounded-xl transition-all shadow-2xs hover:shadow-xs active:scale-[0.98]"
             >
-              <div className="space-y-1.5">
-                <label className="text-caption font-bold text-[#0F172A] flex items-center gap-1.5">
-                  <MapPin className="w-4 h-4 text-[#00153D]" /> Khu vực
-                </label>
-                <select 
-                  value={district} 
-                  onChange={(e) => setDistrict(e.target.value)}
-                  className="w-full bg-white border border-[#CBD5E1] rounded-xl px-4 py-2.5 text-body text-[#0F172A] focus:outline-none focus:ring-2 focus:ring-[#00153D]/10 focus:border-[#00153D] min-h-[44px] cursor-pointer"
-                >
-                  <option value="">Tất cả khu vực tại TP.HCM</option>
-                  <option value="Quận 1">Quận 1</option>
-                  <option value="Quận 3">Quận 3</option>
-                  <option value="Quận 7">Quận 7</option>
-                  <option value="Quận 10">Quận 10</option>
-                  <option value="Bình Thạnh">Bình Thạnh</option>
-                  <option value="Tân Bình">Tân Bình</option>
-                  <option value="Gò Vấp">Gò Vấp</option>
-                  <option value="Thủ Đức">TP. Thủ Đức</option>
-                </select>
-              </div>
-
-              <div className="space-y-1.5">
-                <label className="text-caption font-bold text-[#0F172A] flex items-center gap-1.5">
-                  <Coins className="w-4 h-4 text-[#00153D]" /> Ngân sách hàng tháng
-                </label>
-                <select 
-                  value={price} 
-                  onChange={(e) => setPrice(e.target.value)}
-                  className="w-full bg-white border border-[#CBD5E1] rounded-xl px-4 py-2.5 text-body text-[#0F172A] focus:outline-none focus:ring-2 focus:ring-[#00153D]/10 focus:border-[#00153D] min-h-[44px] cursor-pointer"
-                >
-                  <option value="">Tất cả mức giá</option>
-                  <option value="Dưới 3tr">Dưới 3 triệu / tháng</option>
-                  <option value="3-5tr">3 - 5 triệu / tháng</option>
-                  <option value="5-8tr">5 - 8 triệu / tháng</option>
-                  <option value="Trên 8tr">Trên 8 triệu / tháng</option>
-                </select>
-              </div>
-
-              <button 
-                type="submit"
-                className="w-full bg-[#00153D] hover:bg-[#073372] text-white font-bold py-3 px-6 rounded-xl flex items-center justify-center gap-2 min-h-[44px] text-body transition-[background-color,transform] duration-150 active:scale-[0.985] shadow-xs"
-              >
-                <Search className="w-4 h-4" />
-                <span>Tìm phòng ngay</span>
-              </button>
-            </form>
+              <Map className="w-4 h-4 text-blue-700" />
+              <span>Xem trên bản đồ</span>
+            </button>
           </div>
-
-          {/* Right Column (6 cols): Verified Showcase Card */}
-          <div className="lg:col-span-6">
-            <div className="bg-white rounded-2xl border border-[#E2E8F0] shadow-sm p-3 overflow-hidden">
-              <div className="relative aspect-[16/10] sm:aspect-[4/3] rounded-xl overflow-hidden bg-slate-100">
-                <img 
-                  src="https://images.unsplash.com/photo-1522708323590-d24dbb6b0267?q=80&w=1200&auto=format&fit=crop" 
-                  alt="Phòng trọ thực tế được kiểm tra tại TP.HCM" 
-                  className="w-full h-full object-cover"
-                />
-                
-                {/* Live verification indicator */}
-                <div className="absolute top-3.5 left-3.5 bg-white/95 backdrop-blur-xs text-emerald-800 border border-emerald-200 text-xs font-semibold px-2.5 py-1 rounded-md flex items-center gap-1.5 shadow-xs">
-                  <CheckCircle className="w-3.5 h-3.5 text-emerald-600" />
-                  <span>Hình ảnh đã xác minh thực tế</span>
-                </div>
-
-                {/* Price tag */}
-                <div className="absolute bottom-3.5 left-3.5 bg-[#00153D]/95 text-white backdrop-blur-xs px-3.5 py-1.5 rounded-xl font-bold text-sm shadow-md">
-                  <span>3.500.000đ</span>
-                  <span className="text-slate-300 text-xs font-normal ml-1">/ tháng</span>
-                </div>
-              </div>
-
-              <div className="p-4 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
-                <div>
-                  <h3 className="text-body font-bold text-[#0F172A]">Phòng Studio ban công thoáng mát, gần ĐH Bách Khoa</h3>
-                  <p className="text-caption text-[#475569] mt-0.5">Quận 10, TP. Hồ Chí Minh · 28m² · Đầy đủ tiện nghi cơ bản</p>
-                </div>
-                <Link
-                  to="/search"
-                  className="inline-flex items-center gap-1 text-xs font-bold text-[#00153D] hover:underline shrink-0"
-                >
-                  <span>Khám phá 50+ phòng quanh khu vực</span>
-                  <ArrowRight className="w-3.5 h-3.5" />
-                </Link>
-              </div>
-            </div>
-          </div>
-
         </div>
+
+        {/* Compact Search & Filter Bar */}
+        <div className="bg-white rounded-2xl border border-slate-200/90 shadow-sm p-2 sm:p-2.5">
+          <div className="grid grid-cols-1 sm:grid-cols-12 gap-2 items-center">
+            
+            {/* Search Keyword Input (5 cols) */}
+            <div className="sm:col-span-5 relative">
+              <Search className="w-4 h-4 text-slate-400 absolute left-3.5 top-1/2 -translate-y-1/2 pointer-events-none" />
+              <input
+                type="text"
+                placeholder="Tìm theo tên đường, trường ĐH, địa chỉ..."
+                value={query}
+                onChange={(e) => onQueryChange(e.target.value)}
+                className="w-full bg-slate-50 hover:bg-slate-100/70 focus:bg-white border border-transparent focus:border-[#00153D] rounded-xl pl-9 pr-3 py-2 text-xs sm:text-sm text-[#0F172A] placeholder:text-slate-400 outline-none transition-all h-[42px]"
+              />
+              {query && (
+                <button
+                  type="button"
+                  onClick={() => onQueryChange('')}
+                  className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 p-0.5"
+                >
+                  <X className="w-3.5 h-3.5" />
+                </button>
+              )}
+            </div>
+
+            {/* District Select (3 cols) */}
+            <div className="sm:col-span-3 relative">
+              <MapPin className="w-4 h-4 text-slate-400 absolute left-3.5 top-1/2 -translate-y-1/2 pointer-events-none" />
+              <select
+                value={district}
+                onChange={(e) => onDistrictChange(e.target.value)}
+                className="w-full bg-slate-50 hover:bg-slate-100/70 focus:bg-white border border-transparent focus:border-[#00153D] rounded-xl pl-9 pr-7 py-2 text-xs sm:text-sm text-[#0F172A] outline-none transition-all h-[42px] cursor-pointer appearance-none"
+              >
+                <option value="">Tất cả khu vực</option>
+                <option value="Bình Thạnh">Bình Thạnh</option>
+                <option value="Quận 7">Quận 7</option>
+                <option value="Thủ Đức">TP. Thủ Đức</option>
+                <option value="Quận 10">Quận 10</option>
+                <option value="Quận 1">Quận 1</option>
+                <option value="Quận 3">Quận 3</option>
+                <option value="Tân Bình">Tân Bình</option>
+                <option value="Gò Vấp">Gò Vấp</option>
+                <option value="Phú Nhuận">Phú Nhuận</option>
+              </select>
+            </div>
+
+            {/* Price Select (2 cols) */}
+            <div className="sm:col-span-2 relative">
+              <Coins className="w-4 h-4 text-slate-400 absolute left-3.5 top-1/2 -translate-y-1/2 pointer-events-none" />
+              <select
+                value={price}
+                onChange={(e) => onPriceChange(e.target.value)}
+                className="w-full bg-slate-50 hover:bg-slate-100/70 focus:bg-white border border-transparent focus:border-[#00153D] rounded-xl pl-9 pr-6 py-2 text-xs sm:text-sm text-[#0F172A] outline-none transition-all h-[42px] cursor-pointer appearance-none"
+              >
+                <option value="">Tất cả giá</option>
+                <option value="under3m">Dưới 3 triệu</option>
+                <option value="3mTo5m">3 - 5 triệu</option>
+                <option value="5mTo8m">5 - 8 triệu</option>
+                <option value="above8m">Trên 8 triệu</option>
+              </select>
+            </div>
+
+            {/* Quick Action Button (2 cols) */}
+            <div className="sm:col-span-2">
+              <button
+                type="button"
+                onClick={handleOpenMap}
+                className="w-full h-[42px] bg-[#00153D] hover:bg-[#073372] text-white font-bold text-xs sm:text-sm rounded-xl flex items-center justify-center gap-1.5 transition-all shadow-xs active:scale-[0.98]"
+              >
+                <Search className="w-4 h-4 shrink-0" />
+                <span>Tìm kiếm</span>
+              </button>
+            </div>
+
+          </div>
+        </div>
+
+        {/* Quick Filter Pill Chips */}
+        <div className="flex flex-wrap items-center gap-1.5 py-1 text-xs">
+          <span className="text-slate-500 font-semibold shrink-0 mr-1 hidden sm:inline">Lọc nhanh:</span>
+          
+          <button
+            type="button"
+            onClick={() => onDistrictChange('')}
+            className={`px-3 py-1.5 rounded-full font-semibold transition-all shrink-0 cursor-pointer ${
+              !district 
+                ? 'bg-[#00153D] text-white shadow-2xs' 
+                : 'bg-white text-slate-600 hover:bg-slate-100 border border-slate-200'
+            }`}
+          >
+            Tất cả khu vực
+          </button>
+
+          {quickDistricts.map((d) => (
+            <button
+              key={d}
+              type="button"
+              onClick={() => onDistrictChange(district === d ? '' : d)}
+              className={`px-3 py-1.5 rounded-full font-semibold transition-all shrink-0 cursor-pointer ${
+                district === d 
+                  ? 'bg-[#00153D] text-white shadow-2xs' 
+                  : 'bg-white text-slate-600 hover:bg-slate-100 border border-slate-200'
+              }`}
+            >
+              {d}
+            </button>
+          ))}
+
+          <button
+            type="button"
+            onClick={() => onPriceChange(price === 'under3m' ? '' : 'under3m')}
+            className={`px-3 py-1.5 rounded-full font-semibold transition-all shrink-0 cursor-pointer ${
+              price === 'under3m' 
+                ? 'bg-[#00153D] text-white shadow-2xs' 
+                : 'bg-white text-slate-600 hover:bg-slate-100 border border-slate-200'
+            }`}
+          >
+            Dưới 3 triệu
+          </button>
+
+          <button
+            type="button"
+            onClick={() => onPriceChange(price === '3mTo5m' ? '' : '3mTo5m')}
+            className={`px-3 py-1.5 rounded-full font-semibold transition-all shrink-0 cursor-pointer ${
+              price === '3mTo5m' 
+                ? 'bg-[#00153D] text-white shadow-2xs' 
+                : 'bg-white text-slate-600 hover:bg-slate-100 border border-slate-200'
+            }`}
+          >
+            3 - 5 triệu
+          </button>
+
+          {onVerifiedOnlyChange && (
+            <button
+              type="button"
+              onClick={() => onVerifiedOnlyChange(!verifiedOnly)}
+              className={`inline-flex items-center gap-1 px-3 py-1.5 rounded-full font-semibold transition-all shrink-0 cursor-pointer ${
+                verifiedOnly 
+                  ? 'bg-emerald-700 text-white shadow-2xs' 
+                  : 'bg-white text-emerald-800 hover:bg-emerald-50 border border-emerald-300'
+              }`}
+            >
+              <ShieldCheck className="w-3.5 h-3.5" />
+              <span>Chủ trọ đã xác minh</span>
+            </button>
+          )}
+
+          {hasActiveFilters && onResetFilters && (
+            <button
+              type="button"
+              onClick={onResetFilters}
+              className="inline-flex items-center gap-1 px-2.5 py-1.5 rounded-full font-semibold text-rose-600 bg-rose-50 hover:bg-rose-100 border border-rose-200 transition-all shrink-0 ml-auto"
+            >
+              <X className="w-3.5 h-3.5" />
+              <span>Đặt lại</span>
+            </button>
+          )}
+        </div>
+
       </div>
     </section>
   );

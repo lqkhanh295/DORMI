@@ -26,6 +26,7 @@ public class RoomService : IRoomService
     private readonly IHubContext<ChatHub> _hubContext;
     private readonly IDistributedCache _cache;
     private readonly IKafkaProducer? _kafkaProducer;
+    private static readonly JsonSerializerOptions _cacheJsonOptions = new() { PropertyNamingPolicy = JsonNamingPolicy.CamelCase };
 
     public RoomService(
         DormiDbContext db, 
@@ -282,7 +283,7 @@ public class RoomService : IRoomService
         {
             try
             {
-                await _cache.SetStringAsync(cacheKey, JsonSerializer.Serialize(responsePayload), new DistributedCacheEntryOptions
+                await _cache.SetStringAsync(cacheKey, JsonSerializer.Serialize(responsePayload, _cacheJsonOptions), new DistributedCacheEntryOptions
                 {
                     AbsoluteExpirationRelativeToNow = TimeSpan.FromSeconds(60)
                 });
@@ -377,7 +378,7 @@ public class RoomService : IRoomService
 
         try
         {
-            await _cache.SetStringAsync(cacheKey, JsonSerializer.Serialize(featured), new DistributedCacheEntryOptions
+            await _cache.SetStringAsync(cacheKey, JsonSerializer.Serialize(featured, _cacheJsonOptions), new DistributedCacheEntryOptions
             {
                 AbsoluteExpirationRelativeToNow = TimeSpan.FromMinutes(5)
             });
