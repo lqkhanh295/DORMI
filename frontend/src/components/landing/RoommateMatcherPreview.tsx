@@ -49,10 +49,6 @@ export function RoommateMatcherPreview() {
     <section className="py-16 md:py-24 bg-[#F8FAFC] border-t border-[#E2E8F0]">
       <div className="container-dormi">
         <div className="max-w-xl space-y-2 mb-12">
-          <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-blue-50 border border-blue-200/80 text-blue-800 text-caption font-bold">
-            <Users className="w-3.5 h-3.5 text-blue-600" />
-            <span>Thuật toán tương thích DORMI Match</span>
-          </div>
           <h2 className="text-h2 text-[#0F172A]">
             Tìm người ở cùng phù hợp lối sống
           </h2>
@@ -144,8 +140,7 @@ export function RoommateMatcherPreview() {
             <div className="bg-white border border-slate-200/90 rounded-2xl p-7 lg:p-8 shadow-xs space-y-6">
               
               <div className="flex items-center justify-between border-b border-slate-100 pb-4">
-                <span className="bg-emerald-50 text-emerald-700 border border-emerald-200/80 text-body font-bold px-3 py-1 rounded-full flex items-center gap-1.5">
-                  <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
+                <span className="text-emerald-700 bg-emerald-50 border border-emerald-200 text-xs font-semibold px-2.5 py-1 rounded-md">
                   {matchScore}% tương thích
                 </span>
                 <span className="text-caption text-slate-500 font-medium">Đối soát thói quen sống</span>

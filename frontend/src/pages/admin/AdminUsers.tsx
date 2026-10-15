@@ -49,12 +49,12 @@ export default function AdminUsers() {
   const getRoleBadge = (role: number) => {
     switch (role) {
       case 2:
-        return <span className="px-2.5 py-0.5 rounded-full text-xs font-bold bg-purple-50 text-purple-700 border border-purple-200">Quản trị viên</span>;
+        return <span className="px-2 py-0.5 rounded-md text-xs font-medium bg-purple-50 text-purple-700 border border-purple-200">Quản trị viên</span>;
       case 1:
-        return <span className="px-2.5 py-0.5 rounded-full text-xs font-bold bg-blue-50 text-blue-700 border border-blue-200">Chủ trọ</span>;
+        return <span className="px-2 py-0.5 rounded-md text-xs font-medium bg-blue-50 text-blue-700 border border-blue-200">Chủ trọ</span>;
       case 0:
       default:
-        return <span className="px-2.5 py-0.5 rounded-full text-xs font-bold bg-emerald-50 text-emerald-700 border border-emerald-200">Khách thuê</span>;
+        return <span className="px-2 py-0.5 rounded-md text-xs font-medium bg-emerald-50 text-emerald-700 border border-emerald-200">Khách thuê</span>;
     }
   };
 
@@ -66,7 +66,7 @@ export default function AdminUsers() {
           <h1 className="text-2xl font-bold text-[#00153D]">Quản lý người dùng</h1>
           <p className="text-sm text-[#64748B] mt-1">Danh sách tất cả tài khoản trong hệ thống DORMI.</p>
         </div>
-        <div className="flex items-center gap-2 text-xs font-semibold text-[#64748B] bg-slate-50 px-3.5 py-1.5 rounded-full border border-[#E2E8F0]">
+        <div className="flex items-center gap-2 text-xs font-medium text-slate-600 bg-slate-50 px-3 py-1.5 rounded-md border border-slate-200">
           <Users className="w-4 h-4 text-[#00153D]" />
           <span>{filteredUsers.length} tài khoản</span>
         </div>
@@ -156,11 +156,11 @@ export default function AdminUsers() {
                       <td className="py-4 px-6">
                         {u.role === 1 ? (
                           u.isVerifiedLandlord ? (
-                            <span className="inline-flex items-center gap-1 text-xs font-semibold text-emerald-700 bg-emerald-50 border border-emerald-200 px-2 py-0.5 rounded-full">
+                            <span className="inline-flex items-center gap-1 text-xs font-medium text-emerald-700 bg-emerald-50 border border-emerald-200 px-2 py-0.5 rounded-md">
                               <CheckCircle2 className="w-3.5 h-3.5" /> Đã xác minh
                             </span>
                           ) : (
-                            <span className="inline-flex items-center gap-1 text-xs font-semibold text-amber-700 bg-amber-50 border border-amber-200 px-2 py-0.5 rounded-full">
+                            <span className="inline-flex items-center gap-1 text-xs font-medium text-amber-700 bg-amber-50 border border-amber-200 px-2 py-0.5 rounded-md">
                               <ShieldAlert className="w-3.5 h-3.5" /> Chưa xác minh
                             </span>
                           )

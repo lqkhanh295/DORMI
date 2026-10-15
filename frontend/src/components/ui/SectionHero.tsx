@@ -20,7 +20,7 @@ export function SectionHero({
   return (
     <div className={`flex flex-col ${align === 'center' ? 'items-center text-center' : 'items-start text-left'} ${className}`}>
       {eyebrow && (
-        <p className="mb-2 text-caption font-semibold uppercase tracking-widest text-[#64748B]">
+        <p className="mb-2 text-xs font-medium text-slate-500">
           {eyebrow}
         </p>
       )}

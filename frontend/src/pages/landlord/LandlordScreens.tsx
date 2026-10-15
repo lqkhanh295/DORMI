@@ -87,7 +87,7 @@ export function CreateRoom() {
     <div className="max-w-[800px] mx-auto">
       <div className="flex items-center justify-between mb-8">
         <h1 className="text-[34px] font-bold text-[#1d1d1f]">Tạo phòng mới.</h1>
-        <span className="text-[15px] font-semibold text-[#86868b] uppercase tracking-widest">Bước 1/3</span>
+        <span className="text-sm font-medium text-slate-500">Bước 1/3</span>
       </div>
       
       <BentoCard className="bg-white">
@@ -143,7 +143,7 @@ export function MyRooms() {
                 <p className="text-[15px] text-[#6e6e73] mt-1">{room.price}/tháng</p>
              </div>
              <div className="flex items-center gap-4">
-                <span className={`px-3 py-1 rounded-pill text-[12px] font-semibold ${room.status === 'Đang hiển thị' ? 'bg-[#34c759]/10 text-[#34c759]' : 'bg-[#ff9500]/10 text-[#ff9500]'}`}>
+                <span className={`px-2.5 py-1 rounded-md text-xs font-medium ${room.status === 'Đang hiển thị' ? 'bg-[#34c759]/10 text-[#34c759]' : 'bg-[#ff9500]/10 text-[#ff9500]'}`}>
                   {room.status}
                 </span>
                 <span className="text-[15px] text-[#6e6e73] min-w-[100px] text-right">{room.views} lượt xem</span>

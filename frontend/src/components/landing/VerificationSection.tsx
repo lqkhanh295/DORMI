@@ -1,14 +1,10 @@
-import { ShieldCheck, Camera, FileCheck, CheckCircle2 } from 'lucide-react';
+import { ShieldCheck, Camera, FileCheck } from 'lucide-react';
 
 export function VerificationSection() {
   return (
     <section className="py-16 md:py-24 bg-white border-t border-[#E2E8F0]">
       <div className="container-dormi">
         <div className="max-w-2xl mb-12">
-          <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-emerald-50 border border-emerald-200/80 text-emerald-800 text-caption font-bold mb-3">
-            <CheckCircle2 className="w-3.5 h-3.5 text-emerald-600" />
-            <span>Cam kết minh bạch từ DORMI</span>
-          </div>
           <h2 className="text-h2 text-[#0F172A] tracking-tight">
             Trước khi bạn đến xem phòng, DORMI kiểm tra những gì?
           </h2>

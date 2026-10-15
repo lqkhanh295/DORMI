@@ -14,5 +14,9 @@
     "ClientId": "YOUR_PAYOS_CLIENT_ID",
     "ApiKey": "YOUR_PAYOS_API_KEY",
     "ChecksumKey": "YOUR_PAYOS_CHECKSUM_KEY"
+  },
+  "Email": {
+    "UserName": "YOUR_EMAIL@gmail.com",
+    "Password": "YOUR_GMAIL_APP_PASSWORD"
   }
 }

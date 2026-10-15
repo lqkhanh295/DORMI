@@ -42,7 +42,7 @@ export default function BillingHistory() {
         {/* Total Spent Card */}
         <Card className="p-6 bg-[#0F172A] rounded-[18px] border-none text-white flex flex-col justify-between shadow-clay-soft">
           <div>
-            <h3 className="text-caption font-semibold text-white/70 uppercase tracking-wider">Tổng chi tiêu dịch vụ</h3>
+            <h3 className="text-xs font-medium text-white/80 mb-1">Tổng chi tiêu dịch vụ</h3>
             <p className="text-[36px] font-bold text-white mt-2 leading-none">
               {totalSpent.toLocaleString('vi-VN')}₫
             </p>

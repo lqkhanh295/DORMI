@@ -8,10 +8,6 @@ export function FinalCTA() {
       <div className="absolute inset-0 bg-[radial-gradient(circle_at_top_right,rgba(7,51,114,0.6),transparent_50%)] pointer-events-none" />
       
       <div className="container-dormi relative z-10 text-center max-w-3xl mx-auto space-y-6">
-        <span className="inline-block text-xs font-bold uppercase tracking-wider text-[#F2A900] bg-white/10 px-3.5 py-1 rounded-full border border-white/10">
-          Nền tảng thuê trọ thế hệ mới
-        </span>
-        
         <h2 className="text-3xl md:text-4xl font-black tracking-tight text-white leading-tight">
           Bắt đầu tìm phòng hoặc kết nối người ở ghép ngay hôm nay
         </h2>

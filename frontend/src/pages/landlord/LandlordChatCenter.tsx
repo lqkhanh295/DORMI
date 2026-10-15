@@ -24,7 +24,7 @@ export default function LandlordChatCenter() {
   const [appointments, setAppointments] = useState<any[]>([]);
   const [selectedContactId, setSelectedContactId] = useState<string>(targetUserId || '');
   const [loadingHistory, setLoadingHistory] = useState(false);
-  const messagesEndRef = useRef<HTMLDivElement>(null);
+  const messagesContainerRef = useRef<HTMLDivElement>(null);
 
   // Auto-select contact when targetUserId is provided via navigation state
   useEffect(() => {
@@ -171,7 +171,9 @@ export default function LandlordChatCenter() {
   });
 
   useEffect(() => {
-    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+    if (messagesContainerRef.current) {
+      messagesContainerRef.current.scrollTop = messagesContainerRef.current.scrollHeight;
+    }
   }, [chatMessages]);
 
   const handleSend = async () => {
@@ -338,7 +340,10 @@ export default function LandlordChatCenter() {
             </div>
 
             {/* Messages */}
-            <div className="flex-1 p-6 overflow-y-auto bg-[#F5F7FA] flex flex-col gap-4">
+            <div 
+              ref={messagesContainerRef}
+              className="flex-1 p-6 overflow-y-auto bg-[#F5F7FA] flex flex-col gap-4"
+            >
               <div className="text-center">
                 <span className="text-caption text-[#64748B] bg-white border border-[#E2E8F0] px-3 py-1 rounded-full font-medium">Hôm nay</span>
               </div>
@@ -387,7 +392,6 @@ export default function LandlordChatCenter() {
                   </motion.div>
                 );
               })}
-              <div ref={messagesEndRef} />
             </div>
 
             {/* Input Area */}

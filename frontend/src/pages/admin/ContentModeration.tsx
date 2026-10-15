@@ -151,13 +151,13 @@ export default function ContentModeration() {
   const renderStatusBadge = (status: number) => {
     switch (status) {
       case 0:
-        return <span className="text-caption font-bold bg-[#F0FDF4] text-[#16803C] border border-[#DCFCE7] px-2.5 py-0.5 rounded-full inline-flex items-center gap-1"><CheckCircle2 className="w-3.5 h-3.5" /> Đã duyệt (Công khai)</span>;
+        return <span className="text-xs font-medium bg-emerald-50 text-emerald-700 border border-emerald-200 px-2 py-0.5 rounded-md inline-flex items-center gap-1"><CheckCircle2 className="w-3.5 h-3.5" /> Đã duyệt</span>;
       case 2:
-        return <span className="text-caption font-bold bg-[#FEF3C7] text-[#D97706] border border-[#FDE68A] px-2.5 py-0.5 rounded-full inline-flex items-center gap-1"><Clock className="w-3.5 h-3.5" /> Chờ phê duyệt</span>;
+        return <span className="text-xs font-medium bg-amber-50 text-amber-700 border border-amber-200 px-2 py-0.5 rounded-md inline-flex items-center gap-1"><Clock className="w-3.5 h-3.5" /> Chờ phê duyệt</span>;
       case 3:
-        return <span className="text-caption font-bold bg-[#FEF2F2] text-[#C62828] border border-[#FECACA] px-2.5 py-0.5 rounded-full inline-flex items-center gap-1"><XCircle className="w-3.5 h-3.5" /> Bị từ chối / Ẩn</span>;
+        return <span className="text-xs font-medium bg-rose-50 text-rose-700 border border-rose-200 px-2 py-0.5 rounded-md inline-flex items-center gap-1"><XCircle className="w-3.5 h-3.5" /> Bị từ chối / Ẩn</span>;
       case 1:
-        return <span className="text-caption font-bold bg-[#F1F5F9] text-[#475569] border border-[#E2E8F0] px-2.5 py-0.5 rounded-full">Đã thuê</span>;
+        return <span className="text-xs font-medium bg-slate-100 text-slate-700 border border-slate-200 px-2 py-0.5 rounded-md">Đã thuê</span>;
       default:
         return null;
     }
@@ -199,7 +199,7 @@ export default function ContentModeration() {
           <div className="p-4 border-b border-[#E2E8F0] bg-[#F5F7FA]">
             <div className="flex justify-between items-center mb-3">
               <h3 className="font-bold text-h3 text-[#0F172A]">Danh sách tin đăng</h3>
-              <span className="bg-[#EEF2F6] text-[#00153D] border border-[#E2E8F0] px-2.5 py-0.5 rounded-full text-caption font-semibold">{filteredRooms.length} / {rooms.length}</span>
+              <span className="bg-slate-100 text-slate-700 border border-slate-200 px-2 py-0.5 rounded-md text-xs font-medium">{filteredRooms.length} / {rooms.length}</span>
             </div>
             {/* Status Filter Tabs */}
             <div className="flex gap-1 bg-[#E2E8F0] p-1 rounded-xl text-caption font-semibold">
@@ -349,7 +349,7 @@ export default function ContentModeration() {
                 {/* 2. Gallery Hình ảnh bài đăng */}
                 {selectedRoom.images && selectedRoom.images.length > 0 && (
                   <Card className="p-4 bg-[#F5F7FA] shadow-clay-inset rounded-[12px] border border-[#E2E8F0]">
-                    <h4 className="font-semibold text-caption text-[#64748B] uppercase mb-3">Hình ảnh phòng trọ thực tế ({selectedRoom.images.length} ảnh)</h4>
+                    <h4 className="font-semibold text-caption text-[#64748B] mb-3">Hình ảnh phòng trọ thực tế ({selectedRoom.images.length} ảnh)</h4>
                     <div className="grid grid-cols-4 gap-3">
                       {selectedRoom.images.map((img, idx) => (
                         <div key={img.id || idx} className="h-28 rounded-lg overflow-hidden border border-[#E2E8F0] bg-black/5 cursor-pointer" onClick={() => setPreviewImage(img.imageUrl)}>
@@ -363,31 +363,31 @@ export default function ContentModeration() {
                 {/* 3. Thông tin chính */}
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                   <Card className="p-4 bg-[#F5F7FA] shadow-clay-inset rounded-[12px] border border-[#E2E8F0]">
-                    <h4 className="font-semibold text-caption text-[#64748B] uppercase mb-1">Giá thuê</h4>
+                    <h4 className="font-semibold text-caption text-[#64748B] mb-1">Giá thuê</h4>
                     <p className="text-h3 font-bold text-[#00153D]">{Number(selectedRoom.price).toLocaleString('vi-VN')} ₫/tháng</p>
                   </Card>
                   <Card className="p-4 bg-[#F5F7FA] shadow-clay-inset rounded-[12px] border border-[#E2E8F0]">
-                    <h4 className="font-semibold text-caption text-[#64748B] uppercase mb-1">Diện tích & Loại phòng</h4>
+                    <h4 className="font-semibold text-caption text-[#64748B] mb-1">Diện tích & Loại phòng</h4>
                     <p className="text-h3 font-bold text-[#0F172A]">{selectedRoom.roomType || 'Studio'} • {selectedRoom.area || 25} m²</p>
                   </Card>
                   <Card className="p-4 bg-[#F5F7FA] shadow-clay-inset rounded-[12px] border border-[#E2E8F0]">
-                    <h4 className="font-semibold text-caption text-[#64748B] uppercase mb-1">Ngày tạo tin</h4>
+                    <h4 className="font-semibold text-caption text-[#64748B] mb-1">Ngày tạo tin</h4>
                     <p className="text-body font-bold text-[#0F172A]">{new Date(selectedRoom.createdAt).toLocaleDateString('vi-VN')}</p>
                   </Card>
                 </div>
 
                 {/* 3. Tiêu đề & Địa chỉ */}
                 <Card className="p-4 bg-[#F5F7FA] shadow-clay-inset rounded-[12px] border border-[#E2E8F0]">
-                  <h4 className="font-semibold text-caption text-[#64748B] uppercase mb-1">Tiêu đề tin đăng</h4>
+                  <h4 className="font-semibold text-caption text-[#64748B] mb-1">Tiêu đề tin đăng</h4>
                   <p className="text-body font-bold text-[#0F172A] mb-3">{selectedRoom.title}</p>
-                  <h4 className="font-semibold text-caption text-[#64748B] uppercase mb-1">Địa chỉ chi tiết</h4>
+                  <h4 className="font-semibold text-caption text-[#64748B] mb-1">Địa chỉ chi tiết</h4>
                   <p className="text-body font-medium text-[#0F172A]">{selectedRoom.address}</p>
                 </Card>
 
                 {/* 4. Tiện ích */}
                 {selectedRoom.utilities && (
                   <Card className="p-4 bg-[#F5F7FA] shadow-clay-inset rounded-[12px] border border-[#E2E8F0]">
-                    <h4 className="font-semibold text-caption text-[#64748B] uppercase mb-2">Tiện ích đi kèm</h4>
+                    <h4 className="font-semibold text-caption text-[#64748B] mb-2">Tiện ích đi kèm</h4>
                     <div className="flex flex-wrap gap-2">
                       {selectedRoom.utilities.split(',').map((util, i) => (
                         <span key={i} className="px-3 py-1 bg-white border border-[#CBD5E1] rounded-lg text-caption font-semibold text-[#00153D] shadow-sm inline-flex items-center gap-1">
@@ -401,7 +401,7 @@ export default function ContentModeration() {
                 {/* 5. Mô tả chi tiết */}
                 {selectedRoom.description && (
                   <Card className="p-4 bg-[#F5F7FA] shadow-clay-inset rounded-[12px] border border-[#E2E8F0]">
-                    <h4 className="font-semibold text-caption text-[#64748B] uppercase mb-2">Mô tả chi tiết từ chủ trọ</h4>
+                    <h4 className="font-semibold text-caption text-[#64748B] mb-2">Mô tả chi tiết từ chủ trọ</h4>
                     <p className="text-body text-[#334155] whitespace-pre-line leading-relaxed">{selectedRoom.description}</p>
                   </Card>
                 )}
@@ -409,7 +409,7 @@ export default function ContentModeration() {
                 {/* 6. Virtual 3D Tour */}
                 {selectedRoom.virtual3DUrl && (
                   <Card className="p-4 bg-[#F5F7FA] shadow-clay-inset rounded-[12px] border border-[#E2E8F0]">
-                    <h4 className="font-semibold text-caption text-[#64748B] uppercase mb-1">Link 3D Virtual Tour</h4>
+                    <h4 className="font-semibold text-caption text-[#64748B] mb-1">Link 3D Virtual Tour</h4>
                     <a href={selectedRoom.virtual3DUrl} target="_blank" rel="noreferrer" className="text-body text-[#00153D] font-bold underline hover:text-blue-600 break-all inline-flex items-center gap-1.5">
                       <Globe className="w-4 h-4 text-blue-600" /> {selectedRoom.virtual3DUrl}
                     </a>
@@ -458,7 +458,7 @@ export default function ContentModeration() {
             <div className="p-4 border-b border-[#E2E8F0] bg-[#F5F7FA]">
               <div className="flex justify-between items-center">
                 <h3 className="font-bold text-h3 text-[#0F172A]">Tin tìm người ở ghép</h3>
-                <span className="bg-[#EEF2F6] text-[#00153D] border border-[#E2E8F0] px-2.5 py-0.5 rounded-full text-caption font-semibold">
+                <span className="bg-slate-100 text-slate-700 border border-slate-200 px-2 py-0.5 rounded-md text-xs font-medium">
                   {roommatePosts.length} bài đăng
                 </span>
               </div>
@@ -482,7 +482,7 @@ export default function ContentModeration() {
                   className={`p-4 rounded-[14px] cursor-pointer transition-[background-color,border-color,box-shadow,transform] duration-150 ease-out hover:-translate-y-0.5 active:scale-[0.99] ${selectedRoommateId === post.id ? 'bg-white shadow-clay-primary border-2 border-[#00153D]' : 'bg-[#F5F7FA] border border-[#E2E8F0] hover:bg-white'}`}
                 >
                   <div className="flex justify-between items-start mb-2">
-                    <span className={`text-caption font-bold px-2.5 py-0.5 rounded-full inline-flex items-center gap-1 ${post.isActive ? 'bg-[#F0FDF4] text-[#16803C] border border-[#DCFCE7]' : 'bg-[#FEF2F2] text-[#C62828] border border-[#FECACA]'}`}>
+                    <span className={`text-xs font-medium px-2 py-0.5 rounded-md inline-flex items-center gap-1 ${post.isActive ? 'bg-emerald-50 text-emerald-700 border border-emerald-200' : 'bg-rose-50 text-rose-700 border border-rose-200'}`}>
                       {post.isActive ? <CheckCircle2 className="w-3.5 h-3.5" /> : <XCircle className="w-3.5 h-3.5" />}
                       {post.isActive ? 'Đang hiển thị' : 'Đã ẩn / Vi phạm'}
                     </span>
@@ -509,7 +509,7 @@ export default function ContentModeration() {
                 <div className="p-6 border-b border-[#E2E8F0] bg-[#F5F7FA] flex justify-between items-start">
                   <div>
                     <div className="flex items-center gap-2 mb-2">
-                      <span className={`text-caption font-bold px-2.5 py-0.5 rounded-full inline-flex items-center gap-1 ${selectedRoommate.isActive ? 'bg-[#F0FDF4] text-[#16803C] border border-[#DCFCE7]' : 'bg-[#FEF2F2] text-[#C62828] border border-[#FECACA]'}`}>
+                      <span className={`text-xs font-medium px-2 py-0.5 rounded-md inline-flex items-center gap-1 ${selectedRoommate.isActive ? 'bg-emerald-50 text-emerald-700 border border-emerald-200' : 'bg-rose-50 text-rose-700 border border-rose-200'}`}>
                         {selectedRoommate.isActive ? <CheckCircle2 className="w-3.5 h-3.5" /> : <XCircle className="w-3.5 h-3.5" />}
                         {selectedRoommate.isActive ? 'Đang công khai' : 'Đã ẩn bài đăng'}
                       </span>
@@ -522,7 +522,7 @@ export default function ContentModeration() {
                 <div className="flex-1 overflow-y-auto p-6 space-y-6">
                   {/* Người đăng */}
                   <Card className="p-4 bg-[#F5F7FA] shadow-clay-soft rounded-[12px] border border-[#E2E8F0]">
-                    <h4 className="font-semibold text-caption text-[#64748B] uppercase mb-3">Thông tin người đăng</h4>
+                    <h4 className="font-semibold text-caption text-[#64748B] mb-3">Thông tin người đăng</h4>
                     <div className="flex items-center gap-4">
                       <div className="w-12 h-12 rounded-full bg-[#00153D] text-white flex items-center justify-center font-bold text-lg">
                         {selectedRoommate.customerName?.charAt(0) || 'U'}
@@ -553,10 +553,10 @@ export default function ContentModeration() {
                   {/* Đặc điểm lối sống */}
                   {selectedRoommate.lifestyleTraits && (
                     <div>
-                      <h4 className="font-semibold text-caption text-[#64748B] uppercase mb-2">Đặc điểm lối sống / Sở thích</h4>
+                      <h4 className="font-semibold text-caption text-[#64748B] mb-2">Đặc điểm lối sống / Sở thích</h4>
                       <div className="flex flex-wrap gap-2">
                         {selectedRoommate.lifestyleTraits.split(',').map((trait, i) => (
-                          <span key={i} className="px-3 py-1 bg-[#EEF2F6] text-[#00153D] font-medium text-caption rounded-full border border-[#CBD5E1]">
+                          <span key={i} className="px-2.5 py-1 bg-slate-100 text-slate-800 font-medium text-xs rounded-md border border-slate-200">
                             {trait.trim()}
                           </span>
                         ))}
@@ -566,7 +566,7 @@ export default function ContentModeration() {
 
                   {/* Nội dung bài viết */}
                   <div>
-                    <h4 className="font-semibold text-caption text-[#64748B] uppercase mb-2">Mô tả bài đăng</h4>
+                    <h4 className="font-semibold text-caption text-[#64748B] mb-2">Mô tả bài đăng</h4>
                     <Card className="p-4 bg-white shadow-clay-inset rounded-[12px] border border-[#E2E8F0]">
                       <p className="text-body text-[#334155] whitespace-pre-line leading-relaxed">{selectedRoommate.description}</p>
                     </Card>

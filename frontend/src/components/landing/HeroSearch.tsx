@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
-import { Search, MapPin, Coins, CheckCircle, ShieldCheck, ArrowRight } from 'lucide-react';
+import { Search, MapPin, Coins, CheckCircle, ArrowRight } from 'lucide-react';
 
 export function HeroSearch() {
   const navigate = useNavigate();
@@ -23,10 +23,6 @@ export function HeroSearch() {
           {/* Left Column (6 cols) */}
           <div className="lg:col-span-6 space-y-6">
             <div className="space-y-3">
-              <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-emerald-50 text-emerald-800 border border-emerald-200 text-caption font-bold">
-                <ShieldCheck className="w-4 h-4 text-emerald-600" />
-                <span>Nền tảng phòng trọ sinh viên đã xác minh</span>
-              </div>
               <h1 className="text-2xl sm:text-3xl md:text-4xl lg:text-[38px] xl:text-[42px] font-black text-[#00153D] tracking-tight leading-[1.2]">
                 <span className="inline-block whitespace-nowrap">Tìm phòng đúng giá.</span>{' '}
                 <span className="inline-block whitespace-nowrap">Tìm bạn đúng gu.</span>
@@ -100,8 +96,8 @@ export function HeroSearch() {
                 />
                 
                 {/* Live verification indicator */}
-                <div className="absolute top-3.5 left-3.5 bg-white/95 backdrop-blur-xs text-[#16803C] border border-emerald-200 text-caption font-bold px-3 py-1 rounded-full flex items-center gap-1.5 shadow-xs">
-                  <CheckCircle className="w-4 h-4 text-[#16803C]" />
+                <div className="absolute top-3.5 left-3.5 bg-white/95 backdrop-blur-xs text-emerald-800 border border-emerald-200 text-xs font-semibold px-2.5 py-1 rounded-md flex items-center gap-1.5 shadow-xs">
+                  <CheckCircle className="w-3.5 h-3.5 text-emerald-600" />
                   <span>Hình ảnh đã xác minh thực tế</span>
                 </div>
 

@@ -74,7 +74,6 @@ export default function TenantDashboard() {
   const approvedAppsCount = applications.filter(a => a.status === 1).length;
   const pendingAppsCount = applications.filter(a => a.status === 0 || a.status === 2).length;
   const pendingLeasesCount = leases.filter(l => l.status === 'PendingSignature' || l.status === 'Draft').length;
-  const activeLeasesCount = leases.filter(l => l.status === 'Active').length;
 
   return (
     <div className="space-y-6 pb-16 bg-[#F8FAFC]">
@@ -82,10 +81,6 @@ export default function TenantDashboard() {
       {/* 1. HERO PORTAL BANNER */}
       <div className="bg-white p-6 md:p-8 rounded-2xl shadow-sm border border-[#E2E8F0] flex flex-col md:flex-row md:items-center justify-between gap-6">
         <div>
-          <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-blue-50 text-blue-700 text-xs font-bold mb-3 border border-blue-200">
-            <Sparkles className="w-3.5 h-3.5 text-blue-600" />
-            <span>Phòng của tôi</span>
-          </div>
           <h1 className="text-2xl md:text-3xl font-black text-[#00153D] tracking-tight">
             Xin chào{currentUser?.name ? `, ${currentUser.name}` : ''}!
           </h1>
@@ -128,11 +123,11 @@ export default function TenantDashboard() {
               <FileText className="w-6 h-6" />
             </div>
             {approvedAppsCount > 0 ? (
-              <span className="inline-flex items-center gap-1 text-[11px] font-bold px-2 py-0.5 rounded-full bg-emerald-100 text-emerald-800 animate-pulse">
-                <CheckCircle2 className="w-3 h-3" /> {approvedAppsCount} đã duyệt
+              <span className="inline-flex items-center gap-1 text-xs font-semibold px-2 py-0.5 rounded-md bg-emerald-50 text-emerald-800 border border-emerald-200">
+                <CheckCircle2 className="w-3 h-3 text-emerald-600" /> {approvedAppsCount} đã duyệt
               </span>
             ) : pendingAppsCount > 0 ? (
-              <span className="text-[11px] font-bold px-2 py-0.5 rounded-full bg-blue-100 text-blue-800">
+              <span className="text-xs font-semibold px-2 py-0.5 rounded-md bg-blue-50 text-blue-800 border border-blue-200">
                 {pendingAppsCount} chờ duyệt
               </span>
             ) : null}
@@ -156,15 +151,11 @@ export default function TenantDashboard() {
             <div className="w-12 h-12 rounded-xl bg-emerald-50 text-emerald-600 flex items-center justify-center group-hover:bg-emerald-600 group-hover:text-white transition-colors">
               <FileCheck className="w-6 h-6" />
             </div>
-            {pendingLeasesCount > 0 ? (
-              <span className="inline-flex items-center gap-1 text-[11px] font-bold px-2 py-0.5 rounded-full bg-amber-100 text-amber-800 animate-pulse">
-                <Clock className="w-3 h-3" /> Cần ký ngay ({pendingLeasesCount})
+            {pendingLeasesCount > 0 && (
+              <span className="inline-flex items-center gap-1 text-[11px] font-semibold px-2 py-0.5 rounded-md bg-amber-50 text-amber-800 border border-amber-200">
+                <Clock className="w-3 h-3 text-amber-600" /> Cần ký ({pendingLeasesCount})
               </span>
-            ) : activeLeasesCount > 0 ? (
-              <span className="text-[11px] font-bold px-2 py-0.5 rounded-full bg-emerald-100 text-emerald-800">
-                {activeLeasesCount} có hiệu lực
-              </span>
-            ) : null}
+            )}
           </div>
           <div>
             <span className="text-xs text-[#64748B] font-medium block">Hợp đồng điện tử</span>
@@ -187,11 +178,6 @@ export default function TenantDashboard() {
             <div className="w-12 h-12 rounded-xl bg-indigo-50 text-indigo-600 flex items-center justify-center group-hover:bg-indigo-600 group-hover:text-white transition-colors">
               <Calendar className="w-6 h-6" />
             </div>
-            {appointments.length > 0 && (
-              <span className="text-[11px] font-bold px-2 py-0.5 rounded-full bg-indigo-100 text-indigo-800">
-                {appointments.length} cuộc hẹn
-              </span>
-            )}
           </div>
           <div>
             <span className="text-xs text-[#64748B] font-medium block">Lịch hẹn xem phòng</span>
@@ -214,11 +200,6 @@ export default function TenantDashboard() {
             <div className="w-12 h-12 rounded-xl bg-rose-50 text-rose-600 flex items-center justify-center group-hover:bg-rose-600 group-hover:text-white transition-colors">
               <Heart className="w-6 h-6" />
             </div>
-            {favorites.length > 0 && (
-              <span className="text-[11px] font-bold px-2 py-0.5 rounded-full bg-rose-100 text-rose-800">
-                {favorites.length} đã lưu
-              </span>
-            )}
           </div>
           <div>
             <span className="text-xs text-[#64748B] font-medium block">Phòng đã lưu (Wishlist)</span>

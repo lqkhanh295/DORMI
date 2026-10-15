@@ -578,4 +578,8 @@ scratch/
 screenshots*/
 **/screenshots*/
 
+# Sample contract documents & images
+doc/hopdong/
+**/doc/hopdong/
+
 

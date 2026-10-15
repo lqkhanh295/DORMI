@@ -308,10 +308,10 @@ export default function SearchResults() {
               {activeFilters.map(filter => (
                 <span 
                   key={filter.id}
-                  className="bg-white border border-[#E2E8F0] shadow-clay-soft px-3 py-1 rounded-full text-caption font-semibold text-[#00153D] flex items-center gap-1.5"
+                  className="bg-slate-50 border border-slate-200 text-slate-700 px-2.5 py-1 rounded-md text-xs font-medium flex items-center gap-1.5"
                 >
                   {filter.label}
-                  <button onClick={filter.clear} className="hover:text-[#C62828] touch-target min-h-0 min-w-0 p-0.5">
+                  <button onClick={filter.clear} className="text-slate-400 hover:text-rose-600 transition-colors p-0.5">
                     <X className="w-3.5 h-3.5" />
                   </button>
                 </span>

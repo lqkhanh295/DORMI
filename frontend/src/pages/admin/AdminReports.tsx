@@ -134,26 +134,26 @@ export default function AdminReports() {
     switch (risk) {
       case 'Critical':
         return (
-          <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-bold bg-rose-100 text-rose-800 border border-rose-300">
+          <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-xs font-medium bg-rose-100 text-rose-800 border border-rose-300">
             <AlertOctagon className="w-3.5 h-3.5 text-rose-600" /> Nghiêm trọng (Critical)
           </span>
         );
       case 'High':
         return (
-          <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-bold bg-orange-100 text-orange-800 border border-orange-300">
+          <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-xs font-medium bg-orange-100 text-orange-800 border border-orange-300">
             <AlertTriangle className="w-3.5 h-3.5 text-orange-600" /> Rủi ro cao (High)
           </span>
         );
       case 'Medium':
         return (
-          <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-bold bg-amber-100 text-amber-800 border border-amber-300">
+          <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-xs font-medium bg-amber-100 text-amber-800 border border-amber-300">
             <ShieldAlert className="w-3.5 h-3.5 text-amber-600" /> Trung bình (Medium)
           </span>
         );
       case 'Low':
       default:
         return (
-          <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-bold bg-slate-100 text-slate-700 border border-slate-200">
+          <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-xs font-medium bg-slate-100 text-slate-700 border border-slate-200">
             <Info className="w-3.5 h-3.5 text-slate-500" /> Thấp (Low)
           </span>
         );
@@ -164,20 +164,20 @@ export default function AdminReports() {
     switch (status) {
       case 'Resolved':
         return (
-          <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-bold bg-emerald-50 text-emerald-700 border border-emerald-200">
+          <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-xs font-medium bg-emerald-50 text-emerald-700 border border-emerald-200">
             <CheckCircle2 className="w-3.5 h-3.5" /> Đã xử lý
           </span>
         );
       case 'Dismissed':
         return (
-          <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-bold bg-slate-100 text-slate-600 border border-slate-200">
+          <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-xs font-medium bg-slate-100 text-slate-600 border border-slate-200">
             <XCircle className="w-3.5 h-3.5" /> Đã bỏ qua
           </span>
         );
       case 'Pending':
       default:
         return (
-          <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-bold bg-rose-50 text-rose-700 border border-rose-200">
+          <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-xs font-medium bg-rose-50 text-rose-700 border border-rose-200">
             <Clock className="w-3.5 h-3.5" /> Chờ kiểm duyệt
           </span>
         );
@@ -199,7 +199,7 @@ export default function AdminReports() {
         </div>
         <div className="flex items-center gap-2">
           {pendingCount > 0 && (
-            <span className="text-xs font-bold text-rose-600 bg-rose-50 border border-rose-200 px-3 py-1 rounded-full">
+            <span className="text-xs font-medium text-rose-700 bg-rose-50 border border-rose-200 px-2.5 py-1 rounded-md">
               {pendingCount} báo cáo chờ xử lý
             </span>
           )}
@@ -459,7 +459,7 @@ export default function AdminReports() {
                           {log.actorEmail}
                         </td>
                         <td className="py-3 px-4 whitespace-nowrap">
-                          <span className={`px-2 py-0.5 rounded-full font-bold text-[11px] ${
+                          <span className={`px-2 py-0.5 rounded-md font-medium text-xs ${
                             log.action.includes('Hide') || log.action.includes('Reject') || log.action.includes('Ban')
                               ? 'bg-rose-50 text-rose-700 border border-rose-200'
                               : log.action.includes('Approve') || log.action.includes('Resolve')
@@ -470,7 +470,7 @@ export default function AdminReports() {
                           </span>
                         </td>
                         <td className="py-3 px-4 text-slate-600 whitespace-nowrap">
-                          <span className="font-mono text-[11px] bg-slate-100 px-1.5 py-0.5 rounded">
+                          <span className="font-mono text-[11px] bg-slate-100 px-1.5 py-0.5 rounded-md">
                             {log.entityType} #{log.entityId ? log.entityId.substring(0, 8) : 'N/A'}
                           </span>
                         </td>

@@ -304,28 +304,28 @@ export default function PostRentalModal({ lease, isLandlord, onClose, onRefresh 
   const getPriorityBadge = (p: string) => {
     switch (p.toLowerCase()) {
       case 'urgent':
-        return <span className="px-2 py-0.5 rounded text-[11px] font-bold bg-rose-100 text-rose-800">Khẩn cấp</span>;
+        return <span className="px-2 py-0.5 rounded-md text-xs font-medium bg-rose-50 text-rose-700 border border-rose-200">Khẩn cấp</span>;
       case 'high':
-        return <span className="px-2 py-0.5 rounded text-[11px] font-bold bg-amber-100 text-amber-800">Ưu tiên cao</span>;
+        return <span className="px-2 py-0.5 rounded-md text-xs font-medium bg-amber-50 text-amber-700 border border-amber-200">Ưu tiên cao</span>;
       default:
-        return <span className="px-2 py-0.5 rounded text-[11px] font-medium bg-slate-100 text-slate-700">Bình thường</span>;
+        return <span className="px-2 py-0.5 rounded-md text-xs font-medium bg-slate-100 text-slate-700 border border-slate-200">Bình thường</span>;
     }
   };
 
   const getMaintenanceStatusBadge = (s: string) => {
     switch (s.toUpperCase()) {
       case 'OPEN':
-        return <span className="px-2.5 py-1 rounded-full text-xs font-bold bg-blue-50 text-blue-700 border border-blue-200">Mới gửi</span>;
+        return <span className="px-2 py-0.5 rounded-md text-xs font-medium bg-blue-50 text-blue-700 border border-blue-200">Mới gửi</span>;
       case 'ASSIGNED':
-        return <span className="px-2.5 py-1 rounded-full text-xs font-bold bg-amber-50 text-amber-700 border border-amber-200">Đã giao thợ</span>;
+        return <span className="px-2 py-0.5 rounded-md text-xs font-medium bg-amber-50 text-amber-700 border border-amber-200">Đã giao thợ</span>;
       case 'IN_PROGRESS':
-        return <span className="px-2.5 py-1 rounded-full text-xs font-bold bg-indigo-50 text-indigo-700 border border-indigo-200">Đang xử lý</span>;
+        return <span className="px-2 py-0.5 rounded-md text-xs font-medium bg-indigo-50 text-indigo-700 border border-indigo-200">Đang xử lý</span>;
       case 'RESOLVED':
-        return <span className="px-2.5 py-1 rounded-full text-xs font-bold bg-emerald-50 text-emerald-700 border border-emerald-200">Đã sửa xong</span>;
+        return <span className="px-2 py-0.5 rounded-md text-xs font-medium bg-emerald-50 text-emerald-700 border border-emerald-200">Đã sửa xong</span>;
       case 'CLOSED':
-        return <span className="px-2.5 py-1 rounded-full text-xs font-bold bg-slate-100 text-slate-700 border border-slate-200">Đã đóng</span>;
+        return <span className="px-2 py-0.5 rounded-md text-xs font-medium bg-slate-100 text-slate-700 border border-slate-200">Đã đóng</span>;
       default:
-        return <span className="px-2.5 py-1 rounded-full text-xs font-medium bg-slate-100 text-slate-600">{s}</span>;
+        return <span className="px-2 py-0.5 rounded-md text-xs font-medium bg-slate-100 text-slate-600 border border-slate-200">{s}</span>;
     }
   };
 

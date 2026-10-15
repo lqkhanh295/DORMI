@@ -157,11 +157,10 @@ export default function RentalApplicationModal({
             {/* Modal Header */}
             <div className="p-6 bg-gradient-to-r from-[#00153D] to-[#073372] text-white flex justify-between items-start shrink-0">
               <div>
-                <div className="flex items-center gap-2 mb-1">
+                <h2 id="rental-app-title" className="text-xl font-bold flex items-center gap-2">
                   <FileText className="w-5 h-5 text-indigo-300" />
-                  <span className="text-xs uppercase tracking-wider font-semibold text-indigo-200">Rental Application</span>
-                </div>
-                <h2 id="rental-app-title" className="text-xl font-bold">Nộp hồ sơ thuê phòng</h2>
+                  Nộp hồ sơ thuê phòng
+                </h2>
                 <p className="text-xs text-indigo-100 mt-1 line-clamp-1">
                   {roomTitle} — {roomPrice.toLocaleString()} VNĐ/tháng
                 </p>
@@ -217,14 +216,43 @@ export default function RentalApplicationModal({
             <div className="flex-1 overflow-y-auto p-6 space-y-6">
               {/* Trust Banner */}
               <div className="p-3.5 bg-blue-50/70 border border-blue-100 rounded-xl flex items-start gap-3 text-xs text-blue-900">
-              <ShieldCheck className="w-5 h-5 text-blue-600 shrink-0 mt-0.5" />
-              <div>
-                <p className="font-semibold">Hồ sơ được bảo mật theo tiêu chuẩn DORMI Trust</p>
-                <p className="text-blue-700 mt-0.5">
-                  Thông tin thu nhập và tài liệu của bạn chỉ được chuyển tới chủ nhà để thẩm định khả năng thuê phòng.
+                <ShieldCheck className="w-5 h-5 text-blue-600 shrink-0 mt-0.5" />
+                <div>
+                  <p className="font-semibold">Hồ sơ được bảo mật theo tiêu chuẩn DORMI Trust</p>
+                  <p className="text-blue-700 mt-0.5">
+                    Thông tin thu nhập và tài liệu của bạn chỉ được chuyển tới chủ nhà để thẩm định khả năng thuê phòng.
+                  </p>
+                </div>
+              </div>
+
+              {/* Financial Budget & Deposit Breakdown */}
+              <div className="p-4 bg-slate-50 border border-slate-200 rounded-xl space-y-2.5 text-xs">
+                <div className="flex items-center justify-between text-slate-700">
+                  <span className="font-bold text-[#0F172A]">Tóm tắt chi phí dự kiến khi thuê:</span>
+                  <span className="text-[11px] text-blue-700 font-semibold bg-blue-50 px-2 py-0.5 rounded-md border border-blue-200">
+                    Bảo vệ theo hợp đồng DORMI
+                  </span>
+                </div>
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 text-slate-600">
+                  <div className="flex items-center justify-between p-2.5 bg-white rounded-lg border border-slate-200">
+                    <span>Tiền thuê tháng đầu:</span>
+                    <strong className="text-[#00153D]">{roomPrice.toLocaleString('vi-VN')} đ</strong>
+                  </div>
+                  <div className="flex items-center justify-between p-2.5 bg-white rounded-lg border border-slate-200">
+                    <span>Tiền đặt cọc dự kiến:</span>
+                    <strong className="text-[#00153D]">{roomPrice.toLocaleString('vi-VN')} đ <span className="font-normal text-slate-500">(1 tháng)</span></strong>
+                  </div>
+                </div>
+                <div className="flex items-center justify-between pt-1 border-t border-slate-200 text-slate-800 font-semibold">
+                  <span>Dự kiến ngân sách chuẩn bị dọn vào:</span>
+                  <span className="text-[#00153D] font-bold text-sm">
+                    {(roomPrice * 2).toLocaleString('vi-VN')} đ
+                  </span>
+                </div>
+                <p className="text-[10px] text-slate-500 italic">
+                  * Tiền cọc được hoàn trả lại cho bạn khi hết hạn hợp đồng. Mức cọc chính thức sẽ được thỏa thuận và xác lập trên Hợp đồng thuê sau khi chủ nhà duyệt hồ sơ.
                 </p>
               </div>
-            </div>
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               

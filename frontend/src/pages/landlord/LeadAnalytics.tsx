@@ -133,12 +133,6 @@ export default function LeadAnalytics() {
       {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
-          <div className="flex items-center gap-2 mb-1">
-            <span className="px-2.5 py-0.5 rounded-full text-[11px] font-bold uppercase tracking-wider bg-blue-100 text-blue-800">
-              Landlord CRM
-            </span>
-            <span className="text-xs text-[#64748B]">Hệ điều hành vận hành & dòng chuyển đổi</span>
-          </div>
           <h1 className="text-2xl font-black text-[#0F172A] flex items-center gap-2">
             <BarChart3 className="w-7 h-7 text-[#2563EB]" />
             Phân tích chuyển đổi & Khách tiềm năng (Operating Funnel)
@@ -167,48 +161,48 @@ export default function LeadAnalytics() {
         <>
           {/* Top KPI Cards */}
           <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3.5">
-            <Card className="p-4 bg-white rounded-2xl shadow-clay-soft border-none">
-              <span className="text-[11px] font-semibold text-[#64748B] flex items-center gap-1 uppercase tracking-wider">
+            <Card className="p-4 bg-white rounded-2xl border border-slate-200/90 shadow-xs">
+              <span className="text-xs font-medium text-slate-500 flex items-center gap-1">
                 <Eye className="w-3.5 h-3.5 text-blue-600" /> Lượt xem
               </span>
               <p className="text-2xl font-black text-[#0F172A] mt-2">{totalViews.toLocaleString('vi-VN')}</p>
               <span className="text-[11px] text-[#94A3B8]">Toàn bộ phòng</span>
             </Card>
 
-            <Card className="p-4 bg-white rounded-2xl shadow-clay-soft border-none">
-              <span className="text-[11px] font-semibold text-[#64748B] flex items-center gap-1 uppercase tracking-wider">
+            <Card className="p-4 bg-white rounded-2xl border border-slate-200/90 shadow-xs">
+              <span className="text-xs font-medium text-slate-500 flex items-center gap-1">
                 <Heart className="w-3.5 h-3.5 text-rose-500" /> Quan tâm
               </span>
               <p className="text-2xl font-black text-[#0F172A] mt-2">{totalSaves.toLocaleString('vi-VN')}</p>
               <span className="text-[11px] text-emerald-600 font-semibold">{viewToLeadRate}% từ xem</span>
             </Card>
 
-            <Card className="p-4 bg-white rounded-2xl shadow-clay-soft border-none">
-              <span className="text-[11px] font-semibold text-[#64748B] flex items-center gap-1 uppercase tracking-wider">
+            <Card className="p-4 bg-white rounded-2xl border border-slate-200/90 shadow-xs">
+              <span className="text-xs font-medium text-slate-500 flex items-center gap-1">
                 <Calendar className="w-3.5 h-3.5 text-indigo-600" /> Xem phòng
               </span>
               <p className="text-2xl font-black text-[#0F172A] mt-2">{totalViewings.toLocaleString('vi-VN')}</p>
               <span className="text-[11px] text-indigo-600 font-semibold">{leadToViewingRate}% từ quan tâm</span>
             </Card>
 
-            <Card className="p-4 bg-white rounded-2xl shadow-clay-soft border-none">
-              <span className="text-[11px] font-semibold text-[#64748B] flex items-center gap-1 uppercase tracking-wider">
+            <Card className="p-4 bg-white rounded-2xl border border-slate-200/90 shadow-xs">
+              <span className="text-xs font-medium text-slate-500 flex items-center gap-1">
                 <FileText className="w-3.5 h-3.5 text-amber-600" /> Hồ sơ nộp
               </span>
               <p className="text-2xl font-black text-[#0F172A] mt-2">{totalApplications.toLocaleString('vi-VN')}</p>
               <span className="text-[11px] text-amber-600 font-semibold">{viewingToAppRate}% từ xem phòng</span>
             </Card>
 
-            <Card className="p-4 bg-white rounded-2xl shadow-clay-soft border-none">
-              <span className="text-[11px] font-semibold text-[#64748B] flex items-center gap-1 uppercase tracking-wider">
+            <Card className="p-4 bg-white rounded-2xl border border-slate-200/90 shadow-xs">
+              <span className="text-xs font-medium text-slate-500 flex items-center gap-1">
                 <CheckCircle2 className="w-3.5 h-3.5 text-emerald-600" /> Đã duyệt
               </span>
               <p className="text-2xl font-black text-[#0F172A] mt-2">{totalApproved.toLocaleString('vi-VN')}</p>
               <span className="text-[11px] text-emerald-600 font-semibold">{appToApproveRate}% hồ sơ đạt</span>
             </Card>
 
-            <Card className="p-4 bg-white rounded-2xl shadow-clay-soft border-none bg-gradient-to-br from-emerald-50 to-white border border-emerald-200">
-              <span className="text-[11px] font-bold text-emerald-800 flex items-center gap-1 uppercase tracking-wider">
+            <Card className="p-4 bg-white rounded-2xl border border-emerald-200 shadow-xs">
+              <span className="text-xs font-bold text-emerald-800 flex items-center gap-1">
                 <FileCheck className="w-3.5 h-3.5 text-emerald-600" /> Hợp đồng
               </span>
               <p className="text-2xl font-black text-emerald-700 mt-2">{totalLeases.toLocaleString('vi-VN')}</p>

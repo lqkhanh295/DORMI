@@ -127,7 +127,7 @@ export default function TrustScoreModal({ isOpen, onClose, roomId, roomTitle }: 
                       </div>
                     </div>
                     <div className="text-right">
-                      <span className={`inline-block px-3 py-1 rounded-full text-xs font-bold border ${getScoreBadgeBg(breakdown.totalScore)}`}>
+                      <span className={`inline-block px-2.5 py-1 rounded-md text-xs font-semibold border ${getScoreBadgeBg(breakdown.totalScore)}`}>
                         {breakdown.ratingLevel}
                       </span>
                       <p className="text-[11px] text-slate-400 mt-1">Cập nhật tự động thời gian thực</p>
@@ -144,7 +144,7 @@ export default function TrustScoreModal({ isOpen, onClose, roomId, roomTitle }: 
 
                   {/* Breakdown Factors List */}
                   <div>
-                    <h3 className="text-xs font-bold text-slate-900 uppercase tracking-wider mb-3">
+                    <h3 className="text-xs font-semibold text-slate-700 mb-3">
                       Chi tiết các tiêu chí đối soát ({breakdown.factors?.length || 0})
                     </h3>
                     <div className="space-y-2.5">

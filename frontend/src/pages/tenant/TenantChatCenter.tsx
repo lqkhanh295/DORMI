@@ -18,7 +18,7 @@ export default function TenantChatCenter() {
   const [apiAppointments, setApiAppointments] = useState<any[]>([]);
   const [loadingAppts, setLoadingAppts] = useState(false);
   const [loadingHistory, setLoadingHistory] = useState(false);
-  const messagesEndRef = useRef<HTMLDivElement>(null);
+  const messagesContainerRef = useRef<HTMLDivElement>(null);
 
   // Parse location state passed from RoomDetail
   const targetUserId = location.state?.targetUserId;
@@ -163,7 +163,9 @@ export default function TenantChatCenter() {
   });
 
   useEffect(() => {
-    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+    if (messagesContainerRef.current) {
+      messagesContainerRef.current.scrollTop = messagesContainerRef.current.scrollHeight;
+    }
   }, [chatMessages]);
 
   const handleSend = async () => {
@@ -217,7 +219,7 @@ export default function TenantChatCenter() {
           <div className="flex justify-between items-center border-b border-[#E2E8F0] pb-4">
             <div>
               <h2 className="text-h3 font-bold text-[#0F172A]">Danh sách lịch hẹn xem phòng</h2>
-              <p className="text-caption text-[#64748B]">Dữ liệu đồng bộ trực tiếp từ Backend API</p>
+              <p className="text-caption text-[#64748B]">Dữ liệu đồng bộ theo thời gian thực</p>
             </div>
             <Button size="sm" variant="secondary" onClick={fetchAppointments} disabled={loadingAppts}>
               {loadingAppts ? 'Đang tải...' : 'Làm mới'}
@@ -251,7 +253,7 @@ export default function TenantChatCenter() {
                         {appt.roomTitle || 'Phòng trọ'}
                       </h4>
                       <span
-                        className={`text-caption font-bold px-3 py-1 rounded-full flex items-center gap-1 flex-shrink-0 ${
+                        className={`text-xs font-medium px-2 py-0.5 rounded-md flex items-center gap-1 shrink-0 ${
                           isConfirmed
                             ? 'bg-[#F0FDF4] text-[#16803C] border border-[#DCFCE7]'
                             : 'bg-[#FEF9C3] text-[#854D0E] border border-[#FEF08A]'
@@ -364,7 +366,7 @@ export default function TenantChatCenter() {
                     <div className="flex-1 overflow-hidden">
                       <div className="flex justify-between items-baseline mb-1">
                         <h4 className="font-bold text-[#0F172A] truncate">{contact.name}</h4>
-                        <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-[#F5F7FA] text-[#64748B] border border-[#E2E8F0]">
+                        <span className="text-[11px] font-medium px-1.5 py-0.5 rounded-md bg-slate-100 text-slate-600 border border-slate-200">
                           {contact.role === 'Landlord' ? 'Chủ nhà' : (contact.role === 'Roommate' ? 'Bạn ở ghép' : 'Liên hệ')}
                         </span>
                       </div>
@@ -395,20 +397,23 @@ export default function TenantChatCenter() {
                     <div>
                       <h3 className="font-bold text-[#0F172A] flex items-center gap-2">
                         {selectedContact.name}
-                        <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-[#F5F7FA] text-[#64748B]">
+                        <span className="text-[11px] font-medium px-1.5 py-0.5 rounded-md bg-slate-100 text-slate-600 border border-slate-200">
                           {selectedContact.role === 'Landlord' ? 'Chủ nhà' : (selectedContact.role === 'Roommate' ? 'Bạn ở ghép' : 'Liên hệ')}
                         </span>
                       </h3>
                       <p className="text-xs text-[#16803C] font-semibold flex items-center gap-1">
-                        <span className="w-2 h-2 rounded-full bg-[#16803C] block"></span> Trực tuyến (API Connected)
+                        <span className="w-2 h-2 rounded-full bg-[#16803C] block"></span> Trực tuyến
                       </p>
                     </div>
                   </div>
                 </div>
 
-                <div className="flex-1 p-4 overflow-y-auto bg-[#F5F7FA] flex flex-col gap-3">
+                <div 
+                  ref={messagesContainerRef}
+                  className="flex-1 p-4 overflow-y-auto bg-[#F5F7FA] flex flex-col gap-3"
+                >
                   <div className="text-center">
-                    <span className="text-caption text-[#64748B] bg-white border border-[#E2E8F0] px-3 py-1 rounded-full font-medium">Hôm nay</span>
+                    <span className="text-xs text-slate-500 bg-white border border-slate-200 px-2.5 py-0.5 rounded-md font-medium">Hôm nay</span>
                   </div>
                   
                   {loadingHistory ? (
@@ -455,7 +460,6 @@ export default function TenantChatCenter() {
                       </motion.div>
                     );
                   })}
-                  <div ref={messagesEndRef} />
                 </div>
 
                 <div className="p-4 border-t border-[#E2E8F0] bg-white">
@@ -471,7 +475,7 @@ export default function TenantChatCenter() {
                       onChange={e => setInputText(e.target.value)}
                       onKeyDown={handleKeyDown}
                     ></textarea>
-                    <Button size="sm" className="mb-0.5 px-4" onClick={handleSend}>Gửi API</Button>
+                    <Button size="sm" className="mb-0.5 px-4" onClick={handleSend}>Gửi</Button>
                   </div>
                 </div>
               </>

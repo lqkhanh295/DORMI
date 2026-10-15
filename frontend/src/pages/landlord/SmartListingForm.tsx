@@ -635,7 +635,7 @@ export default function SmartListingForm() {
 
             {qualityResult.recommendations.length > 0 && (
               <div className="p-4 bg-[#FFFBEB] border border-[#FDE68A] rounded-[12px]">
-                <h4 className="text-xs font-bold text-[#B45309] uppercase tracking-wider mb-2">Khuyến nghị cải thiện tin:</h4>
+                <h4 className="text-xs font-bold text-amber-800 mb-2">Khuyến nghị cải thiện tin:</h4>
                 <ul className="text-xs text-[#92400E] space-y-1 list-disc list-inside">
                   {qualityResult.recommendations.map((rec, idx) => (
                     <li key={idx}>{rec}</li>

@@ -102,7 +102,7 @@ export default function AdminDashboard() {
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-5">
         <Card className="p-5 bg-white rounded-2xl border border-slate-200 shadow-sm motion-gpu transition-[transform,box-shadow] duration-200 ease-out hover:shadow-md hover:-translate-y-0.5">
           <div className="flex items-center justify-between mb-3">
-            <span className="text-xs font-bold text-slate-500 uppercase tracking-wider">Tổng người dùng</span>
+            <span className="text-xs font-medium text-slate-500">Tổng người dùng</span>
             <div className="w-9 h-9 rounded-xl bg-blue-50 text-blue-600 flex items-center justify-center">
               <Users className="w-5 h-5" />
             </div>
@@ -115,7 +115,7 @@ export default function AdminDashboard() {
 
         <Card className="p-5 bg-white rounded-2xl border border-slate-200 shadow-sm motion-gpu transition-[transform,box-shadow] duration-200 ease-out hover:shadow-md hover:-translate-y-0.5">
           <div className="flex items-center justify-between mb-3">
-            <span className="text-xs font-bold text-amber-600 uppercase tracking-wider">Chờ xác minh</span>
+            <span className="text-xs font-medium text-amber-700">Chờ xác minh</span>
             <div className="w-9 h-9 rounded-xl bg-amber-50 text-amber-600 flex items-center justify-center">
               <UserCheck className="w-5 h-5" />
             </div>
@@ -130,7 +130,7 @@ export default function AdminDashboard() {
 
         <Card className="p-5 bg-white rounded-2xl border border-slate-200 shadow-sm motion-gpu transition-[transform,box-shadow] duration-200 ease-out hover:shadow-md hover:-translate-y-0.5">
           <div className="flex items-center justify-between mb-3">
-            <span className="text-xs font-bold text-indigo-600 uppercase tracking-wider">Phòng chờ duyệt</span>
+            <span className="text-xs font-medium text-indigo-700">Phòng chờ duyệt</span>
             <div className="w-9 h-9 rounded-xl bg-indigo-50 text-indigo-600 flex items-center justify-center">
               <Home className="w-5 h-5" />
             </div>
@@ -145,7 +145,7 @@ export default function AdminDashboard() {
 
         <Card className="p-5 bg-white rounded-2xl border border-slate-200 shadow-sm motion-gpu transition-[transform,box-shadow] duration-200 ease-out hover:shadow-md hover:-translate-y-0.5">
           <div className="flex items-center justify-between mb-3">
-            <span className="text-xs font-bold text-rose-600 uppercase tracking-wider">Báo cáo chưa xử lý</span>
+            <span className="text-xs font-medium text-rose-700">Báo cáo chưa xử lý</span>
             <div className="w-9 h-9 rounded-xl bg-rose-50 text-rose-600 flex items-center justify-center">
               <AlertTriangle className="w-5 h-5" />
             </div>
@@ -160,7 +160,7 @@ export default function AdminDashboard() {
 
         <Card className="p-5 bg-white rounded-2xl border border-slate-200 shadow-sm motion-gpu transition-[transform,box-shadow] duration-200 ease-out hover:shadow-md hover:-translate-y-0.5">
           <div className="flex items-center justify-between mb-3">
-            <span className="text-xs font-bold text-emerald-600 uppercase tracking-wider">Doanh thu gói DV</span>
+            <span className="text-xs font-medium text-emerald-700">Doanh thu gói DV</span>
             <div className="w-9 h-9 rounded-xl bg-emerald-50 text-emerald-600 flex items-center justify-center">
               <DollarSign className="w-5 h-5" />
             </div>

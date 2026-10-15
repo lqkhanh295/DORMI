@@ -104,7 +104,7 @@ export function GlobalNav() {
           >
             DORMI<span className="text-[#F2A900] ml-0.5">.</span>
             {currentUser?.role === 'Landlord' && (
-              <span className="text-[10px] font-bold text-[#64748B] bg-slate-100 px-1.5 py-0.5 rounded ml-1.5 tracking-normal uppercase">
+              <span className="text-[11px] font-medium text-slate-600 bg-slate-100 border border-slate-200/60 px-1.5 py-0.5 rounded-md ml-1.5 tracking-normal">
                 Chủ trọ
               </span>
             )}

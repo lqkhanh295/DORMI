@@ -297,7 +297,7 @@ export default function TenantProfile() {
         preferences: 'Phòng yên tĩnh, sạch sẽ',
         isLookingForRoommate
       });
-      toast.success('Lưu thông tin hồ sơ vào Backend API thành công!');
+      toast.success('Lưu thông tin hồ sơ thành công!');
     } catch (err: any) {
       console.warn('Profile update warning:', err);
       toast.error('Không thể cập nhật hồ sơ: ' + (err?.message || 'Lỗi kết nối'));
@@ -308,10 +308,10 @@ export default function TenantProfile() {
     <div className="w-full space-y-6 bg-[#F5F7FA]">
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
-          <h1 className="text-h2 font-bold text-[#0F172A]">Hồ sơ cá nhân (API Connected)</h1>
+          <h1 className="text-h2 font-bold text-[#0F172A]">Hồ sơ cá nhân</h1>
           <p className="text-[#64748B] text-body">Cập nhật thông tin và phong cách sống thời gian thực.</p>
         </div>
-        <Button onClick={handleSave} className="px-6" disabled={loading || isUploadingAvatar}>Lưu thay đổi (API)</Button>
+        <Button onClick={handleSave} className="px-6" disabled={loading || isUploadingAvatar}>Lưu thay đổi</Button>
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
@@ -378,8 +378,8 @@ export default function TenantProfile() {
             <p className="text-caption text-[#64748B]">Người thuê trọ</p>
           </div>
           <div className="w-full pt-4 border-t border-[#E2E8F0]">
-            <p className="text-caption text-[#64748B] uppercase tracking-wider mb-2">Độ hoàn thiện hồ sơ</p>
-            <div className="w-full h-2.5 bg-[#F5F7FA] shadow-clay-inset rounded-full overflow-hidden">
+            <p className="text-xs font-medium text-slate-500 mb-2">Độ hoàn thiện hồ sơ</p>
+            <div className="w-full h-2 bg-slate-100 rounded-full overflow-hidden">
               <div className="bg-[#00153D] h-full rounded-full" style={{width: '90%'}}></div>
             </div>
           </div>

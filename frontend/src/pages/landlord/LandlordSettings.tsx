@@ -31,7 +31,7 @@ export default function LandlordSettings() {
     e.preventDefault();
     try {
       await profilesApi.updateLandlordProfile({ phoneNumber });
-      toast.success('Cập nhật cài đặt chủ trọ vào Backend API thành công!');
+      toast.success('Cập nhật cài đặt thành công!');
     } catch {
       toast.error('Không thể lưu cài đặt.');
     }
@@ -40,7 +40,7 @@ export default function LandlordSettings() {
   return (
     <div className="max-w-3xl mx-auto space-y-6 bg-[#F5F7FA]">
       <div>
-        <h1 className="text-h2 font-bold text-[#0F172A]">Cài đặt chủ trọ (API Connected)</h1>
+        <h1 className="text-h2 font-bold text-[#0F172A]">Cài đặt chủ trọ</h1>
         <p className="text-body text-[#64748B]">Quản lý thông tin liên hệ thời gian thực.</p>
       </div>
 
@@ -54,7 +54,7 @@ export default function LandlordSettings() {
           />
 
           <div className="pt-4 flex justify-end">
-            <Button type="submit" variant="primary" className="px-8" disabled={loading}>Lưu vào API</Button>
+            <Button type="submit" variant="primary" className="px-8" disabled={loading}>Lưu thay đổi</Button>
           </div>
         </form>
       </Card>

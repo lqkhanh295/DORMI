@@ -462,7 +462,7 @@ export default function RoomMapView({
 
       {/* Bottom Hint Badge */}
       <div className="absolute bottom-4 left-1/2 -translate-x-1/2 z-10 pointer-events-none">
-        <div className="bg-white/95 backdrop-blur-md px-4 py-1.5 rounded-full shadow-clay-soft border border-[#E2E8F0] text-caption font-semibold text-[#64748B] flex items-center gap-1.5">
+        <div className="bg-white/95 backdrop-blur-md px-3.5 py-1.5 rounded-md shadow-sm border border-slate-200 text-xs font-medium text-slate-600 flex items-center gap-1.5">
           <Navigation className="w-3.5 h-3.5 text-blue-600" />
           <span>Bấm vào mốc giá để xem chi tiết phòng & khoảng cách</span>
         </div>

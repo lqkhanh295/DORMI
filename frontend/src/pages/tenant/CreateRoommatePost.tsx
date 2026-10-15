@@ -106,7 +106,7 @@ export default function CreateRoommatePost() {
               <Home className="w-5 h-5" />
             </div>
             <div>
-              <span className="text-xs font-bold uppercase tracking-wider text-blue-600">Phòng trọ được gắn kèm tin đăng</span>
+              <span className="text-xs font-semibold text-blue-700">Phòng trọ được gắn kèm tin đăng</span>
               <h4 className="text-body font-bold text-slate-900">{attachedRoomTitle || 'Phòng trọ DORMI'}</h4>
               <p className="text-caption text-slate-500">
                 {attachedRoomAddress} · Giá gốc: {attachedRoomPrice ? `${Number(attachedRoomPrice).toLocaleString('vi-VN')}đ/tháng` : 'Thương lượng'}

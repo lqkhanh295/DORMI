@@ -18,9 +18,11 @@ import {
   Paperclip, 
   RefreshCw,
   UserCheck,
-  Wrench
+  Wrench,
+  Printer
 } from 'lucide-react';
 import PostRentalModal from '../../components/transaction/PostRentalModal';
+import PrintContractModal from '../../components/transaction/PrintContractModal';
 import { motion, AnimatePresence } from 'framer-motion';
 import { modalBackdropVariants, modalContentVariants } from '../../utils/motion';
 
@@ -36,6 +38,7 @@ export default function LandlordLeases() {
   const [isCreateOpen, setIsCreateOpen] = useState(false);
   const [viewingLease, setViewingLease] = useState<LeaseContractResponse | null>(null);
   const [managingRental, setManagingRental] = useState<LeaseContractResponse | null>(null);
+  const [printingLease, setPrintingLease] = useState<LeaseContractResponse | null>(null);
   const [terminatingLease, setTerminatingLease] = useState<LeaseContractResponse | null>(null);
   const [terminateReason, setTerminateReason] = useState('');
   const [isSubmittingTerminate, setIsSubmittingTerminate] = useState(false);
@@ -205,42 +208,42 @@ export default function LandlordLeases() {
     switch (status) {
       case 'Active':
         return (
-          <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold bg-emerald-100 text-emerald-800">
+          <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md text-xs font-semibold bg-emerald-50 text-emerald-700 border border-emerald-200">
             <CheckCircle2 className="w-3.5 h-3.5 text-emerald-600" />
             Đang thuê (Hiệu lực)
           </span>
         );
       case 'PendingSignature':
         return (
-          <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold bg-amber-100 text-amber-800 animate-pulse">
+          <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md text-xs font-semibold bg-amber-50 text-amber-800 border border-amber-200">
             <Clock className="w-3.5 h-3.5 text-amber-600" />
             Chờ khách ký
           </span>
         );
       case 'Draft':
         return (
-          <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold bg-slate-100 text-slate-700">
+          <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md text-xs font-semibold bg-slate-50 text-slate-700 border border-slate-200">
             <FileText className="w-3.5 h-3.5 text-slate-500" />
             Bản nháp
           </span>
         );
       case 'Terminated':
         return (
-          <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold bg-rose-100 text-rose-800">
+          <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md text-xs font-semibold bg-rose-50 text-rose-700 border border-rose-200">
             <AlertCircle className="w-3.5 h-3.5 text-rose-600" />
             Đã chấm dứt
           </span>
         );
       case 'Expired':
         return (
-          <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold bg-slate-100 text-slate-800">
+          <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md text-xs font-semibold bg-slate-100 text-slate-700 border border-slate-200">
             <Clock className="w-3.5 h-3.5 text-slate-500" />
             Đã hết hạn
           </span>
         );
       default:
         return (
-          <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold bg-blue-100 text-blue-800">
+          <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md text-xs font-semibold bg-blue-50 text-blue-700 border border-blue-200">
             {status}
           </span>
         );
@@ -264,12 +267,6 @@ export default function LandlordLeases() {
       {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
-          <div className="flex items-center gap-2 mb-1">
-            <span className="px-2.5 py-0.5 rounded-full text-[11px] font-bold uppercase tracking-wider bg-emerald-100 text-emerald-800">
-              Operating System
-            </span>
-            <span className="text-xs text-[#64748B]">Quản lý hợp đồng & dòng tiền thuê</span>
-          </div>
           <h1 className="text-2xl font-black text-[#00153D] tracking-tight">Hợp đồng thuê phòng (Leases)</h1>
           <p className="text-xs sm:text-sm text-[#64748B] mt-1">
             Theo dõi tình trạng ký kết, thời hạn hợp đồng, lịch thanh toán và kích hoạt trạng thái phòng tự động.
@@ -453,7 +450,7 @@ export default function LandlordLeases() {
 
                 {/* Action Bar */}
                 <div className="flex flex-wrap items-center justify-between gap-3 pt-2">
-                  <div className="flex items-center gap-2">
+                  <div className="flex flex-wrap items-center gap-2">
                     <button
                       type="button"
                       onClick={() => setViewingLease(lease)}
@@ -461,6 +458,15 @@ export default function LandlordLeases() {
                     >
                       <Eye className="w-3.5 h-3.5" />
                       Xem chi tiết
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => setPrintingLease(lease)}
+                      className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-blue-50 hover:bg-blue-100 text-blue-900 border border-blue-200 text-xs font-semibold rounded-lg transition-colors"
+                      title="In hợp đồng hoặc xuất file A4 / PDF"
+                    >
+                      <Printer className="w-3.5 h-3.5 text-blue-700" />
+                      In hợp đồng
                     </button>
                     <button
                       type="button"
@@ -930,7 +936,19 @@ export default function LandlordLeases() {
               )}
             </div>
 
-            <div className="flex justify-end pt-3 border-t border-[#E2E8F0]">
+            <div className="flex justify-between items-center pt-3 border-t border-[#E2E8F0]">
+              <button
+                type="button"
+                onClick={() => {
+                  const l = viewingLease;
+                  setViewingLease(null);
+                  setPrintingLease(l);
+                }}
+                className="px-4 py-2 bg-white hover:bg-slate-50 text-[#00153D] border border-slate-300 font-semibold rounded-xl text-xs flex items-center gap-2 shadow-xs transition-colors"
+              >
+                <Printer className="w-4 h-4 text-[#00153D]" />
+                <span>In hợp đồng (Bản in A4 / PDF)</span>
+              </button>
               <button
                 type="button"
                 onClick={() => setViewingLease(null)}
@@ -957,6 +975,14 @@ export default function LandlordLeases() {
           />
         )}
       </AnimatePresence>
+
+      {/* Printable Contract Modal */}
+      {printingLease && (
+        <PrintContractModal
+          lease={printingLease}
+          onClose={() => setPrintingLease(null)}
+        />
+      )}
 
     </div>
   );

@@ -8,7 +8,6 @@ import { toast } from 'sonner';
 import { 
   X, 
   CreditCard, 
-  ShieldCheck, 
   Check, 
   Flame, 
   Building2, 
@@ -163,9 +162,6 @@ export default function PricingCheckout() {
     <div className="max-w-6xl 2xl:max-w-7xl mx-auto space-y-8 bg-[#F8FAFC] pb-12">
       {/* Header */}
       <div className="text-center space-y-3">
-        <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full text-xs font-bold uppercase tracking-wider bg-blue-50 text-blue-800 border border-blue-200">
-          <ShieldCheck className="w-3.5 h-3.5 text-blue-600" /> Dịch vụ Bổ Trợ Chủ Trọ
-        </div>
         <h1 className="text-3xl font-black text-[#0F172A] tracking-tight">
           Nâng cấp Gói Hội viên & Đẩy tin Nổi bật
         </h1>
@@ -225,8 +221,8 @@ export default function PricingCheckout() {
 
           {/* Pro Tier */}
           <Card className="bg-white rounded-2xl shadow-sm p-7 flex flex-col justify-between space-y-6 border-2 border-blue-600 relative">
-            <div className="absolute -top-3 left-1/2 -translate-x-1/2 bg-blue-600 text-white text-[11px] font-black uppercase tracking-wider px-3.5 py-0.5 rounded-full shadow-xs">
-              Khuyên Dùng
+            <div className="absolute -top-3 left-1/2 -translate-x-1/2 bg-blue-600 text-white text-xs font-semibold px-3 py-0.5 rounded-md shadow-xs">
+              Khuyên dùng
             </div>
             <div className="space-y-4 pt-1">
               <h3 className="text-lg font-bold text-[#0F172A]">Gói Chuyên Nghiệp (Pro)</h3>

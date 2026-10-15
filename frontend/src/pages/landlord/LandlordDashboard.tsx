@@ -92,7 +92,7 @@ export default function LandlordDashboard() {
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5">
         <Link to="/landlord/rooms">
           <Card className="p-6 bg-white rounded-2xl border border-slate-200/90 shadow-xs hover:shadow-md hover:border-slate-300 transition-all cursor-pointer h-full">
-            <h3 className="text-caption font-semibold text-slate-500 uppercase tracking-wider mb-2">Phòng hoạt động</h3>
+            <h3 className="text-xs font-medium text-slate-500 mb-2">Phòng hoạt động</h3>
             <div className="flex items-baseline gap-2">
               {loading ? (
                 <div className="h-10 w-16 skeleton-shimmer rounded-lg" />
@@ -106,7 +106,7 @@ export default function LandlordDashboard() {
         
         <Link to="/landlord/applications">
           <Card className="p-6 bg-white rounded-2xl border border-slate-200/90 shadow-xs hover:shadow-md hover:border-indigo-300 transition-all cursor-pointer h-full border-l-4 border-l-indigo-600">
-            <h3 className="text-caption font-semibold text-indigo-700 uppercase tracking-wider mb-2">Hồ sơ ứng tuyển</h3>
+            <h3 className="text-xs font-semibold text-indigo-700 mb-2">Hồ sơ ứng tuyển</h3>
             <div className="flex items-baseline gap-2">
               {loading ? (
                 <div className="h-10 w-16 skeleton-shimmer rounded-lg" />
@@ -120,7 +120,7 @@ export default function LandlordDashboard() {
         
         <Link to="/landlord/viewings">
           <Card className="p-6 bg-white rounded-2xl border border-slate-200/90 shadow-xs hover:shadow-md hover:border-emerald-300 transition-all cursor-pointer h-full border-l-4 border-l-emerald-600">
-            <h3 className="text-caption font-semibold text-emerald-700 uppercase tracking-wider mb-2">Lịch hẹn xem phòng</h3>
+            <h3 className="text-xs font-semibold text-emerald-700 mb-2">Lịch hẹn xem phòng</h3>
             <div className="flex items-baseline gap-2">
               {loading ? (
                 <div className="h-10 w-16 skeleton-shimmer rounded-lg" />
@@ -134,7 +134,7 @@ export default function LandlordDashboard() {
 
         <Link to="/landlord/analytics">
           <Card className="p-6 bg-white rounded-2xl border border-slate-200/90 shadow-xs hover:shadow-md hover:border-slate-300 transition-all cursor-pointer h-full">
-            <h3 className="text-caption font-semibold text-slate-500 uppercase tracking-wider mb-2">Lượt xem tin đăng</h3>
+            <h3 className="text-xs font-medium text-slate-500 mb-2">Lượt xem tin đăng</h3>
             <div className="flex items-baseline gap-2">
               {loading ? (
                 <div className="h-10 w-16 skeleton-shimmer rounded-lg" />

@@ -127,35 +127,35 @@ export default function LandlordApplications() {
     switch (status) {
       case ApplicationStatus.Approved:
         return (
-          <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold bg-emerald-100 text-emerald-800">
+          <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md text-xs font-semibold bg-emerald-50 text-emerald-700 border border-emerald-200">
             <CheckCircle2 className="w-3.5 h-3.5 text-emerald-600" />
             Đã duyệt
           </span>
         );
       case ApplicationStatus.UnderReview:
         return (
-          <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold bg-blue-100 text-blue-800">
+          <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md text-xs font-semibold bg-blue-50 text-blue-700 border border-blue-200">
             <Clock className="w-3.5 h-3.5 text-blue-600" />
             Đang xem xét
           </span>
         );
       case ApplicationStatus.MoreInfoRequested:
         return (
-          <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold bg-amber-100 text-amber-800">
+          <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md text-xs font-semibold bg-amber-50 text-amber-800 border border-amber-200">
             <AlertCircle className="w-3.5 h-3.5 text-amber-600" />
             Chờ bổ sung thông tin
           </span>
         );
       case ApplicationStatus.Rejected:
         return (
-          <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold bg-rose-100 text-rose-800">
+          <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md text-xs font-semibold bg-rose-50 text-rose-700 border border-rose-200">
             <XCircle className="w-3.5 h-3.5 text-rose-600" />
             Đã từ chối
           </span>
         );
       case ApplicationStatus.Withdrawn:
         return (
-          <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold bg-slate-100 text-slate-700">
+          <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md text-xs font-semibold bg-slate-50 text-slate-700 border border-slate-200">
             <XCircle className="w-3.5 h-3.5 text-slate-500" />
             Khách đã rút hồ sơ
           </span>
@@ -163,7 +163,7 @@ export default function LandlordApplications() {
       case ApplicationStatus.Submitted:
       default:
         return (
-          <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold bg-indigo-100 text-indigo-800">
+          <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md text-xs font-semibold bg-indigo-50 text-indigo-700 border border-indigo-200">
             <FileText className="w-3.5 h-3.5 text-indigo-600" />
             Hồ sơ mới
           </span>
@@ -315,12 +315,15 @@ export default function LandlordApplications() {
 
                   {/* Target Room Badge */}
                   <div className="bg-[#F8FAFC] border border-[#E2E8F0] rounded-xl p-3 text-xs md:max-w-xs w-full">
-                    <span className="text-[#94A3B8] block text-[10px] uppercase font-semibold">Phòng ứng tuyển:</span>
+                    <span className="text-slate-500 block text-[11px] font-medium">Phòng ứng tuyển:</span>
                     <Link to={`/room/${app.roomId}`} className="font-bold text-[#00153D] hover:underline line-clamp-1">
                       {app.roomTitle}
                     </Link>
                     <span className="text-[#16803C] font-bold block mt-0.5">
                       {Number(app.roomPrice).toLocaleString('vi-VN')}đ/tháng
+                    </span>
+                    <span className="text-slate-500 text-[11px] block mt-0.5">
+                      Cọc dự kiến: <strong className="text-[#00153D]">{Number(app.roomPrice).toLocaleString('vi-VN')}đ</strong> (1 tháng)
                     </span>
                   </div>
                 </div>

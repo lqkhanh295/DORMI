@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { createPortal } from 'react-dom';
 import { useNavigate } from 'react-router-dom';
 import { leasesApi, type LeaseContractResponse } from '../../services/api';
@@ -18,9 +18,12 @@ import {
   FileCheck,
   Paperclip,
   ExternalLink,
-  RefreshCw
+  RefreshCw,
+  Printer,
+  RotateCcw
 } from 'lucide-react';
 import PostRentalModal from '../../components/transaction/PostRentalModal';
+import PrintContractModal from '../../components/transaction/PrintContractModal';
 import { motion, AnimatePresence } from 'framer-motion';
 import { modalBackdropVariants, modalContentVariants } from '../../utils/motion';
 
@@ -36,8 +39,15 @@ export default function TenantLeases() {
   const [agreedTerms, setAgreedTerms] = useState(false);
   const [isSubmittingSign, setIsSubmittingSign] = useState(false);
 
+  // Canvas drawing state
+  const [signMethod, setSignMethod] = useState<'draw' | 'type'>('draw');
+  const canvasRef = useRef<HTMLCanvasElement | null>(null);
+  const isDrawingRef = useRef(false);
+  const [hasDrawn, setHasDrawn] = useState(false);
+
   const [viewingLease, setViewingLease] = useState<LeaseContractResponse | null>(null);
   const [managingRental, setManagingRental] = useState<LeaseContractResponse | null>(null);
+  const [printingLease, setPrintingLease] = useState<LeaseContractResponse | null>(null);
 
   const fetchLeases = async () => {
     try {
@@ -68,10 +78,63 @@ export default function TenantLeases() {
     return () => window.removeEventListener('keydown', handleKeyDown);
   }, [signingLease, viewingLease]);
 
+  const startDrawing = (e: React.MouseEvent<HTMLCanvasElement> | React.TouchEvent<HTMLCanvasElement>) => {
+    const canvas = canvasRef.current;
+    if (!canvas) return;
+    const ctx = canvas.getContext('2d');
+    if (!ctx) return;
+    
+    isDrawingRef.current = true;
+    const rect = canvas.getBoundingClientRect();
+    const clientX = 'touches' in e ? e.touches[0].clientX : e.clientX;
+    const clientY = 'touches' in e ? e.touches[0].clientY : e.clientY;
+    
+    ctx.beginPath();
+    ctx.moveTo(clientX - rect.left, clientY - rect.top);
+  };
+
+  const draw = (e: React.MouseEvent<HTMLCanvasElement> | React.TouchEvent<HTMLCanvasElement>) => {
+    if (!isDrawingRef.current) return;
+    const canvas = canvasRef.current;
+    if (!canvas) return;
+    const ctx = canvas.getContext('2d');
+    if (!ctx) return;
+    
+    const rect = canvas.getBoundingClientRect();
+    const clientX = 'touches' in e ? e.touches[0].clientX : e.clientX;
+    const clientY = 'touches' in e ? e.touches[0].clientY : e.clientY;
+    
+    ctx.lineWidth = 2.5;
+    ctx.lineCap = 'round';
+    ctx.lineJoin = 'round';
+    ctx.strokeStyle = '#00153D';
+    ctx.lineTo(clientX - rect.left, clientY - rect.top);
+    ctx.stroke();
+    setHasDrawn(true);
+  };
+
+  const stopDrawing = () => {
+    isDrawingRef.current = false;
+  };
+
+  const clearCanvas = () => {
+    const canvas = canvasRef.current;
+    if (!canvas) return;
+    const ctx = canvas.getContext('2d');
+    if (!ctx) return;
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+    setHasDrawn(false);
+  };
+
   const handleOpenSign = (lease: LeaseContractResponse) => {
     setSigningLease(lease);
     setSignatureName(lease.tenantName || '');
     setAgreedTerms(false);
+    setHasDrawn(false);
+    setSignMethod('draw');
+    setTimeout(() => {
+      clearCanvas();
+    }, 60);
   };
 
   const handleSignConfirm = async (e: React.FormEvent) => {
@@ -81,15 +144,26 @@ export default function TenantLeases() {
       toast.error('Vui lòng đồng ý với các điều khoản của hợp đồng.');
       return;
     }
-    if (!signatureName.trim()) {
-      toast.error('Vui lòng nhập họ và tên của bạn để xác nhận chữ ký điện tử.');
-      return;
+
+    let finalSignature = '';
+    if (signMethod === 'draw') {
+      if (!hasDrawn || !canvasRef.current) {
+        toast.error('Vui lòng vẽ chữ ký của bạn trên bảng vẽ.');
+        return;
+      }
+      finalSignature = canvasRef.current.toDataURL('image/png');
+    } else {
+      if (!signatureName.trim()) {
+        toast.error('Vui lòng nhập đầy đủ họ và tên của bạn để xác nhận.');
+        return;
+      }
+      finalSignature = signatureName.trim();
     }
 
     try {
       setIsSubmittingSign(true);
       await leasesApi.signLease(signingLease.id, {
-        signatureData: signatureName.trim(),
+        signatureData: finalSignature,
         agreedToTerms: true
       });
       toast.success('Ký hợp đồng thuê phòng thành công! Hợp đồng hiện đã có hiệu lực.');
@@ -114,42 +188,42 @@ export default function TenantLeases() {
     switch (status) {
       case 'Active':
         return (
-          <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold bg-emerald-100 text-emerald-800">
+          <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md text-xs font-semibold bg-emerald-50 text-emerald-700 border border-emerald-200">
             <CheckCircle2 className="w-3.5 h-3.5 text-emerald-600" />
             Đang hiệu lực
           </span>
         );
       case 'PendingSignature':
         return (
-          <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold bg-amber-100 text-amber-800 animate-pulse">
+          <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md text-xs font-semibold bg-amber-50 text-amber-800 border border-amber-200">
             <Clock className="w-3.5 h-3.5 text-amber-600" />
             Chờ bạn ký nhận
           </span>
         );
       case 'Draft':
         return (
-          <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold bg-slate-100 text-slate-700">
+          <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md text-xs font-semibold bg-slate-50 text-slate-700 border border-slate-200">
             <FileText className="w-3.5 h-3.5 text-slate-500" />
             Bản nháp
           </span>
         );
       case 'Terminated':
         return (
-          <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold bg-rose-100 text-rose-800">
+          <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md text-xs font-semibold bg-rose-50 text-rose-700 border border-rose-200">
             <AlertCircle className="w-3.5 h-3.5 text-rose-600" />
             Đã chấm dứt
           </span>
         );
       case 'Expired':
         return (
-          <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold bg-slate-100 text-slate-800">
+          <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md text-xs font-semibold bg-slate-100 text-slate-700 border border-slate-200">
             <Clock className="w-3.5 h-3.5 text-slate-500" />
             Đã hết hạn
           </span>
         );
       default:
         return (
-          <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold bg-blue-100 text-blue-800">
+          <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md text-xs font-semibold bg-blue-50 text-blue-700 border border-blue-200">
             {status}
           </span>
         );
@@ -173,12 +247,6 @@ export default function TenantLeases() {
       {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
-          <div className="flex items-center gap-2 mb-1">
-            <span className="px-2.5 py-0.5 rounded-full text-[11px] font-bold uppercase tracking-wider bg-emerald-100 text-emerald-800">
-              Rental Spine
-            </span>
-            <span className="text-xs text-[#64748B]">Giao dịch thuê chính thức</span>
-          </div>
           <h1 className="text-2xl font-black text-[#00153D] tracking-tight">Hợp đồng thuê phòng của tôi</h1>
           <p className="text-xs sm:text-sm text-[#64748B] mt-1">
             Quản lý hợp đồng lưu trú, ký điện tử bảo mật và thực hiện các quyền lợi hậu thuê phòng.
@@ -348,14 +416,23 @@ export default function TenantLeases() {
 
                 {/* Action Bar */}
                 <div className="flex flex-wrap items-center justify-between gap-3 pt-2">
-                  <div className="flex items-center gap-2">
+                  <div className="flex flex-wrap items-center gap-2">
                     <button
                       type="button"
                       onClick={() => setViewingLease(lease)}
                       className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-[#F1F5F9] hover:bg-[#E2E8F0] text-[#00153D] text-xs font-semibold rounded-lg transition-colors"
                     >
                       <Eye className="w-3.5 h-3.5" />
-                      Xem chi tiết hợp đồng
+                      Xem chi tiết
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => setPrintingLease(lease)}
+                      className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-blue-50 hover:bg-blue-100 text-blue-900 border border-blue-200 text-xs font-semibold rounded-lg transition-colors"
+                      title="In hợp đồng hoặc xuất file A4 / PDF"
+                    >
+                      <Printer className="w-3.5 h-3.5 text-blue-700" />
+                      In hợp đồng
                     </button>
                     <button
                       type="button"
@@ -463,21 +540,82 @@ export default function TenantLeases() {
                       </div>
                     )}
 
-                    <div className="space-y-1.5 pt-1">
-                      <label className="font-bold text-[#00153D] block">
-                        Chữ ký điện tử (Nhập đầy đủ Họ và Tên):
-                      </label>
-                      <input
-                        type="text"
-                        required
-                        value={signatureName}
-                        onChange={(e) => setSignatureName(e.target.value)}
-                        placeholder="Ví dụ: Nguyễn Văn A"
-                        className="w-full px-3.5 py-2.5 border border-[#CBD5E1] rounded-xl font-semibold text-sm focus:outline-none focus:border-[#00153D] focus:ring-1 focus:ring-[#00153D]"
-                      />
-                      <p className="text-[11px] text-[#94A3B8]">
-                        Bằng việc nhập họ tên và xác nhận, chữ ký điện tử của bạn sẽ được lưu vết kèm mốc thời gian và địa chỉ IP.
-                      </p>
+                    <div className="space-y-2 pt-1">
+                      <div className="flex items-center justify-between">
+                        <label className="font-bold text-[#00153D] block text-xs">
+                          Chữ ký điện tử của bạn:
+                        </label>
+                        <div className="flex items-center bg-slate-100 p-0.5 rounded-lg text-[11px] font-semibold">
+                          <button
+                            type="button"
+                            onClick={() => setSignMethod('draw')}
+                            className={`px-2.5 py-1 rounded-md transition-colors ${
+                              signMethod === 'draw' ? 'bg-white text-[#00153D] shadow-xs' : 'text-slate-500 hover:text-slate-900'
+                            }`}
+                          >
+                            Vẽ chữ ký tay
+                          </button>
+                          <button
+                            type="button"
+                            onClick={() => setSignMethod('type')}
+                            className={`px-2.5 py-1 rounded-md transition-colors ${
+                              signMethod === 'type' ? 'bg-white text-[#00153D] shadow-xs' : 'text-slate-500 hover:text-slate-900'
+                            }`}
+                          >
+                            Nhập họ tên
+                          </button>
+                        </div>
+                      </div>
+
+                      {signMethod === 'draw' ? (
+                        <div className="space-y-1.5">
+                          <div className="relative border border-slate-300 rounded-xl bg-white overflow-hidden shadow-inner">
+                            <canvas
+                              ref={canvasRef}
+                              width={500}
+                              height={140}
+                              onMouseDown={startDrawing}
+                              onMouseMove={draw}
+                              onMouseUp={stopDrawing}
+                              onMouseLeave={stopDrawing}
+                              onTouchStart={startDrawing}
+                              onTouchMove={draw}
+                              onTouchEnd={stopDrawing}
+                              className="w-full h-32 touch-none cursor-crosshair bg-white"
+                            />
+                            {!hasDrawn && (
+                              <div className="absolute inset-0 flex items-center justify-center pointer-events-none text-slate-400 text-xs italic">
+                                Dùng chuột hoặc ngón tay vẽ chữ ký vào đây
+                              </div>
+                            )}
+                            <button
+                              type="button"
+                              onClick={clearCanvas}
+                              className="absolute top-2 right-2 px-2 py-1 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-md text-[10px] font-semibold flex items-center gap-1 transition-colors"
+                              title="Xóa vẽ lại"
+                            >
+                              <RotateCcw className="w-3 h-3" />
+                              <span>Vẽ lại</span>
+                            </button>
+                          </div>
+                          <p className="text-[11px] text-[#64748B]">
+                            Nét vẽ chữ ký sẽ được nhúng niêm phong vào hợp đồng PDF kèm mã băm SHA-256 bảo đảm tính pháp lý.
+                          </p>
+                        </div>
+                      ) : (
+                        <div className="space-y-1.5">
+                          <input
+                            type="text"
+                            value={signatureName}
+                            onChange={(e) => setSignatureName(e.target.value)}
+                            placeholder="Ví dụ: NGUYỄN VĂN AN"
+                            className="w-full px-3.5 py-2.5 border border-[#CBD5E1] rounded-xl font-semibold text-sm focus:outline-none focus:border-[#00153D] focus:ring-1 focus:ring-[#00153D]"
+                          />
+                          <p className="text-[11px] text-[#64748B]">
+                            Bằng việc nhập họ tên và xác nhận, chữ ký điện tử của bạn sẽ được lưu vết kèm mốc thời gian và địa chỉ IP.
+                          </p>
+                        </div>
+                      )}
                     </div>
 
                     <label className="flex items-start gap-2.5 cursor-pointer pt-1">
@@ -652,7 +790,19 @@ export default function TenantLeases() {
                   )}
                 </div>
 
-                <div className="px-6 py-3.5 bg-[#F8FAFC] border-t border-[#E2E8F0] flex justify-end shrink-0">
+                <div className="px-6 py-3.5 bg-[#F8FAFC] border-t border-[#E2E8F0] flex items-center justify-between shrink-0">
+                  <button
+                    type="button"
+                    onClick={() => {
+                      const l = viewingLease;
+                      setViewingLease(null);
+                      setPrintingLease(l);
+                    }}
+                    className="px-4 py-2 bg-white hover:bg-slate-50 text-[#00153D] border border-slate-300 font-semibold rounded-xl text-xs flex items-center gap-2 shadow-xs transition-colors"
+                  >
+                    <Printer className="w-4 h-4 text-[#00153D]" />
+                    <span>In hợp đồng (Bản A4 / PDF)</span>
+                  </button>
                   <button
                     type="button"
                     onClick={() => setViewingLease(null)}
@@ -679,6 +829,14 @@ export default function TenantLeases() {
           />
         )}
       </AnimatePresence>
+
+      {/* Printable Contract Modal */}
+      {printingLease && (
+        <PrintContractModal
+          lease={printingLease}
+          onClose={() => setPrintingLease(null)}
+        />
+      )}
 
     </div>
   );

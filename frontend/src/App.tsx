@@ -1,11 +1,21 @@
 import { useEffect } from 'react';
-import { BrowserRouter } from 'react-router-dom';
+import { BrowserRouter, useLocation } from 'react-router-dom';
 import AppRoutes from './routes/AppRoutes';
 import { Analytics } from '@vercel/analytics/react';
 import { useStore } from './store/useStore';
 import { signalRService } from './services/signalr';
 
 import { Toaster } from 'sonner';
+
+function ScrollToTop() {
+  const { pathname } = useLocation();
+
+  useEffect(() => {
+    window.scrollTo(0, 0);
+  }, [pathname]);
+
+  return null;
+}
 
 function App() {
   const currentUser = useStore(state => state.currentUser);
@@ -20,6 +30,7 @@ function App() {
 
   return (
     <BrowserRouter>
+      <ScrollToTop />
       <AppRoutes />
       <Analytics />
       <Toaster

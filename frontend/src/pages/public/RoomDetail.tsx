@@ -290,20 +290,20 @@ export default function RoomDetail() {
                   {roomData?.isVerifiedLandlord ? (
                     <button 
                       onClick={() => setShowVerificationModal(true)}
-                      className="bg-[#F0FDF4] text-[#16803C] border border-[#DCFCE7] text-caption font-bold px-3.5 py-1.5 rounded-full flex items-center gap-1.5 self-start hover:bg-[#DCFCE7] transition-colors touch-target"
+                      className="bg-[#F0FDF4] text-emerald-800 border border-emerald-200 text-xs font-semibold px-3 py-1.5 rounded-md flex items-center gap-1.5 self-start hover:bg-emerald-100/70 transition-colors"
                     >
-                      <CheckCircle className="w-4 h-4" /> Chủ trọ đã xác minh CCCD
+                      <CheckCircle className="w-4 h-4 text-emerald-600" /> Chủ trọ đã xác minh CCCD
                     </button>
                   ) : (
-                    <span className="bg-slate-100 text-slate-600 border border-slate-200 text-caption font-medium px-3.5 py-1.5 rounded-full flex items-center gap-1.5 self-start">
+                    <span className="bg-slate-100 text-slate-600 border border-slate-200 text-xs font-medium px-3 py-1.5 rounded-md flex items-center gap-1.5 self-start">
                       Chưa xác thực CCCD
                     </span>
                   )}
                   <button
                     onClick={() => setShowTrustScoreModal(true)}
-                    className="bg-[#EFF6FF] text-[#1D4ED8] border border-[#BFDBFE] text-caption font-bold px-3.5 py-1.5 rounded-full flex items-center gap-1.5 self-start hover:bg-[#DBEAFE] transition-colors touch-target"
+                    className="bg-blue-50 text-blue-800 border border-blue-200 text-xs font-semibold px-3 py-1.5 rounded-md flex items-center gap-1.5 self-start hover:bg-blue-100/70 transition-colors"
                   >
-                    <ShieldCheck className="w-4 h-4 text-[#2563EB]" /> Điểm tin cậy: {trustScore?.totalScore ?? (roomData?.isVerifiedLandlord ? 85 : 70)}/100
+                    <ShieldCheck className="w-4 h-4 text-blue-600" /> Điểm tin cậy: {trustScore?.totalScore ?? (roomData?.isVerifiedLandlord ? 85 : 70)}/100
                   </button>
                 </div>
               </div>
@@ -312,19 +312,19 @@ export default function RoomDetail() {
 
             <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 pt-6 border-t border-slate-200">
               <div className="bg-slate-50 border border-slate-200/80 p-3.5 rounded-xl">
-                <p className="text-slate-500 text-caption font-semibold uppercase tracking-wider mb-1">Loại phòng</p>
+                <p className="text-slate-500 text-xs font-medium mb-1">Loại phòng</p>
                 <p className="font-bold text-[#0F172A] text-body">{roomData?.roomType || 'Studio'}</p>
               </div>
               <div className="bg-slate-50 border border-slate-200/80 p-3.5 rounded-xl">
-                <p className="text-slate-500 text-caption font-semibold uppercase tracking-wider mb-1">Trạng thái</p>
+                <p className="text-slate-500 text-xs font-medium mb-1">Trạng thái</p>
                 <p className="font-bold text-[#0F172A] text-body">{roomData?.status === 0 ? 'Còn trống' : 'Đã thuê'}</p>
               </div>
               <div className="bg-slate-50 border border-slate-200/80 p-3.5 rounded-xl">
-                <p className="text-slate-500 text-caption font-semibold uppercase tracking-wider mb-1">Diện tích</p>
+                <p className="text-slate-500 text-xs font-medium mb-1">Diện tích</p>
                 <p className="font-bold text-[#0F172A] text-body">{roomData?.area ? `${roomData.area} m²` : '25 m²'}</p>
               </div>
               <div className="bg-slate-50 border border-slate-200/80 p-3.5 rounded-xl">
-                <p className="text-slate-500 text-caption font-semibold uppercase tracking-wider mb-1">Số tiện ích</p>
+                <p className="text-slate-500 text-xs font-medium mb-1">Số tiện ích</p>
                 <p className="font-bold text-[#0F172A] text-body">
                   {roomData?.utilities ? `${roomData.utilities.split(',').filter(Boolean).length} tiện ích` : 'Đầy đủ'}
                 </p>
@@ -424,10 +424,33 @@ export default function RoomDetail() {
         <div className="lg:col-span-4 flex flex-col">
           <Card className="p-6 bg-white border border-slate-200/90 shadow-md rounded-2xl lg:sticky lg:top-20 space-y-6">
             <div>
-              <p className="text-[34px] font-bold text-[#00153D] leading-none mb-2">
+              <p className="text-[32px] font-bold text-[#00153D] leading-none mb-1.5">
                 {roomData ? `${Number(roomData.price).toLocaleString('vi-VN')}đ` : '0đ'} <span className="text-caption text-slate-500 font-normal">/ tháng</span>
               </p>
               <p className="text-caption text-slate-500 font-medium">Giá thuê niêm yết chủ nhà</p>
+            </div>
+
+            {/* Deposit & Move-in Budget Preview */}
+            <div className="p-3.5 bg-slate-50 rounded-xl border border-slate-200/90 space-y-2 text-xs">
+              <div className="flex items-center justify-between text-slate-700">
+                <span className="flex items-center gap-1.5 font-medium">
+                  <ShieldCheck className="w-3.5 h-3.5 text-blue-700" />
+                  Tiền cọc bảo đảm:
+                </span>
+                <span className="font-bold text-[#00153D]">
+                  {roomData ? `${Number(roomData.price).toLocaleString('vi-VN')}đ` : '0đ'}
+                  <span className="text-[11px] font-normal text-slate-500 ml-1">(1 tháng)</span>
+                </span>
+              </div>
+              <div className="flex items-center justify-between pt-1.5 border-t border-slate-200 text-slate-900 font-semibold">
+                <span>Dự kiến chi phí dọn vào:</span>
+                <span className="text-[#00153D] font-bold text-sm">
+                  {roomData ? `${(Number(roomData.price) * 2).toLocaleString('vi-VN')}đ` : '0đ'}
+                </span>
+              </div>
+              <p className="text-[10px] text-slate-500 italic">
+                (Gồm: 1 tháng tiền phòng + 1 tháng tiền cọc được hoàn lại khi hết hạn hợp đồng)
+              </p>
             </div>
 
             <div className="space-y-3">
@@ -721,7 +744,7 @@ export default function RoomDetail() {
                   )}
 
                   <Button fullWidth size="lg" onClick={handleConfirmSchedule}>
-                    Xác nhận lịch xem phòng (API)
+                    Xác nhận lịch xem phòng
                   </Button>
                 </div>
               )}

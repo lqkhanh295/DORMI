@@ -118,7 +118,7 @@ export default function VerificationModeration() {
             Kiểm tra đối chiếu ảnh chụp CCCD/Hộ chiếu thực tế của chủ trọ trước khi cấp quyền định danh chính chủ.
           </p>
         </div>
-        <div className="flex gap-2 text-xs font-semibold text-slate-500 bg-white px-3.5 py-1.5 rounded-full border border-slate-200 shadow-sm">
+        <div className="flex gap-2 text-xs font-semibold text-slate-500 bg-white px-3 py-1.5 rounded-md border border-slate-200 shadow-sm">
           <span>{queue.length} hồ sơ đang chờ xét duyệt</span>
         </div>
       </div>
@@ -158,7 +158,7 @@ export default function VerificationModeration() {
                   <p className="text-xs text-slate-500 mt-0.5">{item.email}</p>
                   <p className="text-[11px] text-slate-400 mt-1">Loại: {item.documentType} ({item.documentNumber || 'N/A'})</p>
                 </div>
-                <span className="bg-amber-50 text-amber-700 border border-amber-200 text-[11px] font-bold px-2 py-0.5 rounded-full">
+                <span className="bg-amber-50 text-amber-700 border border-amber-200 text-xs font-medium px-2 py-0.5 rounded-md">
                   Chờ duyệt
                 </span>
               </div>
@@ -200,7 +200,7 @@ export default function VerificationModeration() {
             
             <div className="flex-1 overflow-y-auto space-y-6">
               <div>
-                <h3 className="text-xs font-semibold text-[#64748B] uppercase tracking-wider mb-3">
+                <h3 className="text-xs font-semibold text-slate-600 mb-3">
                   Thông tin đăng ký
                 </h3>
                 <div className="grid grid-cols-2 gap-4 bg-[#F8FAFC] border border-slate-200 p-4 rounded-[12px]">
@@ -232,7 +232,7 @@ export default function VerificationModeration() {
               </div>
 
               <div>
-                <h3 className="text-xs font-semibold text-[#64748B] uppercase tracking-wider mb-3">
+                <h3 className="text-xs font-semibold text-slate-600 mb-3">
                   Hình ảnh tài liệu thực tế (Nhấp vào ảnh để phóng to)
                 </h3>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -286,7 +286,7 @@ export default function VerificationModeration() {
             </div>
           </Card>
         ) : (
-          <Card className="flex-1 flex flex-col p-6 items-center justify-center text-[#64748B] bg-white rounded-[18px] shadow-clay-soft">
+          <Card className="flex-1 flex flex-col p-6 items-center justify-center text-[#64748B] bg-white rounded-2xl border border-slate-200 shadow-sm">
             <p className="text-body font-semibold">Chọn một hồ sơ để xem chi tiết.</p>
           </Card>
         )}

@@ -3,7 +3,7 @@ import clsx from 'clsx';
 import { twMerge } from 'tailwind-merge';
 
 export interface BadgeProps extends React.HTMLAttributes<HTMLSpanElement> {
-  variant?: 'primary' | 'secondary' | 'outline' | 'success' | 'warning' | 'error' | 'accent' | 'neutral';
+  variant?: 'primary' | 'secondary' | 'outline' | 'success' | 'warning' | 'error' | 'accent' | 'neutral' | 'info';
   icon?: React.ReactNode;
   text?: string;
   children?: React.ReactNode;
@@ -11,28 +11,29 @@ export interface BadgeProps extends React.HTMLAttributes<HTMLSpanElement> {
 
 export function Badge({ 
   className = '', 
-  variant = 'secondary', 
+  variant = 'neutral', 
   icon, 
   text, 
   children,
   ...props 
 }: BadgeProps) {
   const variants = {
+    neutral: 'bg-slate-100 text-slate-700 border border-slate-200',
+    secondary: 'bg-slate-100 text-slate-700 border border-slate-200',
+    outline: 'bg-white text-slate-700 border border-slate-200',
+    success: 'bg-emerald-50 text-emerald-700 border border-emerald-200',
+    warning: 'bg-amber-50 text-amber-800 border border-amber-200',
+    error: 'bg-rose-50 text-rose-700 border border-rose-200',
+    info: 'bg-blue-50 text-blue-700 border border-blue-200',
     primary: 'bg-[#00153D] text-white',
-    secondary: 'bg-[#F1F5F9] text-[#0F172A] border border-[#E2E8F0]',
-    outline: 'bg-white text-[#0F172A] border border-[#CBD5E1]',
-    success: 'bg-[#F0FDF4] text-[#16803C] border border-[#BBF7D0]',
-    warning: 'bg-[#FFFBEB] text-[#B45309] border border-[#FDE68A]',
-    error: 'bg-[#FEF2F2] text-[#C62828] border border-[#FECACA]',
-    accent: 'bg-[#FFFBEB] text-[#B45309] border border-[#FDE68A]',
-    neutral: 'bg-slate-100 text-slate-700 border border-slate-200'
+    accent: 'bg-amber-50 text-amber-800 border border-amber-200'
   };
 
   return (
     <span
       className={twMerge(
         clsx(
-          "inline-flex items-center gap-1.5 h-[24px] px-2.5 rounded-full text-xs font-semibold select-none whitespace-nowrap",
+          "inline-flex items-center gap-1.5 px-2 py-0.5 rounded-md text-xs font-medium select-none whitespace-nowrap",
           variants[variant],
           className
         )

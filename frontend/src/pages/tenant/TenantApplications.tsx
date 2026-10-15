@@ -82,35 +82,35 @@ export default function TenantApplications() {
     switch (status) {
       case ApplicationStatus.Approved:
         return (
-          <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold bg-emerald-100 text-emerald-800">
+          <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md text-xs font-semibold bg-emerald-50 text-emerald-700 border border-emerald-200">
             <CheckCircle2 className="w-3.5 h-3.5 text-emerald-600" />
             Đã chấp thuận
           </span>
         );
       case ApplicationStatus.UnderReview:
         return (
-          <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold bg-blue-100 text-blue-800">
+          <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md text-xs font-semibold bg-blue-50 text-blue-700 border border-blue-200">
             <Clock className="w-3.5 h-3.5 text-blue-600" />
             Chủ nhà đang xem xét
           </span>
         );
       case ApplicationStatus.MoreInfoRequested:
         return (
-          <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold bg-amber-100 text-amber-800">
+          <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md text-xs font-semibold bg-amber-50 text-amber-800 border border-amber-200">
             <AlertCircle className="w-3.5 h-3.5 text-amber-600" />
             Cần bổ sung thông tin
           </span>
         );
       case ApplicationStatus.Rejected:
         return (
-          <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold bg-rose-100 text-rose-800">
+          <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md text-xs font-semibold bg-rose-50 text-rose-700 border border-rose-200">
             <XCircle className="w-3.5 h-3.5 text-rose-600" />
             Đã từ chối
           </span>
         );
       case ApplicationStatus.Withdrawn:
         return (
-          <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold bg-slate-100 text-slate-700">
+          <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md text-xs font-semibold bg-slate-50 text-slate-700 border border-slate-200">
             <XCircle className="w-3.5 h-3.5 text-slate-500" />
             Đã rút hồ sơ
           </span>
@@ -118,7 +118,7 @@ export default function TenantApplications() {
       case ApplicationStatus.Submitted:
       default:
         return (
-          <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold bg-indigo-100 text-indigo-800">
+          <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md text-xs font-semibold bg-indigo-50 text-indigo-700 border border-indigo-200">
             <FileText className="w-3.5 h-3.5 text-indigo-600" />
             Đã nộp hồ sơ
           </span>
@@ -285,8 +285,9 @@ export default function TenantApplications() {
                     <p className="text-xs text-[#64748B] mt-0.5 line-clamp-1">
                       {app.roomAddress}
                     </p>
-                    <div className="flex items-center gap-4 mt-2 text-xs font-semibold text-[#00153D]">
+                    <div className="flex flex-wrap items-center gap-x-4 gap-y-1 mt-2 text-xs font-semibold text-[#00153D]">
                       <span>Giá thuê: {Number(app.roomPrice).toLocaleString('vi-VN')}đ/tháng</span>
+                      <span className="text-slate-600 font-normal">Cọc dự kiến: <strong className="text-[#00153D]">{Number(app.roomPrice).toLocaleString('vi-VN')}đ</strong></span>
                       <span>Chủ nhà: {app.landlordName}</span>
                     </div>
                   </div>

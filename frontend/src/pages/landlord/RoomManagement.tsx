@@ -281,7 +281,7 @@ export default function RoomManagement() {
         status: editingRoom.status,
         imageUrls: editingRoom.images ? editingRoom.images.map(img => img.imageUrl) : []
       });
-      toast.success('Đã lưu thay đổi thông tin phòng vào Backend API!');
+      toast.success('Đã lưu thay đổi thông tin phòng thành công!');
       setEditingRoom(null);
       loadRooms();
     } catch {
@@ -679,7 +679,7 @@ export default function RoomManagement() {
 
               <div className="flex justify-end gap-3 pt-4 border-t border-[#E2E8F0]">
                 <Button type="button" variant="secondary" onClick={() => setIsAdding(false)}>Hủy</Button>
-                <Button type="submit">Đăng tin phòng trọ (API)</Button>
+                <Button type="submit">Đăng tin phòng trọ</Button>
               </div>
             </form>
             </motion.div>
@@ -898,7 +898,7 @@ export default function RoomManagement() {
 
               <div className="flex justify-end gap-3 pt-4 border-t border-[#E2E8F0]">
                 <Button type="button" variant="secondary" onClick={() => setEditingRoom(null)}>Hủy</Button>
-                <Button type="submit">Lưu vào Backend API</Button>
+                <Button type="submit">Lưu thay đổi</Button>
               </div>
             </form>
             </motion.div>

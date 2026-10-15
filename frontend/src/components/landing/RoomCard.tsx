@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
-import { CheckCircle, Heart, Flame } from 'lucide-react';
+import { CheckCircle, Heart } from 'lucide-react';
 import { toast } from 'sonner';
 import { favoritesApi } from '../../services/api';
 import { useStore } from '../../store/useStore';
@@ -90,17 +90,9 @@ export function RoomCard({
         
         {/* Verification Signal */}
         {room.verified && (
-          <div className="absolute top-3 left-3 bg-white/95 backdrop-blur-xs text-emerald-700 border border-emerald-200/80 text-caption font-bold px-2.5 py-1 rounded-full flex items-center gap-1 shadow-xs select-none">
+          <div className="absolute top-3 left-3 bg-white/95 backdrop-blur-xs text-emerald-800 border border-emerald-200/90 text-[11px] font-semibold px-2 py-0.5 rounded-md flex items-center gap-1 shadow-xs select-none">
             <CheckCircle className="w-3.5 h-3.5 text-emerald-600" />
             <span>Đã xác minh</span>
-          </div>
-        )}
-
-        {/* Boosted / Nổi bật Badge */}
-        {room.isBoosted && (
-          <div className="absolute bottom-3 left-3 bg-[#00153D] text-amber-400 border border-amber-400/30 text-caption font-bold px-2.5 py-1 rounded-full flex items-center gap-1 shadow-xs select-none">
-            <Flame className="w-3.5 h-3.5 fill-amber-400 text-amber-400" />
-            <span>Nổi bật</span>
           </div>
         )}
 

@@ -177,7 +177,7 @@ export default function RoommateMatcher() {
           <h2 className="text-h2 font-bold text-[#0F172A]">Gợi ý ở ghép</h2>
           <button 
             onClick={() => setShowLikedModal(true)}
-            className="bg-white border border-[#E2E8F0] text-[#00153D] px-4 py-2 rounded-full text-caption font-bold flex items-center gap-1.5 shadow-clay-soft touch-target"
+            className="bg-white border border-slate-200 text-slate-800 px-3 py-1.5 rounded-md text-xs font-semibold flex items-center gap-1.5 shadow-xs touch-target"
           >
             <Heart size={16} className="fill-[#C62828] text-[#C62828]" />
             {activeLikedRoommates.length}
@@ -187,7 +187,7 @@ export default function RoommateMatcher() {
         {loading ? (
           <div className="flex flex-col items-center justify-center p-12 text-[#64748B]">
             <div className="w-8 h-8 border-4 border-[#00153D] border-t-transparent rounded-full animate-spin mb-3"></div>
-            <p>Đang tải danh sách người ở ghép từ Backend API...</p>
+            <p>Đang tải danh sách người ở ghép...</p>
           </div>
         ) : roommates.length === 0 ? (
           <div className="flex-1 flex flex-col items-center justify-center text-center bg-white rounded-[18px] shadow-clay-soft p-8 max-w-md mx-auto w-full space-y-4">
@@ -221,7 +221,7 @@ export default function RoommateMatcher() {
               
               <div className="h-64 bg-[#EEF2F6] w-full relative">
                 <img src={profile.image} alt={profile.name} className="w-full h-full object-cover" />
-                <div className="absolute top-4 right-4 bg-white/95 text-[#16803C] border border-[#DCFCE7] px-3.5 py-1.5 rounded-full text-body font-bold shadow-sm">
+                <div className="absolute top-4 right-4 bg-white/95 text-emerald-700 border border-emerald-200 px-2.5 py-1 rounded-md text-xs font-semibold shadow-sm">
                   {profile.matchScore != null ? `${profile.matchScore}% Độ tương thích` : 'Chưa đủ dữ liệu'}
                 </div>
               </div>
@@ -244,7 +244,7 @@ export default function RoommateMatcher() {
                         </div>
                       )}
                       <div className="overflow-hidden">
-                        <span className="text-[10px] font-bold text-blue-700 uppercase tracking-wide">Căn phòng tương ứng</span>
+                        <span className="text-[11px] font-medium text-slate-500">Căn phòng tương ứng</span>
                         <h4 className="text-caption font-bold text-slate-900 truncate">{profile.roomTitle || 'Phòng trọ'}</h4>
                         <p className="text-[11px] text-slate-500 truncate">{profile.roomAddress}</p>
                       </div>
