@@ -157,7 +157,7 @@ export default function RentalApplicationModal({
             {/* Modal Header */}
             <div className="p-6 bg-gradient-to-r from-[#00153D] to-[#073372] text-white flex justify-between items-start shrink-0">
               <div>
-                <h2 id="rental-app-title" className="text-xl font-bold flex items-center gap-2">
+                <h2 id="rental-app-title" className="text-xl font-bold text-white flex items-center gap-2">
                   <FileText className="w-5 h-5 text-indigo-300" />
                   Nộp hồ sơ thuê phòng
                 </h2>

@@ -316,11 +316,11 @@ export default function TenantDashboard() {
             {/* Bottom Invitation Banner */}
             <div className="p-6 bg-gradient-to-r from-[#00153D] to-[#073372] rounded-2xl text-white flex flex-col md:flex-row md:items-center justify-between gap-6 shadow-sm">
               <div className="space-y-1">
-                <h3 className="text-base font-bold flex items-center gap-2">
-                  <MapPin className="w-5 h-5 text-[#F2A900]" />
-                  <span>Bạn muốn tìm phòng theo khu vực cụ thể và mức giá mong muốn?</span>
+                <h3 className="text-base font-bold text-white flex items-center gap-2">
+                  <MapPin className="w-5 h-5 text-[#F2A900] shrink-0" />
+                  <span className="text-white">Bạn muốn tìm phòng theo khu vực cụ thể và mức giá mong muốn?</span>
                 </h3>
-                <p className="text-xs text-slate-300">
+                <p className="text-xs text-slate-200">
                   Sử dụng công cụ Bản đồ tìm kiếm toàn diện với các bộ lọc thông minh (Quận huyện, Giá thuê, Tiện ích, Tour 3D).
                 </p>
               </div>
