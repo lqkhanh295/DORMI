@@ -49,7 +49,7 @@ export default function AdminUsers() {
   const getRoleBadge = (role: number) => {
     switch (role) {
       case 2:
-        return <span className="px-2 py-0.5 rounded-md text-xs font-medium bg-purple-50 text-purple-700 border border-purple-200">Quản trị viên</span>;
+        return <span className="px-2 py-0.5 rounded-md text-xs font-semibold bg-slate-100 text-slate-800 border border-slate-200">Quản trị viên</span>;
       case 1:
         return <span className="px-2 py-0.5 rounded-md text-xs font-medium bg-blue-50 text-blue-700 border border-blue-200">Chủ trọ</span>;
       case 0:

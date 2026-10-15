@@ -319,7 +319,7 @@ export default function PostRentalModal({ lease, isLandlord, onClose, onRefresh 
       case 'ASSIGNED':
         return <span className="px-2 py-0.5 rounded-md text-xs font-medium bg-amber-50 text-amber-700 border border-amber-200">Đã giao thợ</span>;
       case 'IN_PROGRESS':
-        return <span className="px-2 py-0.5 rounded-md text-xs font-medium bg-indigo-50 text-indigo-700 border border-indigo-200">Đang xử lý</span>;
+        return <span className="px-2 py-0.5 rounded-md text-xs font-medium bg-sky-50 text-sky-700 border border-sky-200">Đang xử lý</span>;
       case 'RESOLVED':
         return <span className="px-2 py-0.5 rounded-md text-xs font-medium bg-emerald-50 text-emerald-700 border border-emerald-200">Đã sửa xong</span>;
       case 'CLOSED':
@@ -479,17 +479,17 @@ export default function PostRentalModal({ lease, isLandlord, onClose, onRefresh 
                       </p>
                     </div>
 
-                    <div className="p-4 rounded-xl bg-purple-50 border border-purple-200">
-                      <p className="text-xs font-semibold text-purple-700">Sự cố đang xử lý</p>
-                      <p className="text-lg font-bold text-purple-900 mt-1">
+                    <div className="p-4 rounded-xl bg-slate-50 border border-slate-200">
+                      <p className="text-xs font-semibold text-slate-700">Sự cố đang xử lý</p>
+                      <p className="text-lg font-bold text-[#0F172A] mt-1">
                         {summary?.activeMaintenanceCount ?? 0} sự cố
                       </p>
-                      <p className="text-[11px] text-purple-600 mt-0.5">Thời gian xử lý cam kết 24-48h</p>
+                      <p className="text-[11px] text-slate-500 mt-0.5">Thời gian xử lý cam kết 24-48h</p>
                     </div>
                   </div>
 
                   {/* Next Step Action Guide */}
-                  <div className="p-5 rounded-2xl bg-gradient-to-r from-blue-900 to-indigo-900 text-white space-y-3">
+                  <div className="p-5 rounded-2xl bg-[#00153D] text-white space-y-3 border border-[#073372]">
                     <div className="flex items-center gap-2">
                       <ShieldCheck className="w-5 h-5 text-emerald-400" />
                       <h3 className="font-bold text-sm md:text-base">Quy trình vận hành hợp đồng thuê DORMI</h3>
@@ -585,10 +585,10 @@ export default function PostRentalModal({ lease, isLandlord, onClose, onRefresh 
                             <div className="space-y-1">
                               <div className="flex items-center gap-2">
                                 <span className={`px-2 py-0.5 rounded text-[11px] font-bold ${
-                                  sch.type === 'Deposit' ? 'bg-purple-100 text-purple-800' :
-                                  sch.type === 'Utilities' ? 'bg-cyan-100 text-cyan-800' :
-                                  sch.type === 'MoveOutSettlement' ? 'bg-indigo-100 text-indigo-800' :
-                                  'bg-blue-100 text-blue-800'
+                                  sch.type === 'Deposit' ? 'bg-slate-100 text-slate-700 border border-slate-200' :
+                                  sch.type === 'Utilities' ? 'bg-sky-50 text-sky-700 border border-sky-200' :
+                                  sch.type === 'MoveOutSettlement' ? 'bg-amber-50 text-amber-700 border border-amber-200' :
+                                  'bg-blue-50 text-blue-700 border border-blue-200'
                                 }`}>
                                   {sch.type === 'Deposit' ? 'Đặt cọc' : sch.type === 'Utilities' ? 'Điện nước' : sch.type === 'MoveOutSettlement' ? 'Quyết toán' : 'Tiền thuê'}
                                 </span>
@@ -908,7 +908,7 @@ export default function PostRentalModal({ lease, isLandlord, onClose, onRefresh 
                                   <button
                                     type="button"
                                     onClick={() => handleUpdateMaintenanceStatus('IN_PROGRESS')}
-                                    className="px-3 py-1 bg-indigo-600 hover:bg-indigo-700 text-white font-bold text-xs rounded-lg"
+                                    className="px-3 py-1 bg-[#00153D] hover:bg-[#073372] text-white font-bold text-xs rounded-lg transition-colors"
                                   >
                                     Bắt đầu sửa chữa
                                   </button>

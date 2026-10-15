@@ -171,11 +171,11 @@ export default function TenantDashboard() {
         <div 
           onClick={() => setActiveTab('appointments')}
           className={`bg-white p-5 rounded-2xl border shadow-xs hover:shadow-md transition-[box-shadow,border-color,transform] duration-150 cursor-pointer flex flex-col justify-between space-y-4 group ${
-            activeTab === 'appointments' ? 'border-indigo-500 ring-2 ring-indigo-500/20' : 'border-[#E2E8F0] hover:border-indigo-300'
+            activeTab === 'appointments' ? 'border-[#00153D] ring-2 ring-[#00153D]/10' : 'border-[#E2E8F0] hover:border-slate-300'
           }`}
         >
           <div className="flex items-start justify-between">
-            <div className="w-12 h-12 rounded-xl bg-indigo-50 text-indigo-600 flex items-center justify-center group-hover:bg-indigo-600 group-hover:text-white transition-colors">
+            <div className="w-12 h-12 rounded-xl bg-slate-100 text-[#00153D] flex items-center justify-center group-hover:bg-[#00153D] group-hover:text-white transition-colors">
               <Calendar className="w-6 h-6" />
             </div>
           </div>
@@ -183,7 +183,7 @@ export default function TenantDashboard() {
             <span className="text-xs text-[#64748B] font-medium block">Lịch hẹn xem phòng</span>
             <span className="text-2xl font-black text-[#00153D]">{appointments.length} lịch hẹn</span>
           </div>
-          <div className="flex items-center text-xs font-bold text-indigo-600 group-hover:translate-x-1 transition-transform">
+          <div className="flex items-center text-xs font-bold text-[#00153D] group-hover:translate-x-1 transition-transform">
             <span>Xem danh sách lịch hẹn</span>
             <ArrowRight className="w-3.5 h-3.5 ml-1" />
           </div>
@@ -193,7 +193,7 @@ export default function TenantDashboard() {
         <div 
           onClick={() => setActiveTab('favorites')}
           className={`bg-white p-5 rounded-2xl border shadow-xs hover:shadow-md transition-[box-shadow,border-color,transform] duration-150 cursor-pointer flex flex-col justify-between space-y-4 group ${
-            activeTab === 'favorites' ? 'border-rose-500 ring-2 ring-rose-500/20' : 'border-[#E2E8F0] hover:border-rose-300'
+            activeTab === 'favorites' ? 'border-[#00153D] ring-2 ring-[#00153D]/10' : 'border-[#E2E8F0] hover:border-slate-300'
           }`}
         >
           <div className="flex items-start justify-between">
@@ -233,7 +233,7 @@ export default function TenantDashboard() {
           onClick={() => setActiveTab('appointments')}
           className={`px-4 py-2 rounded-xl text-xs font-bold transition-colors whitespace-nowrap flex items-center gap-2 ${
             activeTab === 'appointments'
-              ? 'bg-indigo-600 text-white shadow-sm'
+              ? 'bg-[#00153D] text-white shadow-sm'
               : 'bg-white border border-[#E2E8F0] text-[#64748B] hover:text-[#0F172A]'
           }`}
         >
@@ -246,7 +246,7 @@ export default function TenantDashboard() {
           onClick={() => setActiveTab('favorites')}
           className={`px-4 py-2 rounded-xl text-xs font-bold transition-colors whitespace-nowrap flex items-center gap-2 ${
             activeTab === 'favorites'
-              ? 'bg-rose-600 text-white shadow-sm'
+              ? 'bg-[#00153D] text-white shadow-sm'
               : 'bg-white border border-[#E2E8F0] text-[#64748B] hover:text-[#0F172A]'
           }`}
         >
@@ -314,7 +314,7 @@ export default function TenantDashboard() {
             )}
 
             {/* Bottom Invitation Banner */}
-            <div className="p-6 bg-gradient-to-r from-[#00153D] to-[#073372] rounded-2xl text-white flex flex-col md:flex-row md:items-center justify-between gap-6 shadow-sm">
+            <div className="p-6 bg-[#00153D] border border-[#073372] rounded-2xl text-white flex flex-col md:flex-row md:items-center justify-between gap-6 shadow-sm">
               <div className="space-y-1">
                 <h3 className="text-base font-bold text-white flex items-center gap-2">
                   <MapPin className="w-5 h-5 text-[#F2A900] shrink-0" />
@@ -349,7 +349,7 @@ export default function TenantDashboard() {
             <div className="flex justify-between items-center pb-2">
               <div>
                 <h2 className="text-lg font-bold text-[#0F172A] flex items-center gap-2">
-                  <Calendar className="w-5 h-5 text-indigo-600" />
+                  <Calendar className="w-5 h-5 text-[#00153D]" />
                   <span>Lịch hẹn xem phòng của tôi</span>
                 </h2>
                 <p className="text-xs text-[#64748B]">Trạng thái các cuộc hẹn trực tiếp với chủ trọ</p>
@@ -357,7 +357,7 @@ export default function TenantDashboard() {
               <button
                 type="button"
                 onClick={() => navigate('/tenant/viewings')}
-                className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-indigo-50 hover:bg-indigo-100 text-indigo-900 text-xs font-bold rounded-lg transition-colors border border-indigo-200"
+                className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-slate-100 hover:bg-slate-200 text-[#00153D] text-xs font-bold rounded-lg transition-colors border border-slate-200"
               >
                 <span>Mở trang Quản lý lịch hẹn</span>
                 <ArrowRight className="w-3.5 h-3.5" />

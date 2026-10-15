@@ -89,7 +89,7 @@ export default function CreateRoommatePost() {
   };
 
   return (
-    <div className="max-w-3xl mx-auto py-8 space-y-6 bg-[#F5F7FA]">
+    <div className="max-w-3xl mx-auto py-8 space-y-6 bg-[#F8FAFC]">
       <div className="space-y-2">
         <h1 className="text-h2 font-bold text-[#0F172A]">
           Tạo tin tìm bạn ở ghép
@@ -100,7 +100,7 @@ export default function CreateRoommatePost() {
       </div>
 
       {attachedRoomId && (
-        <div className="p-4 bg-gradient-to-r from-blue-50 to-indigo-50 border border-blue-200 rounded-[18px] flex items-center justify-between shadow-sm">
+        <div className="p-4 bg-blue-50/70 border border-blue-200 rounded-[18px] flex items-center justify-between shadow-sm">
           <div className="flex items-center gap-3">
             <div className="w-10 h-10 rounded-xl bg-blue-600 text-white flex items-center justify-center shrink-0">
               <Home className="w-5 h-5" />

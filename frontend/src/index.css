@@ -4,29 +4,69 @@
 @theme {
   --font-sans: 'Plus Jakarta Sans', system-ui, -apple-system, sans-serif;
 
-  /* DORMI Functional Clay Color System */
+  /* DORMI Brand Tokens */
+  --color-brand-primary: #00153D;
+  --color-brand-primary-hover: #073372;
+  --color-brand-accent: #F2A900;
+  --color-brand-accent-hover: #D99500;
+
+  /* Backward-compatible Primary & Accent aliases */
   --color-primary: #00153D;
   --color-primary-hover: #073372;
   --color-accent: #F2A900;
   
+  /* Surfaces & Canvas */
   --color-canvas: #F8FAFC;
   --color-surface: #FFFFFF;
+  --color-surface-subtle: #F1F5F9;
   --color-surface-alt: #F1F5F9;
   --color-surface-elevated: #FFFFFF;
   
+  /* Typography / Text */
   --color-text-primary: #0F172A;
   --color-text-secondary: #475569;
   --color-text-muted: #94A3B8;
 
+  /* Borders */
   --color-border: #E2E8F0;
+  --color-border-default: #E2E8F0;
   --color-border-strong: #CBD5E1;
   --color-border-subtle: #F1F5F9;
 
+  /* Actions & Focus */
+  --color-action-primary: #00153D;
+  --color-action-secondary: #FFFFFF;
+  --color-focus-ring: #00153D;
+
+  /* Semantic Status: Success */
   --color-success: #16803C;
+  --color-success-surface: #F0FDF4;
+  --color-success-border: #BBF7D0;
   --color-success-bg: #F0FDF4;
 
+  /* Semantic Status: Warning */
+  --color-warning: #B45309;
+  --color-warning-surface: #FFFBEB;
+  --color-warning-border: #FDE68A;
+
+  /* Semantic Status: Danger / Error */
+  --color-danger: #C62828;
+  --color-danger-surface: #FEF2F2;
+  --color-danger-border: #FECACA;
   --color-error: #C62828;
   --color-error-bg: #FEF2F2;
+
+  /* Semantic Status: Info */
+  --color-info: #1D4ED8;
+  --color-info-surface: #EFF6FF;
+  --color-info-border: #BFDBFE;
+
+  /* Chart Series */
+  --color-chart-series-1: #00153D;
+  --color-chart-series-2: #2563EB;
+  --color-chart-series-3: #16803C;
+  --color-chart-series-4: #F2A900;
+  --color-chart-series-5: #64748B;
 
   /* Radius Scale */
   --radius-button: 12px;

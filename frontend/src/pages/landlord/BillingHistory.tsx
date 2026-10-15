@@ -24,7 +24,7 @@ export default function BillingHistory() {
     .reduce((sum, t) => sum + Number(t.amount || 0), 0);
 
   return (
-    <div className="space-y-6 max-w-5xl mx-auto bg-[#F5F7FA]">
+    <div className="space-y-6 max-w-5xl mx-auto bg-[#F8FAFC]">
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-h2 font-bold text-[#0F172A] flex items-center gap-2">

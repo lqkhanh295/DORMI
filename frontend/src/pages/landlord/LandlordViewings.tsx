@@ -130,8 +130,8 @@ export default function LandlordViewings() {
         );
       case 'Rescheduled':
         return (
-          <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md text-xs font-semibold bg-purple-50 text-purple-700 border border-purple-200">
-            <CalendarClock className="w-3.5 h-3.5 text-purple-600" />
+          <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md text-xs font-semibold bg-sky-50 text-sky-700 border border-sky-200">
+            <CalendarClock className="w-3.5 h-3.5 text-sky-600" />
             Đã đổi lịch
           </span>
         );
@@ -334,7 +334,7 @@ export default function LandlordViewings() {
                 {/* Appointment time highlight */}
                 <div className="p-3.5 bg-[#F8FAFC] rounded-xl border border-[#F1F5F9] flex flex-wrap items-center justify-between gap-3 text-xs">
                   <div className="flex items-center gap-2 text-[#00153D] font-bold">
-                    <Clock className="w-4 h-4 text-indigo-600" />
+                    <Clock className="w-4 h-4 text-[#00153D]" />
                     <span>Lịch hẹn: {new Date(app.appointmentDate).toLocaleString('vi-VN', { dateStyle: 'full', timeStyle: 'short' })}</span>
                   </div>
                   {app.notes && (

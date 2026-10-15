@@ -39,7 +39,7 @@ export function HeroSearch({
   const quickDistricts = ['Bình Thạnh', 'Quận 7', 'Thủ Đức', 'Quận 10', 'Tân Bình'];
 
   return (
-    <section className="pt-6 pb-4 bg-gradient-to-b from-[#F8FAFC] to-white border-b border-slate-200/80">
+    <section className="pt-6 pb-4 bg-[#F8FAFC] border-b border-slate-200/80">
       <div className="container-dormi space-y-4">
         
         {/* Compact Header Title */}

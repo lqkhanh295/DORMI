@@ -157,7 +157,7 @@ export default function RoomDetail() {
   // ponytail: Apple-standard calm skeleton placeholder mirrors final layout to prevent content layout jumps
   if (loading) {
     return (
-      <div className="container-dormi pt-6 pb-28 md:py-10 space-y-8 relative bg-[#F5F7FA]">
+      <div className="container-dormi pt-6 pb-28 md:py-10 space-y-8 relative bg-[#F8FAFC]">
         <div className="flex justify-between items-center">
           <div className="w-28 h-10 rounded-[12px] bg-slate-200 skeleton-shimmer" />
         </div>
@@ -226,7 +226,7 @@ export default function RoomDetail() {
       initial={{ opacity: 0, y: 4 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.22, ease: [0.16, 1, 0.3, 1] }}
-      className="container-dormi pt-6 pb-28 md:py-10 space-y-8 relative bg-[#F5F7FA]"
+      className="container-dormi pt-6 pb-28 md:py-10 space-y-8 relative bg-[#F8FAFC]"
     >
       <Toaster position="top-center" richColors />
       
@@ -278,8 +278,8 @@ export default function RoomDetail() {
                 <h1 className="text-hero text-[#0F172A]">{roomData?.title || 'Studio Hiện Đại'}</h1>
                 <div className="flex flex-wrap items-center gap-2">
                   {roomData?.isBoosted && (
-                    <span className="bg-gradient-to-r from-amber-500 to-orange-500 text-white text-caption font-bold px-3.5 py-1.5 rounded-full flex items-center gap-1.5 self-start shadow-sm">
-                      <Flame className="w-4 h-4 fill-white text-white" /> Tin nổi bật
+                    <span className="bg-[#F2A900] text-[#00153D] text-caption font-bold px-3.5 py-1.5 rounded-full flex items-center gap-1.5 self-start shadow-sm">
+                      <Flame className="w-4 h-4 fill-[#00153D] text-[#00153D]" /> Tin nổi bật
                     </span>
                   )}
                   {roomData?.isPropertyVerified && (
@@ -377,7 +377,7 @@ export default function RoomDetail() {
               <div className="p-4 rounded-xl bg-slate-50 border border-slate-200/90 space-y-3">
                 <div className="w-full bg-slate-200 h-2 rounded-full overflow-hidden">
                   <div 
-                    className="h-full bg-gradient-to-r from-blue-600 to-emerald-600 rounded-full transition-[width] duration-500 ease-out" 
+                    className="h-full bg-emerald-600 rounded-full transition-[width] duration-500 ease-out" 
                     style={{ width: `${trustScore ? trustScore.totalScore : (roomData?.isVerifiedLandlord ? 85 : 70)}%` }}
                   ></div>
                 </div>
@@ -650,11 +650,11 @@ export default function RoomDetail() {
                 </div>
 
                 <div className="space-y-3 text-body text-[#0F172A]">
-                  <div className="flex items-center gap-3 p-3 bg-[#F5F7FA] rounded-xl border border-[#E2E8F0]">
+                  <div className="flex items-center gap-3 p-3 bg-[#F8FAFC] rounded-xl border border-[#E2E8F0]">
                     <CheckCircle className="w-5 h-5 text-[#16803C]" />
                     <span>Danh tính người đăng đã đối soát CCCD</span>
                   </div>
-                  <div className="flex items-center gap-3 p-3 bg-[#F5F7FA] rounded-xl border border-[#E2E8F0]">
+                  <div className="flex items-center gap-3 p-3 bg-[#F8FAFC] rounded-xl border border-[#E2E8F0]">
                     <CheckCircle className="w-5 h-5 text-[#16803C]" />
                     <span>Hình ảnh phòng trọ chụp thực tế</span>
                   </div>
@@ -721,7 +721,7 @@ export default function RoomDetail() {
                       min={new Date().toISOString().split('T')[0]}
                       value={selectedDate}
                       onChange={e => { setSelectedDate(e.target.value); setSchedulerStep(2); }}
-                      className="w-full bg-[#F5F7FA] shadow-clay-inset border border-[#E2E8F0] rounded-[12px] px-4 py-2.5 text-body text-[#0F172A] outline-none min-h-[44px]"
+                      className="w-full bg-[#F8FAFC] shadow-clay-inset border border-[#E2E8F0] rounded-[12px] px-4 py-2.5 text-body text-[#0F172A] outline-none min-h-[44px]"
                     />
                   </div>
 
@@ -734,7 +734,7 @@ export default function RoomDetail() {
                             key={slot}
                             type="button"
                             onClick={() => setSelectedTime(slot)}
-                            className={`py-2.5 rounded-[12px] text-caption font-semibold transition-[background-color,color,border-color] duration-150 active:scale-95 ${selectedTime === slot ? 'btn-clay-primary text-white border-[#00153D]' : 'bg-[#F5F7FA] border border-[#E2E8F0] text-[#0F172A]'}`}
+                            className={`py-2.5 rounded-[12px] text-caption font-semibold transition-[background-color,color,border-color] duration-150 active:scale-95 ${selectedTime === slot ? 'btn-clay-primary text-white border-[#00153D]' : 'bg-[#F8FAFC] border border-[#E2E8F0] text-[#0F172A]'}`}
                           >
                             {slot}
                           </button>
@@ -756,7 +756,7 @@ export default function RoomDetail() {
                   </div>
                   <div className="space-y-2">
                     <h4 className="text-h3 font-bold text-[#0F172A]">Gửi yêu cầu lịch hẹn thành công!</h4>
-                    <div className="bg-[#F5F7FA] shadow-clay-inset p-4 rounded-[12px] text-body font-semibold text-[#00153D] space-y-1">
+                    <div className="bg-[#F8FAFC] shadow-clay-inset p-4 rounded-[12px] text-body font-semibold text-[#00153D] space-y-1">
                       <p>Ngày: {selectedDate}</p>
                       <p>Giờ dự kiến: {selectedTime}</p>
                     </div>

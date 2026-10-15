@@ -107,7 +107,7 @@ export default function PrivacyPolicy() {
               </p>
               <Link 
                 to="/tenant/settings"
-                className="text-indigo-600 font-semibold text-xs hover:underline inline-flex items-center gap-1 mt-1"
+                className="text-blue-600 font-semibold text-xs hover:underline inline-flex items-center gap-1 mt-1"
               >
                 Mở Cài đặt tài khoản
               </Link>
@@ -163,7 +163,7 @@ export default function PrivacyPolicy() {
 
                 <div className="p-3.5 bg-slate-50 border border-slate-200 rounded-xl space-y-1">
                   <p className="font-semibold text-slate-900 flex items-center gap-1.5">
-                    <Sliders className="w-4 h-4 text-indigo-600" />
+                    <Sliders className="w-4 h-4 text-[#00153D]" />
                     Dữ liệu lối sống (Matcher)
                   </p>
                   <p className="text-slate-600">Giờ giấc sinh hoạt, sở thích nuôi thú cưng, hút thuốc, ngân sách dự kiến để tính điểm tương thích bạn cùng phòng.</p>

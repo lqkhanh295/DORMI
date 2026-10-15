@@ -129,7 +129,7 @@ export default function LeadAnalytics() {
   };
 
   return (
-    <div className="space-y-6 bg-[#F5F7FA] pb-12">
+    <div className="space-y-6 bg-[#F8FAFC] pb-12">
       {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
@@ -179,10 +179,10 @@ export default function LeadAnalytics() {
 
             <Card className="p-4 bg-white rounded-2xl border border-slate-200/90 shadow-xs">
               <span className="text-xs font-medium text-slate-500 flex items-center gap-1">
-                <Calendar className="w-3.5 h-3.5 text-indigo-600" /> Xem phòng
+                <Calendar className="w-3.5 h-3.5 text-sky-600" /> Xem phòng
               </span>
               <p className="text-2xl font-black text-[#0F172A] mt-2">{totalViewings.toLocaleString('vi-VN')}</p>
-              <span className="text-[11px] text-indigo-600 font-semibold">{leadToViewingRate}% từ quan tâm</span>
+              <span className="text-[11px] text-sky-600 font-semibold">{leadToViewingRate}% từ quan tâm</span>
             </Card>
 
             <Card className="p-4 bg-white rounded-2xl border border-slate-200/90 shadow-xs">
@@ -316,7 +316,7 @@ export default function LeadAnalytics() {
                   <div>
                     <div className="flex justify-between items-center mb-1">
                       <span className="font-semibold text-[#475569] flex items-center gap-1.5">
-                        <Calendar className="w-3.5 h-3.5 text-indigo-600" /> 3. Lịch hẹn xem phòng
+                        <Calendar className="w-3.5 h-3.5 text-sky-600" /> 3. Lịch hẹn xem phòng
                       </span>
                       <span className="font-bold text-[#0F172A]">
                         {totalViewings.toLocaleString('vi-VN')} <span className="text-[11px] text-[#94A3B8]">({leadToViewingRate}%)</span>
@@ -324,7 +324,7 @@ export default function LeadAnalytics() {
                     </div>
                     <div className="w-full h-2 bg-[#F1F5F9] rounded-full overflow-hidden">
                       <div 
-                        className="bg-indigo-600 h-full rounded-full transition-[width] duration-500 ease-out" 
+                        className="bg-sky-600 h-full rounded-full transition-[width] duration-500 ease-out" 
                         style={{ width: `${Math.min(100, Math.max(leadToViewingRate, 4))}%` }}
                       />
                     </div>
@@ -450,7 +450,7 @@ export default function LeadAnalytics() {
                           <td className="px-3 py-4 whitespace-nowrap text-center font-semibold text-rose-600">
                             {room.saves}
                           </td>
-                          <td className="px-3 py-4 whitespace-nowrap text-center font-semibold text-indigo-600">
+                          <td className="px-3 py-4 whitespace-nowrap text-center font-semibold text-sky-600">
                             {room.viewings ?? room.contacts}
                           </td>
                           <td className="px-3 py-4 whitespace-nowrap text-center font-semibold text-amber-600">

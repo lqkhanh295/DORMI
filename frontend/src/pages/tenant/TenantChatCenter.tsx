@@ -191,7 +191,7 @@ export default function TenantChatCenter() {
           className={`flex items-center gap-2 px-4 py-2 rounded-[10px] text-caption font-bold transition-[background-color,color,box-shadow,transform] duration-150 ease-out active:scale-[0.98] ${
             activeTab === 'chat'
               ? 'btn-clay-primary'
-              : 'text-[#64748B] hover:text-[#0F172A] hover:bg-[#F5F7FA]'
+              : 'text-[#64748B] hover:text-[#0F172A] hover:bg-[#F8FAFC]'
           }`}
         >
           <MessageCircle size={18} />
@@ -205,7 +205,7 @@ export default function TenantChatCenter() {
           className={`flex items-center gap-2 px-4 py-2 rounded-[10px] text-caption font-bold transition-[background-color,color,box-shadow,transform] duration-150 ease-out active:scale-[0.98] ${
             activeTab === 'appointments'
               ? 'btn-clay-primary'
-              : 'text-[#64748B] hover:text-[#0F172A] hover:bg-[#F5F7FA]'
+              : 'text-[#64748B] hover:text-[#0F172A] hover:bg-[#F8FAFC]'
           }`}
         >
           <Calendar size={18} />
@@ -228,7 +228,7 @@ export default function TenantChatCenter() {
 
           {apiAppointments.length === 0 ? (
             <div className="text-center py-16 space-y-3">
-              <div className="w-16 h-16 bg-[#F5F7FA] text-[#64748B] rounded-full flex items-center justify-center mx-auto">
+              <div className="w-16 h-16 bg-[#F8FAFC] text-[#64748B] rounded-full flex items-center justify-center mx-auto">
                 <Calendar size={32} />
               </div>
               <h3 className="text-h3 font-bold text-[#0F172A]">Chưa có lịch hẹn nào</h3>
@@ -323,12 +323,12 @@ export default function TenantChatCenter() {
         /* CHAT VIEW */
         <div className="flex h-[calc(100vh-12rem)] bg-white rounded-[18px] shadow-clay-soft overflow-hidden border border-[#E2E8F0]">
           {/* Sidebar */}
-          <div className="hidden md:flex w-1/3 border-r border-[#E2E8F0] flex-col bg-[#F5F7FA]">
+          <div className="hidden md:flex w-1/3 border-r border-[#E2E8F0] flex-col bg-[#F8FAFC]">
             <div className="p-4 border-b border-[#E2E8F0] bg-white">
               <input 
                 type="text" 
                 placeholder="Tìm kiếm tin nhắn..." 
-                className="w-full bg-[#F5F7FA] shadow-clay-inset border border-[#E2E8F0] rounded-[12px] px-4 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-[#00153D]"
+                className="w-full bg-[#F8FAFC] shadow-clay-inset border border-[#E2E8F0] rounded-[12px] px-4 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-[#00153D]"
               />
             </div>
             <div className="flex-1 overflow-y-auto">
@@ -410,7 +410,7 @@ export default function TenantChatCenter() {
 
                 <div 
                   ref={messagesContainerRef}
-                  className="flex-1 p-4 overflow-y-auto bg-[#F5F7FA] flex flex-col gap-3"
+                  className="flex-1 p-4 overflow-y-auto bg-[#F8FAFC] flex flex-col gap-3"
                 >
                   <div className="text-center">
                     <span className="text-xs text-slate-500 bg-white border border-slate-200 px-2.5 py-0.5 rounded-md font-medium">Hôm nay</span>
@@ -463,7 +463,7 @@ export default function TenantChatCenter() {
                 </div>
 
                 <div className="p-4 border-t border-[#E2E8F0] bg-white">
-                  <div className="flex items-end gap-2 bg-[#F5F7FA] shadow-clay-inset rounded-[12px] border border-[#E2E8F0] p-2 focus-within:bg-white focus-within:ring-1 focus-within:ring-[#00153D] transition-[background-color,box-shadow,border-color] duration-150">
+                  <div className="flex items-end gap-2 bg-[#F8FAFC] shadow-clay-inset rounded-[12px] border border-[#E2E8F0] p-2 focus-within:bg-white focus-within:ring-1 focus-within:ring-[#00153D] transition-[background-color,box-shadow,border-color] duration-150">
                     <button className="p-2 text-[#64748B] hover:text-[#0F172A] rounded-full transition-colors flex-shrink-0">
                       <Paperclip size={20} />
                     </button>
@@ -481,7 +481,7 @@ export default function TenantChatCenter() {
               </>
             ) : (
               <div className="flex-1 flex flex-col items-center justify-center text-[#64748B] p-6 space-y-3">
-                <div className="w-16 h-16 bg-[#F5F7FA] rounded-full flex items-center justify-center text-[#94A3B8]">
+                <div className="w-16 h-16 bg-[#F8FAFC] rounded-full flex items-center justify-center text-[#94A3B8]">
                   <MessageCircle size={32} />
                 </div>
                 <h3 className="font-bold text-[#0F172A] text-h3">Chưa có hội thoại</h3>

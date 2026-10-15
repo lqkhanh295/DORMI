@@ -105,29 +105,29 @@ export default function LandlordDashboard() {
         </Link>
         
         <Link to="/landlord/applications">
-          <Card className="p-6 bg-white rounded-2xl border border-slate-200/90 shadow-xs hover:shadow-md hover:border-indigo-300 transition-all cursor-pointer h-full border-l-4 border-l-indigo-600">
-            <h3 className="text-xs font-semibold text-indigo-700 mb-2">Hồ sơ ứng tuyển</h3>
+          <Card className="p-6 bg-white rounded-2xl border border-slate-200/90 shadow-xs hover:shadow-md hover:border-slate-300 transition-all cursor-pointer h-full">
+            <h3 className="text-xs font-medium text-slate-500 mb-2">Hồ sơ ứng tuyển</h3>
             <div className="flex items-baseline gap-2">
               {loading ? (
                 <div className="h-10 w-16 skeleton-shimmer rounded-lg" />
               ) : (
                 <p className="text-3xl font-black text-[#00153D] leading-none">{pendingApplications}</p>
               )}
-              <span className="text-caption font-bold text-indigo-600">cần xét duyệt</span>
+              <span className="text-caption font-bold text-blue-600">cần xét duyệt</span>
             </div>
           </Card>
         </Link>
         
         <Link to="/landlord/viewings">
-          <Card className="p-6 bg-white rounded-2xl border border-slate-200/90 shadow-xs hover:shadow-md hover:border-emerald-300 transition-all cursor-pointer h-full border-l-4 border-l-emerald-600">
-            <h3 className="text-xs font-semibold text-emerald-700 mb-2">Lịch hẹn xem phòng</h3>
+          <Card className="p-6 bg-white rounded-2xl border border-slate-200/90 shadow-xs hover:shadow-md hover:border-slate-300 transition-all cursor-pointer h-full">
+            <h3 className="text-xs font-medium text-slate-500 mb-2">Lịch hẹn xem phòng</h3>
             <div className="flex items-baseline gap-2">
               {loading ? (
                 <div className="h-10 w-16 skeleton-shimmer rounded-lg" />
               ) : (
                 <p className="text-3xl font-black text-[#00153D] leading-none">{analytics.totalAppointments}</p>
               )}
-              <span className="text-caption font-medium text-rose-600">{analytics.pendingAppointments} chờ duyệt</span>
+              <span className="text-caption font-medium text-amber-700">{analytics.pendingAppointments} chờ duyệt</span>
             </div>
           </Card>
         </Link>

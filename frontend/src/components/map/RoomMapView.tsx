@@ -427,7 +427,7 @@ export default function RoomMapView({
           onClick={locateUser}
           disabled={isLocating}
           title="Định vị vị trí của tôi"
-          className="w-10 h-10 bg-white hover:bg-[#F5F7FA] text-[#00153D] rounded-xl shadow-clay-soft border border-[#E2E8F0] flex items-center justify-center transition-[transform,background-color,box-shadow] duration-150 ease-out touch-target active:scale-95"
+          className="w-10 h-10 bg-white hover:bg-[#F8FAFC] text-[#00153D] rounded-xl shadow-clay-soft border border-[#E2E8F0] flex items-center justify-center transition-[transform,background-color,box-shadow] duration-150 ease-out touch-target active:scale-95"
         >
           <Crosshair className={`w-5 h-5 ${isLocating ? 'animate-spin text-blue-600' : 'text-[#00153D]'}`} />
         </button>
@@ -436,7 +436,7 @@ export default function RoomMapView({
         <button
           onClick={handleFitAll}
           title="Xem tất cả phòng trên bản đồ"
-          className="w-10 h-10 bg-white hover:bg-[#F5F7FA] text-[#00153D] rounded-xl shadow-clay-soft border border-[#E2E8F0] flex items-center justify-center transition-[transform,background-color,box-shadow] duration-150 ease-out touch-target active:scale-95"
+          className="w-10 h-10 bg-white hover:bg-[#F8FAFC] text-[#00153D] rounded-xl shadow-clay-soft border border-[#E2E8F0] flex items-center justify-center transition-[transform,background-color,box-shadow] duration-150 ease-out touch-target active:scale-95"
         >
           <Compass className="w-5 h-5 text-[#00153D]" />
         </button>
@@ -446,14 +446,14 @@ export default function RoomMapView({
           <button
             onClick={handleZoomIn}
             title="Phóng to"
-            className="w-10 h-9 hover:bg-[#F5F7FA] flex items-center justify-center border-b border-[#E2E8F0] text-[#0F172A] transition-colors"
+            className="w-10 h-9 hover:bg-[#F8FAFC] flex items-center justify-center border-b border-[#E2E8F0] text-[#0F172A] transition-colors"
           >
             <ZoomIn className="w-4 h-4" />
           </button>
           <button
             onClick={handleZoomOut}
             title="Thu nhỏ"
-            className="w-10 h-9 hover:bg-[#F5F7FA] flex items-center justify-center text-[#0F172A] transition-colors"
+            className="w-10 h-9 hover:bg-[#F8FAFC] flex items-center justify-center text-[#0F172A] transition-colors"
           >
             <ZoomOut className="w-4 h-4" />
           </button>

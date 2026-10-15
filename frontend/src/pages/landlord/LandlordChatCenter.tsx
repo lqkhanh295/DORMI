@@ -212,7 +212,7 @@ export default function LandlordChatCenter() {
   return (
     <div className="flex h-[calc(100vh-10rem)] bg-white rounded-[18px] shadow-clay-soft overflow-hidden border border-[#E2E8F0]">
       {/* Sidebar: Conversation List */}
-      <div className="hidden md:flex w-1/3 border-r border-[#E2E8F0] flex-col bg-[#F5F7FA]">
+      <div className="hidden md:flex w-1/3 border-r border-[#E2E8F0] flex-col bg-[#F8FAFC]">
         <div className="p-4 border-b border-[#E2E8F0] bg-white">
           <div className="relative">
             <Search className="w-4 h-4 text-[#94A3B8] absolute left-3 top-1/2 -translate-y-1/2" />
@@ -221,7 +221,7 @@ export default function LandlordChatCenter() {
               value={searchQuery}
               onChange={e => setSearchQuery(e.target.value)}
               placeholder="Tìm kiếm hội thoại..." 
-              className="w-full bg-[#F5F7FA] shadow-clay-inset border border-[#E2E8F0] rounded-[12px] pl-9 pr-4 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-[#00153D]"
+              className="w-full bg-[#F8FAFC] shadow-clay-inset border border-[#E2E8F0] rounded-[12px] pl-9 pr-4 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-[#00153D]"
             />
           </div>
         </div>
@@ -342,7 +342,7 @@ export default function LandlordChatCenter() {
             {/* Messages */}
             <div 
               ref={messagesContainerRef}
-              className="flex-1 p-6 overflow-y-auto bg-[#F5F7FA] flex flex-col gap-4"
+              className="flex-1 p-6 overflow-y-auto bg-[#F8FAFC] flex flex-col gap-4"
             >
               <div className="text-center">
                 <span className="text-caption text-[#64748B] bg-white border border-[#E2E8F0] px-3 py-1 rounded-full font-medium">Hôm nay</span>
@@ -396,7 +396,7 @@ export default function LandlordChatCenter() {
 
             {/* Input Area */}
             <div className="p-4 border-t border-[#E2E8F0] bg-white">
-              <div className="flex items-end gap-2 bg-[#F5F7FA] shadow-clay-inset rounded-[12px] border border-[#E2E8F0] p-2 focus-within:bg-white focus-within:ring-1 focus-within:ring-[#00153D] transition-[background-color,box-shadow,border-color] duration-150">
+              <div className="flex items-end gap-2 bg-[#F8FAFC] shadow-clay-inset rounded-[12px] border border-[#E2E8F0] p-2 focus-within:bg-white focus-within:ring-1 focus-within:ring-[#00153D] transition-[background-color,box-shadow,border-color] duration-150">
                 <button type="button" className="p-2 text-[#64748B] hover:text-[#0F172A] rounded-full transition-colors flex-shrink-0">
                   <Paperclip className="w-5 h-5" />
                 </button>

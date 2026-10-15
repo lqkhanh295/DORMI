@@ -190,7 +190,7 @@ export default function AdminReports() {
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 bg-white p-6 rounded-2xl border border-slate-200 shadow-sm">
         <div>
           <h1 className="text-2xl font-bold text-slate-900 flex items-center gap-2">
-            <ShieldAlert className="w-7 h-7 text-indigo-600" />
+            <ShieldAlert className="w-7 h-7 text-rose-600" />
             Trung tâm Giám sát An toàn & Báo cáo Vi phạm
           </h1>
           <p className="text-sm text-slate-500 mt-1">
@@ -316,7 +316,7 @@ export default function AdminReports() {
                       <Link
                         to={`/room/${r.roomId}`}
                         target="_blank"
-                        className="font-bold text-slate-900 text-base hover:text-indigo-600 transition-colors inline-flex items-center gap-1"
+                        className="font-bold text-slate-900 text-base hover:text-blue-600 transition-colors inline-flex items-center gap-1"
                       >
                         {r.roomTitle || 'Phòng trọ'}
                         <ExternalLink className="w-3.5 h-3.5 text-slate-400" />
@@ -351,7 +351,7 @@ export default function AdminReports() {
                         <div className="flex flex-wrap gap-2">
                           {r.evidenceUrls.split(',').filter(Boolean).map((url, idx) => (
                             <a key={idx} href={url.trim()} target="_blank" rel="noopener noreferrer" className="relative group">
-                              <img src={url.trim()} alt="Evidence" className="w-16 h-16 object-cover rounded-lg border border-slate-200 hover:border-indigo-500" />
+                              <img src={url.trim()} alt="Evidence" className="w-16 h-16 object-cover rounded-lg border border-slate-200 hover:border-blue-500" />
                               <div className="absolute inset-0 bg-black/30 rounded-lg flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
                                 <Eye className="w-4 h-4 text-white" />
                               </div>
@@ -424,7 +424,7 @@ export default function AdminReports() {
           <Card className="bg-white rounded-2xl border border-slate-200 overflow-hidden shadow-sm">
             <div className="p-4 border-b border-slate-100 flex items-center justify-between bg-slate-50/50">
               <div className="flex items-center gap-2">
-                <History className="w-5 h-5 text-indigo-600" />
+                <History className="w-5 h-5 text-slate-600" />
                 <h3 className="font-bold text-slate-900 text-sm">Nhật ký hoạt động Quản trị & Kiểm duyệt</h3>
               </div>
               <span className="text-xs text-slate-500">{auditLogs.length} sự kiện gần nhất</span>
@@ -511,7 +511,7 @@ export default function AdminReports() {
               >
                 <div className="flex items-center justify-between border-b border-slate-100 pb-3">
                   <div className="flex items-center gap-2">
-                    <ShieldCheck className="w-5 h-5 text-indigo-600" />
+                    <ShieldCheck className="w-5 h-5 text-blue-600" />
                     <h3 className="text-base font-bold text-slate-900">Xử lý báo cáo vi phạm</h3>
                   </div>
                   <button
@@ -534,7 +534,7 @@ export default function AdminReports() {
                     <select
                       value={modalAction}
                       onChange={e => setModalAction(e.target.value)}
-                      className="w-full p-2.5 rounded-xl border border-slate-200 bg-slate-50 text-slate-900 font-medium outline-none focus:ring-2 focus:ring-indigo-500"
+                      className="w-full p-2.5 rounded-xl border border-slate-200 bg-slate-50 text-slate-900 font-medium outline-none focus:ring-2 focus:ring-blue-600"
                     >
                       <option value="RoomHidden">Ẩn tin đăng khỏi danh sách tìm kiếm (RoomHidden)</option>
                       <option value="WarningIssued">Gửi cảnh cáo vi phạm đến chủ trọ (WarningIssued)</option>
@@ -550,7 +550,7 @@ export default function AdminReports() {
                       value={moderatorNotes}
                       onChange={e => setModeratorNotes(e.target.value)}
                       placeholder="Ghi rõ lý do xử lý, điều khoản vi phạm hoặc lý do bác bỏ..."
-                      className="w-full p-3 rounded-xl border border-slate-200 bg-slate-50 text-slate-900 outline-none focus:ring-2 focus:ring-indigo-500"
+                      className="w-full p-3 rounded-xl border border-slate-200 bg-slate-50 text-slate-900 outline-none focus:ring-2 focus:ring-blue-600"
                     />
                   </div>
                 </div>
@@ -567,7 +567,7 @@ export default function AdminReports() {
                     variant="primary"
                     disabled={resolving}
                     onClick={handleConfirmResolve}
-                    className="bg-indigo-600 hover:bg-indigo-700 text-white shadow-sm"
+                    className="bg-[#00153D] hover:bg-[#073372] text-white shadow-xs"
                   >
                     {resolving ? 'Đang thực hiện...' : 'Xác nhận xử lý & Ghi log'}
                   </Button>

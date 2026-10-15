@@ -134,7 +134,7 @@ export default function RoommateMatcher() {
   );
 
   return (
-    <div className="flex flex-col lg:flex-row gap-6 max-w-6xl mx-auto min-h-[calc(100vh-80px)] overflow-hidden bg-[#F5F7FA] p-4 md:p-6">
+    <div className="flex flex-col lg:flex-row gap-6 max-w-6xl mx-auto min-h-[calc(100vh-80px)] overflow-hidden bg-[#F8FAFC] p-4 md:p-6">
       
       {/* Sidebar: Liked Roommates */}
       <div className="hidden lg:flex w-1/3 flex-col bg-white rounded-[18px] shadow-clay-soft overflow-hidden border border-[#E2E8F0]">
@@ -149,7 +149,7 @@ export default function RoommateMatcher() {
       </div>
 
       {/* Main Area */}
-      <div className="flex-1 flex flex-col relative bg-[#F5F7FA] rounded-[18px] justify-center">
+      <div className="flex-1 flex flex-col relative bg-[#F8FAFC] rounded-[18px] justify-center">
         
         <div className="bg-white rounded-[18px] shadow-clay-soft p-4 mb-6 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
           <div>
@@ -234,7 +234,7 @@ export default function RoommateMatcher() {
                 </div>
 
                 {profile.roomId && (
-                  <div className="p-3 bg-gradient-to-r from-blue-50 to-indigo-50 border border-blue-200 rounded-[14px] flex items-center justify-between gap-3 shadow-sm">
+                  <div className="p-3 bg-blue-50/70 border border-blue-200 rounded-[14px] flex items-center justify-between gap-3 shadow-sm">
                     <div className="flex items-center gap-2.5 overflow-hidden">
                       {profile.roomImageUrl ? (
                         <img src={profile.roomImageUrl} alt={profile.roomTitle} className="w-12 h-12 rounded-[10px] object-cover shrink-0 border border-blue-100" />

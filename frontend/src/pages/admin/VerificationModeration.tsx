@@ -111,7 +111,7 @@ export default function VerificationModeration() {
       <div className="flex items-center justify-between mb-6">
         <div>
           <h1 className="text-2xl font-bold text-slate-900 flex items-center gap-2">
-            <ShieldCheck className="w-7 h-7 text-indigo-600" />
+            <ShieldCheck className="w-7 h-7 text-[#00153D]" />
             Kiểm duyệt hồ sơ CCCD / Giấy tờ chủ trọ
           </h1>
           <p className="text-sm text-slate-500 mt-1">
@@ -148,7 +148,7 @@ export default function VerificationModeration() {
               onClick={() => setSelectedId(item.id)}
               className={`p-4 cursor-pointer motion-gpu transition-[border-color,box-shadow,transform] duration-200 ease-out rounded-xl border ${
                 selectedItem?.id === item.id 
-                  ? 'bg-white border-indigo-600 shadow-md ring-2 ring-indigo-100' 
+                  ? 'bg-white border-[#00153D] shadow-md ring-2 ring-[#00153D]/10' 
                   : 'bg-white border-slate-200 hover:border-slate-300 shadow-sm hover:-translate-y-0.5'
               }`}
             >
@@ -219,7 +219,7 @@ export default function VerificationModeration() {
                   <div>
                     <p className="text-xs text-[#64748B]">Loại giấy tờ & Mã số</p>
                     <p className="font-bold text-[#0F172A] text-sm">
-                      {selectedItem.documentType}: <span className="text-indigo-600 font-mono">{selectedItem.documentNumber || 'Chưa nhập'}</span>
+                      {selectedItem.documentType}: <span className="text-[#00153D] font-mono">{selectedItem.documentNumber || 'Chưa nhập'}</span>
                     </p>
                   </div>
                   {selectedItem.propertyAddress && (
@@ -242,7 +242,7 @@ export default function VerificationModeration() {
                       <span>Mặt trước ({selectedItem.documentType})</span>
                       <button 
                         onClick={() => setZoomedImage(selectedItem.frontImageUrl)}
-                        className="text-indigo-600 hover:text-indigo-800 flex items-center gap-1"
+                        className="text-blue-600 hover:text-blue-800 flex items-center gap-1"
                       >
                         <ZoomIn className="w-3.5 h-3.5" /> Phóng to
                       </button>
@@ -265,7 +265,7 @@ export default function VerificationModeration() {
                       <span>Mặt sau ({selectedItem.documentType})</span>
                       <button 
                         onClick={() => setZoomedImage(selectedItem.backImageUrl)}
-                        className="text-indigo-600 hover:text-indigo-800 flex items-center gap-1"
+                        className="text-blue-600 hover:text-blue-800 flex items-center gap-1"
                       >
                         <ZoomIn className="w-3.5 h-3.5" /> Phóng to
                       </button>

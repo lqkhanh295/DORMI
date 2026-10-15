@@ -13,7 +13,7 @@ export const SoftIconButton = React.forwardRef<HTMLButtonElement, SoftIconButton
     
     const variants = {
       protruding: "bg-white border border-[#E2E8F0] shadow-clay-soft hover:shadow-clay-primary hover:border-[#CBD5E1]",
-      carved: "bg-[#F5F7FA] border border-[#E2E8F0] shadow-clay-inset hover:bg-white hover:border-[#CBD5E1]",
+      carved: "bg-[#F8FAFC] border border-[#E2E8F0] shadow-clay-inset hover:bg-white hover:border-[#CBD5E1]",
     };
 
     const sizes = {

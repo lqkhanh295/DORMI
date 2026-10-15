@@ -22,13 +22,18 @@ export default function AdminLayout() {
   ];
 
   return (
-    <div className="min-h-screen bg-[#F8FAFC] flex text-[#1F2937]">
+    <div className="min-h-screen bg-[#F8FAFC] flex text-[#0F172A]">
       {/* Sidebar */}
-      <aside className="w-64 bg-[#1F2937] text-white hidden md:flex md:flex-col border-r border-[#374151] sticky top-0 h-screen shrink-0 overflow-y-auto z-30">
-        <div className="p-6 shrink-0">
-          <Link to="/" className="text-xl font-bold tracking-tight text-white">DORMI <span className="text-[#6366F1] text-xs ml-1 font-bold">ADMIN</span></Link>
+      <aside className="w-64 bg-[#00153D] text-white hidden md:flex md:flex-col border-r border-slate-800 sticky top-0 h-screen shrink-0 overflow-y-auto z-30">
+        <div className="p-6 shrink-0 border-b border-white/10">
+          <Link to="/" className="text-xl font-black tracking-wider text-white select-none">
+            DORMI<span className="text-[#F2A900] ml-0.5">.</span>
+            <span className="text-[11px] font-bold text-slate-300 bg-white/10 border border-white/20 px-1.5 py-0.5 rounded-md ml-2 tracking-normal">
+              ADMIN
+            </span>
+          </Link>
         </div>
-        <nav className="px-4 py-4 space-y-2 flex-1">
+        <nav className="px-3 py-4 space-y-1.5 flex-1">
           {navItems.map(item => {
             const isActive = item.path === '/admin' 
               ? location.pathname === '/admin' 
@@ -38,9 +43,13 @@ export default function AdminLayout() {
               <Link 
                 key={item.name}
                 to={item.path} 
-                className={`px-4 py-2.5 rounded-full text-sm font-semibold transition-[background-color,color,box-shadow,transform] duration-150 ease-out active:scale-[0.98] min-h-[44px] flex items-center gap-3 ${isActive ? 'text-white bg-[#6366F1] shadow-[0_10px_20px_-10px_rgba(99,102,241,0.5)]' : 'text-gray-300 hover:text-white hover:bg-gray-800'}`}
+                className={`px-3.5 py-2.5 rounded-xl text-xs font-semibold transition-all duration-150 ease-out active:scale-[0.98] min-h-[40px] flex items-center gap-3 ${
+                  isActive 
+                    ? 'text-white bg-white/15 font-bold border border-white/20 shadow-xs' 
+                    : 'text-slate-300 hover:text-white hover:bg-white/10'
+                }`}
               >
-                <Icon className="w-4 h-4 shrink-0" />
+                <Icon className={`w-4 h-4 shrink-0 ${isActive ? 'text-[#F2A900]' : 'text-slate-400'}`} />
                 <span>{item.name}</span>
               </Link>
             );
@@ -50,12 +59,12 @@ export default function AdminLayout() {
 
       {/* Main Content */}
       <div className="flex-1 flex flex-col min-w-0">
-        <header className="h-[56px] bg-white border-b border-[#E5E7EB] shadow-[0_10px_20px_-10px_rgba(99,102,241,0.08)] flex items-center justify-end px-6 gap-4 sticky top-0 z-20">
-          <span className="text-sm font-semibold text-[#1F2937]">{currentUser?.name}</span>
-          <div className="w-8 h-8 rounded-full bg-[#EEF2FF] flex items-center justify-center text-[#4F46E5] font-bold overflow-hidden border border-[#6366F1]/20">
+        <header className="h-[56px] bg-white border-b border-slate-200 shadow-2xs flex items-center justify-end px-6 gap-3 sticky top-0 z-20">
+          <span className="text-xs font-bold text-slate-800">{currentUser?.name || 'Quản trị viên'}</span>
+          <div className="w-8 h-8 rounded-full bg-slate-100 flex items-center justify-center text-[#00153D] font-bold overflow-hidden border border-slate-200 text-xs">
             A
           </div>
-          <button onClick={handleLogout} className="text-xs text-[#991B1B] hover:underline font-semibold min-h-[44px] px-2">Đăng xuất</button>
+          <button onClick={handleLogout} className="text-xs text-rose-600 hover:text-rose-700 hover:underline font-semibold min-h-[44px] px-2">Đăng xuất</button>
         </header>
         <main className="p-6 flex-1">
           <div key={location.pathname} className="page-transition">

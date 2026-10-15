@@ -464,7 +464,7 @@ export default function VerificationCenter() {
           className="space-y-6 motion-gpu"
         >
           {/* Benefit Banner */}
-          <div className="p-5 rounded-[18px] bg-gradient-to-r from-emerald-50 to-teal-50 border border-emerald-200/80 flex items-start gap-4">
+          <div className="p-5 rounded-[18px] bg-emerald-50/80 border border-emerald-200 flex items-start gap-4">
             <div className="w-12 h-12 rounded-xl bg-emerald-600 text-white flex items-center justify-center shrink-0 shadow-sm">
               <Award className="w-6 h-6" />
             </div>

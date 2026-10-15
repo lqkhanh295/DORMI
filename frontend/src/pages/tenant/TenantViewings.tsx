@@ -117,8 +117,8 @@ export default function TenantViewings() {
         );
       case 'Rescheduled':
         return (
-          <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md text-xs font-semibold bg-purple-50 text-purple-700 border border-purple-200">
-            <CalendarClock className="w-3.5 h-3.5 text-purple-600" />
+          <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md text-xs font-semibold bg-sky-50 text-sky-700 border border-sky-200">
+            <CalendarClock className="w-3.5 h-3.5 text-sky-600" />
             Đã đổi lịch
           </span>
         );
@@ -300,7 +300,7 @@ export default function TenantViewings() {
                       </div>
                       <Link
                         to={`/room/${app.roomId}`}
-                        className="text-base font-bold text-[#0F172A] hover:text-indigo-600 transition-colors line-clamp-1"
+                        className="text-base font-bold text-[#0F172A] hover:text-blue-600 transition-colors line-clamp-1"
                       >
                         {app.roomTitle}
                       </Link>
@@ -363,7 +363,7 @@ export default function TenantViewings() {
                 {/* Date Highlight Box */}
                 <div className="p-3.5 bg-[#F8FAFC] rounded-xl border border-[#F1F5F9] my-3 flex flex-wrap items-center justify-between gap-3 text-xs">
                   <div className="flex items-center gap-2 text-[#00153D] font-bold">
-                    <Clock className="w-4 h-4 text-indigo-600" />
+                    <Clock className="w-4 h-4 text-[#00153D]" />
                     <span>Thời gian hẹn: {new Date(app.appointmentDate).toLocaleString('vi-VN', { dateStyle: 'full', timeStyle: 'short' })}</span>
                   </div>
                   {app.notes && (
@@ -375,12 +375,12 @@ export default function TenantViewings() {
 
                 {/* NEXT ACTION: Viewing Completed -> Submit Application Prompt */}
                 {isCompleted && (
-                  <div className="p-4 bg-indigo-50/80 border border-indigo-200 rounded-xl flex flex-col sm:flex-row sm:items-center justify-between gap-3 text-xs text-indigo-950 mt-2">
+                  <div className="p-4 bg-blue-50/80 border border-blue-200 rounded-xl flex flex-col sm:flex-row sm:items-center justify-between gap-3 text-xs text-[#0F172A] mt-2">
                     <div className="flex items-start gap-2.5">
-                      <FileText className="w-5 h-5 text-indigo-600 shrink-0 mt-0.5" />
+                      <FileText className="w-5 h-5 text-blue-600 shrink-0 mt-0.5" />
                       <div>
                         <p className="font-bold text-sm">Bạn đã xem phòng này!</p>
-                        <p className="text-indigo-800 mt-0.5">
+                        <p className="text-slate-600 mt-0.5">
                           Nếu bạn ưng ý với không gian thực tế, hãy nộp hồ sơ thuê ngay để chủ nhà giữ phòng và tạo hợp đồng.
                         </p>
                       </div>
@@ -431,7 +431,7 @@ export default function TenantViewings() {
               >
                 <div className="flex justify-between items-center border-b border-[#E2E8F0] pb-3">
                   <h3 className="font-bold text-base text-[#0F172A] flex items-center gap-2">
-                    <CalendarClock className="w-5 h-5 text-indigo-600" />
+                    <CalendarClock className="w-5 h-5 text-[#00153D]" />
                     Đổi lịch xem phòng
                   </h3>
                   <button onClick={() => setReschedulingItem(null)} className="text-[#94A3B8] hover:text-[#0F172A] p-1 rounded-lg">

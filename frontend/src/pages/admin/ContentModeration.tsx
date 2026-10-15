@@ -171,7 +171,7 @@ export default function ContentModeration() {
   };
 
   return (
-    <PageMotion className="flex flex-col h-[calc(100vh-8rem)] bg-[#F5F7FA]">
+    <PageMotion className="flex flex-col h-[calc(100vh-8rem)] bg-[#F8FAFC]">
       <div className="flex items-center justify-between mb-4">
         <div>
           <h1 className="text-h2 font-bold text-[#0F172A]">Kiểm duyệt nội dung (Admin Portal)</h1>
@@ -196,7 +196,7 @@ export default function ContentModeration() {
       {mainTab === 'rooms' ? (
       <div className="flex gap-6 flex-1 min-h-0">
         <div className="w-1/3 flex flex-col bg-white rounded-[18px] shadow-clay-soft overflow-hidden border border-[#E2E8F0]">
-          <div className="p-4 border-b border-[#E2E8F0] bg-[#F5F7FA]">
+          <div className="p-4 border-b border-[#E2E8F0] bg-[#F8FAFC]">
             <div className="flex justify-between items-center mb-3">
               <h3 className="font-bold text-h3 text-[#0F172A]">Danh sách tin đăng</h3>
               <span className="bg-slate-100 text-slate-700 border border-slate-200 px-2 py-0.5 rounded-md text-xs font-medium">{filteredRooms.length} / {rooms.length}</span>
@@ -245,7 +245,7 @@ export default function ContentModeration() {
               <div
                 key={room.id}
                 onClick={() => setSelectedId(room.id)}
-                className={`p-4 rounded-[14px] cursor-pointer transition-[background-color,border-color,box-shadow,transform] duration-150 ease-out hover:-translate-y-0.5 active:scale-[0.99] ${selectedId === room.id ? 'bg-white shadow-clay-primary border-2 border-[#00153D]' : 'bg-[#F5F7FA] border border-[#E2E8F0] hover:bg-white'}`}
+                className={`p-4 rounded-[14px] cursor-pointer transition-[background-color,border-color,box-shadow,transform] duration-150 ease-out hover:-translate-y-0.5 active:scale-[0.99] ${selectedId === room.id ? 'bg-white shadow-clay-primary border-2 border-[#00153D]' : 'bg-[#F8FAFC] border border-[#E2E8F0] hover:bg-white'}`}
               >
                 <div className="flex justify-between items-start mb-2">
                   {renderStatusBadge(room.status)}
@@ -270,7 +270,7 @@ export default function ContentModeration() {
         <div className="flex-1 bg-white rounded-[18px] shadow-clay-primary overflow-hidden flex flex-col border-none">
           {selectedRoom ? (
             <>
-              <div className="p-6 border-b border-[#E2E8F0] flex justify-between items-center bg-[#F5F7FA]">
+              <div className="p-6 border-b border-[#E2E8F0] flex justify-between items-center bg-[#F8FAFC]">
                 <div>
                   <h2 className="text-h2 font-bold text-[#0F172A] mb-1">Chi tiết tin đăng</h2>
                   <div className="flex items-center gap-2">
@@ -293,7 +293,7 @@ export default function ContentModeration() {
 
               <div className="p-6 flex-1 overflow-y-auto space-y-4">
                 {/* 1. Card Thông tin Chủ trọ (Hình ảnh & Thông tin chi tiết) */}
-                <Card className="p-4 bg-[#F5F7FA] shadow-clay-inset rounded-[14px] border border-[#E2E8F0] flex items-center justify-between gap-4">
+                <Card className="p-4 bg-[#F8FAFC] shadow-clay-inset rounded-[14px] border border-[#E2E8F0] flex items-center justify-between gap-4">
                   <div className="flex items-center gap-4">
                     <div 
                       className="relative group cursor-pointer"
@@ -348,7 +348,7 @@ export default function ContentModeration() {
 
                 {/* 2. Gallery Hình ảnh bài đăng */}
                 {selectedRoom.images && selectedRoom.images.length > 0 && (
-                  <Card className="p-4 bg-[#F5F7FA] shadow-clay-inset rounded-[12px] border border-[#E2E8F0]">
+                  <Card className="p-4 bg-[#F8FAFC] shadow-clay-inset rounded-[12px] border border-[#E2E8F0]">
                     <h4 className="font-semibold text-caption text-[#64748B] mb-3">Hình ảnh phòng trọ thực tế ({selectedRoom.images.length} ảnh)</h4>
                     <div className="grid grid-cols-4 gap-3">
                       {selectedRoom.images.map((img, idx) => (
@@ -362,22 +362,22 @@ export default function ContentModeration() {
 
                 {/* 3. Thông tin chính */}
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                  <Card className="p-4 bg-[#F5F7FA] shadow-clay-inset rounded-[12px] border border-[#E2E8F0]">
+                  <Card className="p-4 bg-[#F8FAFC] shadow-clay-inset rounded-[12px] border border-[#E2E8F0]">
                     <h4 className="font-semibold text-caption text-[#64748B] mb-1">Giá thuê</h4>
                     <p className="text-h3 font-bold text-[#00153D]">{Number(selectedRoom.price).toLocaleString('vi-VN')} ₫/tháng</p>
                   </Card>
-                  <Card className="p-4 bg-[#F5F7FA] shadow-clay-inset rounded-[12px] border border-[#E2E8F0]">
+                  <Card className="p-4 bg-[#F8FAFC] shadow-clay-inset rounded-[12px] border border-[#E2E8F0]">
                     <h4 className="font-semibold text-caption text-[#64748B] mb-1">Diện tích & Loại phòng</h4>
                     <p className="text-h3 font-bold text-[#0F172A]">{selectedRoom.roomType || 'Studio'} • {selectedRoom.area || 25} m²</p>
                   </Card>
-                  <Card className="p-4 bg-[#F5F7FA] shadow-clay-inset rounded-[12px] border border-[#E2E8F0]">
+                  <Card className="p-4 bg-[#F8FAFC] shadow-clay-inset rounded-[12px] border border-[#E2E8F0]">
                     <h4 className="font-semibold text-caption text-[#64748B] mb-1">Ngày tạo tin</h4>
                     <p className="text-body font-bold text-[#0F172A]">{new Date(selectedRoom.createdAt).toLocaleDateString('vi-VN')}</p>
                   </Card>
                 </div>
 
                 {/* 3. Tiêu đề & Địa chỉ */}
-                <Card className="p-4 bg-[#F5F7FA] shadow-clay-inset rounded-[12px] border border-[#E2E8F0]">
+                <Card className="p-4 bg-[#F8FAFC] shadow-clay-inset rounded-[12px] border border-[#E2E8F0]">
                   <h4 className="font-semibold text-caption text-[#64748B] mb-1">Tiêu đề tin đăng</h4>
                   <p className="text-body font-bold text-[#0F172A] mb-3">{selectedRoom.title}</p>
                   <h4 className="font-semibold text-caption text-[#64748B] mb-1">Địa chỉ chi tiết</h4>
@@ -386,7 +386,7 @@ export default function ContentModeration() {
 
                 {/* 4. Tiện ích */}
                 {selectedRoom.utilities && (
-                  <Card className="p-4 bg-[#F5F7FA] shadow-clay-inset rounded-[12px] border border-[#E2E8F0]">
+                  <Card className="p-4 bg-[#F8FAFC] shadow-clay-inset rounded-[12px] border border-[#E2E8F0]">
                     <h4 className="font-semibold text-caption text-[#64748B] mb-2">Tiện ích đi kèm</h4>
                     <div className="flex flex-wrap gap-2">
                       {selectedRoom.utilities.split(',').map((util, i) => (
@@ -400,7 +400,7 @@ export default function ContentModeration() {
 
                 {/* 5. Mô tả chi tiết */}
                 {selectedRoom.description && (
-                  <Card className="p-4 bg-[#F5F7FA] shadow-clay-inset rounded-[12px] border border-[#E2E8F0]">
+                  <Card className="p-4 bg-[#F8FAFC] shadow-clay-inset rounded-[12px] border border-[#E2E8F0]">
                     <h4 className="font-semibold text-caption text-[#64748B] mb-2">Mô tả chi tiết từ chủ trọ</h4>
                     <p className="text-body text-[#334155] whitespace-pre-line leading-relaxed">{selectedRoom.description}</p>
                   </Card>
@@ -408,7 +408,7 @@ export default function ContentModeration() {
 
                 {/* 6. Virtual 3D Tour */}
                 {selectedRoom.virtual3DUrl && (
-                  <Card className="p-4 bg-[#F5F7FA] shadow-clay-inset rounded-[12px] border border-[#E2E8F0]">
+                  <Card className="p-4 bg-[#F8FAFC] shadow-clay-inset rounded-[12px] border border-[#E2E8F0]">
                     <h4 className="font-semibold text-caption text-[#64748B] mb-1">Link 3D Virtual Tour</h4>
                     <a href={selectedRoom.virtual3DUrl} target="_blank" rel="noreferrer" className="text-body text-[#00153D] font-bold underline hover:text-blue-600 break-all inline-flex items-center gap-1.5">
                       <Globe className="w-4 h-4 text-blue-600" /> {selectedRoom.virtual3DUrl}
@@ -417,7 +417,7 @@ export default function ContentModeration() {
                 )}
               </div>
 
-              <div className="p-6 border-t border-[#E2E8F0] bg-[#F5F7FA] flex items-center justify-between gap-3">
+              <div className="p-6 border-t border-[#E2E8F0] bg-[#F8FAFC] flex items-center justify-between gap-3">
                 <span className="text-caption text-[#64748B] font-semibold">Chuyển trạng thái:</span>
                 <div className="flex gap-2">
                   <Button
@@ -455,7 +455,7 @@ export default function ContentModeration() {
         /* Roommate Posts Moderation */
         <div className="flex gap-6 flex-1 min-h-0">
           <div className="w-1/3 flex flex-col bg-white rounded-[18px] shadow-clay-soft overflow-hidden border border-[#E2E8F0]">
-            <div className="p-4 border-b border-[#E2E8F0] bg-[#F5F7FA]">
+            <div className="p-4 border-b border-[#E2E8F0] bg-[#F8FAFC]">
               <div className="flex justify-between items-center">
                 <h3 className="font-bold text-h3 text-[#0F172A]">Tin tìm người ở ghép</h3>
                 <span className="bg-slate-100 text-slate-700 border border-slate-200 px-2 py-0.5 rounded-md text-xs font-medium">
@@ -479,7 +479,7 @@ export default function ContentModeration() {
                 <div
                   key={post.id}
                   onClick={() => setSelectedRoommateId(post.id)}
-                  className={`p-4 rounded-[14px] cursor-pointer transition-[background-color,border-color,box-shadow,transform] duration-150 ease-out hover:-translate-y-0.5 active:scale-[0.99] ${selectedRoommateId === post.id ? 'bg-white shadow-clay-primary border-2 border-[#00153D]' : 'bg-[#F5F7FA] border border-[#E2E8F0] hover:bg-white'}`}
+                  className={`p-4 rounded-[14px] cursor-pointer transition-[background-color,border-color,box-shadow,transform] duration-150 ease-out hover:-translate-y-0.5 active:scale-[0.99] ${selectedRoommateId === post.id ? 'bg-white shadow-clay-primary border-2 border-[#00153D]' : 'bg-[#F8FAFC] border border-[#E2E8F0] hover:bg-white'}`}
                 >
                   <div className="flex justify-between items-start mb-2">
                     <span className={`text-xs font-medium px-2 py-0.5 rounded-md inline-flex items-center gap-1 ${post.isActive ? 'bg-emerald-50 text-emerald-700 border border-emerald-200' : 'bg-rose-50 text-rose-700 border border-rose-200'}`}>
@@ -506,7 +506,7 @@ export default function ContentModeration() {
           <div className="flex-1 flex flex-col bg-white rounded-[18px] shadow-clay-soft overflow-hidden border border-[#E2E8F0]">
             {selectedRoommate ? (
               <>
-                <div className="p-6 border-b border-[#E2E8F0] bg-[#F5F7FA] flex justify-between items-start">
+                <div className="p-6 border-b border-[#E2E8F0] bg-[#F8FAFC] flex justify-between items-start">
                   <div>
                     <div className="flex items-center gap-2 mb-2">
                       <span className={`text-xs font-medium px-2 py-0.5 rounded-md inline-flex items-center gap-1 ${selectedRoommate.isActive ? 'bg-emerald-50 text-emerald-700 border border-emerald-200' : 'bg-rose-50 text-rose-700 border border-rose-200'}`}>
@@ -521,7 +521,7 @@ export default function ContentModeration() {
 
                 <div className="flex-1 overflow-y-auto p-6 space-y-6">
                   {/* Người đăng */}
-                  <Card className="p-4 bg-[#F5F7FA] shadow-clay-soft rounded-[12px] border border-[#E2E8F0]">
+                  <Card className="p-4 bg-[#F8FAFC] shadow-clay-soft rounded-[12px] border border-[#E2E8F0]">
                     <h4 className="font-semibold text-caption text-[#64748B] mb-3">Thông tin người đăng</h4>
                     <div className="flex items-center gap-4">
                       <div className="w-12 h-12 rounded-full bg-[#00153D] text-white flex items-center justify-center font-bold text-lg">
@@ -573,7 +573,7 @@ export default function ContentModeration() {
                   </div>
                 </div>
 
-                <div className="p-6 border-t border-[#E2E8F0] bg-[#F5F7FA] flex items-center justify-between">
+                <div className="p-6 border-t border-[#E2E8F0] bg-[#F8FAFC] flex items-center justify-between">
                   <span className="text-caption text-[#64748B] font-semibold">Tác vụ kiểm duyệt:</span>
                   {selectedRoommate.isActive ? (
                     <Button
@@ -627,13 +627,13 @@ export default function ContentModeration() {
               >
                 <button 
                   onClick={() => setPreviewAvatar(null)} 
-                  className="absolute top-4 right-4 text-[#64748B] hover:text-[#0F172A] w-8 h-8 flex items-center justify-center rounded-full bg-[#F5F7FA]"
+                  className="absolute top-4 right-4 text-[#64748B] hover:text-[#0F172A] w-8 h-8 flex items-center justify-center rounded-full bg-[#F8FAFC]"
                   aria-label="Đóng"
                 >
                   <X className="w-5 h-5" />
                 </button>
                 <h3 className="font-bold text-h3 text-[#0F172A]">Chân dung Chủ trọ</h3>
-                <div className="w-48 h-48 rounded-full overflow-hidden border-4 border-[#00153D] shadow-lg bg-[#F5F7FA]">
+                <div className="w-48 h-48 rounded-full overflow-hidden border-4 border-[#00153D] shadow-lg bg-[#F8FAFC]">
                   <img src={previewAvatar} alt="Chân dung chủ nhà" className="w-full h-full object-cover" />
                 </div>
                 <p className="text-caption text-[#64748B] font-semibold">{selectedRoom?.landlordName}</p>

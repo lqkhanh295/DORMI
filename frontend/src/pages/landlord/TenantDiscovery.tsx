@@ -105,7 +105,7 @@ export default function TenantDiscovery() {
   };
 
   return (
-    <div className="space-y-6 bg-[#F5F7FA]">
+    <div className="space-y-6 bg-[#F8FAFC]">
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
           <h1 className="text-h2 font-bold text-[#0F172A] flex items-center gap-2">

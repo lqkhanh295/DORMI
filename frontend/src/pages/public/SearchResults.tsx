@@ -356,14 +356,14 @@ export default function SearchResults() {
                 exit={{ opacity: 0 }}
                 className="bg-white rounded-[18px] shadow-clay-soft p-8 text-center space-y-6 max-w-md mx-auto my-8 border border-[#E2E8F0]"
               >
-                <div className="w-16 h-16 bg-[#F5F7FA] rounded-full flex items-center justify-center text-[#64748B] mx-auto">
+                <div className="w-16 h-16 bg-[#F8FAFC] rounded-full flex items-center justify-center text-[#64748B] mx-auto">
                   <FadersHorizontal className="w-8 h-8" />
                 </div>
                 <div className="space-y-2">
                   <h3 className="text-h3 font-bold text-[#0F172A]">Không tìm thấy phòng phù hợp</h3>
                   <p className="text-caption text-[#64748B]">Bạn có thể thử các gợi ý sau để mở rộng kết quả:</p>
                 </div>
-                <ul className="text-caption text-[#0F172A] font-semibold text-left space-y-2 bg-[#F5F7FA] p-4 rounded-[12px]">
+                <ul className="text-caption text-[#0F172A] font-semibold text-left space-y-2 bg-[#F8FAFC] p-4 rounded-[12px]">
                   <li>• Mở rộng khu vực tìm kiếm</li>
                   <li>• Tăng ngân sách thêm 500.000đ</li>
                   <li>• Bỏ bớt một bộ lọc quá hẹp</li>
@@ -484,7 +484,7 @@ export default function SearchResults() {
                           key={d}
                           type="button"
                           onClick={() => setSelectedDistrict(selectedDistrict === d ? null : d)}
-                          className={`py-2 px-3 rounded-[10px] text-caption font-semibold border transition-[background-color,color,border-color] duration-150 active:scale-95 ${selectedDistrict === d ? 'btn-clay-primary text-white border-[#00153D]' : 'bg-[#F5F7FA] text-[#64748B] border-[#E2E8F0] hover:text-[#0F172A]'}`}
+                          className={`py-2 px-3 rounded-[10px] text-caption font-semibold border transition-[background-color,color,border-color] duration-150 active:scale-95 ${selectedDistrict === d ? 'btn-clay-primary text-white border-[#00153D]' : 'bg-[#F8FAFC] text-[#64748B] border-[#E2E8F0] hover:text-[#0F172A]'}`}
                         >
                           {d}
                         </button>
@@ -506,7 +506,7 @@ export default function SearchResults() {
                           key={p.id}
                           type="button"
                           onClick={() => setSelectedPrice(selectedPrice === p.id ? null : p.id)}
-                          className={`py-2 px-3 rounded-[10px] text-caption font-semibold border transition-[background-color,color,border-color] duration-150 active:scale-95 ${selectedPrice === p.id ? 'btn-clay-primary text-white border-[#00153D]' : 'bg-[#F5F7FA] text-[#64748B] border-[#E2E8F0] hover:text-[#0F172A]'}`}
+                          className={`py-2 px-3 rounded-[10px] text-caption font-semibold border transition-[background-color,color,border-color] duration-150 active:scale-95 ${selectedPrice === p.id ? 'btn-clay-primary text-white border-[#00153D]' : 'bg-[#F8FAFC] text-[#64748B] border-[#E2E8F0] hover:text-[#0F172A]'}`}
                         >
                           {p.label}
                         </button>
@@ -528,7 +528,7 @@ export default function SearchResults() {
                           key={a.id}
                           type="button"
                           onClick={() => setSelectedArea(selectedArea === a.id ? null : a.id)}
-                          className={`py-2 px-3 rounded-[10px] text-caption font-semibold border transition-[background-color,color,border-color] duration-150 active:scale-95 ${selectedArea === a.id ? 'btn-clay-primary text-white border-[#00153D]' : 'bg-[#F5F7FA] text-[#64748B] border-[#E2E8F0] hover:text-[#0F172A]'}`}
+                          className={`py-2 px-3 rounded-[10px] text-caption font-semibold border transition-[background-color,color,border-color] duration-150 active:scale-95 ${selectedArea === a.id ? 'btn-clay-primary text-white border-[#00153D]' : 'bg-[#F8FAFC] text-[#64748B] border-[#E2E8F0] hover:text-[#0F172A]'}`}
                         >
                           {a.label}
                         </button>
@@ -551,7 +551,7 @@ export default function SearchResults() {
                                 isSelected ? prev.filter(u => u !== util) : [...prev, util]
                               );
                             }}
-                            className={`py-1.5 px-3 rounded-full text-caption font-semibold border transition-[background-color,color,border-color] duration-150 active:scale-95 ${isSelected ? 'bg-[#00153D] text-white border-[#00153D]' : 'bg-[#F5F7FA] text-[#64748B] border-[#E2E8F0] hover:text-[#0F172A]'}`}
+                            className={`py-1.5 px-3 rounded-full text-caption font-semibold border transition-[background-color,color,border-color] duration-150 active:scale-95 ${isSelected ? 'bg-[#00153D] text-white border-[#00153D]' : 'bg-[#F8FAFC] text-[#64748B] border-[#E2E8F0] hover:text-[#0F172A]'}`}
                           >
                             {util}
                           </button>

@@ -271,7 +271,7 @@ export default function SmartListingForm() {
   };
 
   return (
-    <div className="max-w-3xl mx-auto space-y-6 bg-[#F5F7FA]">
+    <div className="max-w-3xl mx-auto space-y-6 bg-[#F8FAFC]">
       <div className="flex items-center justify-between mb-8">
         <div>
           <h1 className="text-h2 font-bold text-[#0F172A]">Tạo tin đăng phòng trọ</h1>
@@ -302,7 +302,7 @@ export default function SmartListingForm() {
                 <select 
                   value={roomType}
                   onChange={(e) => setRoomType(e.target.value)}
-                  className="w-full bg-[#F5F7FA] shadow-clay-inset border border-[#E2E8F0] rounded-[12px] px-4 py-2.5 text-body text-[#0F172A] focus:outline-none focus:ring-1 focus:ring-[#00153D] focus:bg-white min-h-[44px]"
+                  className="w-full bg-[#F8FAFC] shadow-clay-inset border border-[#E2E8F0] rounded-[12px] px-4 py-2.5 text-body text-[#0F172A] focus:outline-none focus:ring-1 focus:ring-[#00153D] focus:bg-white min-h-[44px]"
                 >
                   {ROOM_TYPES.map(type => (
                     <option key={type} value={type}>{type}</option>
@@ -368,7 +368,7 @@ export default function SmartListingForm() {
                 rows={4}
                 value={description}
                 onChange={(e) => setDescription(e.target.value)}
-                className="w-full bg-[#F5F7FA] shadow-clay-inset border border-[#E2E8F0] rounded-[12px] px-4 py-3 text-body text-[#0F172A] focus:outline-none focus:ring-1 focus:ring-[#00153D] focus:bg-white"
+                className="w-full bg-[#F8FAFC] shadow-clay-inset border border-[#E2E8F0] rounded-[12px] px-4 py-3 text-body text-[#0F172A] focus:outline-none focus:ring-1 focus:ring-[#00153D] focus:bg-white"
                 placeholder="Mô tả cụ thể về căn phòng: phòng mới hay cải tạo, nội thất gồm những gì, giá điện nước (ví dụ: 3.5k/kWh), quy định giờ giấc, tiện ích xung quanh..."
               />
             </div>
@@ -392,7 +392,7 @@ export default function SmartListingForm() {
                       className={`px-3 py-1.5 rounded-[10px] text-caption font-semibold transition-[background-color,color,box-shadow,transform] duration-150 ease-out active:scale-95 inline-flex items-center gap-1.5 ${
                         active 
                           ? 'bg-[#00153D] text-white shadow-sm' 
-                          : 'bg-[#F5F7FA] text-[#64748B] border border-[#E2E8F0] hover:bg-white hover:text-[#0F172A]'
+                          : 'bg-[#F8FAFC] text-[#64748B] border border-[#E2E8F0] hover:bg-white hover:text-[#0F172A]'
                       }`}
                     >
                       {active ? <Check className="w-3.5 h-3.5" /> : <Plus className="w-3.5 h-3.5" />}
@@ -431,7 +431,7 @@ export default function SmartListingForm() {
                     }
                   }}
                   placeholder="Thêm tiện ích khác (ví dụ: Nuôi thú cưng, Sân thượng, Bếp điện...)"
-                  className="flex-1 bg-[#F5F7FA] shadow-clay-inset border border-[#E2E8F0] rounded-[10px] px-3.5 py-2 text-caption text-[#0F172A] focus:outline-none focus:ring-1 focus:ring-[#00153D] focus:bg-white"
+                  className="flex-1 bg-[#F8FAFC] shadow-clay-inset border border-[#E2E8F0] rounded-[10px] px-3.5 py-2 text-caption text-[#0F172A] focus:outline-none focus:ring-1 focus:ring-[#00153D] focus:bg-white"
                 />
                 <button
                   type="button"
@@ -453,7 +453,7 @@ export default function SmartListingForm() {
           <div className="space-y-6">
             <h2 className="text-h3 font-bold text-[#0F172A] mb-4">Bước 2: Hình ảnh phòng trọ</h2>
             
-            <div className="border-2 border-dashed border-[#CBD5E1] rounded-[14px] p-8 text-center bg-[#F5F7FA] shadow-clay-inset hover:bg-white transition-[background-color,border-color] duration-150 ease-out cursor-pointer relative">
+            <div className="border-2 border-dashed border-[#CBD5E1] rounded-[14px] p-8 text-center bg-[#F8FAFC] shadow-clay-inset hover:bg-white transition-[background-color,border-color] duration-150 ease-out cursor-pointer relative">
               <input 
                 type="file" 
                 multiple

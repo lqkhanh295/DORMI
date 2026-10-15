@@ -3,7 +3,7 @@ import { AlertCircle as WarningCircle, Home as House } from 'lucide-react';
 
 export default function NotFound() {
   return (
-    <div className="flex flex-col items-center justify-center min-h-[calc(100vh-56px)] bg-[#F5F7FA] px-4">
+    <div className="flex flex-col items-center justify-center min-h-[calc(100vh-56px)] bg-[#F8FAFC] px-4">
       <div className="bg-white rounded-[18px] shadow-clay-soft p-8 md:p-12 flex flex-col items-center text-center max-w-md w-full space-y-6">
         <WarningCircle className="w-20 h-20 text-[#64748B]" />
         <div className="space-y-2">

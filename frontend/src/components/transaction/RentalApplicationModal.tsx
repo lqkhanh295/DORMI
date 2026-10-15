@@ -155,13 +155,13 @@ export default function RentalApplicationModal({
           >
             
             {/* Modal Header */}
-            <div className="p-6 bg-gradient-to-r from-[#00153D] to-[#073372] text-white flex justify-between items-start shrink-0">
+            <div className="p-6 bg-[#00153D] border-b border-[#073372] text-white flex justify-between items-start shrink-0">
               <div>
                 <h2 id="rental-app-title" className="text-xl font-bold text-white flex items-center gap-2">
-                  <FileText className="w-5 h-5 text-indigo-300" />
+                  <FileText className="w-5 h-5 text-[#F2A900]" />
                   Nộp hồ sơ thuê phòng
                 </h2>
-                <p className="text-xs text-indigo-100 mt-1 line-clamp-1">
+                <p className="text-xs text-slate-300 mt-1 line-clamp-1">
                   {roomTitle} — {roomPrice.toLocaleString()} VNĐ/tháng
                 </p>
               </div>
@@ -409,9 +409,9 @@ export default function RentalApplicationModal({
                   {documents.map((doc, idx) => (
                     <div key={idx} className="flex items-center justify-between p-2.5 bg-[#F8FAFC] border border-[#E2E8F0] rounded-lg text-xs">
                       <div className="flex items-center gap-2 truncate">
-                        <FileText className="w-4 h-4 text-indigo-600 shrink-0" />
+                        <FileText className="w-4 h-4 text-slate-500 shrink-0" />
                         <span className="font-medium text-[#0F172A] truncate">{doc.name || `Tài liệu ${idx + 1}`}</span>
-                        <span className="text-[10px] bg-indigo-50 text-indigo-700 px-2 py-0.5 rounded font-medium">{doc.documentType}</span>
+                        <span className="text-[10px] bg-slate-100 text-slate-700 px-2 py-0.5 rounded font-medium border border-slate-200">{doc.documentType}</span>
                       </div>
                       <button
                         type="button"

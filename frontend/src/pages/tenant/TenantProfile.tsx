@@ -305,7 +305,7 @@ export default function TenantProfile() {
   };
 
   return (
-    <div className="w-full space-y-6 bg-[#F5F7FA]">
+    <div className="w-full space-y-6 bg-[#F8FAFC]">
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
           <h1 className="text-h2 font-bold text-[#0F172A]">Hồ sơ cá nhân</h1>
@@ -398,7 +398,7 @@ export default function TenantProfile() {
           <div className="pt-6 border-t border-[#E2E8F0]">
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-3">
-                <div className={`w-10 h-10 rounded-full flex items-center justify-center ${isLookingForRoommate ? 'bg-[#F0FDF4] text-[#16803C]' : 'bg-[#F5F7FA] text-[#64748B]'}`}>
+                <div className={`w-10 h-10 rounded-full flex items-center justify-center ${isLookingForRoommate ? 'bg-[#F0FDF4] text-[#16803C]' : 'bg-[#F8FAFC] text-[#64748B]'}`}>
                   <Users className="w-5 h-5" />
                 </div>
                 <div>
@@ -428,7 +428,7 @@ export default function TenantProfile() {
                     className={`px-3.5 py-2 rounded-[12px] text-caption font-semibold transition-[background-color,color,box-shadow,transform] duration-150 ease-out active:scale-95 flex items-center gap-1.5 ${
                       tag.active 
                         ? 'btn-clay-primary text-white' 
-                        : 'bg-[#F5F7FA] text-[#64748B] shadow-clay-soft hover:bg-white hover:text-[#0F172A]'
+                        : 'bg-[#F8FAFC] text-[#64748B] shadow-clay-soft hover:bg-white hover:text-[#0F172A]'
                     }`}
                   >
                     {tag.active && <Check className="w-3.5 h-3.5 text-white" />}
@@ -518,7 +518,7 @@ export default function TenantProfile() {
                       value={newTagInput}
                       onChange={(e) => setNewTagInput(e.target.value)}
                       placeholder="VD: Thích nấu ăn, Dậy sớm, Nuôi mèo..."
-                      className="w-full bg-[#F5F7FA] border border-[#E2E8F0] rounded-xl px-3.5 py-2.5 text-body text-[#0F172A] focus:outline-none focus:ring-1 focus:ring-[#00153D] focus:bg-white"
+                      className="w-full bg-[#F8FAFC] border border-[#E2E8F0] rounded-xl px-3.5 py-2.5 text-body text-[#0F172A] focus:outline-none focus:ring-1 focus:ring-[#00153D] focus:bg-white"
                       autoFocus
                     />
                     <div className="flex justify-between text-[11px] text-[#94A3B8]">
@@ -641,7 +641,7 @@ export default function TenantProfile() {
                       value={avatarUrlInput}
                       onChange={(e) => setAvatarUrlInput(e.target.value)}
                       placeholder="https://images.unsplash.com/..."
-                      className="w-full bg-[#F5F7FA] border border-[#E2E8F0] rounded-xl px-3.5 py-2.5 text-body text-[#0F172A] focus:outline-none focus:ring-1 focus:ring-[#00153D] focus:bg-white"
+                      className="w-full bg-[#F8FAFC] border border-[#E2E8F0] rounded-xl px-3.5 py-2.5 text-body text-[#0F172A] focus:outline-none focus:ring-1 focus:ring-[#00153D] focus:bg-white"
                       autoFocus
                     />
                   </div>

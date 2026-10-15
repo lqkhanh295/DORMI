@@ -424,7 +424,7 @@ export default function RoomManagement() {
                     className={`w-full inline-flex items-center justify-center gap-1 ${
                       room.isBoosted 
                         ? 'bg-amber-50 text-amber-800 border-amber-200 hover:bg-amber-100 font-semibold' 
-                        : 'bg-indigo-50 text-indigo-700 border-indigo-200 hover:bg-indigo-100'
+                        : 'bg-slate-50 text-[#0F172A] border-slate-200 hover:bg-slate-100'
                     }`}
                     onClick={() => navigate(`/landlord/pricing?tab=boost&roomId=${room.id}`)}
                   >
@@ -499,7 +499,7 @@ export default function RoomManagement() {
                   required
                   value={newRoom.title}
                   onChange={e => setNewRoom({...newRoom, title: e.target.value})}
-                  className="w-full bg-[#F5F7FA] shadow-clay-inset border border-[#E2E8F0] rounded-[12px] px-4 py-2.5 text-body text-[#0F172A] focus:outline-none focus:ring-1 focus:ring-[#00153D] focus:bg-white"
+                  className="w-full bg-[#F8FAFC] shadow-clay-inset border border-[#E2E8F0] rounded-[12px] px-4 py-2.5 text-body text-[#0F172A] focus:outline-none focus:ring-1 focus:ring-[#00153D] focus:bg-white"
                   placeholder="Ví dụ: Căn hộ Studio cao cấp Quận 1 ngập tràn ánh sáng"
                 />
               </div>
@@ -510,7 +510,7 @@ export default function RoomManagement() {
                   <select 
                     value={newRoom.roomType}
                     onChange={e => setNewRoom({...newRoom, roomType: e.target.value})}
-                    className="w-full bg-[#F5F7FA] shadow-clay-inset border border-[#E2E8F0] rounded-[12px] px-4 py-2.5 text-body text-[#0F172A] focus:outline-none focus:ring-1 focus:ring-[#00153D] focus:bg-white min-h-[44px]"
+                    className="w-full bg-[#F8FAFC] shadow-clay-inset border border-[#E2E8F0] rounded-[12px] px-4 py-2.5 text-body text-[#0F172A] focus:outline-none focus:ring-1 focus:ring-[#00153D] focus:bg-white min-h-[44px]"
                   >
                     <option value="Studio">Studio</option>
                     <option value="1 Bedroom">1 Phòng ngủ</option>
@@ -527,7 +527,7 @@ export default function RoomManagement() {
                     required
                     value={newRoom.price || ''}
                     onChange={e => setNewRoom({...newRoom, price: Number(e.target.value)})}
-                    className="w-full bg-[#F5F7FA] shadow-clay-inset border border-[#E2E8F0] rounded-[12px] px-4 py-2.5 text-body text-[#0F172A] focus:outline-none focus:ring-1 focus:ring-[#00153D] focus:bg-white"
+                    className="w-full bg-[#F8FAFC] shadow-clay-inset border border-[#E2E8F0] rounded-[12px] px-4 py-2.5 text-body text-[#0F172A] focus:outline-none focus:ring-1 focus:ring-[#00153D] focus:bg-white"
                     placeholder="4500000"
                   />
                 </div>
@@ -539,7 +539,7 @@ export default function RoomManagement() {
                     required
                     value={newRoom.area || ''}
                     onChange={e => setNewRoom({...newRoom, area: Number(e.target.value)})}
-                    className="w-full bg-[#F5F7FA] shadow-clay-inset border border-[#E2E8F0] rounded-[12px] px-4 py-2.5 text-body text-[#0F172A] focus:outline-none focus:ring-1 focus:ring-[#00153D] focus:bg-white"
+                    className="w-full bg-[#F8FAFC] shadow-clay-inset border border-[#E2E8F0] rounded-[12px] px-4 py-2.5 text-body text-[#0F172A] focus:outline-none focus:ring-1 focus:ring-[#00153D] focus:bg-white"
                     placeholder="30"
                   />
                 </div>
@@ -552,7 +552,7 @@ export default function RoomManagement() {
                   required
                   value={newRoom.address}
                   onChange={e => setNewRoom({...newRoom, address: e.target.value})}
-                  className="w-full bg-[#F5F7FA] shadow-clay-inset border border-[#E2E8F0] rounded-[12px] px-4 py-2.5 text-body text-[#0F172A] focus:outline-none focus:ring-1 focus:ring-[#00153D] focus:bg-white"
+                  className="w-full bg-[#F8FAFC] shadow-clay-inset border border-[#E2E8F0] rounded-[12px] px-4 py-2.5 text-body text-[#0F172A] focus:outline-none focus:ring-1 focus:ring-[#00153D] focus:bg-white"
                   placeholder="Ví dụ: 123 Nguyễn Đình Chiểu, Phường Võ Thị Sáu, Quận 3, TP.HCM"
                 />
               </div>
@@ -572,7 +572,7 @@ export default function RoomManagement() {
                         className={`px-3 py-1.5 rounded-[10px] text-caption font-semibold transition-[background-color,color,box-shadow,transform] duration-150 ease-out active:scale-95 inline-flex items-center gap-1 ${
                           active 
                             ? 'btn-clay-primary text-white' 
-                            : 'bg-[#F5F7FA] text-[#64748B] border border-[#E2E8F0] hover:bg-white hover:text-[#0F172A]'
+                            : 'bg-[#F8FAFC] text-[#64748B] border border-[#E2E8F0] hover:bg-white hover:text-[#0F172A]'
                         }`}
                       >
                         {active ? <><Check className="w-3.5 h-3.5" /> {util}</> : <><Plus className="w-3.5 h-3.5" /> {util}</>}
@@ -607,7 +607,7 @@ export default function RoomManagement() {
                       }
                     }}
                     placeholder="Thêm tiện ích khác (ví dụ: Nuôi thú cưng, Sân phơi, Khóa vân tay...)"
-                    className="flex-1 bg-[#F5F7FA] shadow-clay-inset border border-[#E2E8F0] rounded-[10px] px-3.5 py-1.5 text-caption text-[#0F172A] focus:outline-none focus:bg-white"
+                    className="flex-1 bg-[#F8FAFC] shadow-clay-inset border border-[#E2E8F0] rounded-[10px] px-3.5 py-1.5 text-caption text-[#0F172A] focus:outline-none focus:bg-white"
                   />
                   <button
                     type="button"
@@ -625,7 +625,7 @@ export default function RoomManagement() {
                   rows={3}
                   value={newRoom.description}
                   onChange={e => setNewRoom({...newRoom, description: e.target.value})}
-                  className="w-full bg-[#F5F7FA] shadow-clay-inset border border-[#E2E8F0] rounded-[12px] px-4 py-2.5 text-body text-[#0F172A] focus:outline-none focus:ring-1 focus:ring-[#00153D] focus:bg-white"
+                  className="w-full bg-[#F8FAFC] shadow-clay-inset border border-[#E2E8F0] rounded-[12px] px-4 py-2.5 text-body text-[#0F172A] focus:outline-none focus:ring-1 focus:ring-[#00153D] focus:bg-white"
                   placeholder="Mô tả về nội thất, tình trạng phòng, quy định giờ giấc, tiền điện nước..."
                 />
               </div>
@@ -636,7 +636,7 @@ export default function RoomManagement() {
                   type="text" 
                   value={newRoom.virtual3DUrl}
                   onChange={e => setNewRoom({...newRoom, virtual3DUrl: e.target.value})}
-                  className="w-full bg-[#F5F7FA] shadow-clay-inset border border-[#E2E8F0] rounded-[12px] px-4 py-2.5 text-body text-[#0F172A] focus:outline-none focus:ring-1 focus:ring-[#00153D] focus:bg-white"
+                  className="w-full bg-[#F8FAFC] shadow-clay-inset border border-[#E2E8F0] rounded-[12px] px-4 py-2.5 text-body text-[#0F172A] focus:outline-none focus:ring-1 focus:ring-[#00153D] focus:bg-white"
                   placeholder="https://my.matterport.com/show/?m=..."
                 />
               </div>
@@ -644,7 +644,7 @@ export default function RoomManagement() {
               <div>
                 <label className="block text-caption font-semibold text-[#64748B] mb-2">Hình ảnh thực tế (Tự động nén & Lưu CSDL)</label>
                 
-                <div className="border-2 border-dashed border-[#CBD5E1] rounded-[14px] p-6 text-center bg-[#F5F7FA] shadow-clay-inset hover:bg-white transition-[background-color,border-color] duration-150 ease-out cursor-pointer relative">
+                <div className="border-2 border-dashed border-[#CBD5E1] rounded-[14px] p-6 text-center bg-[#F8FAFC] shadow-clay-inset hover:bg-white transition-[background-color,border-color] duration-150 ease-out cursor-pointer relative">
                   <input 
                     type="file" 
                     accept="image/png, image/jpeg, image/jpg, image/webp, image/gif, image/bmp, image/heic, image/heif, image/*, .png, .jpg, .jpeg, .webp, .gif, .bmp, .heic, .heif"
@@ -725,7 +725,7 @@ export default function RoomManagement() {
                   type="text" 
                   value={editingRoom.title}
                   onChange={e => setEditingRoom({...editingRoom, title: e.target.value})}
-                  className="w-full bg-[#F5F7FA] shadow-clay-inset border border-[#E2E8F0] rounded-[12px] px-4 py-2.5 text-body text-[#0F172A] focus:outline-none focus:ring-1 focus:ring-[#00153D] focus:bg-white"
+                  className="w-full bg-[#F8FAFC] shadow-clay-inset border border-[#E2E8F0] rounded-[12px] px-4 py-2.5 text-body text-[#0F172A] focus:outline-none focus:ring-1 focus:ring-[#00153D] focus:bg-white"
                 />
               </div>
 
@@ -735,7 +735,7 @@ export default function RoomManagement() {
                   <select 
                     value={editingRoom.roomType || 'Studio'}
                     onChange={e => setEditingRoom({...editingRoom, roomType: e.target.value})}
-                    className="w-full bg-[#F5F7FA] shadow-clay-inset border border-[#E2E8F0] rounded-[12px] px-4 py-2.5 text-body text-[#0F172A] focus:outline-none focus:ring-1 focus:ring-[#00153D] focus:bg-white min-h-[44px]"
+                    className="w-full bg-[#F8FAFC] shadow-clay-inset border border-[#E2E8F0] rounded-[12px] px-4 py-2.5 text-body text-[#0F172A] focus:outline-none focus:ring-1 focus:ring-[#00153D] focus:bg-white min-h-[44px]"
                   >
                     <option value="Studio">Studio</option>
                     <option value="1 Bedroom">1 Phòng ngủ</option>
@@ -751,7 +751,7 @@ export default function RoomManagement() {
                     type="number" 
                     value={editingRoom.price}
                     onChange={e => setEditingRoom({...editingRoom, price: Number(e.target.value)})}
-                    className="w-full bg-[#F5F7FA] shadow-clay-inset border border-[#E2E8F0] rounded-[12px] px-4 py-2.5 text-body text-[#0F172A] focus:outline-none focus:ring-1 focus:ring-[#00153D] focus:bg-white"
+                    className="w-full bg-[#F8FAFC] shadow-clay-inset border border-[#E2E8F0] rounded-[12px] px-4 py-2.5 text-body text-[#0F172A] focus:outline-none focus:ring-1 focus:ring-[#00153D] focus:bg-white"
                   />
                 </div>
 
@@ -761,7 +761,7 @@ export default function RoomManagement() {
                     type="number" 
                     value={editingRoom.area}
                     onChange={e => setEditingRoom({...editingRoom, area: Number(e.target.value)})}
-                    className="w-full bg-[#F5F7FA] shadow-clay-inset border border-[#E2E8F0] rounded-[12px] px-4 py-2.5 text-body text-[#0F172A] focus:outline-none focus:ring-1 focus:ring-[#00153D] focus:bg-white"
+                    className="w-full bg-[#F8FAFC] shadow-clay-inset border border-[#E2E8F0] rounded-[12px] px-4 py-2.5 text-body text-[#0F172A] focus:outline-none focus:ring-1 focus:ring-[#00153D] focus:bg-white"
                   />
                 </div>
               </div>
@@ -771,7 +771,7 @@ export default function RoomManagement() {
                 <select 
                   value={editingRoom.status}
                   onChange={e => setEditingRoom({...editingRoom, status: Number(e.target.value)})}
-                  className="w-full bg-[#F5F7FA] shadow-clay-inset border border-[#E2E8F0] rounded-[12px] px-4 py-2.5 text-body text-[#0F172A] focus:outline-none focus:ring-1 focus:ring-[#00153D] focus:bg-white min-h-[44px]"
+                  className="w-full bg-[#F8FAFC] shadow-clay-inset border border-[#E2E8F0] rounded-[12px] px-4 py-2.5 text-body text-[#0F172A] focus:outline-none focus:ring-1 focus:ring-[#00153D] focus:bg-white min-h-[44px]"
                 >
                   <option value={0}>Đã duyệt (Công khai - Còn trống)</option>
                   <option value={2}>Chờ phê duyệt (Admin)</option>
@@ -786,7 +786,7 @@ export default function RoomManagement() {
                   type="text" 
                   value={editingRoom.address}
                   onChange={e => setEditingRoom({...editingRoom, address: e.target.value})}
-                  className="w-full bg-[#F5F7FA] shadow-clay-inset border border-[#E2E8F0] rounded-[12px] px-4 py-2.5 text-body text-[#0F172A] focus:outline-none focus:ring-1 focus:ring-[#00153D] focus:bg-white"
+                  className="w-full bg-[#F8FAFC] shadow-clay-inset border border-[#E2E8F0] rounded-[12px] px-4 py-2.5 text-body text-[#0F172A] focus:outline-none focus:ring-1 focus:ring-[#00153D] focus:bg-white"
                 />
               </div>
 
@@ -804,7 +804,7 @@ export default function RoomManagement() {
                         className={`px-3 py-1.5 rounded-[10px] text-caption font-semibold transition-[background-color,color,box-shadow,transform] duration-150 ease-out active:scale-95 inline-flex items-center gap-1 ${
                           active 
                             ? 'btn-clay-primary text-white' 
-                            : 'bg-[#F5F7FA] text-[#64748B] border border-[#E2E8F0] hover:bg-white hover:text-[#0F172A]'
+                            : 'bg-[#F8FAFC] text-[#64748B] border border-[#E2E8F0] hover:bg-white hover:text-[#0F172A]'
                         }`}
                       >
                         {active ? <><Check className="w-3.5 h-3.5" /> {util}</> : <><Plus className="w-3.5 h-3.5" /> {util}</>}
@@ -839,7 +839,7 @@ export default function RoomManagement() {
                       }
                     }}
                     placeholder="Thêm tiện ích khác..."
-                    className="flex-1 bg-[#F5F7FA] shadow-clay-inset border border-[#E2E8F0] rounded-[10px] px-3.5 py-1.5 text-caption text-[#0F172A] focus:outline-none focus:bg-white"
+                    className="flex-1 bg-[#F8FAFC] shadow-clay-inset border border-[#E2E8F0] rounded-[10px] px-3.5 py-1.5 text-caption text-[#0F172A] focus:outline-none focus:bg-white"
                   />
                   <button
                     type="button"
@@ -857,13 +857,13 @@ export default function RoomManagement() {
                   rows={3}
                   value={editingRoom.description || ''}
                   onChange={e => setEditingRoom({...editingRoom, description: e.target.value})}
-                  className="w-full bg-[#F5F7FA] shadow-clay-inset border border-[#E2E8F0] rounded-[12px] px-4 py-2.5 text-body text-[#0F172A] focus:outline-none focus:ring-1 focus:ring-[#00153D] focus:bg-white"
+                  className="w-full bg-[#F8FAFC] shadow-clay-inset border border-[#E2E8F0] rounded-[12px] px-4 py-2.5 text-body text-[#0F172A] focus:outline-none focus:ring-1 focus:ring-[#00153D] focus:bg-white"
                 />
               </div>
 
               <div>
                 <label className="block text-caption font-semibold text-[#64748B] mb-2">Thêm ảnh thực tế mới</label>
-                <div className="border-2 border-dashed border-[#CBD5E1] rounded-[14px] p-6 text-center bg-[#F5F7FA] shadow-clay-inset hover:bg-white transition-[background-color,border-color] duration-150 ease-out cursor-pointer relative">
+                <div className="border-2 border-dashed border-[#CBD5E1] rounded-[14px] p-6 text-center bg-[#F8FAFC] shadow-clay-inset hover:bg-white transition-[background-color,border-color] duration-150 ease-out cursor-pointer relative">
                   <input 
                     type="file" 
                     accept="image/png, image/jpeg, image/jpg, image/webp, image/gif, image/bmp, image/heic, image/heif, image/*, .png, .jpg, .jpeg, .webp, .gif, .bmp, .heic, .heif"

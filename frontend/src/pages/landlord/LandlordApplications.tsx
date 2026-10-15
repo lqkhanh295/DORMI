@@ -163,8 +163,8 @@ export default function LandlordApplications() {
       case ApplicationStatus.Submitted:
       default:
         return (
-          <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md text-xs font-semibold bg-indigo-50 text-indigo-700 border border-indigo-200">
-            <FileText className="w-3.5 h-3.5 text-indigo-600" />
+          <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md text-xs font-semibold bg-blue-50 text-blue-700 border border-blue-200">
+            <FileText className="w-3.5 h-3.5 text-blue-600" />
             Hồ sơ mới
           </span>
         );
@@ -546,7 +546,7 @@ export default function LandlordApplications() {
                           ? 'bg-emerald-600 hover:bg-emerald-700' 
                           : reviewAction === 'Reject'
                           ? 'bg-rose-600 hover:bg-rose-700'
-                          : 'bg-indigo-600 hover:bg-indigo-700'
+                          : 'bg-[#00153D] hover:bg-[#073372]'
                       }`}
                     >
                       {submittingReview ? 'Đang xử lý...' : 'Xác nhận'}

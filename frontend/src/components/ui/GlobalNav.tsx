@@ -216,7 +216,7 @@ export function GlobalNav() {
                             onClick={() => setDropdownOpen(false)}
                             className="flex items-center gap-2.5 px-3 py-2 rounded-lg hover:bg-slate-100 hover:text-[#00153D] transition-colors"
                           >
-                            <Home className="w-4 h-4 text-blue-600" />
+                            <Home className="w-4 h-4 text-slate-500" />
                             <span>Phòng của tôi (Tổng quan)</span>
                           </Link>
                           <Link
@@ -224,7 +224,7 @@ export function GlobalNav() {
                             onClick={() => setDropdownOpen(false)}
                             className="flex items-center gap-2.5 px-3 py-2 rounded-lg hover:bg-slate-100 hover:text-[#00153D] transition-colors"
                           >
-                            <FileText className="w-4 h-4 text-emerald-600" />
+                            <FileText className="w-4 h-4 text-slate-500" />
                             <span>Hồ sơ thuê phòng</span>
                           </Link>
                           <Link
@@ -232,7 +232,7 @@ export function GlobalNav() {
                             onClick={() => setDropdownOpen(false)}
                             className="flex items-center gap-2.5 px-3 py-2 rounded-lg hover:bg-slate-100 hover:text-[#00153D] transition-colors"
                           >
-                            <FileCheck className="w-4 h-4 text-indigo-600" />
+                            <FileCheck className="w-4 h-4 text-slate-500" />
                             <span>Hợp đồng điện tử</span>
                           </Link>
                           <Link
@@ -240,7 +240,7 @@ export function GlobalNav() {
                             onClick={() => setDropdownOpen(false)}
                             className="flex items-center gap-2.5 px-3 py-2 rounded-lg hover:bg-slate-100 hover:text-[#00153D] transition-colors"
                           >
-                            <Calendar className="w-4 h-4 text-purple-600" />
+                            <Calendar className="w-4 h-4 text-slate-500" />
                             <span>Lịch hẹn xem phòng</span>
                           </Link>
                           <Link
@@ -248,7 +248,7 @@ export function GlobalNav() {
                             onClick={() => setDropdownOpen(false)}
                             className="flex items-center gap-2.5 px-3 py-2 rounded-lg hover:bg-slate-100 hover:text-[#00153D] transition-colors"
                           >
-                            <MessageCircle className="w-4 h-4 text-cyan-600" />
+                            <MessageCircle className="w-4 h-4 text-slate-500" />
                             <span>Tin nhắn trao đổi</span>
                           </Link>
                         </>
@@ -261,7 +261,7 @@ export function GlobalNav() {
                             onClick={() => setDropdownOpen(false)}
                             className="flex items-center gap-2.5 px-3 py-2 rounded-lg hover:bg-slate-100 hover:text-[#00153D] transition-colors"
                           >
-                            <LayoutDashboard className="w-4 h-4 text-blue-600" />
+                            <LayoutDashboard className="w-4 h-4 text-slate-500" />
                             <span>Bảng quản trị Chủ trọ</span>
                           </Link>
                           <Link
@@ -269,7 +269,7 @@ export function GlobalNav() {
                             onClick={() => setDropdownOpen(false)}
                             className="flex items-center gap-2.5 px-3 py-2 rounded-lg hover:bg-slate-100 hover:text-[#00153D] transition-colors"
                           >
-                            <FileText className="w-4 h-4 text-emerald-600" />
+                            <FileText className="w-4 h-4 text-slate-500" />
                             <span>Quản lý phòng trọ</span>
                           </Link>
                           <Link
@@ -277,7 +277,7 @@ export function GlobalNav() {
                             onClick={() => setDropdownOpen(false)}
                             className="flex items-center gap-2.5 px-3 py-2 rounded-lg hover:bg-slate-100 hover:text-[#00153D] transition-colors"
                           >
-                            <FileCheck className="w-4 h-4 text-indigo-600" />
+                            <FileCheck className="w-4 h-4 text-slate-500" />
                             <span>Quản lý hợp đồng</span>
                           </Link>
                         </>
@@ -357,9 +357,9 @@ export function GlobalNav() {
                 <Link 
                   to="/tenant" 
                   onClick={() => setMobileMenuOpen(false)}
-                  className="text-sm font-semibold text-blue-600 py-2 border-b border-[#F1F5F9] flex items-center gap-2"
+                  className="text-sm font-semibold text-[#00153D] py-2 border-b border-[#F1F5F9] flex items-center gap-2"
                 >
-                  <Home className="w-4 h-4 text-blue-600" />
+                  <Home className="w-4 h-4 text-slate-500" />
                   <span>Phòng của tôi</span>
                 </Link>
                 <Link 
@@ -367,7 +367,7 @@ export function GlobalNav() {
                   onClick={() => setMobileMenuOpen(false)}
                   className="text-sm font-medium text-[#0F172A] py-2 border-b border-[#F1F5F9] flex items-center gap-2"
                 >
-                  <FileText className="w-4 h-4 text-emerald-600" />
+                  <FileText className="w-4 h-4 text-slate-500" />
                   <span>Hồ sơ thuê phòng</span>
                 </Link>
                 <Link 
@@ -375,7 +375,7 @@ export function GlobalNav() {
                   onClick={() => setMobileMenuOpen(false)}
                   className="text-sm font-medium text-[#0F172A] py-2 border-b border-[#F1F5F9] flex items-center gap-2"
                 >
-                  <FileCheck className="w-4 h-4 text-indigo-600" />
+                  <FileCheck className="w-4 h-4 text-slate-500" />
                   <span>Hợp đồng thuê</span>
                 </Link>
               </>

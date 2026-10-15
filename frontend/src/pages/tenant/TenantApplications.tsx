@@ -118,8 +118,8 @@ export default function TenantApplications() {
       case ApplicationStatus.Submitted:
       default:
         return (
-          <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md text-xs font-semibold bg-indigo-50 text-indigo-700 border border-indigo-200">
-            <FileText className="w-3.5 h-3.5 text-indigo-600" />
+          <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md text-xs font-semibold bg-blue-50 text-blue-700 border border-blue-200">
+            <FileText className="w-3.5 h-3.5 text-blue-600" />
             Đã nộp hồ sơ
           </span>
         );
@@ -278,7 +278,7 @@ export default function TenantApplications() {
                     </div>
                     <Link
                       to={`/room/${app.roomId}`}
-                      className="text-base font-bold text-[#0F172A] hover:text-indigo-600 transition-colors line-clamp-1"
+                      className="text-base font-bold text-[#0F172A] hover:text-blue-600 transition-colors line-clamp-1"
                     >
                       {app.roomTitle}
                     </Link>
