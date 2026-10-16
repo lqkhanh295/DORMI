@@ -228,6 +228,7 @@ export default function SearchResults() {
             </button>
             <Input 
               placeholder="Tìm kiếm khu vực, tên đường, trường ĐH..." 
+              aria-label="Tìm kiếm khu vực, tên đường, trường đại học"
               className="flex-1"
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}

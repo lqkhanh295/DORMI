@@ -20,6 +20,7 @@ const ForgotPassword = lazy(() => import('../pages/public/ForgotPassword'));
 const TermsOfService = lazy(() => import('../pages/public/TermsOfService'));
 const PrivacyPolicy = lazy(() => import('../pages/public/PrivacyPolicy'));
 const NotFound = lazy(() => import('../pages/public/NotFound'));
+const PaymentReturn = lazy(() => import('../pages/payment/PaymentReturn'));
 
 // Lazy load Tenant Pages
 const TenantDashboard = lazy(() => import('../pages/tenant/TenantDashboard'));
@@ -81,6 +82,7 @@ export default function AppRoutes() {
         <Route path="/privacy-policy" element={<Navigate to="/privacy" replace />} />
         <Route path="/dieu-khoan" element={<Navigate to="/terms" replace />} />
         <Route path="/chinh-sach-bao-mat" element={<Navigate to="/privacy" replace />} />
+        <Route path="/payment/return" element={<PaymentReturn />} />
         
         {/* Legacy Redirects */}
         <Route path="/customer/matcher" element={<Navigate to="/tenant/match" replace />} />

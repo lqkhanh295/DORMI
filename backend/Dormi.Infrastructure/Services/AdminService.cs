@@ -21,17 +21,20 @@ public class AdminService : IAdminService
     private readonly IHubContext<ChatHub> _hubContext;
     private readonly IKafkaProducer? _kafkaProducer;
     private readonly Microsoft.Extensions.Caching.Distributed.IDistributedCache? _cache;
+    private readonly Microsoft.Extensions.Caching.Memory.IMemoryCache? _memoryCache;
 
     public AdminService(
         DormiDbContext db, 
         IHubContext<ChatHub> hubContext, 
         IKafkaProducer? kafkaProducer = null,
-        Microsoft.Extensions.Caching.Distributed.IDistributedCache? cache = null)
+        Microsoft.Extensions.Caching.Distributed.IDistributedCache? cache = null,
+        Microsoft.Extensions.Caching.Memory.IMemoryCache? memoryCache = null)
     {
         _db = db;
         _hubContext = hubContext;
         _kafkaProducer = kafkaProducer;
         _cache = cache;
+        _memoryCache = memoryCache;
     }
 
     public async Task<ServiceResult<AdminStatsDto>> GetStatsAsync()
@@ -273,7 +276,10 @@ public class AdminService : IAdminService
             try
             {
                 await _cache.SetStringAsync("rooms_cache_version", Guid.NewGuid().ToString("N"));
+                await _cache.RemoveAsync($"room:detail:{roomId}");
                 await _cache.RemoveAsync($"room_detail:{roomId}");
+                _memoryCache?.Remove($"room:detail:{roomId}");
+                _memoryCache?.Remove($"room_detail:{roomId}");
                 await _cache.RemoveAsync("featured_rooms_6");
                 await _cache.RemoveAsync("featured_rooms_8");
                 await _cache.RemoveAsync("featured_rooms_10");

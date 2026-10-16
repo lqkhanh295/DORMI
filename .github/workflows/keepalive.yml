@@ -1,0 +1,27 @@
+name: Render Keep-Alive Heartbeat
+
+on:
+  schedule:
+    # Run every 12 minutes to prevent Render free-tier service from spinning down (15-min idle timeout)
+    - cron: '*/12 * * * *'
+  workflow_dispatch:
+
+jobs:
+  keepalive:
+    name: Ping Render Backend
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+
+    steps:
+      - name: Ping GET / (Lightweight Keep-Alive)
+        run: |
+          echo "Sending keep-alive ping to Dormi backend root endpoint..."
+          STATUS=$(curl -s -o /dev/null -w "%{http_code}" --max-time 30 https://dormi-backend-b12o.onrender.com/)
+          echo "Response HTTP Status: $STATUS"
+          if [ "$STATUS" -ge 200 ] && [ "$STATUS" -lt 400 ]; then
+            echo "Render instance is awake and responsive."
+            exit 0
+          else
+            echo "Warning: Received unexpected status $STATUS from Render instance."
+            exit 1
+          fi

@@ -92,6 +92,81 @@ public class BackendLogicTests
     }
 
     [Fact]
+    public async Task CloudinaryService_ShouldReturnStaticPlaceholder_AndNeverReturnBase64()
+    {
+        var config = new ConfigurationBuilder().Build();
+        var service = new CloudinaryService(config);
+
+        using var ms = new System.IO.MemoryStream(System.Text.Encoding.UTF8.GetBytes("fake_image_content"));
+        var resultUrl = await service.UploadImageAsync(ms, "room.jpg");
+
+        Assert.NotNull(resultUrl);
+        Assert.False(resultUrl.StartsWith("data:"), "CloudinaryService fallback must never return raw base64 data URLs");
+        Assert.StartsWith("https://images.unsplash.com", resultUrl);
+    }
+
+    [Fact]
+    public async Task RoomService_GetRoomByIdAsync_ShouldServeFromMemoryCacheOnRepeatCalls()
+    {
+        var services = new ServiceCollection();
+        services.AddLogging();
+        services.AddDbContext<DormiDbContext>(options => options.UseInMemoryDatabase($"Test_RoomService_{Guid.NewGuid()}"));
+        services.AddMemoryCache();
+        services.AddDistributedMemoryCache();
+        services.AddSignalR();
+        services.AddScoped<IImageService, CloudinaryService>();
+        services.AddScoped<IRoomService, RoomService>();
+        services.AddSingleton<IConfiguration>(new ConfigurationBuilder().Build());
+
+        var sp = services.BuildServiceProvider();
+        using var scope = sp.CreateScope();
+        var db = scope.ServiceProvider.GetRequiredService<DormiDbContext>();
+        var roomService = scope.ServiceProvider.GetRequiredService<IRoomService>();
+
+        var landlord = new User
+        {
+            Id = Guid.NewGuid(),
+            Email = "landlord@test.com",
+            FullName = "Test Landlord",
+            Role = UserRole.Landlord,
+            IsVerified = true
+        };
+        db.Users.Add(landlord);
+
+        var room = new Room
+        {
+            Id = Guid.NewGuid(),
+            LandlordId = landlord.Id,
+            Title = "Phòng trọ cao cấp test",
+            Description = "Phòng trọ sạch sẽ tiện nghi",
+            Price = 3500000,
+            Area = 25,
+            Address = "123 Đường Test, Quận 1, TP.HCM",
+            RoomType = "Phòng trọ",
+            Status = RoomStatus.Available,
+            CreatedAt = DateTime.UtcNow
+        };
+        db.Rooms.Add(room);
+        await db.SaveChangesAsync();
+
+        // First call: populates cache
+        var result1 = await roomService.GetRoomByIdAsync(room.Id, null, false, "127.0.0.1");
+        Assert.True(result1.Success);
+        Assert.NotNull(result1.Data);
+        Assert.Equal("Phòng trọ cao cấp test", result1.Data.Title);
+
+        // Modify database directly behind the cache
+        room.Title = "Phòng trọ đã sửa trong DB nhưng cache vẫn giữ";
+        await db.SaveChangesAsync();
+
+        // Second call: served from L1 MemoryCache
+        var result2 = await roomService.GetRoomByIdAsync(room.Id, null, false, "127.0.0.1");
+        Assert.True(result2.Success);
+        Assert.NotNull(result2.Data);
+        Assert.Equal("Phòng trọ cao cấp test", result2.Data.Title);
+    }
+
+    [Fact]
     public void RoommateMatchScore_ShouldCalculateCorrectly()
     {
         string userTraits = "clean, quiet, non-smoker, student";
@@ -2398,6 +2473,194 @@ public class BackendLogicTests
             Comment = "Phòng ở rất tốt, chủ nhà thân thiện!"
         });
         Assert.True(reviewRes.Success);
+    }
+
+    [Fact]
+    public async Task PostRentalService_CreateDepositCheckout_ShouldCreatePayOSPaymentLinkAndTransaction()
+    {
+        var options = new DbContextOptionsBuilder<DormiDbContext>()
+            .UseInMemoryDatabase(databaseName: Guid.NewGuid().ToString())
+            .Options;
+        using var db = new DormiDbContext(options);
+
+        var landlord = new User { Id = Guid.NewGuid(), FullName = "Landlord Dep", Role = UserRole.Landlord, Email = "landlord_dep@test.vn" };
+        var tenant = new User { Id = Guid.NewGuid(), FullName = "Tenant Dep", Role = UserRole.Customer, Email = "tenant_dep@test.vn" };
+        var room = new Room { Id = Guid.NewGuid(), Title = "Phòng 301 Luxury", LandlordId = landlord.Id, Status = RoomStatus.Available, Price = 3500000 };
+        var lease = new LeaseContract
+        {
+            Id = Guid.NewGuid(),
+            RoomId = room.Id,
+            LandlordId = landlord.Id,
+            TenantId = tenant.Id,
+            MonthlyRent = 3500000,
+            Deposit = 3500000,
+            Status = "Active",
+            StartDate = DateTime.UtcNow,
+            EndDate = DateTime.UtcNow.AddMonths(12)
+        };
+        db.Users.AddRange(landlord, tenant);
+        db.Rooms.Add(room);
+        db.LeaseContracts.Add(lease);
+        await db.SaveChangesAsync();
+
+        var config = new ConfigurationBuilder().Build();
+        var postRentalService = new PostRentalService(db, null, null, config, null);
+
+        var res = await postRentalService.CreateDepositCheckoutAsync(lease.Id, tenant.Id);
+        Assert.True(res.Success);
+        Assert.NotNull(res.Data);
+        Assert.True(res.Data.OrderCode > 0);
+        Assert.Equal(3500000m, res.Data.Amount);
+        Assert.Contains(res.Data.OrderCode.ToString(), res.Data.CheckoutUrl);
+
+        // Verify RentalPaymentSchedule was created/updated in DB
+        var schedule = await db.RentalPaymentSchedules.FirstOrDefaultAsync(s => s.LeaseContractId == lease.Id && s.Type == "Deposit");
+        Assert.NotNull(schedule);
+        Assert.Equal(res.Data.OrderCode.ToString(), schedule.PaymentReference);
+        Assert.Equal("PayOS", schedule.PaymentMethod);
+        Assert.Equal("Pending", schedule.Status);
+
+        // Verify PaymentTransaction was recorded in DB
+        var txn = await db.PaymentTransactions.FirstOrDefaultAsync(t => t.TransactionRef == res.Data.OrderCode.ToString());
+        Assert.NotNull(txn);
+        Assert.Equal(3500000m, txn.Amount);
+        Assert.Equal("PayOS", txn.PaymentMethod);
+        Assert.Equal("Pending", txn.Status);
+    }
+
+    [Fact]
+    public async Task PostRentalService_CreateDepositCheckout_AlreadyPaid_ShouldReturnBadRequest()
+    {
+        var options = new DbContextOptionsBuilder<DormiDbContext>()
+            .UseInMemoryDatabase(databaseName: Guid.NewGuid().ToString())
+            .Options;
+        using var db = new DormiDbContext(options);
+
+        var landlord = new User { Id = Guid.NewGuid(), FullName = "Landlord Dep2", Role = UserRole.Landlord };
+        var tenant = new User { Id = Guid.NewGuid(), FullName = "Tenant Dep2", Role = UserRole.Customer };
+        var room = new Room { Id = Guid.NewGuid(), Title = "Phòng 302", LandlordId = landlord.Id, Status = RoomStatus.Rented, Price = 3000000 };
+        var lease = new LeaseContract
+        {
+            Id = Guid.NewGuid(),
+            RoomId = room.Id,
+            LandlordId = landlord.Id,
+            TenantId = tenant.Id,
+            MonthlyRent = 3000000,
+            Deposit = 3000000,
+            Status = "Active",
+            StartDate = DateTime.UtcNow,
+            EndDate = DateTime.UtcNow.AddMonths(12)
+        };
+        var depositSchedule = new RentalPaymentSchedule
+        {
+            Id = Guid.NewGuid(),
+            LeaseContractId = lease.Id,
+            Type = "Deposit",
+            Title = "Tiền đặt cọc",
+            Amount = 3000000,
+            DueDate = DateTime.UtcNow,
+            Status = "Paid",
+            PaidAt = DateTime.UtcNow
+        };
+        db.Users.AddRange(landlord, tenant);
+        db.Rooms.Add(room);
+        db.LeaseContracts.Add(lease);
+        db.RentalPaymentSchedules.Add(depositSchedule);
+        await db.SaveChangesAsync();
+
+        var config = new ConfigurationBuilder().Build();
+        var postRentalService = new PostRentalService(db, null, null, config, null);
+
+        var res = await postRentalService.CreateDepositCheckoutAsync(lease.Id, tenant.Id);
+        Assert.False(res.Success);
+        Assert.Equal(400, res.StatusCode);
+    }
+
+    [Fact]
+    public async Task PostRentalService_SettleDepositPayment_ShouldUpdateScheduleStatusAndSendNotification()
+    {
+        var options = new DbContextOptionsBuilder<DormiDbContext>()
+            .UseInMemoryDatabase(databaseName: Guid.NewGuid().ToString())
+            .Options;
+        using var db = new DormiDbContext(options);
+
+        var landlord = new User { Id = Guid.NewGuid(), FullName = "Landlord Dep3", Role = UserRole.Landlord };
+        var tenant = new User { Id = Guid.NewGuid(), FullName = "Tenant Dep3", Role = UserRole.Customer };
+        var room = new Room { Id = Guid.NewGuid(), Title = "Phòng 303 Deluxe", LandlordId = landlord.Id, Status = RoomStatus.Available, Price = 4000000 };
+        var lease = new LeaseContract
+        {
+            Id = Guid.NewGuid(),
+            RoomId = room.Id,
+            LandlordId = landlord.Id,
+            TenantId = tenant.Id,
+            MonthlyRent = 4000000,
+            Deposit = 4000000,
+            Status = "Active",
+            StartDate = DateTime.UtcNow,
+            EndDate = DateTime.UtcNow.AddMonths(12)
+        };
+
+        const long orderCode = 261016999888;
+        var depositSchedule = new RentalPaymentSchedule
+        {
+            Id = Guid.NewGuid(),
+            LeaseContractId = lease.Id,
+            Type = "Deposit",
+            Title = "Tiền đặt cọc phòng 303",
+            Amount = 4000000,
+            DueDate = DateTime.UtcNow,
+            Status = "Pending",
+            PaymentReference = orderCode.ToString()
+        };
+
+        var txn = new PaymentTransaction
+        {
+            Id = Guid.NewGuid(),
+            UserId = tenant.Id,
+            RoomId = room.Id,
+            Amount = 4000000,
+            PaymentMethod = "PayOS",
+            TransactionRef = orderCode.ToString(),
+            Status = "Pending"
+        };
+
+        db.Users.AddRange(landlord, tenant);
+        db.Rooms.Add(room);
+        db.LeaseContracts.Add(lease);
+        db.RentalPaymentSchedules.Add(depositSchedule);
+        db.PaymentTransactions.Add(txn);
+        await db.SaveChangesAsync();
+
+        var kafkaProducer = new TestKafkaProducer();
+        var config = new ConfigurationBuilder().Build();
+        var postRentalService = new PostRentalService(db, kafkaProducer, null, config, null);
+
+        var res = await postRentalService.SettleDepositPaymentByOrderCodeAsync(orderCode);
+        Assert.True(res.Success);
+        Assert.Equal("Paid", res.Data?.Status);
+        Assert.NotNull(res.Data?.PaidAt);
+
+        // Verify DB updates
+        var updatedSchedule = await db.RentalPaymentSchedules.FindAsync(depositSchedule.Id);
+        Assert.Equal("Paid", updatedSchedule?.Status);
+        Assert.NotNull(updatedSchedule?.PaidAt);
+
+        var updatedTxn = await db.PaymentTransactions.FindAsync(txn.Id);
+        Assert.Equal("Completed", updatedTxn?.Status);
+        Assert.NotNull(updatedTxn?.CompletedAt);
+
+        var updatedRoom = await db.Rooms.FindAsync(room.Id);
+        Assert.Equal(RoomStatus.Rented, updatedRoom?.Status);
+
+        // Verify Notifications created in DB
+        var notifs = await db.Notifications.ToListAsync();
+        Assert.True(notifs.Count >= 2);
+        Assert.Contains(notifs, n => n.UserId == tenant.Id && n.Title.Contains("đặt cọc"));
+        Assert.Contains(notifs, n => n.UserId == landlord.Id && n.Title.Contains("đặt cọc"));
+
+        // Verify Kafka events
+        var kafkaEvts = kafkaProducer.PublishedEvents.Where(e => e.EventType == "DepositPaymentPaid").ToList();
+        Assert.Equal(2, kafkaEvts.Count);
     }
 
     private class TestKafkaProducer : IKafkaProducer

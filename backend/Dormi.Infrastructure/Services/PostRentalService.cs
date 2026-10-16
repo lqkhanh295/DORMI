@@ -9,6 +9,10 @@ using Dormi.Application.Interfaces;
 using Dormi.Domain.Entities;
 using Dormi.Domain.Enums;
 using Dormi.Infrastructure.Data;
+using Microsoft.Extensions.Configuration;
+using PayOS;
+using PayOS.Models.V2.PaymentRequests;
+using PaymentTransaction = Dormi.Domain.Entities.PaymentTransaction;
 
 namespace Dormi.Infrastructure.Services;
 
@@ -19,12 +23,21 @@ public class PostRentalService : IPostRentalService
     private readonly DormiDbContext _db;
     private readonly IKafkaProducer? _kafkaProducer;
     private readonly IDistributedLockService? _lockService;
+    private readonly IConfiguration? _configuration;
+    private readonly PayOSClient? _payOS;
 
-    public PostRentalService(DormiDbContext db, IKafkaProducer? kafkaProducer = null, IDistributedLockService? lockService = null)
+    public PostRentalService(
+        DormiDbContext db, 
+        IKafkaProducer? kafkaProducer = null, 
+        IDistributedLockService? lockService = null,
+        IConfiguration? configuration = null,
+        PayOSClient? payOS = null)
     {
         _db = db;
         _kafkaProducer = kafkaProducer;
         _lockService = lockService;
+        _configuration = configuration;
+        _payOS = payOS;
     }
 
     // =========================================================================
@@ -200,6 +213,259 @@ public class PostRentalService : IPostRentalService
                 await _lockService.ReleaseLockAsync(lockKey);
             }
         }
+    }
+
+    public async Task<ServiceResult<DepositCheckoutResponseDto>> CreateDepositCheckoutAsync(Guid leaseId, Guid userId)
+    {
+        var lease = await _db.LeaseContracts
+            .Include(l => l.Tenant)
+            .Include(l => l.Landlord)
+            .Include(l => l.Room)
+            .FirstOrDefaultAsync(l => l.Id == leaseId);
+
+        if (lease == null) return ServiceResult<DepositCheckoutResponseDto>.NotFound("Không tìm thấy hợp đồng thuê.");
+        if (lease.TenantId != userId && lease.LandlordId != userId) return ServiceResult<DepositCheckoutResponseDto>.Forbidden();
+
+        // Find or initialize deposit schedule
+        var depositSchedule = await _db.RentalPaymentSchedules
+            .FirstOrDefaultAsync(s => s.LeaseContractId == leaseId && s.Type == "Deposit");
+
+        if (depositSchedule == null)
+        {
+            var roomTitle = lease.Room?.Title ?? "phòng trọ";
+            depositSchedule = new RentalPaymentSchedule
+            {
+                Id = Guid.NewGuid(),
+                LeaseContractId = lease.Id,
+                Type = "Deposit",
+                Title = $"Tiền đặt cọc hợp đồng ({roomTitle})",
+                Amount = lease.Deposit,
+                DueDate = lease.StartDate,
+                Status = "Pending",
+                CreatedAt = DateTime.UtcNow
+            };
+            _db.RentalPaymentSchedules.Add(depositSchedule);
+        }
+
+        if (depositSchedule.Status == "Paid")
+        {
+            return ServiceResult<DepositCheckoutResponseDto>.Fail("Tiền cọc cho hợp đồng này đã được thanh toán thành công.", 400);
+        }
+
+        decimal amount = depositSchedule.Amount > 0 ? depositSchedule.Amount : lease.Deposit;
+        if (amount <= 0)
+        {
+            return ServiceResult<DepositCheckoutResponseDto>.Fail("Số tiền đặt cọc không hợp lệ.", 400);
+        }
+
+        // Generate unique numeric orderCode
+        long orderCode = long.Parse(DateTime.UtcNow.ToString("yyMMddHHmmss") + Random.Shared.Next(10, 99));
+
+        depositSchedule.PaymentReference = orderCode.ToString();
+        depositSchedule.PaymentMethod = "PayOS";
+
+        var transaction = new PaymentTransaction
+        {
+            Id = Guid.NewGuid(),
+            UserId = lease.TenantId,
+            RoomId = lease.RoomId,
+            Amount = amount,
+            PaymentMethod = "PayOS",
+            TransactionRef = orderCode.ToString(),
+            Description = $"DORMI COC #{orderCode % 1000000}",
+            Status = "Pending",
+            CreatedAt = DateTime.UtcNow
+        };
+        _db.PaymentTransactions.Add(transaction);
+        await _db.SaveChangesAsync();
+
+        string checkoutUrl = "";
+        string paymentLinkId = "";
+        string qrCode = "";
+        string qrUrl = "";
+        string? accountNumber = null;
+        string? accountName = null;
+        string? bin = null;
+
+        var frontendUrl = _configuration?["App:FrontendUrl"] ?? "https://www.dormi.space";
+        var returnUrl = $"{frontendUrl}/payment/return?type=deposit&leaseId={leaseId}&orderCode={orderCode}";
+        var cancelUrl = $"{frontendUrl}/payment/return?type=deposit&leaseId={leaseId}&orderCode={orderCode}&cancel=true";
+
+        if (_payOS != null)
+        {
+            string desc = $"DORMI COC {orderCode % 1000000}";
+            if (desc.Length > 25) desc = desc[..25];
+
+            var request = new CreatePaymentLinkRequest
+            {
+                OrderCode = orderCode,
+                Amount = (long)amount,
+                Description = desc,
+                ReturnUrl = returnUrl,
+                CancelUrl = cancelUrl
+            };
+
+            var payOsRes = await _payOS.PaymentRequests.CreateAsync(request);
+            checkoutUrl = payOsRes.CheckoutUrl;
+            paymentLinkId = payOsRes.PaymentLinkId ?? orderCode.ToString();
+            qrCode = payOsRes.QrCode ?? checkoutUrl;
+            accountNumber = payOsRes.AccountNumber;
+            accountName = payOsRes.AccountName;
+            bin = payOsRes.Bin;
+            qrUrl = !string.IsNullOrWhiteSpace(payOsRes.QrCode)
+                ? $"https://api.qrserver.com/v1/create-qr-code/?size=300x300&data={Uri.EscapeDataString(payOsRes.QrCode)}"
+                : $"https://api.qrserver.com/v1/create-qr-code/?size=300x300&data={Uri.EscapeDataString(checkoutUrl)}";
+        }
+        else
+        {
+            checkoutUrl = $"https://pay.payos.vn/web/demo/{orderCode}";
+            paymentLinkId = $"demo_{orderCode}";
+            qrCode = $"00020101021238540010A000000727012400069704220110{orderCode}5303704540{amount}5802VN6304";
+            qrUrl = $"https://api.qrserver.com/v1/create-qr-code/?size=300x300&data={Uri.EscapeDataString(checkoutUrl)}";
+        }
+
+        return ServiceResult<DepositCheckoutResponseDto>.Ok(new DepositCheckoutResponseDto
+        {
+            CheckoutUrl = checkoutUrl,
+            PaymentLinkId = paymentLinkId,
+            QrCode = qrCode,
+            QrUrl = qrUrl,
+            OrderCode = orderCode,
+            Amount = amount,
+            LeaseId = lease.Id,
+            ScheduleId = depositSchedule.Id,
+            AccountNumber = accountNumber,
+            AccountName = accountName,
+            Bin = bin,
+            Message = "Khởi tạo thanh toán cọc PayOS thành công."
+        });
+    }
+
+    public async Task<ServiceResult<RentalPaymentScheduleDto>> SettleDepositPaymentByOrderCodeAsync(long orderCode)
+    {
+        var refStr = orderCode.ToString();
+
+        // 1. Find schedule by PaymentReference
+        var schedule = await _db.RentalPaymentSchedules
+            .Include(s => s.LeaseContract)
+                .ThenInclude(l => l.Tenant)
+            .Include(s => s.LeaseContract)
+                .ThenInclude(l => l.Landlord)
+            .Include(s => s.LeaseContract)
+                .ThenInclude(l => l.Room)
+            .FirstOrDefaultAsync(s => s.PaymentReference == refStr);
+
+        // Fallback: If not found on schedule, check PaymentTransactions
+        PaymentTransaction? transaction = await _db.PaymentTransactions
+            .FirstOrDefaultAsync(t => t.TransactionRef == refStr);
+
+        if (schedule == null && transaction != null)
+        {
+            schedule = await _db.RentalPaymentSchedules
+                .Include(s => s.LeaseContract)
+                    .ThenInclude(l => l.Tenant)
+                .Include(s => s.LeaseContract)
+                    .ThenInclude(l => l.Landlord)
+                .Include(s => s.LeaseContract)
+                    .ThenInclude(l => l.Room)
+                .FirstOrDefaultAsync(s => s.LeaseContract.TenantId == transaction.UserId && s.Type == "Deposit" && s.Status != "Paid");
+        }
+
+        if (schedule == null)
+        {
+            return ServiceResult<RentalPaymentScheduleDto>.NotFound($"Không tìm thấy đợt thanh toán cọc cho mã đơn {orderCode}.");
+        }
+
+        if (schedule.Status == "Paid")
+        {
+            return ServiceResult<RentalPaymentScheduleDto>.Ok(new RentalPaymentScheduleDto
+            {
+                Id = schedule.Id,
+                LeaseContractId = schedule.LeaseContractId,
+                Type = schedule.Type,
+                Title = schedule.Title,
+                Amount = schedule.Amount,
+                DueDate = schedule.DueDate,
+                Status = schedule.Status,
+                PaidAt = schedule.PaidAt,
+                PaymentReference = schedule.PaymentReference,
+                PaymentMethod = schedule.PaymentMethod
+            });
+        }
+
+        schedule.Status = "Paid";
+        schedule.PaidAt = DateTime.UtcNow;
+        schedule.PaymentMethod = "PayOS";
+
+        if (transaction != null && transaction.Status != "Completed")
+        {
+            transaction.Status = "Completed";
+            transaction.CompletedAt = DateTime.UtcNow;
+        }
+
+        var lease = schedule.LeaseContract;
+        if (lease != null && lease.Room != null)
+        {
+            lease.Room.Status = RoomStatus.Rented;
+        }
+
+        await _db.SaveChangesAsync();
+
+        if (lease != null)
+        {
+            var roomTitle = lease.Room?.Title ?? "phòng";
+            // Notify tenant
+            await SendNotificationAsync(
+                lease.TenantId,
+                "Thanh toán đặt cọc thành công",
+                $"Bạn đã thanh toán thành công {schedule.Amount:N0}đ tiền đặt cọc qua cổng PayOS cho phòng '{roomTitle}'.",
+                "Payment",
+                "/tenant/leases",
+                "DepositPaymentPaid",
+                new Dictionary<string, object?>
+                {
+                    ["orderCode"] = orderCode,
+                    ["leaseId"] = lease.Id.ToString(),
+                    ["scheduleId"] = schedule.Id.ToString(),
+                    ["amount"] = schedule.Amount
+                }
+            );
+
+            // Notify landlord
+            await SendNotificationAsync(
+                lease.LandlordId,
+                "Khách thuê đã đặt cọc qua PayOS",
+                $"Khách thuê {lease.Tenant?.FullName} đã thanh toán thành công {schedule.Amount:N0}đ tiền đặt cọc qua PayOS cho phòng '{roomTitle}'.",
+                "Payment",
+                "/landlord/leases",
+                "DepositPaymentPaid",
+                new Dictionary<string, object?>
+                {
+                    ["orderCode"] = orderCode,
+                    ["leaseId"] = lease.Id.ToString(),
+                    ["scheduleId"] = schedule.Id.ToString(),
+                    ["amount"] = schedule.Amount
+                }
+            );
+
+            await _db.SaveChangesAsync();
+        }
+
+        return ServiceResult<RentalPaymentScheduleDto>.Ok(new RentalPaymentScheduleDto
+        {
+            Id = schedule.Id,
+            LeaseContractId = schedule.LeaseContractId,
+            Type = schedule.Type,
+            Title = schedule.Title,
+            Amount = schedule.Amount,
+            DueDate = schedule.DueDate,
+            Status = schedule.Status,
+            PaidAt = schedule.PaidAt,
+            PaymentReference = schedule.PaymentReference,
+            PaymentMethod = schedule.PaymentMethod,
+            LandlordNotes = schedule.LandlordNotes,
+            CreatedAt = schedule.CreatedAt
+        });
     }
 
     // =========================================================================

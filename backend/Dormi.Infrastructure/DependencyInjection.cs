@@ -84,6 +84,9 @@ public static class DependencyInjection
             services.AddDistributedMemoryCache();
         }
 
+        // Register In-Memory Cache (L1 Cache for hot room details & fast lookups)
+        services.AddMemoryCache();
+
         // Register Core Infrastructure Services
         services.Configure<EmailOptions>(configuration.GetSection(EmailOptions.SectionName));
         services.AddScoped<IEmailService, EmailService>();

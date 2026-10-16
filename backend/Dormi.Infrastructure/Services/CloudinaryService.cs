@@ -52,49 +52,12 @@ namespace Dormi.Infrastructure.Services
                 }
                 catch
                 {
-                    // Fallback to Data URL preserving the actual uploaded image
+                    // Cloudinary upload failed or timed out
                 }
             }
 
-            try
-            {
-                if (fileStream.CanSeek)
-                {
-                    fileStream.Position = 0;
-                }
-                using var ms = new MemoryStream();
-                await fileStream.CopyToAsync(ms);
-                var bytes = ms.ToArray();
-                if (bytes.Length > 0)
-                {
-                    var mime = GetMimeType(fileName);
-                    return $"data:{mime};base64,{Convert.ToBase64String(bytes)}";
-                }
-            }
-            catch
-            {
-            }
-
-            return "https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?auto=format&fit=crop&w=200&q=80";
-        }
-
-        private static string GetMimeType(string fileName)
-        {
-            var ext = Path.GetExtension(fileName).ToLowerInvariant();
-            return ext switch
-            {
-                ".png" => "image/png",
-                ".gif" => "image/gif",
-                ".webp" => "image/webp",
-                ".svg" => "image/svg+xml",
-                ".bmp" => "image/bmp",
-                ".avif" => "image/avif",
-                ".ico" => "image/x-icon",
-                ".heic" => "image/heic",
-                ".heif" => "image/heif",
-                ".tiff" or ".tif" => "image/tiff",
-                _ => "image/jpeg"
-            };
+            // ponytail: Return static clean placeholder URL instead of multi-megabyte base64 string to protect PostgreSQL & RAM
+            return "https://images.unsplash.com/photo-1522708323590-d24dbb6b0267?auto=format&fit=crop&w=800&q=80";
         }
 
         public async Task<bool> DeleteImageAsync(string publicId)

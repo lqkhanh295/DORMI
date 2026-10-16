@@ -2,6 +2,8 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Threading;
+using System.Threading.Channels;
 using System.Threading.Tasks;
 using Dormi.Application.Common;
 using Dormi.Application.DTOs;
@@ -14,6 +16,8 @@ using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.SignalR;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Caching.Distributed;
+using Microsoft.Extensions.Caching.Memory;
+using Microsoft.Extensions.DependencyInjection;
 using System.Text.Json;
 using NetTopologySuite.Geometries;
 
@@ -25,21 +29,74 @@ public class RoomService : IRoomService
     private readonly IImageService _imageService;
     private readonly IHubContext<ChatHub> _hubContext;
     private readonly IDistributedCache _cache;
+    private readonly IMemoryCache _memoryCache;
+    private readonly IServiceScopeFactory _scopeFactory;
     private readonly IKafkaProducer? _kafkaProducer;
     private static readonly JsonSerializerOptions _cacheJsonOptions = new() { PropertyNamingPolicy = JsonNamingPolicy.CamelCase };
+
+    // ponytail: bounded channel batches RoomView DB writes to eliminate lock contention on GET /api/rooms/{id}
+    private static readonly Channel<RoomView> _viewChannel = Channel.CreateBounded<RoomView>(new BoundedChannelOptions(10000)
+    {
+        FullMode = BoundedChannelFullMode.DropOldest
+    });
+    private static int _processorStarted = 0;
+    private static IServiceScopeFactory? _staticScopeFactory;
 
     public RoomService(
         DormiDbContext db, 
         IImageService imageService, 
         IHubContext<ChatHub> hubContext,
         IDistributedCache cache,
+        IMemoryCache memoryCache,
+        IServiceScopeFactory scopeFactory,
         IKafkaProducer? kafkaProducer = null)
     {
         _db = db;
         _imageService = imageService;
         _hubContext = hubContext;
         _cache = cache;
+        _memoryCache = memoryCache;
+        _scopeFactory = scopeFactory;
         _kafkaProducer = kafkaProducer;
+
+        EnsureViewProcessorStarted(scopeFactory);
+    }
+
+    private static void EnsureViewProcessorStarted(IServiceScopeFactory scopeFactory)
+    {
+        _staticScopeFactory = scopeFactory;
+        if (Interlocked.CompareExchange(ref _processorStarted, 1, 0) == 0)
+        {
+            Task.Run(async () =>
+            {
+                var reader = _viewChannel.Reader;
+                var batch = new List<RoomView>(50);
+                while (await reader.WaitToReadAsync())
+                {
+                    batch.Clear();
+                    while (batch.Count < 50 && reader.TryRead(out var item))
+                    {
+                        batch.Add(item);
+                    }
+
+                    if (batch.Count > 0 && _staticScopeFactory != null)
+                    {
+                        try
+                        {
+                            using var scope = _staticScopeFactory.CreateScope();
+                            var db = scope.ServiceProvider.GetRequiredService<DormiDbContext>();
+                            db.RoomViews.AddRange(batch);
+                            await db.SaveChangesAsync();
+                        }
+                        catch (Exception ex)
+                        {
+                            Console.WriteLine($"[View Batch Error]: {ex.Message}");
+                        }
+                        await Task.Delay(200);
+                    }
+                }
+            });
+        }
     }
 
     private static bool IsValidImageFile(IFormFile file, out string? errorMessage)
@@ -308,6 +365,9 @@ public class RoomService : IRoomService
             await _cache.RemoveAsync("featured_rooms_12");
             if (roomId.HasValue)
             {
+                _memoryCache.Remove($"room:detail:{roomId.Value}");
+                _memoryCache.Remove($"room_detail:{roomId.Value}");
+                await _cache.RemoveAsync($"room:detail:{roomId.Value}");
                 await _cache.RemoveAsync($"room_detail:{roomId.Value}");
             }
         }
@@ -390,29 +450,116 @@ public class RoomService : IRoomService
 
     public async Task<ServiceResult<RoomResponseDto>> GetRoomByIdAsync(Guid id, Guid? currentUserId, bool isAdmin, string? clientIp)
     {
-        var room = await _db.Rooms
-            .AsNoTracking()
-            .Include(r => r.Landlord)
-            .Include(r => r.Images)
-            .FirstOrDefaultAsync(r => r.Id == id);
+        var cacheKey = $"room:detail:{id}";
+        var legacyCacheKey = $"room_detail:{id}";
 
-        if (room == null) return ServiceResult<RoomResponseDto>.NotFound("Không tìm thấy phòng trọ.");
+        RoomResponseDto? dto = null;
 
-        if (!isAdmin && room.LandlordId != currentUserId)
+        // 1. Check L1 In-Memory Cache (ultrafast < 1ms response)
+        if (_memoryCache.TryGetValue(cacheKey, out RoomResponseDto? memCached) && memCached != null)
         {
-            if (room.Status != RoomStatus.Available && room.Status != RoomStatus.Rented)
+            dto = memCached;
+        }
+
+        // 2. Check L2 Distributed Cache on L1 miss
+        if (dto == null)
+        {
+            try
+            {
+                var cachedJson = await _cache.GetStringAsync(cacheKey) ?? await _cache.GetStringAsync(legacyCacheKey);
+                if (!string.IsNullOrEmpty(cachedJson))
+                {
+                    dto = JsonSerializer.Deserialize<RoomResponseDto>(cachedJson, _cacheJsonOptions);
+                    if (dto != null)
+                    {
+                        _memoryCache.Set(cacheKey, dto, new MemoryCacheEntryOptions
+                        {
+                            SlidingExpiration = TimeSpan.FromMinutes(10),
+                            AbsoluteExpirationRelativeToNow = TimeSpan.FromHours(1)
+                        });
+                    }
+                }
+            }
+            catch { }
+        }
+
+        // 3. Fallback to Database on Cache Miss
+        if (dto == null)
+        {
+            var room = await _db.Rooms
+                .AsNoTracking()
+                .Include(r => r.Landlord)
+                .Include(r => r.Images)
+                .FirstOrDefaultAsync(r => r.Id == id);
+
+            if (room == null) return ServiceResult<RoomResponseDto>.NotFound("Không tìm thấy phòng trọ.");
+
+            dto = new RoomResponseDto
+            {
+                Id = room.Id,
+                LandlordId = room.LandlordId,
+                LandlordName = room.Landlord?.FullName ?? "Chủ phòng",
+                LandlordPhone = room.Landlord?.PhoneNumber,
+                Title = room.Title,
+                Description = room.Description,
+                Price = room.Price,
+                Area = room.Area,
+                Utilities = room.Utilities,
+                RoomType = room.RoomType,
+                Address = room.Address,
+                Latitude = room.Latitude,
+                Longitude = room.Longitude,
+                DistanceKm = null,
+                Virtual3DUrl = room.Virtual3DUrl,
+                Status = room.Status,
+                IsVerifiedLandlord = room.Landlord?.IsVerified ?? false,
+                CreatedAt = room.CreatedAt,
+                IsBoosted = room.IsBoosted && room.BoostExpiresAt > DateTime.UtcNow,
+                BoostExpiresAt = room.BoostExpiresAt,
+                BoostType = room.BoostType,
+                Images = room.Images.Select(img => new RoomImageDto
+                {
+                    Id = img.Id,
+                    ImageUrl = img.ImageUrl,
+                    IsPrimary = img.IsPrimary
+                }).ToList()
+            };
+
+            // Store in L1 MemoryCache (10m sliding expiration)
+            _memoryCache.Set(cacheKey, dto, new MemoryCacheEntryOptions
+            {
+                SlidingExpiration = TimeSpan.FromMinutes(10),
+                AbsoluteExpirationRelativeToNow = TimeSpan.FromHours(1)
+            });
+
+            // Store in L2 DistributedCache
+            try
+            {
+                var json = JsonSerializer.Serialize(dto, _cacheJsonOptions);
+                await _cache.SetStringAsync(cacheKey, json, new DistributedCacheEntryOptions
+                {
+                    SlidingExpiration = TimeSpan.FromMinutes(10)
+                });
+            }
+            catch { }
+        }
+
+        // 4. Access visibility check
+        if (!isAdmin && dto.LandlordId != currentUserId)
+        {
+            if (dto.Status != RoomStatus.Available && dto.Status != RoomStatus.Rented)
             {
                 return ServiceResult<RoomResponseDto>.NotFound("Phòng trọ này hiện chưa được công khai.");
             }
         }
 
+        // 5. Decoupled View Tracking: debounce via cache & enqueue into background channel without blocking DB
         try
         {
             var ip = clientIp ?? "unknown";
             var viewerKey = currentUserId.HasValue ? currentUserId.Value.ToString() : ip;
             var viewLockKey = $"room_view_lock:{id}:{viewerKey}";
 
-            // ponytail: Redis check avoids heavy database scanning on RoomViews
             var alreadyViewed = await _cache.GetStringAsync(viewLockKey);
             if (string.IsNullOrEmpty(alreadyViewed))
             {
@@ -421,7 +568,7 @@ public class RoomService : IRoomService
                     AbsoluteExpirationRelativeToNow = TimeSpan.FromMinutes(30)
                 });
 
-                _db.RoomViews.Add(new RoomView
+                _viewChannel.Writer.TryWrite(new RoomView
                 {
                     Id = Guid.NewGuid(),
                     RoomId = id,
@@ -430,7 +577,6 @@ public class RoomService : IRoomService
                     IpAddress = ip,
                     CreatedAt = DateTime.UtcNow
                 });
-                await _db.SaveChangesAsync();
             }
         }
         catch (Exception ex)
@@ -438,37 +584,6 @@ public class RoomService : IRoomService
             // Suppress analytics failure
             Console.WriteLine($"[View Tracking Notice]: {ex.Message}");
         }
-
-        var dto = new RoomResponseDto
-        {
-            Id = room.Id,
-            LandlordId = room.LandlordId,
-            LandlordName = room.Landlord?.FullName ?? "Chủ phòng",
-            LandlordPhone = room.Landlord?.PhoneNumber,
-            Title = room.Title,
-            Description = room.Description,
-            Price = room.Price,
-            Area = room.Area,
-            Utilities = room.Utilities,
-            RoomType = room.RoomType,
-            Address = room.Address,
-            Latitude = room.Latitude,
-            Longitude = room.Longitude,
-            DistanceKm = null,
-            Virtual3DUrl = room.Virtual3DUrl,
-            Status = room.Status,
-            IsVerifiedLandlord = room.Landlord?.IsVerified ?? false,
-            CreatedAt = room.CreatedAt,
-            IsBoosted = room.IsBoosted && room.BoostExpiresAt > DateTime.UtcNow,
-            BoostExpiresAt = room.BoostExpiresAt,
-            BoostType = room.BoostType,
-            Images = room.Images.Select(img => new RoomImageDto
-            {
-                Id = img.Id,
-                ImageUrl = img.ImageUrl,
-                IsPrimary = img.IsPrimary
-            }).ToList()
-        };
 
         return ServiceResult<RoomResponseDto>.Ok(dto);
     }
@@ -813,6 +928,8 @@ public class RoomService : IRoomService
         _db.RoomImages.Add(roomImage);
         await _db.SaveChangesAsync();
 
+        await InvalidateRoomsCacheAsync(roomId);
+
         return ServiceResult<RoomImageDto>.Ok(new RoomImageDto
         {
             Id = roomImage.Id,
@@ -837,6 +954,8 @@ public class RoomService : IRoomService
         _db.RoomImages.Remove(roomImage);
         await _db.SaveChangesAsync();
 
+        await InvalidateRoomsCacheAsync(roomId);
+
         return ServiceResult<object>.Ok(new { message = "Đã xoá ảnh khỏi phòng thành công." });
     }
 
@@ -859,6 +978,7 @@ public class RoomService : IRoomService
         }
 
         await _db.SaveChangesAsync();
+        await InvalidateRoomsCacheAsync(roomId);
         return ServiceResult<object>.Ok(new { message = "Đã đặt làm ảnh chính thành công." });
     }
 
@@ -896,7 +1016,7 @@ public class RoomService : IRoomService
 
         try
         {
-            _db.RoomViews.Add(new RoomView
+            _viewChannel.Writer.TryWrite(new RoomView
             {
                 Id = Guid.NewGuid(),
                 RoomId = roomId,
@@ -905,7 +1025,6 @@ public class RoomService : IRoomService
                 IpAddress = clientIp ?? "unknown",
                 CreatedAt = DateTime.UtcNow
             });
-            await _db.SaveChangesAsync();
         }
         catch
         {

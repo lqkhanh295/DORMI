@@ -95,7 +95,17 @@ export default function AuthPage() {
     setSearchParams(registerMode ? { tab: 'register' } : {});
   };
 
+  // Only enable quick demo autofill in strict local development (localhost / 127.0.0.1)
+  const isLocalDev = Boolean(
+    import.meta.env.DEV &&
+    typeof window !== 'undefined' &&
+    (window.location.hostname === 'localhost' ||
+     window.location.hostname === '127.0.0.1' ||
+     window.location.hostname.endsWith('.local'))
+  );
+
   const handleFillDemo = (demoRole: 'Tenant' | 'Landlord' | 'Admin') => {
+    if (!isLocalDev) return;
     if (demoRole === 'Landlord') {
       setEmail('landlord@dormi.vn');
       setPassword('Password123!');
@@ -575,7 +585,7 @@ export default function AuthPage() {
             </form>
 
             {/* Quick Demo Fill (Only visible in Local Development) */}
-            {import.meta.env.DEV && (
+            {isLocalDev && (
               <div className="mt-5 pt-4 border-t border-slate-100 space-y-2 text-caption">
                 <div className="flex items-center justify-between text-[#64748B]">
                   <span className="flex items-center gap-1 text-xs">

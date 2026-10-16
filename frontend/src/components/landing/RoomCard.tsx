@@ -4,6 +4,7 @@ import { CheckCircle, Heart } from 'lucide-react';
 import { toast } from 'sonner';
 import { favoritesApi } from '../../services/api';
 import { useStore } from '../../store/useStore';
+import { getOptimizedImageUrl } from '../../utils/imageUtils';
 
 export interface RoomItem {
   id: string;
@@ -66,14 +67,14 @@ export function RoomCard({
     }
   };
 
-  const [imgSrc, setImgSrc] = useState(room.image);
   const fallbackImage = 'https://images.unsplash.com/photo-1522771739844-6a9f6d5f14af?auto=format&fit=crop&w=600&q=80';
+  const [imgSrc, setImgSrc] = useState(getOptimizedImageUrl(room.image, 600) || fallbackImage);
 
   useEffect(() => {
-    setImgSrc(room.image || fallbackImage);
+    setImgSrc(getOptimizedImageUrl(room.image, 600) || fallbackImage);
   }, [room.image]);
 
-  // ponytail: Apple-grade tactile room card with fallback image handling
+  // ponytail: Apple-grade tactile room card with responsive Cloudinary transforms and fallback image handling
   return (
     <Link 
       to={`/room/${room.id}`}
@@ -84,6 +85,7 @@ export function RoomCard({
           src={imgSrc} 
           alt={room.title} 
           loading="lazy"
+          decoding="async"
           onError={() => setImgSrc(fallbackImage)}
           className="w-full h-full object-cover transition-transform duration-300 ease-[cubic-bezier(0.22,1,0.36,1)] group-hover:scale-[1.03]"
         />

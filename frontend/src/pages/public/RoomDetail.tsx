@@ -11,6 +11,7 @@ import { appointmentsApi, favoritesApi, roomsApi, trustSafetyApi, type RoomRespo
 import RentalApplicationModal from '../../components/transaction/RentalApplicationModal';
 import TrustScoreModal from '../../components/trust/TrustScoreModal';
 import { modalBackdropVariants, modalContentVariants } from '../../utils/motion';
+import { getOptimizedImageUrl } from '../../utils/imageUtils';
 
 export default function RoomDetail() {
   const navigate = useNavigate();
@@ -240,7 +241,12 @@ export default function RoomDetail() {
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6 h-[40vh] md:h-[55vh]">
           <div className="md:col-span-2 h-full bg-white shadow-clay-soft rounded-[18px] overflow-hidden relative group cursor-pointer p-2" onClick={() => setShowGallery(true)}>
             <div className="w-full h-full rounded-[14px] overflow-hidden">
-              <img src={photos[0]} alt="Room Main" className="w-full h-full object-cover transition-transform duration-200 group-hover:scale-[1.02]" />
+              <img 
+                src={getOptimizedImageUrl(photos[0], 1200)} 
+                alt="Room Main" 
+                decoding="async"
+                className="w-full h-full object-cover transition-transform duration-200 group-hover:scale-[1.02]" 
+              />
             </div>
             <div className="absolute inset-0 bg-[#0F172A]/20 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
               <Button variant="secondary" className="bg-white text-[#0F172A] border-none shadow-clay-soft">
@@ -250,10 +256,22 @@ export default function RoomDetail() {
           </div>
           <div className="hidden md:flex flex-col gap-6 h-full">
             <div className="flex-1 bg-white shadow-clay-soft rounded-[18px] p-2 cursor-pointer" onClick={() => setShowGallery(true)}>
-              <img src={photos[1] || photos[0]} alt="Room 2" className="w-full h-full object-cover rounded-[14px] transition-transform hover:scale-[1.02]" />
+              <img 
+                src={getOptimizedImageUrl(photos[1] || photos[0], 600)} 
+                alt="Room 2" 
+                loading="lazy"
+                decoding="async"
+                className="w-full h-full object-cover rounded-[14px] transition-transform hover:scale-[1.02]" 
+              />
             </div>
             <div className="flex-1 bg-white shadow-clay-soft rounded-[18px] p-2 relative group cursor-pointer" onClick={() => setShowGallery(true)}>
-              <img src={photos[2] || photos[0]} alt="Room 3" className="w-full h-full object-cover rounded-[14px] transition-transform group-hover:scale-[1.02]" />
+              <img 
+                src={getOptimizedImageUrl(photos[2] || photos[0], 600)} 
+                alt="Room 3" 
+                loading="lazy"
+                decoding="async"
+                className="w-full h-full object-cover rounded-[14px] transition-transform group-hover:scale-[1.02]" 
+              />
               {photos.length > 3 && (
                 <div className="absolute inset-2 rounded-[14px] bg-[#0F172A]/50 flex items-center justify-center">
                   <span className="text-white font-bold text-h2">+{photos.length - 3} Ảnh</span>
@@ -554,7 +572,8 @@ export default function RoomDetail() {
                     navigate('/auth');
                     return;
                   }
-                  navigate('/tenant/chat', {
+                  const chatRoute = currentUser.role === 'Landlord' ? '/landlord/chat' : '/tenant/chat';
+                  navigate(chatRoute, {
                     state: {
                       targetUserId: roomData?.landlordId,
                       targetUserName: roomData?.landlordName,
@@ -604,7 +623,14 @@ export default function RoomDetail() {
                 className="grid grid-cols-1 md:grid-cols-2 gap-4 max-w-5xl mx-auto w-full motion-gpu my-auto"
               >
                 {photos.map((photo, i) => (
-                  <img key={i} src={photo} alt={`Photo ${i}`} className="w-full h-64 object-cover rounded-xl shadow-lg border border-white/10" />
+                  <img 
+                    key={i} 
+                    src={getOptimizedImageUrl(photo, 800)} 
+                    alt={`Photo ${i}`} 
+                    loading="lazy" 
+                    decoding="async" 
+                    className="w-full h-64 object-cover rounded-xl shadow-lg border border-white/10" 
+                  />
                 ))}
               </motion.div>
             </motion.div>
@@ -766,14 +792,17 @@ export default function RoomDetail() {
                   </div>
                   <Button 
                     fullWidth 
-                    onClick={() => navigate('/tenant/chat', { 
-                      state: { 
-                        tab: 'appointments',
-                        targetUserId: roomData?.landlordId,
-                        targetUserName: roomData?.landlordName,
-                        targetUserRole: 'Landlord'
-                      } 
-                    })}
+                    onClick={() => {
+                      const chatRoute = currentUser?.role === 'Landlord' ? '/landlord/chat' : '/tenant/chat';
+                      navigate(chatRoute, { 
+                        state: { 
+                          tab: 'appointments',
+                          targetUserId: roomData?.landlordId,
+                          targetUserName: roomData?.landlordName,
+                          targetUserRole: 'Landlord'
+                        } 
+                      });
+                    }}
                   >
                     Xem lịch & Chat với chủ nhà
                   </Button>

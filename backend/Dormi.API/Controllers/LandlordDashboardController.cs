@@ -112,6 +112,7 @@ public class LandlordDashboardController : BaseApiController
     [HttpPost("payment/payos-webhook")]
     [HttpPost("/api/payos/webhook")]
     [HttpPost("/api/payment/payos-webhook")]
+    [HttpPost("/api/payment/webhook")]
     [AllowAnonymous]
     public async Task<IActionResult> PayOSWebhook([FromBody] PayOS.Models.Webhooks.Webhook webhook)
     {

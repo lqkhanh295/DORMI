@@ -13,6 +13,8 @@ public interface IPostRentalService
     Task<ServiceResult<List<RentalPaymentScheduleDto>>> GetPaymentSchedulesAsync(Guid leaseId, Guid userId);
     Task<ServiceResult<RentalPaymentScheduleDto>> CreatePaymentScheduleAsync(CreatePaymentScheduleDto dto, Guid landlordId);
     Task<ServiceResult<RentalPaymentScheduleDto>> RecordPaymentAsync(Guid scheduleId, RecordPaymentDto dto, Guid userId);
+    Task<ServiceResult<DepositCheckoutResponseDto>> CreateDepositCheckoutAsync(Guid leaseId, Guid userId);
+    Task<ServiceResult<RentalPaymentScheduleDto>> SettleDepositPaymentByOrderCodeAsync(long orderCode);
 
     // Maintenance ticketing
     Task<ServiceResult<MaintenanceRequestDto>> CreateMaintenanceRequestAsync(CreateMaintenanceRequestDto dto, Guid tenantId);

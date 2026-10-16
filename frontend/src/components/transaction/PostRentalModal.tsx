@@ -12,14 +12,17 @@ import {
   Plus, 
   Check, 
   RefreshCw,
-  Home
+  Home,
+  QrCode,
+  ExternalLink
 } from 'lucide-react';
 import { 
   postRentalApi, 
   type LeaseContractResponse, 
   type RentalPaymentScheduleResponse, 
   type MaintenanceRequestResponse, 
-  type PostRentalSummaryResponse 
+  type PostRentalSummaryResponse,
+  type DepositCheckoutResponse
 } from '../../services/api';
 import { toast } from 'sonner';
 import { motion } from 'framer-motion';
@@ -51,6 +54,8 @@ export default function PostRentalModal({ lease, isLandlord, onClose, onRefresh 
 
   const [payingSchedule, setPayingSchedule] = useState<RentalPaymentScheduleResponse | null>(null);
   const [paymentRefCode, setPaymentRefCode] = useState('');
+  const [payOSCheckout, setPayOSCheckout] = useState<DepositCheckoutResponse | null>(null);
+  const [isGeneratingPayOS, setIsGeneratingPayOS] = useState(false);
 
   const [isAddingMaintenance, setIsAddingMaintenance] = useState(false);
   const [newMaintenance, setNewMaintenance] = useState({
@@ -167,6 +172,23 @@ export default function PostRentalModal({ lease, isLandlord, onClose, onRefresh 
       loadData();
     } catch (err: any) {
       toast.error(err?.message || 'Không thể cập nhật thanh toán.');
+    }
+  };
+
+  const handleCreatePayOSDeposit = async () => {
+    try {
+      setIsGeneratingPayOS(true);
+      const res = await postRentalApi.createDepositCheckout(lease.id);
+      if (res && res.checkoutUrl) {
+        setPayOSCheckout(res);
+        toast.success('Đã tạo liên kết thanh toán cọc VietQR thành công!');
+      } else {
+        toast.error('Không nhận được dữ liệu thanh toán PayOS.');
+      }
+    } catch (err: any) {
+      toast.error(err?.message || 'Không thể tạo mã VietQR thanh toán cọc.');
+    } finally {
+      setIsGeneratingPayOS(false);
     }
   };
 
@@ -646,16 +668,29 @@ export default function PostRentalModal({ lease, isLandlord, onClose, onRefresh 
                                     </span>
                                   )
                                 ) : (
-                                  <button
-                                    type="button"
-                                    onClick={() => {
-                                      setPayingSchedule(sch);
-                                      setPaymentRefCode('');
-                                    }}
-                                    className="px-3.5 py-1.5 bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold rounded-lg transition-colors shadow-xs"
-                                  >
-                                    {isLandlord ? 'Xác nhận đã nhận' : 'Báo đã chuyển khoản'}
-                                  </button>
+                                  <div className="flex flex-wrap items-center gap-2">
+                                    {!isLandlord && sch.type === 'Deposit' && (
+                                      <button
+                                        type="button"
+                                        onClick={handleCreatePayOSDeposit}
+                                        disabled={isGeneratingPayOS}
+                                        className="px-3.5 py-1.5 bg-[#00153D] hover:bg-[#002266] text-white text-xs font-bold rounded-lg transition-colors shadow-xs flex items-center gap-1.5"
+                                      >
+                                        <QrCode className="w-3.5 h-3.5" />
+                                        {isGeneratingPayOS ? 'Đang tạo VietQR...' : 'Thanh toán cọc qua PayOS (VietQR)'}
+                                      </button>
+                                    )}
+                                    <button
+                                      type="button"
+                                      onClick={() => {
+                                        setPayingSchedule(sch);
+                                        setPaymentRefCode('');
+                                      }}
+                                      className="px-3.5 py-1.5 bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold rounded-lg transition-colors shadow-xs"
+                                    >
+                                      {isLandlord ? 'Xác nhận đã nhận' : 'Báo đã chuyển khoản'}
+                                    </button>
+                                  </div>
                                 )
                               )}
                             </div>
@@ -686,6 +721,32 @@ export default function PostRentalModal({ lease, isLandlord, onClose, onRefresh 
                             </p>
                           )}
                         </div>
+
+                        {!isLandlord && payingSchedule.type === 'Deposit' && (
+                          <div className="p-3 bg-blue-50 border border-blue-200 rounded-xl space-y-2">
+                            <div className="flex items-center justify-between">
+                              <span className="font-bold text-xs text-[#00153D] flex items-center gap-1.5">
+                                <QrCode className="w-4 h-4 text-blue-600" />
+                                Thanh toán cọc tự động qua PayOS
+                              </span>
+                              <button
+                                type="button"
+                                onClick={() => {
+                                  setPayingSchedule(null);
+                                  handleCreatePayOSDeposit();
+                                }}
+                                disabled={isGeneratingPayOS}
+                                className="px-3 py-1 bg-[#00153D] text-white text-xs font-bold rounded-lg hover:bg-blue-900 transition-colors"
+                              >
+                                {isGeneratingPayOS ? 'Đang tạo...' : 'Tạo mã VietQR ngay'}
+                              </button>
+                            </div>
+                            <p className="text-[11px] text-[#475569]">
+                              Khuyên dùng: Hệ thống tự động gạch nợ và đổi trạng thái "Đã thanh toán" tức thì sau khi quét mã.
+                            </p>
+                          </div>
+                        )}
+
                         <div>
                           <label className="text-xs font-semibold text-[#0F172A] block mb-1">
                             {isLandlord ? 'Ghi chú đối soát / Mã giao dịch nhận' : 'Mã giao dịch / Nội dung chuyển khoản ngân hàng'}
@@ -712,6 +773,84 @@ export default function PostRentalModal({ lease, isLandlord, onClose, onRefresh 
                             className="px-4 py-1.5 bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs rounded-lg transition-colors"
                           >
                             {isLandlord ? 'Xác nhận nhận tiền vào tài khoản' : 'Gửi xác nhận chuyển khoản'}
+                          </button>
+                        </div>
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Modal VietQR PayOS Deposit */}
+                  {payOSCheckout && (
+                    <div className="fixed inset-0 z-[120] bg-[#0F172A]/70 backdrop-blur-xs flex items-center justify-center p-4 overflow-y-auto">
+                      <div className="relative my-auto bg-white rounded-2xl p-6 max-w-md w-full shadow-2xl space-y-4 border border-[#E2E8F0]">
+                        <div className="flex justify-between items-center pb-3 border-b border-[#E2E8F0]">
+                          <div className="flex items-center gap-2">
+                            <div className="p-1.5 bg-blue-50 rounded-lg text-blue-700">
+                              <QrCode className="w-5 h-5" />
+                            </div>
+                            <div>
+                              <h4 className="font-bold text-base text-[#0F172A]">Thanh toán cọc qua VietQR</h4>
+                              <p className="text-caption text-[#64748B]">Cổng thanh toán PayOS đối soát tự động</p>
+                            </div>
+                          </div>
+                          <button 
+                            type="button"
+                            onClick={() => setPayOSCheckout(null)} 
+                            className="text-[#64748B] hover:text-[#0F172A] p-1 rounded-lg"
+                          >
+                            <X className="w-5 h-5" />
+                          </button>
+                        </div>
+
+                        <div className="text-center space-y-3 py-1">
+                          <div className="inline-block p-3 bg-white border-2 border-dashed border-blue-400 rounded-2xl shadow-xs">
+                            <img 
+                              src={payOSCheckout.qrUrl || `https://api.qrserver.com/v1/create-qr-code/?size=260x260&data=${encodeURIComponent(payOSCheckout.qrCode || payOSCheckout.checkoutUrl)}`} 
+                              alt="VietQR PayOS" 
+                              className="w-56 h-56 mx-auto object-contain rounded-xl"
+                            />
+                          </div>
+                          <div>
+                            <p className="text-xs text-[#64748B]">Số tiền cọc cần thanh toán</p>
+                            <p className="text-2xl font-extrabold text-[#00153D]">
+                              {payOSCheckout.amount.toLocaleString('vi-VN')} đ
+                            </p>
+                            <p className="text-xs text-[#64748B] mt-1">
+                              Mã đơn hàng: <span className="font-mono font-bold text-[#0F172A]">{payOSCheckout.orderCode}</span>
+                            </p>
+                          </div>
+                        </div>
+
+                        <div className="p-3 bg-[#F8FAFC] rounded-xl border border-[#E2E8F0] space-y-1.5 text-xs">
+                          <div className="flex items-center gap-2 text-emerald-700 font-semibold">
+                            <ShieldCheck className="w-4 h-4 shrink-0" />
+                            <span>Quét mã bằng app ngân hàng bất kỳ để xác nhận tự động</span>
+                          </div>
+                          <p className="text-[#64748B]">
+                            Sau khi chuyển khoản thành công, giao diện sẽ tự động cập nhật trong vòng vài giây. Bạn cũng có thể mở trực tiếp trang thanh toán PayOS bên dưới.
+                          </p>
+                        </div>
+
+                        <div className="flex flex-col gap-2 pt-2">
+                          <a
+                            href={payOSCheckout.checkoutUrl}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="w-full py-2.5 px-4 bg-[#00153D] hover:bg-[#002266] text-white font-bold text-xs rounded-xl text-center flex items-center justify-center gap-2 shadow-xs transition-colors"
+                          >
+                            <ExternalLink className="w-4 h-4" />
+                            Mở trang thanh toán PayOS
+                          </a>
+                          <button
+                            type="button"
+                            onClick={() => {
+                              setPayOSCheckout(null);
+                              loadData();
+                              onRefresh();
+                            }}
+                            className="w-full py-2 text-xs font-semibold text-[#64748B] hover:text-[#0F172A] hover:bg-slate-100 rounded-xl transition-colors"
+                          >
+                            Đóng và làm mới trạng thái
                           </button>
                         </div>
                       </div>

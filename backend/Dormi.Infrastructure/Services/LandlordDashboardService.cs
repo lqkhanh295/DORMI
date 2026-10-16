@@ -530,6 +530,64 @@ public class LandlordDashboardService : ILandlordDashboardService
                 .Include(t => t.Subscription)
                 .FirstOrDefaultAsync(t => t.TransactionRef == refStr);
 
+            // Check if this orderCode corresponds to a rental deposit schedule
+            var depositSchedule = await _db.RentalPaymentSchedules
+                .Include(s => s.LeaseContract)
+                    .ThenInclude(l => l.Tenant)
+                .Include(s => s.LeaseContract)
+                    .ThenInclude(l => l.Landlord)
+                .Include(s => s.LeaseContract)
+                    .ThenInclude(l => l.Room)
+                .FirstOrDefaultAsync(s => s.PaymentReference == refStr);
+
+            if (depositSchedule != null)
+            {
+                if (depositSchedule.Status != "Paid")
+                {
+                    depositSchedule.Status = "Paid";
+                    depositSchedule.PaidAt = DateTime.UtcNow;
+                    depositSchedule.PaymentMethod = "PayOS";
+
+                    if (transaction != null && transaction.Status != "Completed")
+                    {
+                        transaction.Status = "Completed";
+                        transaction.CompletedAt = DateTime.UtcNow;
+                    }
+
+                    if (depositSchedule.LeaseContract?.Room != null)
+                    {
+                        depositSchedule.LeaseContract.Room.Status = RoomStatus.Rented;
+                    }
+
+                    var roomTitle = depositSchedule.LeaseContract?.Room?.Title ?? "phòng";
+                    _db.Notifications.Add(new Notification
+                    {
+                        Id = Guid.NewGuid(),
+                        UserId = depositSchedule.LeaseContract!.TenantId,
+                        Title = "Thanh toán đặt cọc thành công",
+                        Message = $"Bạn đã thanh toán thành công {depositSchedule.Amount:N0}đ tiền cọc qua cổng PayOS cho phòng '{roomTitle}'.",
+                        Type = "Payment",
+                        LinkUrl = "/tenant/leases",
+                        CreatedAt = DateTime.UtcNow
+                    });
+
+                    _db.Notifications.Add(new Notification
+                    {
+                        Id = Guid.NewGuid(),
+                        UserId = depositSchedule.LeaseContract!.LandlordId,
+                        Title = "Khách thuê đã thanh toán tiền cọc",
+                        Message = $"Khách thuê {depositSchedule.LeaseContract.Tenant?.FullName} đã hoàn tất đặt cọc {depositSchedule.Amount:N0}đ qua PayOS cho phòng '{roomTitle}'.",
+                        Type = "Payment",
+                        LinkUrl = "/landlord/leases",
+                        CreatedAt = DateTime.UtcNow
+                    });
+
+                    await _db.SaveChangesAsync();
+                }
+
+                return ServiceResult<object>.Ok(new { message = "Thanh toán đặt cọc PayOS được xác thực và xử lý thành công.", orderCode = verifiedData.OrderCode, type = "Deposit" });
+            }
+
             if (transaction == null)
             {
                 return ServiceResult<object>.Ok(new { message = $"OrderCode {refStr} không tìm thấy trong cơ sở dữ liệu." });

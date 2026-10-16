@@ -11,9 +11,6 @@
   },
   "dependencies": {
     "@microsoft/signalr": "^10.0.0",
-    "@phosphor-icons/react": "^2.1.10",
-    "@react-three/drei": "^10.7.7",
-    "@react-three/fiber": "^9.6.1",
     "@types/leaflet": "^1.9.22",
     "@vercel/analytics": "^2.0.1",
     "clsx": "^2.1.1",
@@ -25,7 +22,6 @@
     "react-router-dom": "^7.17.0",
     "sonner": "^2.0.7",
     "tailwind-merge": "^3.6.0",
-    "three": "^0.184.0",
     "zustand": "^5.0.14"
   },
   "devDependencies": {

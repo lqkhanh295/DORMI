@@ -64,6 +64,16 @@ public class PostRentalController : BaseApiController
         return HandleResult(result);
     }
 
+    [HttpPost("leases/{leaseId:guid}/deposit/checkout")]
+    public async Task<IActionResult> CreateDepositCheckout(Guid leaseId)
+    {
+        var userId = GetCurrentUserId();
+        if (!userId.HasValue) return Unauthorized();
+
+        var result = await _service.CreateDepositCheckoutAsync(leaseId, userId.Value);
+        return HandleResult(result);
+    }
+
     // --- 3. Maintenance ticketing ---
     [HttpGet("maintenance")]
     public async Task<IActionResult> GetMaintenanceRequests([FromQuery] Guid? leaseId, [FromQuery] bool? isLandlord)

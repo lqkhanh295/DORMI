@@ -75,6 +75,7 @@ export function HeroSearch({
               <Search className="w-4 h-4 text-slate-400 absolute left-3.5 top-1/2 -translate-y-1/2 pointer-events-none" />
               <input
                 type="text"
+                aria-label="Tìm kiếm phòng theo khu vực, trường đại học, địa chỉ"
                 placeholder="Tìm theo tên đường, trường ĐH, địa chỉ..."
                 value={query}
                 onChange={(e) => onQueryChange(e.target.value)}
@@ -83,6 +84,7 @@ export function HeroSearch({
               {query && (
                 <button
                   type="button"
+                  aria-label="Xóa từ khóa tìm kiếm"
                   onClick={() => onQueryChange('')}
                   className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 p-0.5"
                 >
@@ -95,6 +97,7 @@ export function HeroSearch({
             <div className="sm:col-span-3 relative">
               <MapPin className="w-4 h-4 text-slate-400 absolute left-3.5 top-1/2 -translate-y-1/2 pointer-events-none" />
               <select
+                aria-label="Chọn khu vực, quận huyện"
                 value={district}
                 onChange={(e) => onDistrictChange(e.target.value)}
                 className="w-full bg-slate-50 hover:bg-slate-100/70 focus:bg-white border border-transparent focus:border-[#00153D] rounded-xl pl-9 pr-7 py-2 text-xs sm:text-sm text-[#0F172A] outline-none transition-all h-[42px] cursor-pointer appearance-none"
@@ -116,6 +119,7 @@ export function HeroSearch({
             <div className="sm:col-span-2 relative">
               <Coins className="w-4 h-4 text-slate-400 absolute left-3.5 top-1/2 -translate-y-1/2 pointer-events-none" />
               <select
+                aria-label="Chọn khoảng giá thuê phòng"
                 value={price}
                 onChange={(e) => onPriceChange(e.target.value)}
                 className="w-full bg-slate-50 hover:bg-slate-100/70 focus:bg-white border border-transparent focus:border-[#00153D] rounded-xl pl-9 pr-6 py-2 text-xs sm:text-sm text-[#0F172A] outline-none transition-all h-[42px] cursor-pointer appearance-none"
@@ -132,6 +136,7 @@ export function HeroSearch({
             <div className="sm:col-span-2">
               <button
                 type="button"
+                aria-label="Tìm kiếm phòng trọ"
                 onClick={handleOpenMap}
                 className="w-full h-[42px] bg-[#00153D] hover:bg-[#073372] text-white font-bold text-xs sm:text-sm rounded-xl flex items-center justify-center gap-1.5 transition-all shadow-xs active:scale-[0.98]"
               >

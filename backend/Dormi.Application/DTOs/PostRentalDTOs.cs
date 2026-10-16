@@ -144,3 +144,19 @@ public class PostRentalSummaryDto
     public bool IsRenewalRequested { get; set; }
     public bool IsMoveOutRequested { get; set; }
 }
+
+public class DepositCheckoutResponseDto
+{
+    public string CheckoutUrl { get; set; } = string.Empty;
+    public string PaymentLinkId { get; set; } = string.Empty;
+    public string QrCode { get; set; } = string.Empty;
+    public string? QrUrl { get; set; }
+    public long OrderCode { get; set; }
+    public decimal Amount { get; set; }
+    public Guid LeaseId { get; set; }
+    public Guid ScheduleId { get; set; }
+    public string? AccountNumber { get; set; }
+    public string? AccountName { get; set; }
+    public string? Bin { get; set; }
+    public string Message { get; set; } = string.Empty;
+}

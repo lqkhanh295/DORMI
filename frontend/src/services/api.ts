@@ -962,6 +962,21 @@ export interface PostRentalSummaryResponse {
   isMoveOutRequested: boolean;
 }
 
+export interface DepositCheckoutResponse {
+  checkoutUrl: string;
+  paymentLinkId: string;
+  qrCode: string;
+  qrUrl?: string;
+  orderCode: number;
+  amount: number;
+  leaseId: string;
+  scheduleId?: string;
+  accountNumber?: string;
+  accountName?: string;
+  bin?: string;
+  message?: string;
+}
+
 export const postRentalApi = {
   getSummary: async (leaseId: string) => {
     return request<PostRentalSummaryResponse>(`/postrental/leases/${leaseId}/summary`);
@@ -969,6 +984,12 @@ export const postRentalApi = {
 
   getPayments: async (leaseId: string) => {
     return request<RentalPaymentScheduleResponse[]>(`/postrental/leases/${leaseId}/payments`);
+  },
+
+  createDepositCheckout: async (leaseId: string) => {
+    return request<DepositCheckoutResponse>(`/postrental/leases/${leaseId}/deposit/checkout`, {
+      method: 'POST'
+    });
   },
 
   createPayment: async (leaseId: string, data: {
