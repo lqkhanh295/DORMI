@@ -582,4 +582,6 @@ screenshots*/
 doc/hopdong/
 **/doc/hopdong/
 
-
+# Lighthouse generated report dumps
+reports/*.html
+reports/*.json

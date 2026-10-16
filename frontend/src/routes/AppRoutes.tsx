@@ -1,4 +1,6 @@
+import { lazy, Suspense } from 'react';
 import { Routes, Route, Navigate } from 'react-router-dom';
+import { Loader2 } from 'lucide-react';
 import ProtectedRoute from './ProtectedRoute';
 
 // Layouts
@@ -7,52 +9,63 @@ import TenantLayout from '../layouts/TenantLayout';
 import LandlordLayout from '../layouts/LandlordLayout';
 import AdminLayout from '../layouts/AdminLayout';
 
-// Public & Auth Pages
+// Eager load LandingPage for instant first paint
 import LandingPage from '../pages/public/LandingPage';
-import SearchResults from '../pages/public/SearchResults';
-import RoomDetail from '../pages/public/RoomDetail';
-import AuthPage from '../pages/public/AuthPage';
-import ForgotPassword from '../pages/public/ForgotPassword';
-import TermsOfService from '../pages/public/TermsOfService';
-import PrivacyPolicy from '../pages/public/PrivacyPolicy';
-import NotFound from '../pages/public/NotFound';
 
-// Tenant Pages
-import TenantDashboard from '../pages/tenant/TenantDashboard';
-import TenantApplications from '../pages/tenant/TenantApplications';
-import TenantViewings from '../pages/tenant/TenantViewings';
-import TenantLeases from '../pages/tenant/TenantLeases';
-import RoommateMatcher from '../pages/tenant/RoommateMatcher';
-import CreateRoommatePost from '../pages/tenant/CreateRoommatePost';
-import TenantChatCenter from '../pages/tenant/TenantChatCenter';
-import TenantProfile from '../pages/tenant/TenantProfile';
-import TenantSettings from '../pages/tenant/TenantSettings';
+// Lazy load secondary public & auth pages
+const SearchResults = lazy(() => import('../pages/public/SearchResults'));
+const RoomDetail = lazy(() => import('../pages/public/RoomDetail'));
+const AuthPage = lazy(() => import('../pages/public/AuthPage'));
+const ForgotPassword = lazy(() => import('../pages/public/ForgotPassword'));
+const TermsOfService = lazy(() => import('../pages/public/TermsOfService'));
+const PrivacyPolicy = lazy(() => import('../pages/public/PrivacyPolicy'));
+const NotFound = lazy(() => import('../pages/public/NotFound'));
 
-// Landlord Pages
-import LandlordDashboard from '../pages/landlord/LandlordDashboard';
-import LandlordApplications from '../pages/landlord/LandlordApplications';
-import LandlordViewings from '../pages/landlord/LandlordViewings';
-import LandlordLeases from '../pages/landlord/LandlordLeases';
-import LeadAnalytics from '../pages/landlord/LeadAnalytics';
-import SmartListingForm from '../pages/landlord/SmartListingForm';
-import RoomManagement from '../pages/landlord/RoomManagement';
-import TenantDiscovery from '../pages/landlord/TenantDiscovery';
-import PricingCheckout from '../pages/landlord/PricingCheckout';
-import BillingHistory from '../pages/landlord/BillingHistory';
-import VerificationCenter from '../pages/landlord/VerificationCenter';
-import LandlordChatCenter from '../pages/landlord/LandlordChatCenter';
-import LandlordSettings from '../pages/landlord/LandlordSettings';
+// Lazy load Tenant Pages
+const TenantDashboard = lazy(() => import('../pages/tenant/TenantDashboard'));
+const TenantApplications = lazy(() => import('../pages/tenant/TenantApplications'));
+const TenantViewings = lazy(() => import('../pages/tenant/TenantViewings'));
+const TenantLeases = lazy(() => import('../pages/tenant/TenantLeases'));
+const RoommateMatcher = lazy(() => import('../pages/tenant/RoommateMatcher'));
+const CreateRoommatePost = lazy(() => import('../pages/tenant/CreateRoommatePost'));
+const TenantChatCenter = lazy(() => import('../pages/tenant/TenantChatCenter'));
+const TenantProfile = lazy(() => import('../pages/tenant/TenantProfile'));
+const TenantSettings = lazy(() => import('../pages/tenant/TenantSettings'));
 
-// Admin Pages
-import AdminDashboard from '../pages/admin/AdminDashboard';
-import VerificationModeration from '../pages/admin/VerificationModeration';
-import ContentModeration from '../pages/admin/ContentModeration';
-import AdminUsers from '../pages/admin/AdminUsers';
-import AdminReports from '../pages/admin/AdminReports';
+// Lazy load Landlord Pages
+const LandlordDashboard = lazy(() => import('../pages/landlord/LandlordDashboard'));
+const LandlordApplications = lazy(() => import('../pages/landlord/LandlordApplications'));
+const LandlordViewings = lazy(() => import('../pages/landlord/LandlordViewings'));
+const LandlordLeases = lazy(() => import('../pages/landlord/LandlordLeases'));
+const LeadAnalytics = lazy(() => import('../pages/landlord/LeadAnalytics'));
+const SmartListingForm = lazy(() => import('../pages/landlord/SmartListingForm'));
+const RoomManagement = lazy(() => import('../pages/landlord/RoomManagement'));
+const TenantDiscovery = lazy(() => import('../pages/landlord/TenantDiscovery'));
+const PricingCheckout = lazy(() => import('../pages/landlord/PricingCheckout'));
+const BillingHistory = lazy(() => import('../pages/landlord/BillingHistory'));
+const VerificationCenter = lazy(() => import('../pages/landlord/VerificationCenter'));
+const LandlordChatCenter = lazy(() => import('../pages/landlord/LandlordChatCenter'));
+const LandlordSettings = lazy(() => import('../pages/landlord/LandlordSettings'));
+
+// Lazy load Admin Pages
+const AdminDashboard = lazy(() => import('../pages/admin/AdminDashboard'));
+const VerificationModeration = lazy(() => import('../pages/admin/VerificationModeration'));
+const ContentModeration = lazy(() => import('../pages/admin/ContentModeration'));
+const AdminUsers = lazy(() => import('../pages/admin/AdminUsers'));
+const AdminReports = lazy(() => import('../pages/admin/AdminReports'));
+
+function RouteLoading() {
+  return (
+    <div className="flex items-center justify-center min-h-[50vh]">
+      <Loader2 className="w-8 h-8 text-blue-600 animate-spin" />
+    </div>
+  );
+}
 
 export default function AppRoutes() {
   return (
-    <Routes>
+    <Suspense fallback={<RouteLoading />}>
+      <Routes>
       {/* PUBLIC ROUTES (Guest) */}
       <Route element={<MainLayout />}>
         <Route path="/" element={<LandingPage />} />
@@ -132,5 +145,6 @@ export default function AppRoutes() {
         <Route path="*" element={<NotFound />} />
       </Route>
     </Routes>
+    </Suspense>
   );
 }

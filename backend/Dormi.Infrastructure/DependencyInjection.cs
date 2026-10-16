@@ -145,7 +145,7 @@ public static class DependencyInjection
         if (!string.IsNullOrWhiteSpace(connectionString) && !connectionString.Contains("Keepalive", StringComparison.OrdinalIgnoreCase))
         {
             var separator = connectionString.TrimEnd().EndsWith(";") ? "" : ";";
-            connectionString += $"{separator}Keepalive=30;Pooling=true;Minimum Pool Size=1;Maximum Pool Size=20;Connection Idle Lifetime=60;Timeout=15;Command Timeout=30;";
+            connectionString += $"{separator}Keepalive=30;Pooling=true;Minimum Pool Size=1;Maximum Pool Size=10;Connection Idle Lifetime=60;Timeout=30;Command Timeout=30;";
         }
 
         return connectionString ?? string.Empty;
@@ -168,7 +168,7 @@ public static class DependencyInjection
             var database = uri.AbsolutePath.TrimStart('/');
             var port = uri.Port > 0 ? uri.Port : 5432;
 
-            return $"Host={uri.Host};Port={port};Database={database};Username={username};Password={password};SSL Mode=Require;Trust Server Certificate=true;Keepalive=30;Pooling=true;Minimum Pool Size=1;Maximum Pool Size=20;Connection Idle Lifetime=60;Timeout=15;Command Timeout=30;";
+            return $"Host={uri.Host};Port={port};Database={database};Username={username};Password={password};SSL Mode=Require;Trust Server Certificate=true;Keepalive=30;Pooling=true;Minimum Pool Size=1;Maximum Pool Size=10;Connection Idle Lifetime=60;Timeout=30;Command Timeout=30;";
         }
         catch
         {
