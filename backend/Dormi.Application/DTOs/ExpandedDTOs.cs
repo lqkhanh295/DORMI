@@ -124,6 +124,12 @@ public class LandlordAnalyticsDto
     public int PendingAppointments { get; set; }
     public int TotalViews { get; set; }
     public double ConversionRate { get; set; }
+
+    // ponytail: subscription tier tracking for feature & room limits
+    public string CurrentPlan { get; set; } = "Free";
+    public DateTime? CurrentPlanEndDate { get; set; }
+    public int MaxRoomLimit { get; set; } = 2;
+    public int RoomsUsed { get; set; } = 0;
 }
 
 public class SubscriptionDto
@@ -276,6 +282,10 @@ public class RealLeadAnalyticsDto
 
     public List<DailyLeadMetricDto> DailyMetrics { get; set; } = new();
     public List<RoomLeadPerformanceDto> TopRooms { get; set; } = new();
+
+    // ponytail: plan status for analytics gating
+    public string CurrentPlan { get; set; } = "Free";
+    public bool IsGated { get; set; } = false;
 
     // Dual-compatible aliases for frontend
     public List<DailyLeadMetricDto> DailyViews => DailyMetrics;

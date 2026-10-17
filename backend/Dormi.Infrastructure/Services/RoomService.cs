@@ -601,6 +601,30 @@ public class RoomService : IRoomService
             return ServiceResult<RoomResponseDto>.Fail("Tài khoản Chủ trọ của bạn chưa được xác minh danh tính. Vui lòng gửi yêu cầu xác minh trước khi đăng tin.", 400);
         }
 
+        // ponytail: enforce subscription plan room limit (Free: 2, Pro: 15, Business: Unlimited)
+        var activeSub = await _db.LandlordSubscriptions
+            .Where(s => s.LandlordId == landlordId && s.IsActive && s.EndDate > DateTime.UtcNow)
+            .OrderByDescending(s => s.EndDate)
+            .FirstOrDefaultAsync();
+
+        var planName = activeSub?.PlanName ?? "Free";
+        int maxRooms = planName.Equals("Business", StringComparison.OrdinalIgnoreCase) || planName.Equals("Enterprise", StringComparison.OrdinalIgnoreCase)
+            ? int.MaxValue
+            : (planName.Equals("Pro", StringComparison.OrdinalIgnoreCase) ? 15 : 2);
+
+        var currentActiveRooms = await _db.Rooms.CountAsync(r => 
+            r.LandlordId == landlordId && 
+            r.Status != RoomStatus.Rented && 
+            r.Status != RoomStatus.Hidden);
+
+        if (currentActiveRooms >= maxRooms)
+        {
+            var planLabel = planName.Equals("Pro", StringComparison.OrdinalIgnoreCase) ? "Gói Chuyên Nghiệp (Pro - tối đa 15 phòng)" : "Gói Miễn Phí (Free - tối đa 2 phòng)";
+            return ServiceResult<RoomResponseDto>.Fail(
+                $"Bạn đã đạt giới hạn số lượng tin đăng của {planLabel}. Vui lòng nâng cấp gói dịch vụ để đăng thêm phòng mới.", 
+                400);
+        }
+
         Point? locationPoint = null;
         if (dto.Latitude.HasValue && dto.Longitude.HasValue)
         {
