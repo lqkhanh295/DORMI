@@ -111,7 +111,7 @@ export default function LandlordViewings() {
       return s === 'Pending' || s === 'Requested';
     }
     if (activeTab === 'confirmed') {
-      return s === 'Confirmed' || s === 'Rescheduled';
+      return s === 'Confirmed' || s === 'Approved' || s === 'Rescheduled';
     }
     if (activeTab === 'completed') {
       return s === 'Completed';
@@ -122,6 +122,7 @@ export default function LandlordViewings() {
   const getStatusBadge = (status: string) => {
     switch (status) {
       case 'Confirmed':
+      case 'Approved':
         return (
           <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md text-xs font-semibold bg-emerald-50 text-emerald-700 border border-emerald-200">
             <CheckCircle className="w-3.5 h-3.5 text-emerald-600" />
@@ -222,7 +223,7 @@ export default function LandlordViewings() {
               : 'bg-white border border-[#E2E8F0] text-[#64748B] hover:text-[#0F172A]'
           }`}
         >
-          Đã xác nhận / Đổi lịch ({appointments.filter(a => a.status === 'Confirmed' || a.status === 'Rescheduled').length})
+          Đã xác nhận / Đổi lịch ({appointments.filter(a => a.status === 'Confirmed' || a.status === 'Approved' || a.status === 'Rescheduled').length})
         </button>
         <button
           type="button"
@@ -279,7 +280,7 @@ export default function LandlordViewings() {
         <div className="space-y-4">
           {filteredAppointments.map(app => {
             const isPending = app.status === 'Pending' || app.status === 'Requested';
-            const isConfirmed = app.status === 'Confirmed' || app.status === 'Rescheduled';
+            const isConfirmed = app.status === 'Confirmed' || app.status === 'Approved' || app.status === 'Rescheduled';
 
             return (
               <div
