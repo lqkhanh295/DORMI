@@ -93,7 +93,15 @@ async function request<T>(endpoint: string, options: RequestInit = {}): Promise<
   });
 
   if (!response.ok) {
-    if (response.status === 401) {
+    const errorData = await response.json().catch(() => ({ message: 'API request failed' }));
+
+    const isAuthEndpoint = endpoint.startsWith('/auth/login') ||
+                           endpoint.startsWith('/auth/register') ||
+                           endpoint.startsWith('/auth/verify-mfa') ||
+                           endpoint.startsWith('/auth/forgot-password') ||
+                           endpoint.startsWith('/auth/reset-password');
+
+    if (response.status === 401 && !isAuthEndpoint) {
       removeAuthToken();
       try {
         const storeKey = localStorage.getItem('dormi-storage-v5') ? 'dormi-storage-v5' : 'dormi-storage';
@@ -108,12 +116,12 @@ async function request<T>(endpoint: string, options: RequestInit = {}): Promise<
       } catch {}
 
       const error: any = new Error('Phiên đăng nhập đã hết hạn. Vui lòng đăng nhập lại để tiếp tục.');
+      error.data = errorData;
       error.status = 401;
       throw error;
     }
 
-    const errorData = await response.json().catch(() => ({ message: 'API request failed' }));
-    const error: any = new Error(errorData.message || `HTTP error! Status: ${response.status}`);
+    const error: any = new Error(errorData.message || (response.status === 401 ? 'Email hoặc mật khẩu không chính xác.' : `HTTP error! Status: ${response.status}`));
     error.data = errorData;
     error.status = response.status;
     throw error;
