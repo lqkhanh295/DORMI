@@ -9,8 +9,6 @@ import {
   UserCheck, 
   FileCheck, 
   Home, 
-  Mail, 
-  PhoneCall,
   Sliders
 } from 'lucide-react';
 
@@ -25,7 +23,7 @@ export default function PrivacyPolicy() {
     { id: 'section-5', title: '5. Bảo mật thanh toán & Tài chính' },
     { id: 'section-6', title: '6. Quyền kiểm soát & Tùy chỉnh của bạn' },
     { id: 'section-7', title: '7. Lưu trữ & Biện pháp an toàn kỹ thuật' },
-    { id: 'section-8', title: '8. Liên hệ Ban An toàn Thông tin' },
+    { id: 'section-8', title: '8. Tiếp nhận phản ánh & Hỗ trợ' },
   ];
 
   const scrollToSection = (id: string) => {
@@ -263,17 +261,11 @@ export default function PrivacyPolicy() {
             {/* Section 8 */}
             <section id="section-8" className="space-y-3 scroll-mt-24">
               <h2 className="text-xl font-bold text-[#00153D] flex items-center gap-2 border-b border-slate-100 pb-2">
-                8. Liên hệ Ban An toàn Thông tin
+                8. Tiếp nhận phản ánh & Hỗ trợ
               </h2>
               <p>
-                Mọi thắc mắc, phản ánh liên quan đến an toàn dữ liệu hoặc yêu cầu thực hiện quyền đối với dữ liệu cá nhân, vui lòng liên hệ trực tiếp với Cán bộ Bảo vệ Dữ liệu (DPO) của DORMI:
+                Mọi thắc mắc, phản ánh liên quan đến an toàn dữ liệu hoặc yêu cầu thực hiện quyền đối với dữ liệu cá nhân, người dùng có thể gửi yêu cầu hỗ trợ trực tiếp qua mục <strong>Trợ giúp & Báo cáo</strong> trên nền tảng DORMI. Đội ngũ kiểm duyệt và quản trị viên sẽ tiếp nhận và xử lý nhanh chóng trong vòng 24 - 48 giờ làm việc.
               </p>
-              <div className="bg-slate-50 p-4 rounded-xl border border-slate-200 space-y-1.5 text-xs">
-                <p><strong>Bộ phận Bảo vệ Dữ liệu & An ninh mạng DORMI</strong></p>
-                <p className="flex items-center gap-1.5"><Mail className="w-3.5 h-3.5 text-slate-500" /> Email: <a href="mailto:privacy@dormi.space" className="text-blue-600 underline">privacy@dormi.space</a></p>
-                <p className="flex items-center gap-1.5"><PhoneCall className="w-3.5 h-3.5 text-slate-500" /> Hotline hỗ trợ: <span className="font-semibold text-slate-800">0909 123 456</span> (08:00 - 21:00)</p>
-                <p>Địa chỉ văn phòng: Khu Công nghệ cao, TP. Thủ Đức, TP. Hồ Chí Minh</p>
-              </div>
             </section>
 
             {/* Footer Navigation Box */}
