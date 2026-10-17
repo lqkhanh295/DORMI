@@ -13,11 +13,7 @@ export function GlobalFooter() {
             <p className="text-sm text-[#64748B] max-w-sm">
               Nền tảng tìm kiếm phòng trọ và kết nối bạn ở ghép thông minh, minh bạch tại TP. Hồ Chí Minh.
             </p>
-            <div className="text-xs text-[#64748B] space-y-1 pt-1">
-              <p>Hotline: <a href="tel:0909123456" className="text-[#00153D] font-medium hover:underline">0909 123 456</a> (08:00 - 21:00)</p>
-              <p>Email: <a href="mailto:hotro@dormi.space" className="text-[#00153D] font-medium hover:underline">hotro@dormi.space</a></p>
-              <p>Địa chỉ: Khu Công nghệ cao, TP. Thủ Đức, TP.HCM</p>
-            </div>
+
           </div>
 
           {/* Người thuê */}
