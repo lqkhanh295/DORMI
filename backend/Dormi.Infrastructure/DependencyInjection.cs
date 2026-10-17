@@ -88,7 +88,36 @@ public static class DependencyInjection
         services.AddMemoryCache();
 
         // Register Core Infrastructure Services
-        services.Configure<EmailOptions>(configuration.GetSection(EmailOptions.SectionName));
+        services.Configure<EmailOptions>(options =>
+        {
+            configuration.GetSection(EmailOptions.SectionName).Bind(options);
+
+            var smtpHost = configuration["Email:SmtpHost"]
+                ?? configuration["Email__SmtpHost"]
+                ?? configuration["SMTP_HOST"]
+                ?? configuration["EMAIL_SMTP_HOST"];
+            if (!string.IsNullOrWhiteSpace(smtpHost)) options.SmtpHost = smtpHost;
+
+            var userName = configuration["Email:UserName"]
+                ?? configuration["Email__UserName"]
+                ?? configuration["EMAIL_USERNAME"]
+                ?? configuration["EMAIL_USER"]
+                ?? configuration["SMTP_USER"];
+            if (!string.IsNullOrWhiteSpace(userName)) options.UserName = userName;
+
+            var password = configuration["Email:Password"]
+                ?? configuration["Email__Password"]
+                ?? configuration["EMAIL_PASSWORD"]
+                ?? configuration["EMAIL_PASS"]
+                ?? configuration["SMTP_PASS"];
+            if (!string.IsNullOrWhiteSpace(password)) options.Password = password;
+
+            var senderEmail = configuration["Email:SenderEmail"]
+                ?? configuration["Email__SenderEmail"]
+                ?? configuration["EMAIL_SENDER"]
+                ?? configuration["SENDER_EMAIL"];
+            if (!string.IsNullOrWhiteSpace(senderEmail)) options.SenderEmail = senderEmail;
+        });
         services.AddScoped<IEmailService, EmailService>();
         services.AddScoped<IImageService, CloudinaryService>();
         services.AddScoped<IJwtTokenGenerator, JwtTokenGenerator>();
