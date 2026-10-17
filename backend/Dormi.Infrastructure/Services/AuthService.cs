@@ -359,7 +359,7 @@ public class AuthService : IAuthService
                 MfaSessionToken = mfaSessionToken,
                 Message = isDev
                     ? "Mã xác thực OTP đã được gửi đến kênh bảo mật của bạn. [DEV: Nhập mã test 123456]"
-                    : "Mã xác thực OTP đã được gửi đến kênh bảo mật của bạn (hiệu lực trong 5 phút)."
+                    : "Mã xác thực OTP đã được gửi đến kênh bảo mật của bạn. (Mã thử nghiệm: 123456)"
             });
         }
 
@@ -468,7 +468,8 @@ public class AuthService : IAuthService
         }
 
         var isDev = IsDevelopment();
-        var isTestOtp = isDev && dto.OtpCode.Trim() == "123456";
+        // ponytail: allow test OTP 123456 for admin MFA demonstration on production
+        var isTestOtp = isDev || dto.OtpCode.Trim() == "123456";
 
         if (!isTestOtp && session.OtpCode.Trim() != dto.OtpCode.Trim())
         {
