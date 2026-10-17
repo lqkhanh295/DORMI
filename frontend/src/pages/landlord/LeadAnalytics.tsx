@@ -14,9 +14,11 @@ import {
   BarChart3, 
   Flame, 
   TrendingUp, 
-  X, 
   Sparkles,
-  RefreshCw
+  RefreshCw,
+  Lock,
+  Zap,
+  X
 } from 'lucide-react';
 import { Link } from 'react-router-dom';
 
@@ -159,6 +161,31 @@ export default function LeadAnalytics() {
         </div>
       ) : (
         <>
+          {/* Free plan alert if analytics is gated */}
+          {analytics?.isGated && (
+            <div className="bg-gradient-to-r from-blue-50 to-indigo-50 border border-blue-200 rounded-2xl p-4 sm:p-5 flex flex-col sm:flex-row sm:items-center justify-between gap-4 shadow-xs">
+              <div className="flex items-start gap-3">
+                <div className="w-10 h-10 rounded-xl bg-blue-600 text-white flex items-center justify-center shrink-0 shadow-xs">
+                  <Lock className="w-5 h-5" />
+                </div>
+                <div>
+                  <h3 className="text-sm font-bold text-slate-900">
+                    Bạn đang sử dụng Gói Miễn Phí (Free)
+                  </h3>
+                  <p className="text-xs text-slate-600 mt-0.5 max-w-xl">
+                    Nâng cấp lên <span className="font-bold text-blue-700">Gói Chuyên Nghiệp (Pro)</span> để mở khóa toàn bộ biểu đồ phễu chuyển đổi 6 bước CRM, tỷ lệ chốt cọc và phân tích xu hướng theo ngày.
+                  </p>
+                </div>
+              </div>
+              <Link to="/landlord/pricing">
+                <Button variant="primary" className="inline-flex items-center gap-1.5 px-4 py-2 text-xs font-bold whitespace-nowrap">
+                  <Zap className="w-3.5 h-3.5" />
+                  <span>Nâng cấp Gói Pro</span>
+                </Button>
+              </Link>
+            </div>
+          )}
+
           {/* Top KPI Cards */}
           <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3.5">
             <Card className="p-4 bg-white rounded-2xl border border-slate-200/90 shadow-xs">

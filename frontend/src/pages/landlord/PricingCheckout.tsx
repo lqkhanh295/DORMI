@@ -23,11 +23,33 @@ export default function PricingCheckout() {
   const [verifying, setVerifying] = useState(false);
   const [initiating, setInitiating] = useState(false);
 
+  // Plan state
+  const [currentPlan, setCurrentPlan] = useState<'Free' | 'Pro' | 'Business'>('Free');
+  const [roomsUsed, setRoomsUsed] = useState<number>(0);
+
   // Boost tab state
   const [rooms, setRooms] = useState<any[]>([]);
   const [selectedRoomId, setSelectedRoomId] = useState<string>('');
   const [selectedBoostType, setSelectedBoostType] = useState<'24h' | '3days' | '7days'>('3days');
   const [loadingRooms, setLoadingRooms] = useState(false);
+
+  useEffect(() => {
+    landlordApi.getAnalytics()
+      .then(res => {
+        if (res?.currentPlan) {
+          const plan = res.currentPlan.toLowerCase();
+          if (plan.includes('business') || plan.includes('enterprise')) {
+            setCurrentPlan('Business');
+          } else if (plan.includes('pro')) {
+            setCurrentPlan('Pro');
+          } else {
+            setCurrentPlan('Free');
+          }
+        }
+        if (typeof res?.roomsUsed === 'number') setRoomsUsed(res.roomsUsed);
+      })
+      .catch(err => console.warn('Failed to load plan analytics:', err));
+  }, []);
 
   useEffect(() => {
     const tabParam = searchParams.get('tab');
@@ -201,7 +223,14 @@ export default function PricingCheckout() {
       {activeTab === 'plans' && (
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6 items-stretch">
           {/* Free Tier */}
-          <Card className="bg-white rounded-2xl shadow-xs p-7 flex flex-col justify-between space-y-6 border border-slate-200">
+          <Card className={`bg-white rounded-2xl shadow-xs p-7 flex flex-col justify-between space-y-6 border ${
+            currentPlan === 'Free' ? 'border-2 border-emerald-600 relative' : 'border-slate-200'
+          }`}>
+            {currentPlan === 'Free' && (
+              <div className="absolute -top-3 left-1/2 -translate-x-1/2 bg-emerald-600 text-white text-xs font-semibold px-3 py-0.5 rounded-md shadow-xs">
+                Gói đang sử dụng
+              </div>
+            )}
             <div className="space-y-4">
               <h3 className="text-lg font-bold text-[#0F172A]">Gói Miễn Phí (Free)</h3>
               <p className="text-xs text-[#64748B]">Dành cho chủ trọ cá nhân có 1 - 2 phòng trọ nhỏ.</p>
@@ -210,19 +239,25 @@ export default function PricingCheckout() {
                 <span className="text-xs text-[#64748B]"> / tháng</span>
               </div>
               <ul className="space-y-2.5 text-xs text-[#64748B] pt-4 border-t border-slate-100">
-                <li className="flex items-center gap-2"><Check className="w-4 h-4 text-emerald-600 shrink-0" /><span>Đăng tối đa 2 tin phòng hoạt động</span></li>
+                <li className="flex items-center gap-2"><Check className="w-4 h-4 text-emerald-600 shrink-0" /><span>Đăng tối đa 2 tin phòng hoạt động ({roomsUsed}/2 đã dùng)</span></li>
                 <li className="flex items-center gap-2"><Check className="w-4 h-4 text-emerald-600 shrink-0" /><span>Nhận tin nhắn & hẹn xem phòng</span></li>
                 <li className="flex items-center gap-2"><Check className="w-4 h-4 text-emerald-600 shrink-0" /><span>Tiếp nhận hồ sơ ứng tuyển cơ bản</span></li>
                 <li className="flex items-center gap-2"><Check className="w-4 h-4 text-emerald-600 shrink-0" /><span>Ký hợp đồng thuê điện tử</span></li>
               </ul>
             </div>
-            <Button variant="secondary" fullWidth disabled className="text-xs font-bold">Gói mặc định</Button>
+            <Button variant="secondary" fullWidth disabled className="text-xs font-bold">
+              {currentPlan === 'Free' ? 'Gói hiện tại của bạn' : 'Gói mặc định'}
+            </Button>
           </Card>
 
           {/* Pro Tier */}
-          <Card className="bg-white rounded-2xl shadow-sm p-7 flex flex-col justify-between space-y-6 border-2 border-blue-600 relative">
-            <div className="absolute -top-3 left-1/2 -translate-x-1/2 bg-blue-600 text-white text-xs font-semibold px-3 py-0.5 rounded-md shadow-xs">
-              Khuyên dùng
+          <Card className={`bg-white rounded-2xl shadow-sm p-7 flex flex-col justify-between space-y-6 border-2 relative ${
+            currentPlan === 'Pro' ? 'border-emerald-600' : 'border-blue-600'
+          }`}>
+            <div className={`absolute -top-3 left-1/2 -translate-x-1/2 text-white text-xs font-semibold px-3 py-0.5 rounded-md shadow-xs ${
+              currentPlan === 'Pro' ? 'bg-emerald-600' : 'bg-blue-600'
+            }`}>
+              {currentPlan === 'Pro' ? 'Gói đang sử dụng' : 'Khuyên dùng'}
             </div>
             <div className="space-y-4 pt-1">
               <h3 className="text-lg font-bold text-[#0F172A]">Gói Chuyên Nghiệp (Pro)</h3>
@@ -232,7 +267,7 @@ export default function PricingCheckout() {
                 <span className="text-xs text-[#64748B]"> / tháng</span>
               </div>
               <ul className="space-y-2.5 text-xs text-[#0F172A] font-semibold pt-4 border-t border-[#E2E8F0]">
-                <li className="flex items-center gap-2"><Check className="w-4 h-4 text-blue-600 shrink-0" /><span>Đăng tối đa 15 tin phòng hoạt động</span></li>
+                <li className="flex items-center gap-2"><Check className="w-4 h-4 text-blue-600 shrink-0" /><span>Đăng tối đa 15 tin phòng hoạt động {currentPlan === 'Pro' ? `(${roomsUsed}/15 đã dùng)` : ''}</span></li>
                 <li className="flex items-center gap-2"><Check className="w-4 h-4 text-blue-600 shrink-0" /><span>Huy hiệu Chủ trọ xác thực uy tín (Trust Badge)</span></li>
                 <li className="flex items-center gap-2"><Check className="w-4 h-4 text-blue-600 shrink-0" /><span>Báo cáo phễu chuyển đổi 6 bước CRM</span></li>
                 <li className="flex items-center gap-2"><Check className="w-4 h-4 text-blue-600 shrink-0" /><span>Tặng 1 lượt Đẩy tin nổi bật mỗi tháng</span></li>
@@ -240,18 +275,25 @@ export default function PricingCheckout() {
               </ul>
             </div>
             <Button 
-              variant="primary" 
+              variant={currentPlan === 'Pro' ? 'secondary' : 'primary'}
               fullWidth 
-              disabled={initiating}
+              disabled={initiating || currentPlan === 'Pro'}
               onClick={() => handleUpgrade('Pro')}
-              className="bg-blue-600 hover:bg-blue-700 text-white font-bold text-xs"
+              className={currentPlan === 'Pro' ? 'text-xs font-bold' : 'bg-blue-600 hover:bg-blue-700 text-white font-bold text-xs'}
             >
-              {initiating ? 'Đang tạo đơn...' : 'Nâng cấp Gói Pro (299.000₫)'}
+              {currentPlan === 'Pro' ? 'Đang kích hoạt' : (initiating ? 'Đang tạo đơn...' : 'Nâng cấp Gói Pro (299.000₫)')}
             </Button>
           </Card>
 
           {/* Business Tier */}
-          <Card className="bg-white rounded-2xl shadow-clay-soft p-7 flex flex-col justify-between space-y-6 border border-[#E2E8F0]">
+          <Card className={`bg-white rounded-2xl shadow-clay-soft p-7 flex flex-col justify-between space-y-6 relative ${
+            currentPlan === 'Business' ? 'border-2 border-emerald-600' : 'border border-[#E2E8F0]'
+          }`}>
+            {currentPlan === 'Business' && (
+              <div className="absolute -top-3 left-1/2 -translate-x-1/2 bg-emerald-600 text-white text-xs font-semibold px-3 py-0.5 rounded-md shadow-xs">
+                Gói đang sử dụng
+              </div>
+            )}
             <div className="space-y-4">
               <h3 className="text-lg font-bold text-[#0F172A]">Gói Doanh Nghiệp (Business)</h3>
               <p className="text-xs text-[#64748B]">Dành cho chuỗi căn hộ dịch vụ, KTX & đơn vị quản lý lớn.</p>
@@ -260,7 +302,7 @@ export default function PricingCheckout() {
                 <span className="text-xs text-[#64748B]"> / tháng</span>
               </div>
               <ul className="space-y-2.5 text-xs text-[#64748B] pt-4 border-t border-[#E2E8F0]">
-                <li className="flex items-center gap-2"><Check className="w-4 h-4 text-emerald-600 shrink-0" /><span>Không giới hạn số lượng tin đăng</span></li>
+                <li className="flex items-center gap-2"><Check className="w-4 h-4 text-emerald-600 shrink-0" /><span>Không giới hạn số lượng tin đăng {currentPlan === 'Business' ? `(Hiện có ${roomsUsed} phòng)` : ''}</span></li>
                 <li className="flex items-center gap-2"><Check className="w-4 h-4 text-emerald-600 shrink-0" /><span>Tặng 5 lượt Đẩy tin nổi bật mỗi tháng</span></li>
                 <li className="flex items-center gap-2"><Check className="w-4 h-4 text-emerald-600 shrink-0" /><span>Phân quyền quản lý nhiều nhân viên (Staff)</span></li>
                 <li className="flex items-center gap-2"><Check className="w-4 h-4 text-emerald-600 shrink-0" /><span>Hỗ trợ CSKH 24/7 & chuyên viên tư vấn riêng</span></li>
@@ -269,11 +311,11 @@ export default function PricingCheckout() {
             <Button 
               variant="secondary" 
               fullWidth 
-              disabled={initiating}
+              disabled={initiating || currentPlan === 'Business'}
               onClick={() => handleUpgrade('Business')}
               className="font-bold text-xs"
             >
-              {initiating ? 'Đang tạo đơn...' : 'Nâng cấp Doanh nghiệp (799.000₫)'}
+              {currentPlan === 'Business' ? 'Đang kích hoạt' : (initiating ? 'Đang tạo đơn...' : 'Nâng cấp Doanh nghiệp (799.000₫)')}
             </Button>
           </Card>
         </div>

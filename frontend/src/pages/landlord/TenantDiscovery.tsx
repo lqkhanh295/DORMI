@@ -2,9 +2,9 @@ import { useState, useEffect } from 'react';
 import { createPortal } from 'react-dom';
 import { Card } from '../../components/ui/Card';
 import { Button } from '../../components/ui/Button';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, Link } from 'react-router-dom';
 import { landlordApi, roomsApi, type RoomResponse, type TenantDiscoveryCandidate } from '../../services/api';
-import { Users, MapPin, DollarSign, Star, MessageSquare, Check, X, Send, Home, Sparkles, ShieldCheck } from 'lucide-react';
+import { Users, MapPin, DollarSign, Star, MessageSquare, Check, X, Send, Home, Sparkles, ShieldCheck, Lock, Zap } from 'lucide-react';
 import { toast } from 'sonner';
 
 export default function TenantDiscovery() {
@@ -12,6 +12,7 @@ export default function TenantDiscovery() {
   const [tenants, setTenants] = useState<TenantDiscoveryCandidate[]>([]);
   const [myRooms, setMyRooms] = useState<RoomResponse[]>([]);
   const [loading, setLoading] = useState(true);
+  const [isGated, setIsGated] = useState(false);
 
   // Filter states
   const [minScore, setMinScore] = useState<number>(0);
@@ -41,6 +42,12 @@ export default function TenantDiscovery() {
       .then(([tenantsRes, roomsRes]) => {
         if (tenantsRes.status === 'fulfilled' && Array.isArray(tenantsRes.value)) {
           setTenants(tenantsRes.value);
+          setIsGated(false);
+        } else if (tenantsRes.status === 'rejected') {
+          const errReason = tenantsRes.reason?.message || '';
+          if (errReason.includes('403') || errReason.includes('Gói Chuyên Nghiệp') || errReason.includes('nâng cấp')) {
+            setIsGated(true);
+          }
         }
         if (roomsRes.status === 'fulfilled' && roomsRes.value?.data) {
           setMyRooms(roomsRes.value.data);
@@ -166,6 +173,28 @@ export default function TenantDiscovery() {
 
       {loading ? (
         <div className="py-16 text-center text-[#64748B]">Đang tìm kiếm hồ sơ khách thuê...</div>
+      ) : isGated ? (
+        <div className="bg-white rounded-2xl border border-blue-200 p-8 text-center space-y-4 shadow-clay-soft">
+          <div className="w-14 h-14 bg-blue-50 text-blue-600 rounded-2xl flex items-center justify-center mx-auto shadow-xs">
+            <Lock className="w-7 h-7" />
+          </div>
+          <div className="max-w-md mx-auto space-y-2">
+            <h3 className="text-lg font-bold text-slate-900">
+              Mở khóa tính năng Khám phá khách thuê (Tenant Discovery)
+            </h3>
+            <p className="text-xs text-slate-600 leading-relaxed">
+              Bạn đang sử dụng <span className="font-bold text-slate-800">Gói Miễn Phí</span>. Nâng cấp lên <span className="font-bold text-blue-600">Gói Chuyên Nghiệp (Pro)</span> hoặc <span className="font-bold text-emerald-600">Gói Doanh Nghiệp (Business)</span> để chủ động kết nối, gửi lời mời và tiếp cận dữ liệu người tìm phòng phù hợp.
+            </p>
+          </div>
+          <div className="pt-2">
+            <Link to="/landlord/pricing">
+              <Button variant="primary" className="inline-flex items-center gap-1.5 px-6 py-2.5 text-xs font-bold">
+                <Zap className="w-4 h-4" />
+                <span>Nâng cấp ngay từ 299.000₫/tháng</span>
+              </Button>
+            </Link>
+          </div>
+        </div>
       ) : filteredTenants.length === 0 ? (
         <div className="py-16 text-center text-[#64748B] bg-white rounded-2xl border border-dashed border-slate-200">
           Không tìm thấy khách thuê nào thỏa mãn bộ lọc hiện tại.

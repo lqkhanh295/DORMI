@@ -3,7 +3,7 @@ import { createPortal } from 'react-dom';
 import { useNavigate } from 'react-router-dom';
 import { Card } from '../../components/ui/Card';
 import { Button } from '../../components/ui/Button';
-import { roomsApi, imagesApi, type RoomResponse } from '../../services/api';
+import { roomsApi, imagesApi, landlordApi, type RoomResponse } from '../../services/api';
 import { toast } from 'sonner';
 import { Pencil, Eye, EyeOff, Trash2, CheckCircle2, Clock, XCircle, Image as ImageIcon, Check, X, Plus, Camera, Flame } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
@@ -41,15 +41,34 @@ export default function RoomManagement() {
     imageUrls: [] as string[]
   });
 
+  // ponytail: active plan listing quota
+  const [planInfo, setPlanInfo] = useState<{ currentPlan: string; roomsUsed: number; maxRoomLimit: number }>({
+    currentPlan: 'Free',
+    roomsUsed: 0,
+    maxRoomLimit: 2
+  });
+
   const loadRooms = async () => {
     try {
       setLoading(true);
-      const res = await roomsApi.getRooms({ page: 1, pageSize: 50 });
-      if (res?.data) {
-        setMyRooms(res.data);
+      const [roomsRes, analyticsRes] = await Promise.allSettled([
+        roomsApi.getRooms({ page: 1, pageSize: 50 }),
+        landlordApi.getAnalytics()
+      ]);
+
+      if (roomsRes.status === 'fulfilled' && roomsRes.value?.data) {
+        setMyRooms(roomsRes.value.data);
+      }
+
+      if (analyticsRes.status === 'fulfilled' && analyticsRes.value) {
+        setPlanInfo({
+          currentPlan: analyticsRes.value.currentPlan || 'Free',
+          roomsUsed: analyticsRes.value.roomsUsed ?? 0,
+          maxRoomLimit: analyticsRes.value.maxRoomLimit ?? 2
+        });
       }
     } catch (err) {
-      console.warn('Failed to load rooms from API:', err);
+      console.warn('Failed to load rooms or plan info from API:', err);
     } finally {
       setLoading(false);
     }
@@ -337,8 +356,8 @@ export default function RoomManagement() {
         imageUrls: []
       });
       loadRooms();
-    } catch (err) {
-      toast.error('Không thể tạo bài đăng phòng trọ mới.');
+    } catch (err: any) {
+      toast.error(err?.message || 'Không thể tạo bài đăng phòng trọ mới.');
     }
   };
 
@@ -357,12 +376,35 @@ export default function RoomManagement() {
 
   return (
     <PageMotion className="space-y-6 relative bg-[#F8FAFC]">
-      <div className="flex items-center justify-between">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
           <h1 className="text-2xl font-black text-[#00153D]">Quản lý phòng trọ</h1>
           <p className="text-body text-[#64748B]">Theo dõi danh sách phòng, trạng thái duyệt và quản lý gói đẩy tin.</p>
         </div>
-        <Button onClick={() => setIsAdding(true)}>+ Thêm phòng mới</Button>
+        <div className="flex items-center gap-3">
+          <div className="text-xs px-3.5 py-1.5 rounded-xl bg-white border border-slate-200 text-slate-700 shadow-xs flex items-center gap-2">
+            <span className={`w-2 h-2 rounded-full ${
+              planInfo.currentPlan.toLowerCase().includes('pro') 
+                ? 'bg-blue-600' 
+                : (planInfo.currentPlan.toLowerCase().includes('business') ? 'bg-purple-600' : 'bg-emerald-600')
+            }`} />
+            <span className="font-bold">
+              {planInfo.currentPlan.toLowerCase().includes('business') 
+                ? `Gói Doanh Nghiệp (${planInfo.roomsUsed} phòng)` 
+                : `${planInfo.currentPlan === 'Pro' ? 'Gói Pro' : 'Gói Miễn Phí'}: ${planInfo.roomsUsed}/${planInfo.maxRoomLimit} tin`}
+            </span>
+            {planInfo.roomsUsed >= planInfo.maxRoomLimit && planInfo.maxRoomLimit < 999 && (
+              <button 
+                type="button" 
+                onClick={() => navigate('/landlord/pricing')}
+                className="text-blue-600 hover:text-blue-700 font-bold underline ml-1 cursor-pointer"
+              >
+                Nâng cấp
+              </button>
+            )}
+          </div>
+          <Button onClick={() => setIsAdding(true)}>+ Thêm phòng mới</Button>
+        </div>
       </div>
 
       <div className="grid grid-cols-1 gap-6">
