@@ -148,6 +148,9 @@ export default function SearchResults() {
   // Filtered and Sorted Listings
   const filteredListings = useMemo(() => {
     let result = listings.filter(room => {
+      // Chỉ hiển thị phòng đang trống (Available) trên trang tìm kiếm
+      if (room.status && room.status !== 'Available') return false;
+
       const matchQuery = !searchQuery || 
         room.title.toLowerCase().includes(searchQuery.toLowerCase()) || 
         room.address.toLowerCase().includes(searchQuery.toLowerCase());
