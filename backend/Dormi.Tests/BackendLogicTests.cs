@@ -657,11 +657,11 @@ public class BackendLogicTests
             }
         }
 
-        // 4. Test MFA for Admin
+        // 4. Test Direct Login for Admin (MFA temporarily disabled)
         var adminLoginRes = await authService.LoginAsync(new LoginDto { Email = "admin@dormi.vn", Password = "AdminPass123!" }, "5.6.7.8");
         Assert.True(adminLoginRes.Success);
-        Assert.True(adminLoginRes.Data?.RequiresMfa);
-        Assert.False(string.IsNullOrEmpty(adminLoginRes.Data?.MfaSessionToken));
+        Assert.False(adminLoginRes.Data?.RequiresMfa);
+        Assert.False(string.IsNullOrEmpty(adminLoginRes.Data?.Token));
 
         // 5. Test Rate Limiting (11th request from single IP should return 429)
         var testIp = "9.9.9.9";
