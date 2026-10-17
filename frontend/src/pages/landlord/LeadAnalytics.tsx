@@ -67,13 +67,6 @@ export default function LeadAnalytics() {
   const totalApproved = analytics?.totalApproved ?? 0;
   const totalLeases = analytics?.totalLeases ?? 0;
 
-  const viewToLeadRate = analytics?.viewToLeadRate ?? analytics?.saveRate ?? 0;
-  const leadToViewingRate = analytics?.leadToViewingRate ?? 0;
-  const viewingToAppRate = analytics?.viewingToAppRate ?? 0;
-  const appToApproveRate = analytics?.appToApproveRate ?? 0;
-  const approveToLeaseRate = analytics?.approveToLeaseRate ?? 0;
-  const overallConversionRate = analytics?.overallConversionRate ?? 0;
-
   const dailyViews = analytics?.dailyViews ?? analytics?.dailyMetrics ?? [];
   const roomStats = analytics?.roomStats ?? analytics?.topRooms ?? [];
   const maxDayViews = Math.max(...dailyViews.map((d: any) => d.views || 0), 1);
@@ -201,7 +194,7 @@ export default function LeadAnalytics() {
                 <Heart className="w-3.5 h-3.5 text-rose-500" /> Quan tâm
               </span>
               <p className="text-2xl font-black text-[#0F172A] mt-2">{totalSaves.toLocaleString('vi-VN')}</p>
-              <span className="text-[11px] text-emerald-600 font-semibold">{viewToLeadRate}% từ xem</span>
+              <span className="text-[11px] text-[#94A3B8]">Lượt lưu phòng</span>
             </Card>
 
             <Card className="p-4 bg-white rounded-2xl border border-slate-200/90 shadow-xs">
@@ -209,7 +202,7 @@ export default function LeadAnalytics() {
                 <Calendar className="w-3.5 h-3.5 text-sky-600" /> Xem phòng
               </span>
               <p className="text-2xl font-black text-[#0F172A] mt-2">{totalViewings.toLocaleString('vi-VN')}</p>
-              <span className="text-[11px] text-sky-600 font-semibold">{leadToViewingRate}% từ quan tâm</span>
+              <span className="text-[11px] text-[#94A3B8]">Lịch hẹn xem</span>
             </Card>
 
             <Card className="p-4 bg-white rounded-2xl border border-slate-200/90 shadow-xs">
@@ -217,7 +210,7 @@ export default function LeadAnalytics() {
                 <FileText className="w-3.5 h-3.5 text-amber-600" /> Hồ sơ nộp
               </span>
               <p className="text-2xl font-black text-[#0F172A] mt-2">{totalApplications.toLocaleString('vi-VN')}</p>
-              <span className="text-[11px] text-amber-600 font-semibold">{viewingToAppRate}% từ xem phòng</span>
+              <span className="text-[11px] text-[#94A3B8]">Đơn đăng ký thuê</span>
             </Card>
 
             <Card className="p-4 bg-white rounded-2xl border border-slate-200/90 shadow-xs">
@@ -225,7 +218,7 @@ export default function LeadAnalytics() {
                 <CheckCircle2 className="w-3.5 h-3.5 text-emerald-600" /> Đã duyệt
               </span>
               <p className="text-2xl font-black text-[#0F172A] mt-2">{totalApproved.toLocaleString('vi-VN')}</p>
-              <span className="text-[11px] text-emerald-600 font-semibold">{appToApproveRate}% hồ sơ đạt</span>
+              <span className="text-[11px] text-[#94A3B8]">Hồ sơ đạt tiêu chuẩn</span>
             </Card>
 
             <Card className="p-4 bg-white rounded-2xl border border-emerald-200 shadow-xs">
@@ -233,7 +226,7 @@ export default function LeadAnalytics() {
                 <FileCheck className="w-3.5 h-3.5 text-emerald-600" /> Hợp đồng
               </span>
               <p className="text-2xl font-black text-emerald-700 mt-2">{totalLeases.toLocaleString('vi-VN')}</p>
-              <span className="text-[11px] text-emerald-700 font-bold">{overallConversionRate}% tổng phễu</span>
+              <span className="text-[11px] text-emerald-600 font-semibold">Đã ký kết</span>
             </Card>
           </div>
 
@@ -300,11 +293,11 @@ export default function LeadAnalytics() {
                   <h3 className="font-bold text-base text-[#0F172A]">Phễu chuyển đổi 6 bước</h3>
                   <span className="inline-flex items-center gap-1 text-[11px] font-bold text-emerald-700 bg-emerald-50 px-2.5 py-1 rounded-full border border-emerald-200">
                     <TrendingUp className="w-3 h-3 text-emerald-600" />
-                    Chốt: {overallConversionRate}%
+                    Chốt: {totalLeases} hợp đồng
                   </span>
                 </div>
                 <p className="text-xs text-[#64748B] mt-2 mb-4">
-                  Phản ánh tỷ lệ rơi rụng thực tế từ lượt ghé thăm đến hợp đồng thuê có hiệu lực.
+                  Phản ánh số lượng thực tế qua từng giai đoạn từ lượt xem tin đến hợp đồng thuê có hiệu lực.
                 </p>
 
                 <div className="space-y-3.5 text-xs">
@@ -328,13 +321,13 @@ export default function LeadAnalytics() {
                         <Heart className="w-3.5 h-3.5 text-rose-500" /> 2. Khách quan tâm (Lưu tin)
                       </span>
                       <span className="font-bold text-[#0F172A]">
-                        {totalSaves.toLocaleString('vi-VN')} <span className="text-[11px] text-[#94A3B8]">({viewToLeadRate}%)</span>
+                        {totalSaves.toLocaleString('vi-VN')}
                       </span>
                     </div>
                     <div className="w-full h-2 bg-[#F1F5F9] rounded-full overflow-hidden">
                       <div 
                         className="bg-rose-500 h-full rounded-full transition-[width] duration-500 ease-out" 
-                        style={{ width: `${Math.min(100, Math.max(viewToLeadRate, 4))}%` }}
+                        style={{ width: `${Math.min(100, Math.max((totalSaves / Math.max(totalViews, 1)) * 100, 6))}%` }}
                       />
                     </div>
                   </div>
@@ -346,13 +339,13 @@ export default function LeadAnalytics() {
                         <Calendar className="w-3.5 h-3.5 text-sky-600" /> 3. Lịch hẹn xem phòng
                       </span>
                       <span className="font-bold text-[#0F172A]">
-                        {totalViewings.toLocaleString('vi-VN')} <span className="text-[11px] text-[#94A3B8]">({leadToViewingRate}%)</span>
+                        {totalViewings.toLocaleString('vi-VN')}
                       </span>
                     </div>
                     <div className="w-full h-2 bg-[#F1F5F9] rounded-full overflow-hidden">
                       <div 
                         className="bg-sky-600 h-full rounded-full transition-[width] duration-500 ease-out" 
-                        style={{ width: `${Math.min(100, Math.max(leadToViewingRate, 4))}%` }}
+                        style={{ width: `${Math.min(100, Math.max((totalViewings / Math.max(totalViews, 1)) * 100, 6))}%` }}
                       />
                     </div>
                   </div>
@@ -364,13 +357,13 @@ export default function LeadAnalytics() {
                         <FileText className="w-3.5 h-3.5 text-amber-600" /> 4. Nộp hồ sơ ứng tuyển
                       </span>
                       <span className="font-bold text-[#0F172A]">
-                        {totalApplications.toLocaleString('vi-VN')} <span className="text-[11px] text-[#94A3B8]">({viewingToAppRate}%)</span>
+                        {totalApplications.toLocaleString('vi-VN')}
                       </span>
                     </div>
                     <div className="w-full h-2 bg-[#F1F5F9] rounded-full overflow-hidden">
                       <div 
                         className="bg-amber-500 h-full rounded-full transition-[width] duration-500 ease-out" 
-                        style={{ width: `${Math.min(100, Math.max(viewingToAppRate, 4))}%` }}
+                        style={{ width: `${Math.min(100, Math.max((totalApplications / Math.max(totalViews, 1)) * 100, 6))}%` }}
                       />
                     </div>
                   </div>
@@ -382,13 +375,13 @@ export default function LeadAnalytics() {
                         <CheckCircle2 className="w-3.5 h-3.5 text-emerald-600" /> 5. Hồ sơ được chấp thuận
                       </span>
                       <span className="font-bold text-[#0F172A]">
-                        {totalApproved.toLocaleString('vi-VN')} <span className="text-[11px] text-[#94A3B8]">({appToApproveRate}%)</span>
+                        {totalApproved.toLocaleString('vi-VN')}
                       </span>
                     </div>
                     <div className="w-full h-2 bg-[#F1F5F9] rounded-full overflow-hidden">
                       <div 
                         className="bg-emerald-500 h-full rounded-full transition-[width] duration-500 ease-out" 
-                        style={{ width: `${Math.min(100, Math.max(appToApproveRate, 4))}%` }}
+                        style={{ width: `${Math.min(100, Math.max((totalApproved / Math.max(totalViews, 1)) * 100, 6))}%` }}
                       />
                     </div>
                   </div>
@@ -400,13 +393,13 @@ export default function LeadAnalytics() {
                         <FileCheck className="w-3.5 h-3.5 text-emerald-600" /> 6. Ký kết hợp đồng lưu trú
                       </span>
                       <span className="font-black text-emerald-700">
-                        {totalLeases.toLocaleString('vi-VN')} <span className="text-[11px] text-emerald-600">({approveToLeaseRate}%)</span>
+                        {totalLeases.toLocaleString('vi-VN')}
                       </span>
                     </div>
                     <div className="w-full h-2.5 bg-emerald-100 rounded-full overflow-hidden border border-emerald-200">
                       <div 
                         className="bg-emerald-600 h-full rounded-full transition-[width] duration-500 ease-out" 
-                        style={{ width: `${Math.min(100, Math.max(approveToLeaseRate, 5))}%` }}
+                        style={{ width: `${Math.min(100, Math.max((totalLeases / Math.max(totalViews, 1)) * 100, 6))}%` }}
                       />
                     </div>
                   </div>
