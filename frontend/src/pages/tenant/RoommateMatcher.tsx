@@ -134,24 +134,24 @@ export default function RoommateMatcher() {
   );
 
   return (
-    <div className="flex flex-col lg:flex-row gap-6 max-w-6xl mx-auto min-h-[calc(100vh-80px)] overflow-hidden bg-[#F8FAFC] p-4 md:p-6">
+    <div className="flex-1 flex flex-col lg:flex-row gap-4 lg:gap-6 max-w-6xl mx-auto w-full lg:h-[calc(100vh-135px)] overflow-hidden">
       
       {/* Sidebar: Liked Roommates */}
-      <div className="hidden lg:flex w-1/3 flex-col bg-white rounded-[18px] shadow-clay-soft overflow-hidden border border-[#E2E8F0]">
-        <div className="p-6 border-b border-[#E2E8F0] bg-white">
+      <div className="hidden lg:flex w-1/3 flex-col bg-white rounded-[18px] shadow-clay-soft overflow-hidden border border-[#E2E8F0] h-full">
+        <div className="p-4 border-b border-[#E2E8F0] bg-white shrink-0">
           <h2 className="text-h3 font-bold text-[#0F172A] flex items-center gap-2">
             <Heart size={20} className="text-[#C62828] fill-[#C62828]" />
             Đã thích ({activeLikedRoommates.length})
           </h2>
-          <p className="text-caption text-[#64748B] mt-1">Hồ sơ người ở ghép bạn đã lưu.</p>
+          <p className="text-caption text-[#64748B] mt-0.5">Hồ sơ người ở ghép bạn đã lưu.</p>
         </div>
         <LikedList />
       </div>
 
       {/* Main Area */}
-      <div className="flex-1 flex flex-col relative bg-[#F8FAFC] rounded-[18px] justify-center">
+      <div className="flex-1 flex flex-col relative bg-[#F8FAFC] rounded-[18px] h-full overflow-hidden justify-between">
         
-        <div className="bg-white rounded-[18px] shadow-clay-soft p-4 mb-6 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+        <div className="bg-white rounded-[18px] shadow-clay-soft p-3 mb-3 shrink-0 flex flex-col sm:flex-row sm:items-center justify-between gap-2 border border-[#E2E8F0]/60">
           <div>
             <span className="text-caption font-bold text-[#00153D]">Thuật toán đối soát độ tương thích lối sống</span>
             <p className="text-[11px] text-[#64748B]">Kết nối bạn cùng phòng và các căn phòng đang có sẵn trên Marketplace</p>
@@ -216,72 +216,72 @@ export default function RoommateMatcher() {
             </Button>
           </div>
         ) : (
-          <div className="flex-1 flex flex-col items-center justify-center w-full mx-auto">
-            <div className="bg-white rounded-[18px] shadow-clay-primary w-full max-w-lg overflow-hidden flex flex-col">
+          <div className="flex-1 flex flex-col items-center justify-center w-full mx-auto min-h-0">
+            <div className="bg-white rounded-[18px] shadow-clay-primary w-full max-w-md overflow-hidden flex flex-col my-auto border border-[#E2E8F0]/60">
               
-              <div className="h-64 bg-[#EEF2F6] w-full relative">
+              <div className="h-44 sm:h-52 bg-[#EEF2F6] w-full relative shrink-0">
                 <img src={profile.image} alt={profile.name} className="w-full h-full object-cover" />
-                <div className="absolute top-4 right-4 bg-white/95 text-emerald-700 border border-emerald-200 px-2.5 py-1 rounded-md text-xs font-semibold shadow-sm">
+                <div className="absolute top-3 right-3 bg-white/95 text-emerald-700 border border-emerald-200 px-2.5 py-0.5 rounded-md text-xs font-semibold shadow-sm">
                   {profile.matchScore != null ? `${profile.matchScore}% Độ tương thích` : 'Chưa đủ dữ liệu'}
                 </div>
               </div>
               
-              <div className="p-6 space-y-4 bg-white">
+              <div className="p-4 sm:p-5 space-y-3 bg-white flex flex-col justify-between">
                 <div>
                   <h3 className="text-h3 font-bold text-[#0F172A]">{profile.name}{profile.age ? `, ${profile.age} tuổi` : ''}</h3>
                   <p className="text-caption text-[#64748B] font-semibold">{profile.major} · Ngân sách {profile.budget}</p>
-                  <p className="text-body text-[#64748B] mt-2">{profile.bio}</p>
+                  <p className="text-body text-[#64748B] mt-1 line-clamp-2">{profile.bio}</p>
                 </div>
 
                 {profile.roomId && (
-                  <div className="p-3 bg-blue-50/70 border border-blue-200 rounded-[14px] flex items-center justify-between gap-3 shadow-sm">
-                    <div className="flex items-center gap-2.5 overflow-hidden">
+                  <div className="p-2.5 bg-blue-50/70 border border-blue-200 rounded-[12px] flex items-center justify-between gap-3 shadow-xs">
+                    <div className="flex items-center gap-2 overflow-hidden">
                       {profile.roomImageUrl ? (
-                        <img src={profile.roomImageUrl} alt={profile.roomTitle} className="w-12 h-12 rounded-[10px] object-cover shrink-0 border border-blue-100" />
+                        <img src={profile.roomImageUrl} alt={profile.roomTitle} className="w-10 h-10 rounded-[8px] object-cover shrink-0 border border-blue-100" />
                       ) : (
-                        <div className="w-12 h-12 rounded-[10px] bg-blue-600 text-white flex items-center justify-center shrink-0">
-                          <Home className="w-5 h-5" />
+                        <div className="w-10 h-10 rounded-[8px] bg-blue-600 text-white flex items-center justify-center shrink-0">
+                          <Home className="w-4 h-4" />
                         </div>
                       )}
                       <div className="overflow-hidden">
-                        <span className="text-[11px] font-medium text-slate-500">Căn phòng tương ứng</span>
+                        <span className="text-[10px] font-medium text-slate-500">Căn phòng tương ứng</span>
                         <h4 className="text-caption font-bold text-slate-900 truncate">{profile.roomTitle || 'Phòng trọ'}</h4>
-                        <p className="text-[11px] text-slate-500 truncate">{profile.roomAddress}</p>
+                        <p className="text-[10px] text-slate-500 truncate">{profile.roomAddress}</p>
                       </div>
                     </div>
                     <Link 
                       to={`/room/${profile.roomId}`}
                       target="_blank"
-                      className="shrink-0 px-3 py-1.5 rounded-lg bg-blue-600 text-white text-xs font-semibold hover:bg-blue-700 transition-colors flex items-center gap-1 shadow-sm"
+                      className="shrink-0 px-2.5 py-1 rounded-lg bg-blue-600 text-white text-[11px] font-semibold hover:bg-blue-700 transition-colors flex items-center gap-1 shadow-xs"
                     >
                       <span>Xem phòng</span>
-                      <ExternalLink className="w-3.5 h-3.5" />
+                      <ExternalLink className="w-3 h-3" />
                     </Link>
                   </div>
                 )}
 
-                <div className="bg-slate-50 border border-slate-200/80 p-3.5 rounded-xl space-y-1.5">
-                  <span className="text-caption font-bold text-slate-900 block">Lý do tương thích:</span>
-                  <div className="flex items-center gap-2 text-caption font-semibold text-emerald-700">
-                    <CheckCircle2 className="w-4 h-4 text-emerald-600" />
+                <div className="bg-slate-50 border border-slate-200/80 p-2.5 rounded-xl space-y-1">
+                  <span className="text-[11px] font-bold text-slate-900 block">Lý do tương thích:</span>
+                  <div className="flex items-center gap-1.5 text-caption font-semibold text-emerald-700">
+                    <CheckCircle2 className="w-4 h-4 text-emerald-600 shrink-0" />
                     <span>Cùng thói quen sinh hoạt và ngân sách</span>
                   </div>
                 </div>
 
-                <div className="flex justify-center gap-6 pt-2">
+                <div className="flex justify-center gap-5 pt-1">
                   <button 
                     onClick={() => handleAction('left')}
-                    className="w-14 h-14 rounded-full bg-[#FEF2F2] text-[#C62828] hover:bg-[#C62828] hover:text-white flex items-center justify-center transition-[background-color,color,transform,box-shadow] duration-150 ease-out hover:scale-105 active:scale-95 border border-[#FECACA] shadow-clay-soft touch-target"
+                    className="w-12 h-12 rounded-full bg-[#FEF2F2] text-[#C62828] hover:bg-[#C62828] hover:text-white flex items-center justify-center transition-[background-color,color,transform,box-shadow] duration-150 ease-out hover:scale-105 active:scale-95 border border-[#FECACA] shadow-clay-soft touch-target"
                     title="Bỏ qua"
                   >
-                    <X size={24} strokeWidth={2.5} />
+                    <X size={22} strokeWidth={2.5} />
                   </button>
                   <button 
                     onClick={() => handleAction('right')}
-                    className="w-14 h-14 rounded-full bg-[#F0FDF4] text-[#16803C] hover:bg-[#16803C] hover:text-white flex items-center justify-center transition-[background-color,color,transform,box-shadow] duration-150 ease-out hover:scale-105 active:scale-95 border border-[#DCFCE7] shadow-clay-soft touch-target"
+                    className="w-12 h-12 rounded-full bg-[#F0FDF4] text-[#16803C] hover:bg-[#16803C] hover:text-white flex items-center justify-center transition-[background-color,color,transform,box-shadow] duration-150 ease-out hover:scale-105 active:scale-95 border border-[#DCFCE7] shadow-clay-soft touch-target"
                     title="Yêu thích"
                   >
-                    <Heart size={24} strokeWidth={2.5} className="fill-current" />
+                    <Heart size={22} strokeWidth={2.5} className="fill-current" />
                   </button>
                 </div>
               </div>
