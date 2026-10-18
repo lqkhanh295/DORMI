@@ -171,7 +171,7 @@ export default function RoomManagement() {
 
         // 2. Async Cloudinary sync in background — tracked so submit can await
         const uploadPromise = imagesApi.uploadImage(file).then(res => {
-          if (res?.imageUrl && !res.imageUrl.includes('unsplash')) {
+          if (res?.imageUrl) {
             if (isEdit) {
               setEditingRoom(prev => prev ? {
                 ...prev,
@@ -185,7 +185,19 @@ export default function RoomManagement() {
             }
           }
         }).catch(() => {
-          // Keep the high-quality local compressed image seamlessly
+          // If upload fails, fallback to clean remote URL, never keep raw base64
+          const safeFallback = 'https://images.unsplash.com/photo-1522708323590-d24dbb6b0267?auto=format&fit=crop&w=800&q=80';
+          if (isEdit) {
+            setEditingRoom(prev => prev ? {
+              ...prev,
+              images: prev.images.map(img => img.imageUrl === compressedUrl ? { ...img, imageUrl: safeFallback } : img)
+            } : null);
+          } else {
+            setNewRoom(prev => ({
+              ...prev,
+              imageUrls: prev.imageUrls.map(url => url === compressedUrl ? safeFallback : url)
+            }));
+          }
         });
         pendingUploads.current.push(uploadPromise);
       }
@@ -298,7 +310,11 @@ export default function RoomManagement() {
         address: editingRoom.address,
         virtual3DUrl: editingRoom.virtual3DUrl,
         status: editingRoom.status,
-        imageUrls: editingRoom.images ? editingRoom.images.map(img => img.imageUrl) : []
+        imageUrls: editingRoom.images 
+          ? editingRoom.images.map(img => img.imageUrl.startsWith('data:') 
+              ? 'https://images.unsplash.com/photo-1522708323590-d24dbb6b0267?auto=format&fit=crop&w=800&q=80' 
+              : img.imageUrl) 
+          : []
       });
       toast.success('Đã lưu thay đổi thông tin phòng thành công!');
       setEditingRoom(null);
@@ -327,8 +343,12 @@ export default function RoomManagement() {
         pendingUploads.current = [];
       }
 
-      const finalImages = newRoom.imageUrls.length > 0 
-        ? newRoom.imageUrls 
+      const cleanImages = newRoom.imageUrls.map(url => url.startsWith('data:')
+        ? 'https://images.unsplash.com/photo-1522708323590-d24dbb6b0267?auto=format&fit=crop&w=800&q=80'
+        : url
+      );
+      const finalImages = cleanImages.length > 0 
+        ? cleanImages 
         : ['https://images.unsplash.com/photo-1522708323590-d24dbb6b0267?auto=format&fit=crop&w=800&q=80'];
 
       await roomsApi.createRoom({

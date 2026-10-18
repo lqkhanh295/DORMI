@@ -136,59 +136,39 @@ export default function TenantProfile() {
     }
 
     setIsUploadingAvatar(true);
+    // 1. Instant local preview for smooth UI without Base64 in state/DB
+    const previewUrl = URL.createObjectURL(file);
+    setAvatar(previewUrl);
 
-    const reader = new FileReader();
-    reader.onload = async (event) => {
-      const dataUrl = event.target?.result as string;
-      if (!dataUrl) {
-        setIsUploadingAvatar(false);
-        return;
+    try {
+      // 2. Upload binary to Cloudinary storage
+      const uploadRes = await imagesApi.uploadImage(file);
+      const cdnUrl = uploadRes?.imageUrl;
+      if (!cdnUrl || cdnUrl.startsWith('data:')) {
+        throw new Error('Đường dẫn ảnh không hợp lệ.');
       }
 
-      // 1. Hiển thị ngay lập tức không bị chớp hay mất ảnh
-      setAvatar(dataUrl);
-      updateUser({ avatar: dataUrl });
+      setAvatar(cdnUrl);
+      updateUser({ avatar: cdnUrl });
 
-      let savedUrl = dataUrl;
-      try {
-        const uploadRes = await imagesApi.uploadImage(file);
-        if (uploadRes?.imageUrl && !uploadRes.imageUrl.includes('522708323590-d24dbb6b0267')) {
-          savedUrl = uploadRes.imageUrl;
-          setAvatar(savedUrl);
-          updateUser({ avatar: savedUrl });
-        }
+      // 3. POST tiny JSON payload to ASP.NET API
+      await profilesApi.updateCustomerProfile({
+        fullName: [lastName, firstName].filter(Boolean).join(' ').trim(),
+        avatarUrl: cdnUrl
+      });
 
-        await profilesApi.updateCustomerProfile({
-          fullName: [lastName, firstName].filter(Boolean).join(' ').trim(),
-          avatarUrl: savedUrl
-        });
-
-        toast.success('Cập nhật ảnh đại diện thành công!');
-      } catch (err: any) {
-        console.warn('Upload image API fallback to local dataUrl:', err);
-        try {
-          await profilesApi.updateCustomerProfile({
-            fullName: [lastName, firstName].filter(Boolean).join(' ').trim(),
-            avatarUrl: dataUrl
-          });
-          toast.success('Đã lưu ảnh đại diện thành công!');
-        } catch {
-          toast.success('Đã áp dụng ảnh đại diện mới!');
-        }
-      } finally {
-        setIsUploadingAvatar(false);
-        if (fileInputRef.current) {
-          fileInputRef.current.value = '';
-        }
-      }
-    };
-
-    reader.onerror = () => {
+      toast.success('Cập nhật ảnh đại diện thành công!');
+    } catch (err: any) {
+      console.error('Lỗi khi tải ảnh đại diện lên Cloudinary:', err);
+      toast.error('Không thể tải ảnh đại diện lên máy chủ. Vui lòng thử lại.');
+      setAvatar(currentUser?.avatar || '');
+    } finally {
       setIsUploadingAvatar(false);
-      toast.error('Không thể đọc tập tin ảnh.');
-    };
-
-    reader.readAsDataURL(file);
+      URL.revokeObjectURL(previewUrl);
+      if (fileInputRef.current) {
+        fileInputRef.current.value = '';
+      }
+    }
   };
 
   const handleOpenAvatarUrlModal = () => {
