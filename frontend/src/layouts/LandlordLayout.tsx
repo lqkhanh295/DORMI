@@ -59,13 +59,19 @@ export default function LandlordLayout() {
         </div>
       </div>
 
-      <main className="flex-1 p-4 md:p-6 lg:p-8 w-full max-w-7xl 2xl:max-w-[1536px] mx-auto mb-12 md:mb-4">
-        <div key={location.pathname} className="page-transition">
+      <main className={`flex-1 w-full max-w-7xl 2xl:max-w-[1536px] mx-auto ${
+        location.pathname === '/landlord/chat'
+          ? 'p-2 sm:p-4 mb-0 flex flex-col' 
+          : 'p-4 md:p-6 lg:p-8 mb-12 md:mb-4'
+      }`}>
+        <div key={location.pathname} className={`page-transition ${
+          location.pathname === '/landlord/chat' ? 'flex-1 flex flex-col' : ''
+        }`}>
           <Outlet />
         </div>
       </main>
 
-      <GlobalFooter />
+      {location.pathname !== '/landlord/chat' && <GlobalFooter />}
     </div>
   );
 }

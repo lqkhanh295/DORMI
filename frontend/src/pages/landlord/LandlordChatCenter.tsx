@@ -210,7 +210,7 @@ export default function LandlordChatCenter() {
   });
 
   return (
-    <div className="flex h-[calc(100vh-10rem)] bg-white rounded-[18px] shadow-clay-soft overflow-hidden border border-[#E2E8F0]">
+    <div className="flex-1 flex h-[calc(100vh-135px)] min-h-[480px] bg-white rounded-[18px] shadow-clay-soft overflow-hidden border border-[#E2E8F0]">
       {/* Sidebar: Conversation List */}
       <div className="hidden md:flex w-1/3 border-r border-[#E2E8F0] flex-col bg-[#F8FAFC]">
         <div className="p-4 border-b border-[#E2E8F0] bg-white">

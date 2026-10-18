@@ -183,9 +183,9 @@ export default function TenantChatCenter() {
   };
 
   return (
-    <div className="space-y-4">
+    <div className="flex-1 flex flex-col space-y-3 h-full min-h-0">
       {/* Navigation Tabs */}
-      <div className="flex items-center gap-3 bg-white p-2 rounded-[14px] shadow-clay-soft border border-[#E2E8F0] w-fit">
+      <div className="flex items-center gap-2 bg-white p-1.5 rounded-[14px] shadow-clay-soft border border-[#E2E8F0] w-fit shrink-0">
         <button
           onClick={() => setActiveTab('chat')}
           className={`flex items-center gap-2 px-4 py-2 rounded-[10px] text-caption font-bold transition-[background-color,color,box-shadow,transform] duration-150 ease-out active:scale-[0.98] ${
@@ -321,7 +321,7 @@ export default function TenantChatCenter() {
         </div>
       ) : (
         /* CHAT VIEW */
-        <div className="flex h-[calc(100vh-12rem)] bg-white rounded-[18px] shadow-clay-soft overflow-hidden border border-[#E2E8F0]">
+        <div className="flex-1 flex h-[calc(100vh-175px)] min-h-[480px] bg-white rounded-[18px] shadow-clay-soft overflow-hidden border border-[#E2E8F0]">
           {/* Sidebar */}
           <div className="hidden md:flex w-1/3 border-r border-[#E2E8F0] flex-col bg-[#F8FAFC]">
             <div className="p-4 border-b border-[#E2E8F0] bg-white">
