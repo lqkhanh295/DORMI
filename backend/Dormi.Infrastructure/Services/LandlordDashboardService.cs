@@ -13,6 +13,7 @@ using Dormi.Infrastructure.Data;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Caching.Distributed;
+using Microsoft.Extensions.Caching.Memory;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Hosting;
 using System.Text.Json;
@@ -29,6 +30,7 @@ public class LandlordDashboardService : ILandlordDashboardService
     private readonly IConfiguration _configuration;
     private readonly IWebHostEnvironment _env;
     private readonly IDistributedCache? _cache;
+    private readonly IMemoryCache? _memCache;
     private readonly PayOSClient? _payOS;
 
     public LandlordDashboardService(
@@ -36,12 +38,14 @@ public class LandlordDashboardService : ILandlordDashboardService
         IConfiguration configuration, 
         IWebHostEnvironment env,
         IDistributedCache? cache = null,
+        IMemoryCache? memCache = null,
         PayOSClient? payOS = null)
     {
         _db = db;
         _configuration = configuration;
         _env = env;
         _cache = cache;
+        _memCache = memCache;
         _payOS = payOS;
     }
 
@@ -51,26 +55,53 @@ public class LandlordDashboardService : ILandlordDashboardService
     public async Task<ServiceResult<LandlordAnalyticsDto>> GetAnalyticsAsync(Guid landlordId)
     {
         var cacheKey = $"landlord_analytics:{landlordId}";
-        if (_cache != null)
+        if (_memCache != null && _memCache.TryGetValue(cacheKey, out LandlordAnalyticsDto? memCached) && memCached != null)
         {
-            var cached = await _cache.GetStringAsync(cacheKey);
-            if (!string.IsNullOrEmpty(cached))
-            {
-                try
-                {
-                    var cachedDto = JsonSerializer.Deserialize<LandlordAnalyticsDto>(cached);
-                    if (cachedDto != null) return ServiceResult<LandlordAnalyticsDto>.Ok(cachedDto);
-                }
-                catch { }
-            }
+            return ServiceResult<LandlordAnalyticsDto>.Ok(memCached);
         }
 
-        var totalListings = await _db.Rooms.CountAsync(r => r.LandlordId == landlordId);
-        var activeListings = await _db.Rooms.CountAsync(r => r.LandlordId == landlordId && r.Status == RoomStatus.Available);
-        var totalAppointments = await _db.ViewingAppointments.CountAsync(a => a.Room.LandlordId == landlordId);
-        var pendingAppointments = await _db.ViewingAppointments.CountAsync(a => a.Room.LandlordId == landlordId && a.Status == "Pending");
+        if (_cache != null)
+        {
+            try
+            {
+                var cached = await _cache.GetStringAsync(cacheKey);
+                if (!string.IsNullOrEmpty(cached))
+                {
+                    var cachedDto = JsonSerializer.Deserialize<LandlordAnalyticsDto>(cached);
+                    if (cachedDto != null)
+                    {
+                        _memCache?.Set(cacheKey, cachedDto, TimeSpan.FromMinutes(2));
+                        return ServiceResult<LandlordAnalyticsDto>.Ok(cachedDto);
+                    }
+                }
+            }
+            catch { }
+        }
 
-        var totalViews = await _db.RoomViews.CountAsync(v => v.Room.LandlordId == landlordId && v.EventType == "View");
+        var roomCounts = await _db.Rooms
+            .AsNoTracking()
+            .Where(r => r.LandlordId == landlordId)
+            .GroupBy(r => r.Status)
+            .Select(g => new { Status = g.Key, Count = g.Count() })
+            .ToListAsync();
+
+        var totalListings = roomCounts.Sum(x => x.Count);
+        var activeListings = roomCounts.Where(x => x.Status == RoomStatus.Available).Sum(x => x.Count);
+
+        var apptCounts = await _db.ViewingAppointments
+            .AsNoTracking()
+            .Where(a => a.Room.LandlordId == landlordId)
+            .GroupBy(a => a.Status)
+            .Select(g => new { Status = g.Key, Count = g.Count() })
+            .ToListAsync();
+
+        var totalAppointments = apptCounts.Sum(x => x.Count);
+        var pendingAppointments = apptCounts.Where(x => x.Status == "Pending").Sum(x => x.Count);
+
+        var totalViews = await _db.RoomViews
+            .AsNoTracking()
+            .CountAsync(v => v.Room.LandlordId == landlordId && v.EventType == "View");
+
         var conversionRate = totalViews > 0 ? Math.Round((double)totalAppointments / totalViews * 100.0, 1) : 0.0;
 
         var analytics = new LandlordAnalyticsDto
@@ -82,6 +113,8 @@ public class LandlordDashboardService : ILandlordDashboardService
             TotalViews = totalViews,
             ConversionRate = conversionRate
         };
+
+        _memCache?.Set(cacheKey, analytics, TimeSpan.FromMinutes(2));
 
         if (_cache != null)
         {
@@ -101,34 +134,137 @@ public class LandlordDashboardService : ILandlordDashboardService
     public async Task<ServiceResult<RealLeadAnalyticsDto>> GetLeadAnalyticsAsync(Guid landlordId, Guid? roomId)
     {
         var cacheKey = $"landlord_leads:{landlordId}:{(roomId.HasValue && roomId.Value != Guid.Empty ? roomId.Value.ToString() : "all")}";
-        if (_cache != null)
+
+        // 1. Check L1 MemoryCache first (instant < 1ms)
+        if (_memCache != null && _memCache.TryGetValue(cacheKey, out RealLeadAnalyticsDto? memCached) && memCached != null)
         {
-            var cached = await _cache.GetStringAsync(cacheKey);
-            if (!string.IsNullOrEmpty(cached))
-            {
-                try
-                {
-                    var cachedDto = JsonSerializer.Deserialize<RealLeadAnalyticsDto>(cached);
-                    if (cachedDto != null) return ServiceResult<RealLeadAnalyticsDto>.Ok(cachedDto);
-                }
-                catch { }
-            }
+            return ServiceResult<RealLeadAnalyticsDto>.Ok(memCached);
         }
 
-        var roomsQuery = _db.Rooms.Where(r => r.LandlordId == landlordId);
+        // 2. Check L2 DistributedCache
+        if (_cache != null)
+        {
+            try
+            {
+                var cached = await _cache.GetStringAsync(cacheKey);
+                if (!string.IsNullOrEmpty(cached))
+                {
+                    var cachedDto = JsonSerializer.Deserialize<RealLeadAnalyticsDto>(cached);
+                    if (cachedDto != null)
+                    {
+                        _memCache?.Set(cacheKey, cachedDto, TimeSpan.FromMinutes(2));
+                        return ServiceResult<RealLeadAnalyticsDto>.Ok(cachedDto);
+                    }
+                }
+            }
+            catch { }
+        }
+
+        var now = DateTime.UtcNow;
+
+        // 3. Lean query for landlord rooms (only necessary projection columns)
+        var roomsQuery = _db.Rooms
+            .AsNoTracking()
+            .Where(r => r.LandlordId == landlordId);
+
         if (roomId.HasValue && roomId.Value != Guid.Empty)
         {
             roomsQuery = roomsQuery.Where(r => r.Id == roomId.Value);
         }
 
-        var landlordRoomIds = await roomsQuery.Select(r => r.Id).ToListAsync();
+        var rooms = await roomsQuery
+            .Select(r => new
+            {
+                r.Id,
+                r.Title,
+                Status = r.Status.ToString(),
+                r.Price,
+                r.Address,
+                ImageUrl = r.Images.OrderByDescending(i => i.IsPrimary).Select(i => i.ImageUrl).FirstOrDefault(),
+                r.IsBoosted,
+                r.BoostExpiresAt,
+                r.BoostType
+            })
+            .ToListAsync();
 
-        var totalViews = await _db.RoomViews.CountAsync(v => landlordRoomIds.Contains(v.RoomId) && v.EventType == "View");
-        var totalSaves = await _db.FavoriteRooms.CountAsync(f => landlordRoomIds.Contains(f.RoomId));
-        var totalViewings = await _db.ViewingAppointments.CountAsync(a => landlordRoomIds.Contains(a.RoomId));
-        var totalApplications = await _db.RentalApplications.CountAsync(app => landlordRoomIds.Contains(app.RoomId));
-        var totalApproved = await _db.RentalApplications.CountAsync(app => landlordRoomIds.Contains(app.RoomId) && app.Status == ApplicationStatus.Approved);
-        var totalLeases = await _db.LeaseContracts.CountAsync(l => landlordRoomIds.Contains(l.RoomId) && (l.Status == "Active" || l.Status == "Renewed" || l.Status == "Terminated"));
+        if (rooms.Count == 0)
+        {
+            var emptyDto = new RealLeadAnalyticsDto
+            {
+                DailyMetrics = new List<DailyLeadMetricDto>(),
+                TopRooms = new List<RoomLeadPerformanceDto>()
+            };
+            _memCache?.Set(cacheKey, emptyDto, TimeSpan.FromMinutes(2));
+            return ServiceResult<RealLeadAnalyticsDto>.Ok(emptyDto);
+        }
+
+        var landlordRoomIds = rooms.Select(r => r.Id).ToList();
+        var startDate = now.Date.AddDays(-27);
+
+        // Grouped queries & counts
+        var viewsByRoom = await _db.RoomViews
+            .AsNoTracking()
+            .Where(v => landlordRoomIds.Contains(v.RoomId) && v.EventType == "View")
+            .GroupBy(v => v.RoomId)
+            .Select(g => new { RoomId = g.Key, Count = g.Count() })
+            .ToDictionaryAsync(g => g.RoomId, g => g.Count);
+
+        var savesByRoom = await _db.FavoriteRooms
+            .AsNoTracking()
+            .Where(f => landlordRoomIds.Contains(f.RoomId))
+            .GroupBy(f => f.RoomId)
+            .Select(g => new { RoomId = g.Key, Count = g.Count() })
+            .ToDictionaryAsync(g => g.RoomId, g => g.Count);
+
+        var viewingsByRoom = await _db.ViewingAppointments
+            .AsNoTracking()
+            .Where(a => landlordRoomIds.Contains(a.RoomId))
+            .GroupBy(a => a.RoomId)
+            .Select(g => new { RoomId = g.Key, Count = g.Count() })
+            .ToDictionaryAsync(g => g.RoomId, g => g.Count);
+
+        var appStats = await _db.RentalApplications
+            .AsNoTracking()
+            .Where(app => landlordRoomIds.Contains(app.RoomId))
+            .GroupBy(app => new { app.RoomId, app.Status })
+            .Select(g => new { g.Key.RoomId, g.Key.Status, Count = g.Count() })
+            .ToListAsync();
+
+        var leaseStats = await _db.LeaseContracts
+            .AsNoTracking()
+            .Where(l => landlordRoomIds.Contains(l.RoomId) && (l.Status == "Active" || l.Status == "Renewed" || l.Status == "Terminated"))
+            .GroupBy(l => new { l.RoomId, l.Status })
+            .Select(g => new { g.Key.RoomId, g.Key.Status, Count = g.Count() })
+            .ToListAsync();
+
+        var viewsInPeriod = await _db.RoomViews
+            .AsNoTracking()
+            .Where(v => landlordRoomIds.Contains(v.RoomId) && v.CreatedAt >= startDate && v.EventType == "View")
+            .Select(v => v.CreatedAt)
+            .ToListAsync();
+
+        var savesInPeriod = await _db.FavoriteRooms
+            .AsNoTracking()
+            .Where(f => landlordRoomIds.Contains(f.RoomId) && f.SavedAt >= startDate)
+            .Select(f => f.SavedAt)
+            .ToListAsync();
+
+        var contactsInPeriod = await _db.ViewingAppointments
+            .AsNoTracking()
+            .Where(a => landlordRoomIds.Contains(a.RoomId) && a.CreatedAt >= startDate)
+            .Select(a => a.CreatedAt)
+            .ToListAsync();
+
+        // Totals derived in-memory without extra DB roundtrips
+        var totalViews = viewsByRoom.Values.Sum();
+        var totalSaves = savesByRoom.Values.Sum();
+        var totalViewings = viewingsByRoom.Values.Sum();
+        var totalApplications = appStats.Sum(x => x.Count);
+        var totalApproved = appStats.Where(x => x.Status == ApplicationStatus.Approved).Sum(x => x.Count);
+        var totalLeases = leaseStats.Sum(x => x.Count);
+
+        var appsByRoom = appStats.GroupBy(x => x.RoomId).ToDictionary(g => g.Key, g => g.Sum(x => x.Count));
+        var leasesByRoom = leaseStats.Where(x => x.Status == "Active" || x.Status == "Renewed").GroupBy(x => x.RoomId).ToDictionary(g => g.Key, g => g.Sum(x => x.Count));
 
         var totalContacts = totalViewings;
         var totalInquiries = totalSaves;
@@ -141,24 +277,6 @@ public class LandlordDashboardService : ILandlordDashboardService
         double appToApproveRate = totalApplications > 0 ? Math.Round((double)totalApproved / totalApplications * 100.0, 1) : 0.0;
         double approveToLeaseRate = totalApproved > 0 ? Math.Round((double)totalLeases / totalApproved * 100.0, 1) : 0.0;
         double overallConversionRate = totalViews > 0 ? Math.Round((double)totalLeases / totalViews * 100.0, 2) : 0.0;
-
-        var now = DateTime.UtcNow;
-        var startDate = now.Date.AddDays(-27);
-
-        var viewsInPeriod = await _db.RoomViews
-            .Where(v => landlordRoomIds.Contains(v.RoomId) && v.CreatedAt >= startDate && v.EventType == "View")
-            .Select(v => v.CreatedAt)
-            .ToListAsync();
-
-        var savesInPeriod = await _db.FavoriteRooms
-            .Where(f => landlordRoomIds.Contains(f.RoomId) && f.SavedAt >= startDate)
-            .Select(f => f.SavedAt)
-            .ToListAsync();
-
-        var contactsInPeriod = await _db.ViewingAppointments
-            .Where(a => landlordRoomIds.Contains(a.RoomId) && a.CreatedAt >= startDate)
-            .Select(a => a.CreatedAt)
-            .ToListAsync();
 
         var dailyMetrics = new List<DailyLeadMetricDto>();
         for (int i = 9; i >= 0; i--)
@@ -178,45 +296,14 @@ public class LandlordDashboardService : ILandlordDashboardService
             });
         }
 
-        var viewsByRoom = await _db.RoomViews
-            .Where(v => landlordRoomIds.Contains(v.RoomId) && v.EventType == "View")
-            .GroupBy(v => v.RoomId)
-            .Select(g => new { RoomId = g.Key, Count = g.Count() })
-            .ToDictionaryAsync(g => g.RoomId, g => g.Count);
-
-        var savesByRoom = await _db.FavoriteRooms
-            .Where(f => landlordRoomIds.Contains(f.RoomId))
-            .GroupBy(f => f.RoomId)
-            .Select(g => new { RoomId = g.Key, Count = g.Count() })
-            .ToDictionaryAsync(g => g.RoomId, g => g.Count);
-
-        var viewingsByRoom = await _db.ViewingAppointments
-            .Where(a => landlordRoomIds.Contains(a.RoomId))
-            .GroupBy(a => a.RoomId)
-            .Select(g => new { RoomId = g.Key, Count = g.Count() })
-            .ToDictionaryAsync(g => g.RoomId, g => g.Count);
-
-        var appsByRoom = await _db.RentalApplications
-            .Where(app => landlordRoomIds.Contains(app.RoomId))
-            .GroupBy(app => app.RoomId)
-            .Select(g => new { RoomId = g.Key, Count = g.Count() })
-            .ToDictionaryAsync(g => g.RoomId, g => g.Count);
-
-        var leasesByRoom = await _db.LeaseContracts
-            .Where(l => landlordRoomIds.Contains(l.RoomId) && (l.Status == "Active" || l.Status == "Renewed"))
-            .GroupBy(l => l.RoomId)
-            .Select(g => new { RoomId = g.Key, Count = g.Count() })
-            .ToDictionaryAsync(g => g.RoomId, g => g.Count);
-
-        var rooms = await roomsQuery.Include(r => r.Images).ToListAsync();
         var topRooms = rooms.Select(r => new RoomLeadPerformanceDto
         {
             RoomId = r.Id,
             Title = r.Title,
-            Status = r.Status.ToString(),
+            Status = r.Status,
             Price = r.Price,
             Address = r.Address,
-            ImageUrl = r.Images.FirstOrDefault()?.ImageUrl,
+            ImageUrl = r.ImageUrl,
             Views = viewsByRoom.GetValueOrDefault(r.Id, 0),
             Saves = savesByRoom.GetValueOrDefault(r.Id, 0),
             Contacts = viewingsByRoom.GetValueOrDefault(r.Id, 0),
@@ -249,6 +336,8 @@ public class LandlordDashboardService : ILandlordDashboardService
             DailyMetrics = dailyMetrics,
             TopRooms = topRooms
         };
+
+        _memCache?.Set(cacheKey, resultDto, TimeSpan.FromMinutes(2));
 
         if (_cache != null)
         {

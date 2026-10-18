@@ -9,6 +9,7 @@ using Dormi.Domain.Entities;
 using Dormi.Domain.Enums;
 using Dormi.Infrastructure.Data;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Caching.Memory;
 
 namespace Dormi.Infrastructure.Services;
 
@@ -17,11 +18,13 @@ public class RentalApplicationService : IRentalApplicationService
 {
     private readonly DormiDbContext _db;
     private readonly IKafkaProducer? _kafkaProducer;
+    private readonly IMemoryCache? _memCache;
 
-    public RentalApplicationService(DormiDbContext db, IKafkaProducer? kafkaProducer = null)
+    public RentalApplicationService(DormiDbContext db, IKafkaProducer? kafkaProducer = null, IMemoryCache? memCache = null)
     {
         _db = db;
         _kafkaProducer = kafkaProducer;
+        _memCache = memCache;
     }
 
     public async Task<ServiceResult<RentalApplicationResponseDto>> CreateApplicationAsync(Guid tenantId, CreateApplicationDto dto)
@@ -120,7 +123,14 @@ public class RentalApplicationService : IRentalApplicationService
 
     public async Task<ServiceResult<List<RentalApplicationResponseDto>>> GetTenantApplicationsAsync(Guid tenantId)
     {
+        var cacheKey = $"tenant_apps:{tenantId}";
+        if (_memCache != null && _memCache.TryGetValue(cacheKey, out List<RentalApplicationResponseDto>? cached) && cached != null)
+        {
+            return ServiceResult<List<RentalApplicationResponseDto>>.Ok(cached);
+        }
+
         var applications = await _db.RentalApplications
+            .AsNoTracking()
             .Include(a => a.Room)
                 .ThenInclude(r => r.Images)
             .Include(a => a.Room)
@@ -132,19 +142,40 @@ public class RentalApplicationService : IRentalApplicationService
             .ToListAsync();
 
         var result = applications.Select(a => MapToResponseDto(a, a.Room, a.Tenant)).ToList();
+        _memCache?.Set(cacheKey, result, TimeSpan.FromSeconds(30));
         return ServiceResult<List<RentalApplicationResponseDto>>.Ok(result);
     }
 
     public async Task<ServiceResult<List<RentalApplicationResponseDto>>> GetLandlordApplicationsAsync(Guid landlordId, ApplicationStatus? status = null)
     {
+        var cacheKey = $"landlord_apps:{landlordId}:{(status.HasValue ? status.Value.ToString() : "all")}";
+        if (_memCache != null && _memCache.TryGetValue(cacheKey, out List<RentalApplicationResponseDto>? cached) && cached != null)
+        {
+            return ServiceResult<List<RentalApplicationResponseDto>>.Ok(cached);
+        }
+
+        var landlordRoomIds = await _db.Rooms
+            .AsNoTracking()
+            .Where(r => r.LandlordId == landlordId)
+            .Select(r => r.Id)
+            .ToListAsync();
+
+        if (landlordRoomIds.Count == 0)
+        {
+            var empty = new List<RentalApplicationResponseDto>();
+            _memCache?.Set(cacheKey, empty, TimeSpan.FromSeconds(30));
+            return ServiceResult<List<RentalApplicationResponseDto>>.Ok(empty);
+        }
+
         var query = _db.RentalApplications
+            .AsNoTracking()
             .Include(a => a.Room)
                 .ThenInclude(r => r.Images)
             .Include(a => a.Room)
                 .ThenInclude(r => r.Landlord)
             .Include(a => a.Tenant)
             .Include(a => a.Documents)
-            .Where(a => a.Room.LandlordId == landlordId);
+            .Where(a => landlordRoomIds.Contains(a.RoomId));
 
         if (status.HasValue)
         {
@@ -153,12 +184,14 @@ public class RentalApplicationService : IRentalApplicationService
 
         var applications = await query.OrderByDescending(a => a.CreatedAt).ToListAsync();
         var result = applications.Select(a => MapToResponseDto(a, a.Room, a.Tenant)).ToList();
+        _memCache?.Set(cacheKey, result, TimeSpan.FromSeconds(30));
         return ServiceResult<List<RentalApplicationResponseDto>>.Ok(result);
     }
 
     public async Task<ServiceResult<RentalApplicationResponseDto>> GetApplicationByIdAsync(Guid id, Guid currentUserId, bool isAdmin)
     {
         var application = await _db.RentalApplications
+            .AsNoTracking()
             .Include(a => a.Room)
                 .ThenInclude(r => r.Images)
             .Include(a => a.Room)

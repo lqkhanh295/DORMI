@@ -11,6 +11,7 @@ using Dormi.Infrastructure.Hubs;
 using Microsoft.AspNetCore.SignalR;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Caching.Distributed;
+using Microsoft.Extensions.Caching.Memory;
 
 namespace Dormi.Infrastructure.Services;
 
@@ -19,12 +20,14 @@ public class MessageService : IMessageService
     private readonly DormiDbContext _db;
     private readonly IHubContext<ChatHub> _hubContext;
     private readonly IDistributedCache? _cache;
+    private readonly IMemoryCache? _memCache;
 
-    public MessageService(DormiDbContext db, IHubContext<ChatHub> hubContext, IDistributedCache? cache = null)
+    public MessageService(DormiDbContext db, IHubContext<ChatHub> hubContext, IDistributedCache? cache = null, IMemoryCache? memCache = null)
     {
         _db = db;
         _hubContext = hubContext;
         _cache = cache;
+        _memCache = memCache;
     }
 
     public async Task<ServiceResult<object>> SendMessageAsync(Guid senderId, SendMessageDto dto)
@@ -74,12 +77,16 @@ public class MessageService : IMessageService
             Console.WriteLine($"[SignalR Notification Notice]: {ex.Message}");
         }
 
+        _memCache?.Remove($"conversations:{senderId}");
+        _memCache?.Remove($"conversations:{dto.ReceiverId}");
+
         return ServiceResult<object>.Ok(new { id = message.Id, message = "Đã gửi tin nhắn.", data = messagePayload });
     }
 
     public async Task<ServiceResult<List<MessageResponseDto>>> GetConversationHistoryAsync(Guid userId, Guid otherUserId)
     {
         var messages = await _db.Messages
+            .AsNoTracking()
             .Include(m => m.Sender)
             .Include(m => m.Receiver)
             .Where(m => (m.SenderId == userId && m.ReceiverId == otherUserId) ||
@@ -109,6 +116,7 @@ public class MessageService : IMessageService
                 msg.IsRead = true;
             }
             await _db.SaveChangesAsync();
+            _memCache?.Remove($"conversations:{userId}");
         }
 
         return ServiceResult<List<MessageResponseDto>>.Ok(messages);
@@ -116,7 +124,14 @@ public class MessageService : IMessageService
 
     public async Task<ServiceResult<List<ConversationDto>>> GetConversationsAsync(Guid userId)
     {
+        var cacheKey = $"conversations:{userId}";
+        if (_memCache != null && _memCache.TryGetValue(cacheKey, out List<ConversationDto>? memCached) && memCached != null)
+        {
+            return ServiceResult<List<ConversationDto>>.Ok(memCached);
+        }
+
         var messages = await _db.Messages
+            .AsNoTracking()
             .Include(m => m.Sender)
             .Include(m => m.Receiver)
             .Where(m => m.SenderId == userId || m.ReceiverId == userId)
@@ -187,6 +202,7 @@ public class MessageService : IMessageService
             }
         }
 
+        _memCache?.Set(cacheKey, conversationGroups, TimeSpan.FromSeconds(15));
         return ServiceResult<List<ConversationDto>>.Ok(conversationGroups);
     }
 }

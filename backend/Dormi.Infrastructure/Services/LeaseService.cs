@@ -9,6 +9,7 @@ using Dormi.Domain.Entities;
 using Dormi.Domain.Enums;
 using Dormi.Infrastructure.Data;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Caching.Memory;
 
 namespace Dormi.Infrastructure.Services;
 
@@ -18,12 +19,14 @@ public class LeaseService : ILeaseService
     private readonly DormiDbContext _db;
     private readonly IKafkaProducer? _kafkaProducer;
     private readonly IDistributedLockService? _lockService;
+    private readonly IMemoryCache? _memCache;
 
-    public LeaseService(DormiDbContext db, IKafkaProducer? kafkaProducer = null, IDistributedLockService? lockService = null)
+    public LeaseService(DormiDbContext db, IKafkaProducer? kafkaProducer = null, IDistributedLockService? lockService = null, IMemoryCache? memCache = null)
     {
         _db = db;
         _kafkaProducer = kafkaProducer;
         _lockService = lockService;
+        _memCache = memCache;
     }
 
     public async Task<ServiceResult<LeaseContractResponseDto>> CreateLeaseAsync(Guid landlordId, CreateLeaseDto dto)
@@ -143,23 +146,80 @@ public class LeaseService : ILeaseService
 
     public async Task<ServiceResult<List<LeaseContractResponseDto>>> GetMyLeasesAsync(Guid userId)
     {
-        var leases = await _db.LeaseContracts
-            .Include(l => l.Room)
-                .ThenInclude(r => r.Images)
-            .Include(l => l.Landlord)
-            .Include(l => l.Tenant)
-            .Include(l => l.Documents)
+        var cacheKey = $"my_leases:{userId}";
+        if (_memCache != null && _memCache.TryGetValue(cacheKey, out List<LeaseContractResponseDto>? cached) && cached != null)
+        {
+            return ServiceResult<List<LeaseContractResponseDto>>.Ok(cached);
+        }
+
+        var dtos = await _db.LeaseContracts
+            .AsNoTracking()
             .Where(l => l.LandlordId == userId || l.TenantId == userId)
             .OrderByDescending(l => l.CreatedAt)
+            .Select(l => new LeaseContractResponseDto
+            {
+                Id = l.Id,
+                RentalApplicationId = l.RentalApplicationId,
+                RoomId = l.RoomId,
+                RoomTitle = l.Room.Title,
+                RoomAddress = l.Room.Address,
+                RoomImageUrl = l.Room.Images.OrderByDescending(i => i.IsPrimary).Select(i => i.ImageUrl).FirstOrDefault(),
+                LandlordId = l.LandlordId,
+                LandlordName = l.Landlord.FullName,
+                LandlordPhone = l.Landlord.PhoneNumber,
+                LandlordEmail = l.Landlord.Email,
+                TenantId = l.TenantId,
+                TenantName = l.Tenant.FullName,
+                TenantPhone = l.Tenant.PhoneNumber,
+                TenantEmail = l.Tenant.Email,
+                StartDate = l.StartDate,
+                EndDate = l.EndDate,
+                MonthlyRent = l.MonthlyRent,
+                Deposit = l.Deposit,
+                UtilitiesDescription = l.UtilitiesDescription,
+                TermsAndConditions = l.TermsAndConditions,
+                PaymentCycleMonths = l.PaymentCycleMonths,
+                Status = l.Status,
+                LandlordSigned = l.LandlordSigned,
+                LandlordSignedAt = l.LandlordSignedAt,
+                TenantSigned = l.TenantSigned,
+                TenantSignedAt = l.TenantSignedAt,
+                TenantSignatureData = l.TenantSignatureData,
+                ContractDocumentUrl = l.ContractDocumentUrl,
+                CreatedAt = l.CreatedAt,
+                ActivatedAt = l.ActivatedAt,
+                TerminatedAt = l.TerminatedAt,
+                TerminationReason = l.TerminationReason,
+                MoveOutRequestedAt = l.MoveOutRequestedAt,
+                MoveOutDate = l.MoveOutDate,
+                MoveOutReason = l.MoveOutReason,
+                MoveOutInspectionNotes = l.MoveOutInspectionNotes,
+                MoveOutDeductions = l.MoveOutDeductions,
+                MoveOutDeductionReason = l.MoveOutDeductionReason,
+                MoveOutSettledDeposit = l.MoveOutSettledDeposit,
+                MoveOutSettledAt = l.MoveOutSettledAt,
+                RenewalRequestedAt = l.RenewalRequestedAt,
+                RenewalProposedEndDate = l.RenewalProposedEndDate,
+                RenewalStatus = l.RenewalStatus,
+                Documents = l.Documents.Select(d => new LeaseDocumentDto
+                {
+                    Id = d.Id,
+                    DocumentType = d.DocumentType,
+                    FileUrl = d.FileUrl,
+                    Title = d.Title,
+                    UploadedAt = d.UploadedAt
+                }).ToList()
+            })
             .ToListAsync();
 
-        var dtos = leases.Select(l => MapToDto(l, l.Room, l.Landlord, l.Tenant)).ToList();
+        _memCache?.Set(cacheKey, dtos, TimeSpan.FromSeconds(30));
         return ServiceResult<List<LeaseContractResponseDto>>.Ok(dtos);
     }
 
     public async Task<ServiceResult<LeaseContractResponseDto>> GetLeaseByIdAsync(Guid leaseId, Guid userId, bool isAdmin)
     {
         var lease = await _db.LeaseContracts
+            .AsNoTracking()
             .Include(l => l.Room)
                 .ThenInclude(r => r.Images)
             .Include(l => l.Landlord)

@@ -192,6 +192,20 @@ public class RoomService : IRoomService
             }
             catch { }
         }
+        else if (isLandlord && currentUserId.HasValue && currentUserId.Value != Guid.Empty && string.IsNullOrWhiteSpace(filter.Query))
+        {
+            try
+            {
+                cacheKey = $"landlord_rooms:{currentUserId.Value}:{filter.Status}:{filter.SortBy}:{filter.Page}:{filter.PageSize}";
+                var cached = await _cache.GetStringAsync(cacheKey);
+                if (!string.IsNullOrEmpty(cached))
+                {
+                    var cachedObj = JsonSerializer.Deserialize<JsonElement>(cached);
+                    return ServiceResult<object>.Ok(cachedObj);
+                }
+            }
+            catch { }
+        }
 
         var query = _db.Rooms
             .AsNoTracking()
