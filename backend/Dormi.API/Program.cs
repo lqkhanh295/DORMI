@@ -208,7 +208,7 @@ if (!app.Environment.IsDevelopment())
 app.UseAuthentication();
 app.UseAuthorization();
 
-app.MapGet("/", () => Results.Ok(new { status = "healthy", service = "Dormi API", timestamp = DateTime.UtcNow }));
+app.MapMethods("/", new[] { "GET", "HEAD" }, () => Results.Ok(new { status = "healthy", service = "Dormi API", timestamp = DateTime.UtcNow }));
 
 app.MapGet("/health", async (Dormi.Infrastructure.Data.DormiDbContext db, Microsoft.Extensions.Caching.Distributed.IDistributedCache cache) =>
 {
