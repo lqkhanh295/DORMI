@@ -1,22 +1,18 @@
 import { useState, useRef, useEffect } from 'react';
-import { useLocation, useNavigate } from 'react-router-dom';
+import { useLocation } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { useStore } from '../../store/useStore';
 import { Button } from '../../components/ui/Button';
-import { Hand, Paperclip, Calendar, MessageCircle, Clock, MapPin, CheckCircle2, AlertCircle } from 'lucide-react';
-import { messagesApi, appointmentsApi } from '../../services/api';
+import { Hand, Paperclip, MessageCircle } from 'lucide-react';
+import { messagesApi } from '../../services/api';
 import { signalRService } from '../../services/signalr';
 import { chatMessageItemVariants } from '../../utils/motion';
 
 export default function TenantChatCenter() {
   const { currentUser, messages, sendMessageWithApi, fetchMessageHistoryWithApi, likedRoommates } = useStore();
   const location = useLocation();
-  const navigate = useNavigate();
-  const [activeTab, setActiveTab] = useState<'chat' | 'appointments'>('chat');
   const [inputText, setInputText] = useState('');
   const [apiConversations, setApiConversations] = useState<any[]>([]);
-  const [apiAppointments, setApiAppointments] = useState<any[]>([]);
-  const [loadingAppts, setLoadingAppts] = useState(false);
   const [loadingHistory, setLoadingHistory] = useState(false);
   const messagesContainerRef = useRef<HTMLDivElement>(null);
 
@@ -24,13 +20,6 @@ export default function TenantChatCenter() {
   const targetUserId = location.state?.targetUserId;
   const targetUserName = location.state?.targetUserName;
   const targetUserRole = location.state?.targetUserRole;
-  const initialTab = location.state?.tab;
-
-  useEffect(() => {
-    if (initialTab === 'appointments') {
-      setActiveTab('appointments');
-    }
-  }, [initialTab]);
 
   // SignalR real-time messaging connection
   useEffect(() => {
@@ -51,23 +40,6 @@ export default function TenantChatCenter() {
         }
       })
       .catch(() => {});
-  }, []);
-
-  // Load appointments
-  const fetchAppointments = () => {
-    setLoadingAppts(true);
-    appointmentsApi.getMyAppointments()
-      .then(res => {
-        if (Array.isArray(res)) {
-          setApiAppointments(res);
-        }
-      })
-      .catch(() => {})
-      .finally(() => setLoadingAppts(false));
-  };
-
-  useEffect(() => {
-    fetchAppointments();
   }, []);
 
   // Build dynamic contacts list
@@ -192,146 +164,8 @@ export default function TenantChatCenter() {
   };
 
   return (
-    <div className="flex-1 flex flex-col space-y-3 h-full min-h-0">
-      {/* Navigation Tabs */}
-      <div className="flex items-center gap-2 bg-white p-1.5 rounded-[14px] shadow-clay-soft border border-[#E2E8F0] w-fit shrink-0">
-        <button
-          onClick={() => setActiveTab('chat')}
-          className={`flex items-center gap-2 px-4 py-2 rounded-[10px] text-caption font-bold transition-[background-color,color,box-shadow,transform] duration-150 ease-out active:scale-[0.98] ${
-            activeTab === 'chat'
-              ? 'btn-clay-primary'
-              : 'text-[#64748B] hover:text-[#0F172A] hover:bg-[#F8FAFC]'
-          }`}
-        >
-          <MessageCircle size={18} />
-          Hội thoại & Tin nhắn
-        </button>
-        <button
-          onClick={() => {
-            setActiveTab('appointments');
-            fetchAppointments();
-          }}
-          className={`flex items-center gap-2 px-4 py-2 rounded-[10px] text-caption font-bold transition-[background-color,color,box-shadow,transform] duration-150 ease-out active:scale-[0.98] ${
-            activeTab === 'appointments'
-              ? 'btn-clay-primary'
-              : 'text-[#64748B] hover:text-[#0F172A] hover:bg-[#F8FAFC]'
-          }`}
-        >
-          <Calendar size={18} />
-          Lịch hẹn xem phòng ({apiAppointments.length})
-        </button>
-      </div>
-
-      {activeTab === 'appointments' ? (
-        /* APPOINTMENTS VIEW */
-        <div className="bg-white rounded-[18px] shadow-clay-soft p-6 border border-[#E2E8F0] space-y-6">
-          <div className="flex justify-between items-center border-b border-[#E2E8F0] pb-4">
-            <div>
-              <h2 className="text-h3 font-bold text-[#0F172A]">Danh sách lịch hẹn xem phòng</h2>
-              <p className="text-caption text-[#64748B]">Dữ liệu đồng bộ theo thời gian thực</p>
-            </div>
-            <Button size="sm" variant="secondary" onClick={fetchAppointments} disabled={loadingAppts}>
-              {loadingAppts ? 'Đang tải...' : 'Làm mới'}
-            </Button>
-          </div>
-
-          {apiAppointments.length === 0 ? (
-            <div className="text-center py-16 space-y-3">
-              <div className="w-16 h-16 bg-[#F8FAFC] text-[#64748B] rounded-full flex items-center justify-center mx-auto">
-                <Calendar size={32} />
-              </div>
-              <h3 className="text-h3 font-bold text-[#0F172A]">Chưa có lịch hẹn nào</h3>
-              <p className="text-body text-[#64748B] max-w-md mx-auto">
-                Bạn chưa đặt lịch xem phòng trọ nào. Hãy tìm kiếm phòng ưng ý và bấm "Đặt lịch xem phòng".
-              </p>
-              <Button onClick={() => navigate('/search')} className="mt-2">
-                Khám phá phòng trọ
-              </Button>
-            </div>
-          ) : (
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              {apiAppointments.map(appt => {
-                const isConfirmed = appt.status === 'Confirmed';
-                return (
-                  <div
-                    key={appt.id}
-                    className="p-5 rounded-[14px] bg-[#F8FAFC] border border-[#E2E8F0] transition-[box-shadow,transform] duration-200 ease-out hover:-translate-y-0.5 hover:shadow-md space-y-3"
-                  >
-                    <div className="flex justify-between items-start gap-2">
-                      <h4 className="font-bold text-body text-[#0F172A] line-clamp-1">
-                        {appt.roomTitle || 'Phòng trọ'}
-                      </h4>
-                      <span
-                        className={`text-xs font-medium px-2 py-0.5 rounded-md flex items-center gap-1 shrink-0 ${
-                          isConfirmed
-                            ? 'bg-[#F0FDF4] text-[#16803C] border border-[#DCFCE7]'
-                            : 'bg-[#FEF9C3] text-[#854D0E] border border-[#FEF08A]'
-                        }`}
-                      >
-                        {isConfirmed ? <CheckCircle2 size={14} /> : <AlertCircle size={14} />}
-                        {isConfirmed ? 'Đã xác nhận' : 'Chờ chủ nhà duyệt'}
-                      </span>
-                    </div>
-
-                    <div className="space-y-1.5 text-caption text-[#64748B]">
-                      {appt.roomAddress && (
-                        <div className="flex items-center gap-2">
-                          <MapPin size={15} className="text-[#64748B] flex-shrink-0" />
-                          <span className="truncate">{appt.roomAddress}</span>
-                        </div>
-                      )}
-                      <div className="flex items-center gap-2">
-                        <Clock size={15} className="text-[#00153D] flex-shrink-0" />
-                        <span className="font-semibold text-[#00153D]">
-                          {new Date(appt.appointmentDate).toLocaleString('vi-VN', {
-                            weekday: 'short',
-                            year: 'numeric',
-                            month: '2-digit',
-                            day: '2-digit',
-                            hour: '2-digit',
-                            minute: '2-digit'
-                          })}
-                        </span>
-                      </div>
-                      {appt.notes && (
-                        <p className="italic bg-white p-2 rounded-[8px] border border-[#E2E8F0]">
-                          "{appt.notes}"
-                        </p>
-                      )}
-                    </div>
-
-                    <div className="pt-2 border-t border-[#E2E8F0] flex gap-2">
-                      <Button
-                        size="sm"
-                        variant="secondary"
-                        fullWidth
-                        onClick={() => navigate(`/room/${appt.roomId}`)}
-                      >
-                        Xem phòng
-                      </Button>
-                      <Button
-                        size="sm"
-                        fullWidth
-                        onClick={() => {
-                          setActiveTab('chat');
-                          if (appt.landlordId) {
-                            setSelectedContactId(appt.landlordId);
-                          }
-                        }}
-                      >
-                        Nhắn tin chủ trọ
-                      </Button>
-                    </div>
-                  </div>
-                );
-              })}
-            </div>
-          )}
-        </div>
-      ) : (
-        /* CHAT VIEW */
-        <div className="flex-1 min-h-0 flex bg-white rounded-[18px] shadow-clay-soft overflow-hidden border border-[#E2E8F0]">
-          {/* Sidebar */}
+    <div className="flex-1 min-h-0 flex bg-white rounded-[18px] shadow-clay-soft overflow-hidden border border-[#E2E8F0]">
+      {/* Sidebar */}
           <div className="hidden md:flex w-1/3 border-r border-[#E2E8F0] flex-col bg-[#F8FAFC]">
             <div className="p-4 border-b border-[#E2E8F0] bg-white">
               <input 
@@ -502,8 +336,6 @@ export default function TenantChatCenter() {
               </div>
             )}
           </div>
-        </div>
-      )}
     </div>
   );
 }
