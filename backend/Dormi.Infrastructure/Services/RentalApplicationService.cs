@@ -131,19 +131,48 @@ public class RentalApplicationService : IRentalApplicationService
 
         var applications = await _db.RentalApplications
             .AsNoTracking()
-            .Include(a => a.Room)
-                .ThenInclude(r => r.Images)
-            .Include(a => a.Room)
-                .ThenInclude(r => r.Landlord)
-            .Include(a => a.Tenant)
-            .Include(a => a.Documents)
             .Where(a => a.TenantId == tenantId)
             .OrderByDescending(a => a.CreatedAt)
+            .Select(a => new RentalApplicationResponseDto
+            {
+                Id = a.Id,
+                RoomId = a.RoomId,
+                RoomTitle = a.Room.Title,
+                RoomAddress = a.Room.Address,
+                RoomPrice = a.Room.Price,
+                RoomImageUrl = a.Room.Images.OrderByDescending(i => i.IsPrimary).Select(i => i.ImageUrl).FirstOrDefault(),
+                TenantId = a.TenantId,
+                TenantName = !string.IsNullOrWhiteSpace(a.Tenant.FullName) ? a.Tenant.FullName : (!string.IsNullOrWhiteSpace(a.Tenant.Email) ? a.Tenant.Email : "Khách thuê"),
+                TenantEmail = a.Tenant.Email,
+                TenantPhone = a.Tenant.PhoneNumber,
+                TenantAvatar = a.Tenant.AvatarUrl,
+                IsTenantVerified = a.Tenant.IsVerified,
+                LandlordId = a.Room.LandlordId,
+                LandlordName = !string.IsNullOrWhiteSpace(a.Room.Landlord.FullName) ? a.Room.Landlord.FullName : (!string.IsNullOrWhiteSpace(a.Room.Landlord.Email) ? a.Room.Landlord.Email : "Chủ trọ"),
+                Status = a.Status,
+                MonthlyIncome = a.MonthlyIncome,
+                Occupation = a.Occupation,
+                EmployerName = a.EmployerName,
+                OccupantsCount = a.OccupantsCount,
+                DesiredMoveInDate = a.DesiredMoveInDate,
+                LeaseDurationMonths = a.LeaseDurationMonths,
+                NoteToLandlord = a.NoteToLandlord,
+                RejectionReason = a.RejectionReason,
+                LandlordNotes = a.LandlordNotes,
+                CreatedAt = a.CreatedAt,
+                ReviewedAt = a.ReviewedAt,
+                Documents = a.Documents.Select(d => new ApplicationDocumentDto
+                {
+                    Id = d.Id,
+                    DocumentType = d.DocumentType,
+                    FileUrl = d.FileUrl,
+                    UploadedAt = d.UploadedAt
+                }).ToList()
+            })
             .ToListAsync();
 
-        var result = applications.Select(a => MapToResponseDto(a, a.Room, a.Tenant)).ToList();
-        _memCache?.Set(cacheKey, result, TimeSpan.FromSeconds(30));
-        return ServiceResult<List<RentalApplicationResponseDto>>.Ok(result);
+        _memCache?.Set(cacheKey, applications, TimeSpan.FromMinutes(2));
+        return ServiceResult<List<RentalApplicationResponseDto>>.Ok(applications);
     }
 
     public async Task<ServiceResult<List<RentalApplicationResponseDto>>> GetLandlordApplicationsAsync(Guid landlordId, ApplicationStatus? status = null)
@@ -163,18 +192,12 @@ public class RentalApplicationService : IRentalApplicationService
         if (landlordRoomIds.Count == 0)
         {
             var empty = new List<RentalApplicationResponseDto>();
-            _memCache?.Set(cacheKey, empty, TimeSpan.FromSeconds(30));
+            _memCache?.Set(cacheKey, empty, TimeSpan.FromMinutes(2));
             return ServiceResult<List<RentalApplicationResponseDto>>.Ok(empty);
         }
 
         var query = _db.RentalApplications
             .AsNoTracking()
-            .Include(a => a.Room)
-                .ThenInclude(r => r.Images)
-            .Include(a => a.Room)
-                .ThenInclude(r => r.Landlord)
-            .Include(a => a.Tenant)
-            .Include(a => a.Documents)
             .Where(a => landlordRoomIds.Contains(a.RoomId));
 
         if (status.HasValue)
@@ -182,10 +205,48 @@ public class RentalApplicationService : IRentalApplicationService
             query = query.Where(a => a.Status == status.Value);
         }
 
-        var applications = await query.OrderByDescending(a => a.CreatedAt).ToListAsync();
-        var result = applications.Select(a => MapToResponseDto(a, a.Room, a.Tenant)).ToList();
-        _memCache?.Set(cacheKey, result, TimeSpan.FromSeconds(30));
-        return ServiceResult<List<RentalApplicationResponseDto>>.Ok(result);
+        var applications = await query
+            .OrderByDescending(a => a.CreatedAt)
+            .Select(a => new RentalApplicationResponseDto
+            {
+                Id = a.Id,
+                RoomId = a.RoomId,
+                RoomTitle = a.Room.Title,
+                RoomAddress = a.Room.Address,
+                RoomPrice = a.Room.Price,
+                RoomImageUrl = a.Room.Images.OrderByDescending(i => i.IsPrimary).Select(i => i.ImageUrl).FirstOrDefault(),
+                TenantId = a.TenantId,
+                TenantName = !string.IsNullOrWhiteSpace(a.Tenant.FullName) ? a.Tenant.FullName : (!string.IsNullOrWhiteSpace(a.Tenant.Email) ? a.Tenant.Email : "Khách thuê"),
+                TenantEmail = a.Tenant.Email,
+                TenantPhone = a.Tenant.PhoneNumber,
+                TenantAvatar = a.Tenant.AvatarUrl,
+                IsTenantVerified = a.Tenant.IsVerified,
+                LandlordId = a.Room.LandlordId,
+                LandlordName = !string.IsNullOrWhiteSpace(a.Room.Landlord.FullName) ? a.Room.Landlord.FullName : (!string.IsNullOrWhiteSpace(a.Room.Landlord.Email) ? a.Room.Landlord.Email : "Chủ trọ"),
+                Status = a.Status,
+                MonthlyIncome = a.MonthlyIncome,
+                Occupation = a.Occupation,
+                EmployerName = a.EmployerName,
+                OccupantsCount = a.OccupantsCount,
+                DesiredMoveInDate = a.DesiredMoveInDate,
+                LeaseDurationMonths = a.LeaseDurationMonths,
+                NoteToLandlord = a.NoteToLandlord,
+                RejectionReason = a.RejectionReason,
+                LandlordNotes = a.LandlordNotes,
+                CreatedAt = a.CreatedAt,
+                ReviewedAt = a.ReviewedAt,
+                Documents = a.Documents.Select(d => new ApplicationDocumentDto
+                {
+                    Id = d.Id,
+                    DocumentType = d.DocumentType,
+                    FileUrl = d.FileUrl,
+                    UploadedAt = d.UploadedAt
+                }).ToList()
+            })
+            .ToListAsync();
+
+        _memCache?.Set(cacheKey, applications, TimeSpan.FromMinutes(2));
+        return ServiceResult<List<RentalApplicationResponseDto>>.Ok(applications);
     }
 
     public async Task<ServiceResult<RentalApplicationResponseDto>> GetApplicationByIdAsync(Guid id, Guid currentUserId, bool isAdmin)

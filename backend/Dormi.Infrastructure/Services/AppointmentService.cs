@@ -10,6 +10,7 @@ using Dormi.Domain.Enums;
 using Dormi.Infrastructure.Data;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Caching.Distributed;
+using Microsoft.Extensions.Caching.Memory;
 
 namespace Dormi.Infrastructure.Services;
 
@@ -18,12 +19,14 @@ public class AppointmentService : IAppointmentService
     private readonly DormiDbContext _db;
     private readonly IDistributedCache? _cache;
     private readonly IKafkaProducer? _kafkaProducer;
+    private readonly IMemoryCache? _memCache;
 
-    public AppointmentService(DormiDbContext db, IDistributedCache? cache = null, IKafkaProducer? kafkaProducer = null)
+    public AppointmentService(DormiDbContext db, IDistributedCache? cache = null, IKafkaProducer? kafkaProducer = null, IMemoryCache? memCache = null)
     {
         _db = db;
         _cache = cache;
         _kafkaProducer = kafkaProducer;
+        _memCache = memCache;
     }
 
     public async Task<ServiceResult<object>> CreateAppointmentAsync(Guid userId, CreateAppointmentDto dto)
@@ -116,17 +119,22 @@ public class AppointmentService : IAppointmentService
             });
         }
 
+        _memCache?.Remove($"appointments:{userId}");
+        _memCache?.Remove($"appointments:{room.LandlordId}");
+
         return ServiceResult<object>.Ok(new { id = appointment.Id, message = "Đặt lịch xem phòng thành công!" });
     }
 
     public async Task<ServiceResult<List<AppointmentResponseDto>>> GetMyAppointmentsAsync(Guid userId)
     {
+        var cacheKey = $"appointments:{userId}";
+        if (_memCache != null && _memCache.TryGetValue(cacheKey, out List<AppointmentResponseDto>? cached) && cached != null)
+        {
+            return ServiceResult<List<AppointmentResponseDto>>.Ok(cached);
+        }
+
         var appointments = await _db.ViewingAppointments
-            .Include(a => a.Customer)
-            .Include(a => a.Room)
-                .ThenInclude(r => r.Images)
-            .Include(a => a.Room)
-                .ThenInclude(r => r.Landlord)
+            .AsNoTracking()
             .Where(a => a.CustomerId == userId || a.Room.LandlordId == userId)
             .OrderByDescending(a => a.AppointmentDate)
             .Select(a => new AppointmentResponseDto
@@ -153,6 +161,7 @@ public class AppointmentService : IAppointmentService
             })
             .ToListAsync();
 
+        _memCache?.Set(cacheKey, appointments, TimeSpan.FromSeconds(60));
         return ServiceResult<List<AppointmentResponseDto>>.Ok(appointments);
     }
 
@@ -227,6 +236,12 @@ public class AppointmentService : IAppointmentService
             });
         }
 
+        _memCache?.Remove($"appointments:{appointment.CustomerId}");
+        if (appointment.Room != null)
+        {
+            _memCache?.Remove($"appointments:{appointment.Room.LandlordId}");
+        }
+
         return ServiceResult<object>.Ok(new { message = "Cập nhật trạng thái lịch hẹn thành công." });
     }
 
@@ -276,9 +291,13 @@ public class AppointmentService : IAppointmentService
                 Title = "Lịch hẹn xem phòng đã được đổi giờ",
                 Message = $"Lịch hẹn xem '{appointment.Room.Title}' đã được dời sang {dto.NewAppointmentDate:dd/MM/yyyy HH:mm}.",
                 Type = "Appointment",
-                LinkUrl = "/appointments",
-                CreatedAt = DateTime.UtcNow
             });
+        }
+
+        _memCache?.Remove($"appointments:{appointment.CustomerId}");
+        if (appointment.Room != null)
+        {
+            _memCache?.Remove($"appointments:{appointment.Room.LandlordId}");
         }
 
         return ServiceResult<object>.Ok(new { message = "Đổi lịch xem phòng thành công!" });

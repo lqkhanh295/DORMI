@@ -43,7 +43,12 @@ public class ProfileService : IProfileService
 
         if (!string.IsNullOrWhiteSpace(dto.FullName)) user.FullName = dto.FullName.Trim();
         if (dto.PhoneNumber != null) user.PhoneNumber = dto.PhoneNumber.Trim();
-        if (!string.IsNullOrWhiteSpace(dto.AvatarUrl)) user.AvatarUrl = dto.AvatarUrl.Trim();
+        if (!string.IsNullOrWhiteSpace(dto.AvatarUrl))
+        {
+            user.AvatarUrl = dto.AvatarUrl.Length > 200000 
+                ? "https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=200&q=80" 
+                : dto.AvatarUrl.Trim();
+        }
         if (dto.Preferences != null) user.Preferences = dto.Preferences;
         if (dto.Lifestyle != null) user.Lifestyle = dto.Lifestyle;
         if (dto.IsLookingForRoommate.HasValue) user.IsLookingForRoommate = dto.IsLookingForRoommate.Value;
@@ -79,7 +84,12 @@ public class ProfileService : IProfileService
 
         if (!string.IsNullOrWhiteSpace(dto.FullName)) user.FullName = dto.FullName.Trim();
         if (dto.PhoneNumber != null) user.PhoneNumber = dto.PhoneNumber.Trim();
-        if (!string.IsNullOrWhiteSpace(dto.AvatarUrl)) user.AvatarUrl = dto.AvatarUrl.Trim();
+        if (!string.IsNullOrWhiteSpace(dto.AvatarUrl))
+        {
+            user.AvatarUrl = dto.AvatarUrl.Length > 200000 
+                ? "https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=200&q=80" 
+                : dto.AvatarUrl.Trim();
+        }
 
         await _db.SaveChangesAsync();
         return ServiceResult<object>.Ok(new { message = "Cập nhật hồ sơ chủ trọ thành công.", fullName = user.FullName, avatarUrl = user.AvatarUrl });
@@ -90,7 +100,9 @@ public class ProfileService : IProfileService
         var user = await _db.Users.FindAsync(userId);
         if (user == null) return ServiceResult<object>.NotFound("Không tìm thấy thông tin người dùng.");
 
-        user.AvatarUrl = avatarUrl.Trim();
+        user.AvatarUrl = (!string.IsNullOrWhiteSpace(avatarUrl) && avatarUrl.Length > 200000)
+            ? "https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=200&q=80"
+            : avatarUrl.Trim();
         await _db.SaveChangesAsync();
         return ServiceResult<object>.Ok(new { message = "Cập nhật ảnh đại diện thành công.", avatarUrl = user.AvatarUrl });
     }

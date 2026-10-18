@@ -212,7 +212,7 @@ public class LeaseService : ILeaseService
             })
             .ToListAsync();
 
-        _memCache?.Set(cacheKey, dtos, TimeSpan.FromSeconds(30));
+        _memCache?.Set(cacheKey, dtos, TimeSpan.FromMinutes(2));
         return ServiceResult<List<LeaseContractResponseDto>>.Ok(dtos);
     }
 

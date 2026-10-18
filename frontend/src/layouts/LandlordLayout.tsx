@@ -31,11 +31,11 @@ export default function LandlordLayout() {
   const isFixedViewportPage = location.pathname === '/landlord/chat';
 
   return (
-    <div className={`${isFixedViewportPage ? 'h-screen overflow-hidden' : 'min-h-screen'} bg-[#F8FAFC] text-[#1F2937] flex flex-col font-sans pt-[56px]`}>
+    <div className={`${isFixedViewportPage ? 'h-[calc(100vh-56px)] mt-[56px] overflow-hidden' : 'min-h-screen pt-[56px]'} bg-[#F8FAFC] text-[#1F2937] flex flex-col font-sans`}>
       <GlobalNav />
 
       {/* Landlord Workspace Sub-Navigation Strip */}
-      <div className="bg-white border-b border-[#E2E8F0] sticky top-[56px] z-30 shadow-2xs shrink-0">
+      <div className="bg-white border-b border-[#E2E8F0] z-30 shadow-2xs shrink-0">
         <div className="container-dormi flex items-center gap-1 sm:gap-2 overflow-x-auto py-2 scrollbar-none">
           {subNavItems.map((item) => {
             const Icon = item.icon;

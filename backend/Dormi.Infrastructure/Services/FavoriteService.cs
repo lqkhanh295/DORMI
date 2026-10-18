@@ -9,23 +9,31 @@ using Dormi.Domain.Entities;
 using Dormi.Domain.Enums;
 using Dormi.Infrastructure.Data;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Caching.Memory;
 
 namespace Dormi.Infrastructure.Services;
 
 public class FavoriteService : IFavoriteService
 {
     private readonly DormiDbContext _db;
+    private readonly IMemoryCache? _memCache;
 
-    public FavoriteService(DormiDbContext db)
+    public FavoriteService(DormiDbContext db, IMemoryCache? memCache = null)
     {
         _db = db;
+        _memCache = memCache;
     }
 
     public async Task<ServiceResult<List<RoomResponseDto>>> GetFavoritesAsync(Guid userId)
     {
+        var cacheKey = $"favorites:{userId}";
+        if (_memCache != null && _memCache.TryGetValue(cacheKey, out List<RoomResponseDto>? cached) && cached != null)
+        {
+            return ServiceResult<List<RoomResponseDto>>.Ok(cached);
+        }
+
         var favorites = await _db.FavoriteRooms
-            .Include(f => f.Room).ThenInclude(r => r.Images)
-            .Include(f => f.Room).ThenInclude(r => r.Landlord)
+            .AsNoTracking()
             .Where(f => f.CustomerId == userId)
             .OrderByDescending(f => f.SavedAt)
             .Select(f => new RoomResponseDto
@@ -53,22 +61,23 @@ public class FavoriteService : IFavoriteService
             })
             .ToListAsync();
 
+        _memCache?.Set(cacheKey, favorites, TimeSpan.FromSeconds(60));
         return ServiceResult<List<RoomResponseDto>>.Ok(favorites);
     }
 
     public async Task<ServiceResult<object>> AddFavoriteAsync(Guid userId, Guid roomId)
     {
-        var user = await _db.Users.FindAsync(userId);
+        var user = await _db.Users.AsNoTracking().FirstOrDefaultAsync(u => u.Id == userId);
         if (user == null || user.Role != UserRole.Customer)
         {
             return ServiceResult<object>.Fail("Chỉ tài khoản người thuê mới có thể lưu phòng yêu thích.", 400);
         }
 
-        var room = await _db.Rooms.FindAsync(roomId);
-        if (room == null) return ServiceResult<object>.NotFound("Không tìm thấy phòng trọ.");
+        var roomExists = await _db.Rooms.AnyAsync(r => r.Id == roomId);
+        if (!roomExists) return ServiceResult<object>.NotFound("Không tìm thấy phòng trọ.");
 
-        var existing = await _db.FavoriteRooms.FindAsync(userId, roomId);
-        if (existing != null)
+        var existing = await _db.FavoriteRooms.AnyAsync(f => f.CustomerId == userId && f.RoomId == roomId);
+        if (existing)
         {
             return ServiceResult<object>.Ok(new { message = "Phòng trọ này đã có trong danh sách yêu thích." });
         }
@@ -83,6 +92,7 @@ public class FavoriteService : IFavoriteService
         _db.FavoriteRooms.Add(favorite);
         await _db.SaveChangesAsync();
 
+        _memCache?.Remove($"favorites:{userId}");
         return ServiceResult<object>.Ok(new { message = "Đã thêm phòng trọ vào danh sách yêu thích." });
     }
 
@@ -94,6 +104,7 @@ public class FavoriteService : IFavoriteService
         _db.FavoriteRooms.Remove(favorite);
         await _db.SaveChangesAsync();
 
+        _memCache?.Remove($"favorites:{userId}");
         return ServiceResult<object>.Ok(new { message = "Đã bỏ lưu phòng trọ yêu thích." });
     }
 }

@@ -9,6 +9,7 @@ using Dormi.Application.Interfaces;
 using Dormi.Domain.Entities;
 using Dormi.Domain.Enums;
 using Dormi.Infrastructure.Data;
+using Microsoft.Extensions.Caching.Memory;
 
 namespace Dormi.Infrastructure.Services;
 
@@ -17,16 +18,25 @@ public class TrustSafetyService : ITrustSafetyService
 {
     private readonly DormiDbContext _db;
     private readonly IKafkaProducer? _kafkaProducer;
+    private readonly IMemoryCache? _memCache;
 
-    public TrustSafetyService(DormiDbContext db, IKafkaProducer? kafkaProducer = null)
+    public TrustSafetyService(DormiDbContext db, IKafkaProducer? kafkaProducer = null, IMemoryCache? memCache = null)
     {
         _db = db;
         _kafkaProducer = kafkaProducer;
+        _memCache = memCache;
     }
 
     public async Task<ServiceResult<TrustScoreBreakdownDto>> CalculateTrustScoreAsync(Guid roomId)
     {
+        var cacheKey = $"trust_score:{roomId}";
+        if (_memCache != null && _memCache.TryGetValue(cacheKey, out TrustScoreBreakdownDto? cached) && cached != null)
+        {
+            return ServiceResult<TrustScoreBreakdownDto>.Ok(cached);
+        }
+
         var room = await _db.Rooms
+            .AsNoTracking()
             .Include(r => r.Landlord)
             .Include(r => r.Images)
             .FirstOrDefaultAsync(r => r.Id == roomId);
@@ -172,6 +182,7 @@ public class TrustSafetyService : ITrustSafetyService
             Factors = factors
         };
 
+        _memCache?.Set(cacheKey, breakdown, TimeSpan.FromMinutes(5));
         return ServiceResult<TrustScoreBreakdownDto>.Ok(breakdown);
     }
 

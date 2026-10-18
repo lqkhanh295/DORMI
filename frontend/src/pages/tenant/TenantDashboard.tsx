@@ -55,9 +55,11 @@ export default function TenantDashboard() {
   };
 
   useEffect(() => {
-    fetchListings();
+    if (listings.length === 0) {
+      fetchListings();
+    }
     loadData();
-  }, [fetchListings]);
+  }, [fetchListings, listings.length]);
 
   const handleCancelAppointment = async (id: string) => {
     if (!window.confirm('Bạn có chắc chắn muốn hủy lịch hẹn xem phòng này?')) return;

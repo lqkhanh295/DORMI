@@ -177,8 +177,15 @@ public class RoomService : IRoomService
     {
         string? cacheKey = null;
         var isPublicQuery = !isAdmin && (!isLandlord || !currentUserId.HasValue);
+        string? l1Key = null;
         if (isPublicQuery)
         {
+            l1Key = $"rooms_search_l1:{filter.Query}:{filter.RoomType}:{filter.MinPrice}:{filter.MaxPrice}:{filter.District}:{filter.SortBy}:{filter.Page}:{filter.PageSize}";
+            if (_memoryCache.TryGetValue(l1Key, out object? l1Cached) && l1Cached != null)
+            {
+                return ServiceResult<object>.Ok(l1Cached);
+            }
+
             try
             {
                 var version = await _cache.GetStringAsync("rooms_cache_version") ?? "1";
@@ -187,6 +194,7 @@ public class RoomService : IRoomService
                 if (!string.IsNullOrEmpty(cached))
                 {
                     var cachedObj = JsonSerializer.Deserialize<JsonElement>(cached);
+                    _memoryCache.Set(l1Key, cachedObj, TimeSpan.FromSeconds(60));
                     return ServiceResult<object>.Ok(cachedObj);
                 }
             }
@@ -194,6 +202,12 @@ public class RoomService : IRoomService
         }
         else if (isLandlord && currentUserId.HasValue && currentUserId.Value != Guid.Empty && string.IsNullOrWhiteSpace(filter.Query))
         {
+            l1Key = $"landlord_rooms_l1:{currentUserId.Value}:{filter.Status}:{filter.SortBy}:{filter.Page}:{filter.PageSize}";
+            if (_memoryCache.TryGetValue(l1Key, out object? l1Cached) && l1Cached != null)
+            {
+                return ServiceResult<object>.Ok(l1Cached);
+            }
+
             try
             {
                 cacheKey = $"landlord_rooms:{currentUserId.Value}:{filter.Status}:{filter.SortBy}:{filter.Page}:{filter.PageSize}";
@@ -201,6 +215,7 @@ public class RoomService : IRoomService
                 if (!string.IsNullOrEmpty(cached))
                 {
                     var cachedObj = JsonSerializer.Deserialize<JsonElement>(cached);
+                    _memoryCache.Set(l1Key, cachedObj, TimeSpan.FromSeconds(60));
                     return ServiceResult<object>.Ok(cachedObj);
                 }
             }
@@ -360,6 +375,11 @@ public class RoomService : IRoomService
                 });
             }
             catch { }
+        }
+
+        if (l1Key != null)
+        {
+            _memoryCache.Set(l1Key, responsePayload, TimeSpan.FromSeconds(60));
         }
 
         return ServiceResult<object>.Ok(responsePayload);
@@ -668,11 +688,15 @@ public class RoomService : IRoomService
         {
             for (int i = 0; i < dto.ImageUrls.Count; i++)
             {
+                var rawUrl = dto.ImageUrls[i];
+                var safeUrl = (!string.IsNullOrWhiteSpace(rawUrl) && rawUrl.Length > 200000)
+                    ? "https://images.unsplash.com/photo-1522708323590-d24dbb6b0267?auto=format&fit=crop&w=800&q=80"
+                    : rawUrl;
                 room.Images.Add(new RoomImage
                 {
                     Id = Guid.NewGuid(),
                     RoomId = room.Id,
-                    ImageUrl = dto.ImageUrls[i],
+                    ImageUrl = safeUrl,
                     IsPrimary = i == 0
                 });
             }
@@ -828,7 +852,9 @@ public class RoomService : IRoomService
                 {
                     Id = Guid.NewGuid(),
                     RoomId = room.Id,
-                    ImageUrl = url,
+                    ImageUrl = (!string.IsNullOrWhiteSpace(url) && url.Length > 200000)
+                        ? "https://images.unsplash.com/photo-1522708323590-d24dbb6b0267?auto=format&fit=crop&w=800&q=80"
+                        : url,
                     IsPrimary = index == 0
                 }).ToList();
 
