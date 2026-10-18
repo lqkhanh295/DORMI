@@ -28,12 +28,14 @@ export default function LandlordLayout() {
     { name: 'Cài đặt', path: '/landlord/settings', icon: Settings },
   ];
 
+  const isFixedViewportPage = location.pathname === '/landlord/chat';
+
   return (
-    <div className="min-h-screen bg-[#F8FAFC] text-[#1F2937] flex flex-col font-sans pt-[56px]">
+    <div className={`${isFixedViewportPage ? 'h-screen overflow-hidden' : 'min-h-screen'} bg-[#F8FAFC] text-[#1F2937] flex flex-col font-sans pt-[56px]`}>
       <GlobalNav />
 
       {/* Landlord Workspace Sub-Navigation Strip */}
-      <div className="bg-white border-b border-[#E2E8F0] sticky top-[56px] z-30 shadow-2xs">
+      <div className="bg-white border-b border-[#E2E8F0] sticky top-[56px] z-30 shadow-2xs shrink-0">
         <div className="container-dormi flex items-center gap-1 sm:gap-2 overflow-x-auto py-2 scrollbar-none">
           {subNavItems.map((item) => {
             const Icon = item.icon;
@@ -59,19 +61,19 @@ export default function LandlordLayout() {
         </div>
       </div>
 
-      <main className={`flex-1 w-full max-w-7xl 2xl:max-w-[1536px] mx-auto ${
-        location.pathname === '/landlord/chat'
-          ? 'p-2 sm:p-4 mb-0 flex flex-col' 
+      <main className={`flex-1 w-full max-w-7xl 2xl:max-w-[1536px] mx-auto min-h-0 ${
+        isFixedViewportPage
+          ? 'p-2 sm:p-3 mb-0 flex flex-col overflow-hidden' 
           : 'p-4 md:p-6 lg:p-8 mb-12 md:mb-4'
       }`}>
         <div key={location.pathname} className={`page-transition ${
-          location.pathname === '/landlord/chat' ? 'flex-1 flex flex-col' : ''
+          isFixedViewportPage ? 'flex-1 flex flex-col min-h-0 overflow-hidden' : ''
         }`}>
           <Outlet />
         </div>
       </main>
 
-      {location.pathname !== '/landlord/chat' && <GlobalFooter />}
+      {!isFixedViewportPage && <GlobalFooter />}
     </div>
   );
 }

@@ -42,7 +42,7 @@ export default function TenantChatCenter() {
     };
   }, [currentUser?.id, currentUser?.token]);
 
-  // Load active conversations from backend
+  // Load active conversations from backend on mount
   useEffect(() => {
     messagesApi.getConversations()
       .then(res => {
@@ -51,7 +51,7 @@ export default function TenantChatCenter() {
         }
       })
       .catch(() => {});
-  }, [messages]);
+  }, []);
 
   // Load appointments
   const fetchAppointments = () => {
@@ -172,6 +172,15 @@ export default function TenantChatCenter() {
     if (!inputText.trim() || !selectedContact) return;
     const msgText = inputText;
     setInputText('');
+    setApiConversations(prev => {
+      const idx = prev.findIndex(c => c.otherUserId === selectedContact.id);
+      if (idx >= 0) {
+        const updated = [...prev];
+        updated[idx] = { ...updated[idx], lastMessage: msgText, lastMessageTime: new Date().toISOString() };
+        return updated;
+      }
+      return prev;
+    });
     await sendMessageWithApi(selectedContact.id, msgText);
   };
 
@@ -321,7 +330,7 @@ export default function TenantChatCenter() {
         </div>
       ) : (
         /* CHAT VIEW */
-        <div className="flex-1 flex h-[calc(100vh-175px)] min-h-[480px] bg-white rounded-[18px] shadow-clay-soft overflow-hidden border border-[#E2E8F0]">
+        <div className="flex-1 min-h-0 flex bg-white rounded-[18px] shadow-clay-soft overflow-hidden border border-[#E2E8F0]">
           {/* Sidebar */}
           <div className="hidden md:flex w-1/3 border-r border-[#E2E8F0] flex-col bg-[#F8FAFC]">
             <div className="p-4 border-b border-[#E2E8F0] bg-white">
