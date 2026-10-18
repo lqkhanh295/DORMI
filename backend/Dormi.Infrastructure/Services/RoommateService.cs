@@ -9,16 +9,19 @@ using Dormi.Domain.Entities;
 using Dormi.Domain.Enums;
 using Dormi.Infrastructure.Data;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Caching.Memory;
 
 namespace Dormi.Infrastructure.Services;
 
 public class RoommateService : IRoommateService
 {
     private readonly DormiDbContext _db;
+    private readonly IMemoryCache? _memCache;
 
-    public RoommateService(DormiDbContext db)
+    public RoommateService(DormiDbContext db, IMemoryCache? memCache = null)
     {
         _db = db;
+        _memCache = memCache;
     }
 
     public async Task<ServiceResult<List<RoommatePostResponseDto>>> GetRoommatePostsAsync(
@@ -27,7 +30,14 @@ public class RoommateService : IRoommateService
         string? genderPreference, 
         Guid? currentUserId)
     {
+        var cacheKey = $"roommates:{location ?? "all"}:{maxBudget ?? 0}:{genderPreference ?? "any"}:{currentUserId?.ToString() ?? "anon"}";
+        if (_memCache != null && _memCache.TryGetValue(cacheKey, out List<RoommatePostResponseDto>? cached) && cached != null)
+        {
+            return ServiceResult<List<RoommatePostResponseDto>>.Ok(cached);
+        }
+
         var query = _db.RoommatePosts
+            .AsNoTracking()
             .Include(r => r.Customer)
             .Include(r => r.Room)
                 .ThenInclude(rm => rm!.Images)
@@ -53,7 +63,7 @@ public class RoommateService : IRoommateService
         string userLifestyle = "";
         if (currentUserId.HasValue)
         {
-            var currentUser = await _db.Users.FindAsync(currentUserId.Value);
+            var currentUser = await _db.Users.AsNoTracking().FirstOrDefaultAsync(u => u.Id == currentUserId.Value);
             userLifestyle = currentUser?.Lifestyle?.ToLower() ?? "";
         }
 
@@ -81,9 +91,10 @@ public class RoommateService : IRoommateService
             RoomTitle = r.Room?.Title,
             RoomAddress = r.Room?.Address,
             RoomPrice = r.Room?.Price,
-            RoomImageUrl = r.Room?.Images.FirstOrDefault()?.ImageUrl
+            RoomImageUrl = r.Room?.Images.OrderByDescending(i => i.IsPrimary).Select(i => i.ImageUrl).FirstOrDefault()
         }).ToList();
 
+        _memCache?.Set(cacheKey, posts, TimeSpan.FromSeconds(60));
         return ServiceResult<List<RoommatePostResponseDto>>.Ok(posts);
     }
 
@@ -198,10 +209,17 @@ public class RoommateService : IRoommateService
 
     public async Task<ServiceResult<List<RoommatePostResponseDto>>> GetRecommendationsAsync(Guid userId)
     {
-        var currentUser = await _db.Users.FindAsync(userId);
+        var cacheKey = $"roommate_recs:{userId}";
+        if (_memCache != null && _memCache.TryGetValue(cacheKey, out List<RoommatePostResponseDto>? cached) && cached != null)
+        {
+            return ServiceResult<List<RoommatePostResponseDto>>.Ok(cached);
+        }
+
+        var currentUser = await _db.Users.AsNoTracking().FirstOrDefaultAsync(u => u.Id == userId);
         var userLifestyle = currentUser?.Lifestyle?.ToLower() ?? "";
 
         var posts = await _db.RoommatePosts
+            .AsNoTracking()
             .Include(r => r.Customer)
             .Include(r => r.Room)
                 .ThenInclude(rm => rm!.Images)
@@ -237,12 +255,13 @@ public class RoommateService : IRoommateService
                 RoomTitle = post.Room?.Title,
                 RoomAddress = post.Room?.Address,
                 RoomPrice = post.Room?.Price,
-                RoomImageUrl = post.Room?.Images.FirstOrDefault()?.ImageUrl
+                RoomImageUrl = post.Room?.Images.OrderByDescending(i => i.IsPrimary).Select(i => i.ImageUrl).FirstOrDefault()
             };
         })
         .OrderByDescending(r => r.MatchScore ?? 0)
         .ToList();
 
+        _memCache?.Set(cacheKey, recommendations, TimeSpan.FromSeconds(60));
         return ServiceResult<List<RoommatePostResponseDto>>.Ok(recommendations);
     }
 
