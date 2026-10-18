@@ -225,10 +225,10 @@ export default function TenantChatCenter() {
           </div>
 
           {/* Main Chat Area */}
-          <div className="flex-1 flex flex-col bg-white">
+          <div className="flex-1 min-w-0 flex flex-col bg-white">
             {selectedContact ? (
               <>
-                <div className="h-16 border-b border-[#E2E8F0] px-6 flex items-center justify-between">
+                <div className="h-16 shrink-0 border-b border-[#E2E8F0] px-6 flex items-center justify-between bg-white z-10">
                   <div className="flex items-center gap-3">
                     {selectedContact.avatar ? (
                       <img src={selectedContact.avatar} alt={selectedContact.name} className="w-10 h-10 rounded-full object-cover border border-[#E2E8F0]" />
@@ -305,7 +305,7 @@ export default function TenantChatCenter() {
                   })}
                 </div>
 
-                <div className="p-4 border-t border-[#E2E8F0] bg-white">
+                <div className="p-4 border-t border-[#E2E8F0] bg-white shrink-0">
                   <div className="flex items-end gap-2 bg-[#F8FAFC] shadow-clay-inset rounded-[12px] border border-[#E2E8F0] p-2 focus-within:bg-white focus-within:ring-1 focus-within:ring-[#00153D] transition-[background-color,box-shadow,border-color] duration-150">
                     <button className="p-2 text-[#64748B] hover:text-[#0F172A] rounded-full transition-colors flex-shrink-0">
                       <Paperclip size={20} />
