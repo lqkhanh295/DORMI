@@ -37,10 +37,38 @@ public class MessageService : IMessageService
             return ServiceResult<object>.Fail("Bạn không thể tự gửi tin nhắn cho chính mình.", 400);
         }
 
-        var receiverExists = await _db.Users.AnyAsync(u => u.Id == dto.ReceiverId);
-        if (!receiverExists) return ServiceResult<object>.NotFound("Không tìm thấy người nhận.");
+        // ponytail: cache sender name and receiver validation to avoid multiple remote DB roundtrips per message
+        string senderName = "Người dùng";
+        if (_memCache != null && _memCache.TryGetValue($"user_name:{senderId}", out string? cachedName) && !string.IsNullOrEmpty(cachedName))
+        {
+            senderName = cachedName;
+        }
 
-        var sender = await _db.Users.FindAsync(senderId);
+        bool receiverExists = false;
+        if (_memCache != null && _memCache.TryGetValue($"user_exists:{dto.ReceiverId}", out bool cachedExists))
+        {
+            receiverExists = cachedExists;
+        }
+
+        if (!receiverExists || senderName == "Người dùng")
+        {
+            var userInfos = await _db.Users
+                .AsNoTracking()
+                .Where(u => u.Id == senderId || u.Id == dto.ReceiverId)
+                .Select(u => new { u.Id, u.FullName, u.Email })
+                .ToListAsync();
+
+            var receiver = userInfos.FirstOrDefault(u => u.Id == dto.ReceiverId);
+            if (receiver == null) return ServiceResult<object>.NotFound("Không tìm thấy người nhận.");
+            _memCache?.Set($"user_exists:{dto.ReceiverId}", true, TimeSpan.FromMinutes(30));
+
+            var sender = userInfos.FirstOrDefault(u => u.Id == senderId);
+            if (sender != null)
+            {
+                senderName = !string.IsNullOrWhiteSpace(sender.FullName) ? sender.FullName : (!string.IsNullOrWhiteSpace(sender.Email) ? sender.Email : "Người dùng");
+                _memCache?.Set($"user_name:{senderId}", senderName, TimeSpan.FromMinutes(30));
+            }
+        }
 
         var message = new Message
         {
@@ -59,7 +87,7 @@ public class MessageService : IMessageService
         {
             id = message.Id.ToString(),
             senderId = message.SenderId.ToString(),
-            senderName = sender?.FullName ?? "Người dùng",
+            senderName = senderName,
             receiverId = message.ReceiverId.ToString(),
             text = message.Content,
             timestamp = message.SentAt.ToString("o")
@@ -77,6 +105,8 @@ public class MessageService : IMessageService
             Console.WriteLine($"[SignalR Notification Notice]: {ex.Message}");
         }
 
+        var pairKey = senderId < dto.ReceiverId ? $"{senderId}:{dto.ReceiverId}" : $"{dto.ReceiverId}:{senderId}";
+        _memCache?.Remove($"conv_hist:{pairKey}");
         _memCache?.Remove($"conversations:{senderId}");
         _memCache?.Remove($"conversations:{dto.ReceiverId}");
 
@@ -85,10 +115,16 @@ public class MessageService : IMessageService
 
     public async Task<ServiceResult<List<MessageResponseDto>>> GetConversationHistoryAsync(Guid userId, Guid otherUserId)
     {
+        var pairKey = userId < otherUserId ? $"{userId}:{otherUserId}" : $"{otherUserId}:{userId}";
+        var cacheKey = $"conv_hist:{pairKey}";
+
+        if (_memCache != null && _memCache.TryGetValue(cacheKey, out List<MessageResponseDto>? cachedMessages) && cachedMessages != null)
+        {
+            return ServiceResult<List<MessageResponseDto>>.Ok(cachedMessages);
+        }
+
         var messages = await _db.Messages
             .AsNoTracking()
-            .Include(m => m.Sender)
-            .Include(m => m.Receiver)
             .Where(m => (m.SenderId == userId && m.ReceiverId == otherUserId) ||
                         (m.SenderId == otherUserId && m.ReceiverId == userId))
             .OrderBy(m => m.SentAt)
@@ -105,20 +141,17 @@ public class MessageService : IMessageService
             })
             .ToListAsync();
 
-        var unreadIncoming = await _db.Messages
-            .Where(m => m.SenderId == otherUserId && m.ReceiverId == userId && !m.IsRead)
-            .ToListAsync();
-
-        if (unreadIncoming.Count > 0)
+        // ponytail: mark unread messages directly using single ExecuteUpdateAsync without second roundtrip SELECT
+        if (messages.Any(m => m.SenderId == otherUserId && !m.IsRead))
         {
-            foreach (var msg in unreadIncoming)
-            {
-                msg.IsRead = true;
-            }
-            await _db.SaveChangesAsync();
+            await _db.Messages
+                .Where(m => m.SenderId == otherUserId && m.ReceiverId == userId && !m.IsRead)
+                .ExecuteUpdateAsync(s => s.SetProperty(m => m.IsRead, true));
+
             _memCache?.Remove($"conversations:{userId}");
         }
 
+        _memCache?.Set(cacheKey, messages, TimeSpan.FromSeconds(15));
         return ServiceResult<List<MessageResponseDto>>.Ok(messages);
     }
 
@@ -130,79 +163,71 @@ public class MessageService : IMessageService
             return ServiceResult<List<ConversationDto>>.Ok(memCached);
         }
 
-        var messages = await _db.Messages
+        // ponytail: select only lightweight message fields without heavy User joins
+        var rawMessages = await _db.Messages
             .AsNoTracking()
-            .Include(m => m.Sender)
-            .Include(m => m.Receiver)
             .Where(m => m.SenderId == userId || m.ReceiverId == userId)
             .OrderByDescending(m => m.SentAt)
+            .Select(m => new
+            {
+                m.SenderId,
+                m.ReceiverId,
+                m.Content,
+                m.SentAt,
+                m.IsRead
+            })
             .ToListAsync();
 
-        var conversationGroups = messages
+        var groups = rawMessages
             .GroupBy(m => m.SenderId == userId ? m.ReceiverId : m.SenderId)
-            .Select(g =>
-            {
-                var otherUserId = g.Key;
-                var lastMsg = g.First();
-                var otherUser = g.Select(m => m.SenderId == userId ? m.Receiver : m.Sender).FirstOrDefault(u => u != null);
-                var unread = g.Count(m => m.ReceiverId == userId && !m.IsRead);
-
-                var userName = !string.IsNullOrWhiteSpace(otherUser?.FullName)
-                    ? otherUser.FullName
-                    : (!string.IsNullOrWhiteSpace(otherUser?.Email) ? otherUser.Email : "Người dùng");
-
-                return new ConversationDto
-                {
-                    OtherUserId = otherUserId,
-                    OtherUserName = userName,
-                    OtherUserAvatar = otherUser?.AvatarUrl,
-                    LastMessage = lastMsg.Content,
-                    LastMessageTime = lastMsg.SentAt,
-                    UnreadCount = unread
-                };
-            })
             .ToList();
 
-        // Fallback: If any conversation has fallback "Người dùng", resolve directly from Users table
-        var missingUserIds = conversationGroups
-            .Where(c => c.OtherUserName == "Người dùng")
-            .Select(c => c.OtherUserId)
-            .Distinct()
-            .ToList();
+        var distinctOtherUserIds = groups.Select(g => g.Key).ToList();
+        var usersMap = new Dictionary<Guid, (string Name, string? Avatar)>();
 
-        if (missingUserIds.Count > 0)
+        if (distinctOtherUserIds.Count > 0)
         {
-            var usersMap = await _db.Users
-                .Where(u => missingUserIds.Contains(u.Id))
-                .ToDictionaryAsync(u => u.Id, u => new
-                {
-                    Name = !string.IsNullOrWhiteSpace(u.FullName) ? u.FullName : (!string.IsNullOrWhiteSpace(u.Email) ? u.Email : "Người dùng"),
-                    Avatar = u.AvatarUrl
-                });
+            var userEntities = await _db.Users
+                .AsNoTracking()
+                .Where(u => distinctOtherUserIds.Contains(u.Id))
+                .Select(u => new { u.Id, u.FullName, u.Email, u.AvatarUrl })
+                .ToListAsync();
 
-            foreach (var conv in conversationGroups)
+            foreach (var u in userEntities)
             {
-                if (usersMap.TryGetValue(conv.OtherUserId, out var resolvedUser))
-                {
-                    conv.OtherUserName = resolvedUser.Name;
-                    if (string.IsNullOrEmpty(conv.OtherUserAvatar))
-                    {
-                        conv.OtherUserAvatar = resolvedUser.Avatar;
-                    }
-                }
+                var name = !string.IsNullOrWhiteSpace(u.FullName) ? u.FullName : (!string.IsNullOrWhiteSpace(u.Email) ? u.Email : "Người dùng");
+                usersMap[u.Id] = (name, u.AvatarUrl);
             }
         }
 
-        if (_cache != null)
+        var conversationGroups = groups.Select(g =>
         {
-            foreach (var conv in conversationGroups)
+            var otherUserId = g.Key;
+            var lastMsg = g.First();
+            var unread = g.Count(m => m.ReceiverId == userId && !m.IsRead);
+            usersMap.TryGetValue(otherUserId, out var userInfo);
+
+            return new ConversationDto
+            {
+                OtherUserId = otherUserId,
+                OtherUserName = userInfo.Name ?? "Người dùng",
+                OtherUserAvatar = userInfo.Avatar,
+                LastMessage = lastMsg.Content,
+                LastMessageTime = lastMsg.SentAt,
+                UnreadCount = unread
+            };
+        }).ToList();
+
+        if (_cache != null && conversationGroups.Count > 0)
+        {
+            await Task.WhenAll(conversationGroups.Select(async conv =>
             {
                 var presence = await _cache.GetStringAsync($"presence:{conv.OtherUserId.ToString().ToLower()}");
                 conv.IsOnline = !string.IsNullOrEmpty(presence);
-            }
+            }));
         }
 
-        _memCache?.Set(cacheKey, conversationGroups, TimeSpan.FromSeconds(15));
+        _memCache?.Set(cacheKey, conversationGroups, TimeSpan.FromSeconds(60));
         return ServiceResult<List<ConversationDto>>.Ok(conversationGroups);
     }
 }

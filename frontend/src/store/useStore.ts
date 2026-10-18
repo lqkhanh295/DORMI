@@ -224,26 +224,33 @@ export const useStore = create<AppState>()(
       }),
 
       sendMessageWithApi: async (receiverId, text) => {
+        const currentUserId = get().currentUser?.id || '';
+        const tempId = `temp-${Date.now()}`;
+        const optimisticMsg: Message = {
+          id: tempId,
+          senderId: currentUserId,
+          receiverId,
+          text,
+          timestamp: new Date().toISOString()
+        };
+        // ponytail: optimistic UI update so user sees sent message immediately with 0ms perceived lag
+        set(state => ({ messages: [...state.messages, optimisticMsg] }));
+
         try {
           const res = await messagesApi.sendMessage(receiverId, text);
-          const currentMessages = get().messages;
-          const msgId = res?.id || res?.data?.id;
-          if (msgId) {
-            const alreadyExists = currentMessages.some(m => m.id === msgId);
-            if (!alreadyExists) {
-              const msg: Message = {
-                id: msgId,
-                senderId: get().currentUser?.id || '',
-                receiverId,
-                text,
-                timestamp: res?.data?.timestamp || new Date().toISOString()
-              };
-              set({ messages: [...currentMessages, msg] });
-            }
+          const realId = (res?.id || res?.data?.id || '').toString();
+          if (realId) {
+            set(state => ({
+              messages: state.messages.map(m => m.id === tempId ? { ...m, id: realId, timestamp: res?.data?.timestamp || m.timestamp } : m)
+            }));
           }
           return true;
         } catch (err) {
           console.error('API sendMessage failed:', err);
+          // Rollback optimistic message if send failed
+          set(state => ({
+            messages: state.messages.filter(m => m.id !== tempId)
+          }));
           return false;
         }
       },
