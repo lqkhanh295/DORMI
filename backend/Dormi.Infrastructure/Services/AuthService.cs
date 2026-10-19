@@ -38,6 +38,7 @@ public class AuthService : IAuthService
         public Guid UserId { get; set; }
         public string Email { get; set; } = string.Empty;
         public string OtpHash { get; set; } = string.Empty;
+        public System.Collections.Generic.List<string> PreviousOtpHashes { get; set; } = new();
         public int Attempts { get; set; }
         public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
     }
@@ -587,11 +588,28 @@ public class AuthService : IAuthService
         var user = await _db.Users.AsNoTracking().FirstOrDefaultAsync(u => u.Email.ToLower() == normalizedEmail);
         if (user != null)
         {
-            // Invalidate any previous OTP for the same account
-            await Task.WhenAll(
-                SafeRemoveCacheAsync($"password-reset:{user.Id}"),
-                SafeRemoveCacheAsync($"password-reset:email:{normalizedEmail}")
-            );
+            // Check if there is an existing active OTP session to avoid invalidating in-flight emails
+            var existingOtpJson = await SafeGetCacheStringAsync($"password-reset:{user.Id}");
+            var previousHashes = new System.Collections.Generic.List<string>();
+            if (!string.IsNullOrEmpty(existingOtpJson))
+            {
+                try
+                {
+                    var existingData = JsonSerializer.Deserialize<PasswordResetOtpData>(existingOtpJson);
+                    if (existingData != null)
+                    {
+                        if (!string.IsNullOrEmpty(existingData.OtpHash))
+                        {
+                            previousHashes.Add(existingData.OtpHash);
+                        }
+                        if (existingData.PreviousOtpHashes != null)
+                        {
+                            previousHashes.AddRange(existingData.PreviousOtpHashes);
+                        }
+                    }
+                }
+                catch { }
+            }
 
             // Generate cryptographically secure 6-digit OTP
             var otp = RandomNumberGenerator.GetInt32(100000, 1000000).ToString("D6");
@@ -602,6 +620,7 @@ public class AuthService : IAuthService
                 UserId = user.Id,
                 Email = user.Email,
                 OtpHash = otpHash,
+                PreviousOtpHashes = previousHashes.Distinct().Take(3).ToList(),
                 Attempts = 0,
                 CreatedAt = DateTime.UtcNow
             };
@@ -705,6 +724,7 @@ public class AuthService : IAuthService
 
         if (userId == Guid.Empty)
         {
+            _logger.LogWarning("[AUTH AUDIT] OTP_VERIFY_FAILED: UserNotFound, Email={MaskedEmail}, IP={IP}", MaskEmail(normalizedEmail), clientIp);
             return ServiceResult<VerifyOtpResponseDto>.Fail("Mã OTP không hợp lệ hoặc đã hết hạn.", 400);
         }
 
@@ -712,6 +732,7 @@ public class AuthService : IAuthService
         var cachedOtpJson = await SafeGetCacheStringAsync(otpCacheKey);
         if (string.IsNullOrEmpty(cachedOtpJson))
         {
+            _logger.LogWarning("[AUTH AUDIT] OTP_VERIFY_FAILED: CacheExpiredOrNotFound, UserId={UserId}, Email={MaskedEmail}, IP={IP}", userId, MaskEmail(normalizedEmail), clientIp);
             return ServiceResult<VerifyOtpResponseDto>.Fail("Mã OTP không hợp lệ hoặc đã hết hạn.", 400);
         }
 
@@ -727,6 +748,7 @@ public class AuthService : IAuthService
 
         if (otpData == null)
         {
+            _logger.LogWarning("[AUTH AUDIT] OTP_VERIFY_FAILED: InvalidCacheData, UserId={UserId}", userId);
             return ServiceResult<VerifyOtpResponseDto>.Fail("Mã OTP không hợp lệ hoặc đã hết hạn.", 400);
         }
 
@@ -739,9 +761,10 @@ public class AuthService : IAuthService
             return ServiceResult<VerifyOtpResponseDto>.Fail("Bạn đã nhập sai mã OTP quá 5 lần. Mã đã bị vô hiệu hóa, vui lòng yêu cầu mã mới.", 400);
         }
 
-        // Constant-time comparison of OTP hash
+        // Constant-time comparison of OTP hash (supports current OTP and previous active OTPs if resent)
         var inputHash = HashSha256Hex(trimmedOtp);
-        var isValid = SlowEqualsHex(inputHash, otpData.OtpHash);
+        var isValid = SlowEquals(inputHash, otpData.OtpHash) 
+                      || (otpData.PreviousOtpHashes != null && otpData.PreviousOtpHashes.Any(prevHash => SlowEquals(inputHash, prevHash)));
 
         if (!isValid)
         {
@@ -754,13 +777,14 @@ public class AuthService : IAuthService
                 return ServiceResult<VerifyOtpResponseDto>.Fail("Bạn đã nhập sai mã OTP quá 5 lần. Mã đã bị vô hiệu hóa, vui lòng yêu cầu mã mới.", 400);
             }
 
-            // Update remaining attempts in cache with 5-min TTL
+            // Update remaining attempts in cache with 15-min TTL
             await SafeSetCacheStringAsync(otpCacheKey, JsonSerializer.Serialize(otpData), new DistributedCacheEntryOptions
             {
-                AbsoluteExpirationRelativeToNow = TimeSpan.FromMinutes(5)
+                AbsoluteExpirationRelativeToNow = TimeSpan.FromMinutes(15)
             });
 
             var remaining = 5 - otpData.Attempts;
+            _logger.LogWarning("[AUTH AUDIT] OTP_MISMATCH: UserId={UserId}, Email={MaskedEmail}, Remaining={Remaining}", userId, MaskEmail(normalizedEmail), remaining);
             return ServiceResult<VerifyOtpResponseDto>.Fail($"Mã OTP không chính xác. Bạn còn {remaining} lần thử.", 400);
         }
 

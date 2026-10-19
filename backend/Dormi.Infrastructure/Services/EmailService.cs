@@ -125,9 +125,10 @@ public class EmailService : IEmailService
 
     public Task SendPasswordResetOtpAsync(string toEmail, string otp, CancellationToken ct = default)
     {
-        if (string.IsNullOrWhiteSpace(_options.SmtpHost) || string.IsNullOrWhiteSpace(_options.UserName) || string.IsNullOrWhiteSpace(_options.Password))
+        if (string.IsNullOrWhiteSpace(_options.ResendApiKey) && 
+            (string.IsNullOrWhiteSpace(_options.SmtpHost) || string.IsNullOrWhiteSpace(_options.UserName) || string.IsNullOrWhiteSpace(_options.Password)))
         {
-            _logger.LogWarning("[EMAIL SIMULATION] Chưa cấu hình tài khoản SMTP trong appsettings.Local.json. Mã OTP cho {Email} là: [{Otp}]", toEmail, otp);
+            _logger.LogWarning("[EMAIL SIMULATION] Chưa cấu hình Resend API Key hoặc tài khoản SMTP. Mã OTP cho {Email} là: [{Otp}]", toEmail, otp);
             return Task.CompletedTask;
         }
         var subject = "[DORMI] Mã xác thực đặt lại mật khẩu của bạn";
