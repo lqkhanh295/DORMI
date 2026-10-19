@@ -52,9 +52,9 @@ public class EmailService : IEmailService
                 using var httpClient = new HttpClient { Timeout = TimeSpan.FromSeconds(8) };
                 httpClient.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", _options.ResendApiKey.Trim());
 
-                var fromAddress = !string.IsNullOrWhiteSpace(_options.SenderEmail) 
-                                  && !_options.SenderEmail.EndsWith("@gmail.com", StringComparison.OrdinalIgnoreCase)
-                    ? $"{_options.SenderName} <{_options.SenderEmail}>"
+                var senderEmail = _options.SenderEmail?.Trim() ?? string.Empty;
+                var fromAddress = (!string.IsNullOrWhiteSpace(senderEmail) && senderEmail.EndsWith("@dormi.space", StringComparison.OrdinalIgnoreCase))
+                    ? $"{_options.SenderName} <{senderEmail}>"
                     : $"{_options.SenderName} <onboarding@resend.dev>";
 
                 var payload = new
@@ -72,11 +72,28 @@ public class EmailService : IEmailService
                     _logger.LogInformation("[EmailService:Resend] Email delivered to {MaskedEmail} via Resend REST API in <1s.", maskedEmail);
                     return;
                 }
-                else
+
+                // If custom domain is not yet verified on Resend (403), retry immediately with onboarding@resend.dev
+                if (!fromAddress.Contains("onboarding@resend.dev"))
                 {
-                    var errBody = await response.Content.ReadAsStringAsync(ct);
-                    _logger.LogWarning("[EmailService:Resend] Resend API returned {StatusCode}: {Error}, falling back to SMTP...", response.StatusCode, errBody);
+                    var fallbackPayload = new
+                    {
+                        from = $"{_options.SenderName} <onboarding@resend.dev>",
+                        to = new[] { toEmail },
+                        subject = subject,
+                        html = htmlBody
+                    };
+                    var fallbackContent = new StringContent(JsonSerializer.Serialize(fallbackPayload), Encoding.UTF8, "application/json");
+                    var fallbackResponse = await httpClient.PostAsync("https://api.resend.com/emails", fallbackContent, ct);
+                    if (fallbackResponse.IsSuccessStatusCode)
+                    {
+                        _logger.LogInformation("[EmailService:Resend] Email delivered to {MaskedEmail} via Resend (onboarding fallback) in <1s.", maskedEmail);
+                        return;
+                    }
                 }
+
+                var errBody = await response.Content.ReadAsStringAsync(ct);
+                _logger.LogWarning("[EmailService:Resend] Resend API returned {StatusCode}: {Error}, falling back to SMTP...", response.StatusCode, errBody);
             }
             catch (Exception ex)
             {
