@@ -36,7 +36,7 @@ namespace Dormi.Infrastructure.Services
             {
                 try
                 {
-                    using var cts = new CancellationTokenSource(TimeSpan.FromSeconds(5));
+                    using var cts = new CancellationTokenSource(TimeSpan.FromSeconds(25));
                     var uploadParams = new ImageUploadParams
                     {
                         File = new FileDescription(fileName, fileStream),

@@ -151,16 +151,21 @@ export default function TenantProfile() {
       setAvatar(cdnUrl);
       updateUser({ avatar: cdnUrl });
 
-      // 3. POST tiny JSON payload to ASP.NET API
-      await profilesApi.updateCustomerProfile({
-        fullName: [lastName, firstName].filter(Boolean).join(' ').trim(),
-        avatarUrl: cdnUrl
-      });
+      // 3. Update avatar via profile endpoint
+      try {
+        await profilesApi.updateCustomerProfile({
+          fullName: [lastName, firstName].filter(Boolean).join(' ').trim(),
+          avatarUrl: cdnUrl
+        });
+      } catch {
+        // Fallback to direct avatar endpoint if user is landlord/admin or customer update fails
+        await profilesApi.updateAvatar(cdnUrl);
+      }
 
       toast.success('Cập nhật ảnh đại diện thành công!');
     } catch (err: any) {
-      console.error('Lỗi khi tải ảnh đại diện lên Cloudinary:', err);
-      toast.error('Không thể tải ảnh đại diện lên máy chủ. Vui lòng thử lại.');
+      console.error('Lỗi khi tải ảnh đại diện:', err);
+      toast.error(err?.message || 'Không thể tải ảnh đại diện lên máy chủ. Vui lòng thử lại.');
       setAvatar(currentUser?.avatar || '');
     } finally {
       setIsUploadingAvatar(false);

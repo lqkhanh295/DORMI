@@ -4,7 +4,7 @@ import { Card } from '../../components/ui/Card';
 import { Button } from '../../components/ui/Button';
 import { Input } from '../../components/ui/Input';
 import { authApi } from '../../services/api';
-import { Lock, ArrowLeft, Mail, KeyRound, CheckCircle2, RefreshCw } from 'lucide-react';
+import { Lock, ArrowLeft, Mail, KeyRound, CheckCircle2, RefreshCw, Info } from 'lucide-react';
 import { PageMotion } from '../../components/common/Motion';
 
 export default function ForgotPassword() {
@@ -206,8 +206,14 @@ export default function ForgotPassword() {
                 required 
               />
               <p className="text-xs text-[#64748B] mt-1.5">
-                Mã OTP có hiệu lực trong 5 phút. Tối đa 5 lần thử.
+                Mã OTP có hiệu lực trong 15 phút. Tối đa 5 lần thử.
               </p>
+              <div className="mt-3 p-3 bg-slate-50 border border-slate-200/80 rounded-xl flex items-start gap-2.5 text-xs text-slate-600 leading-relaxed">
+                <Info className="w-4 h-4 text-[#00153D] shrink-0 mt-0.5" />
+                <span>
+                  Nếu chưa thấy email trong Hộp thư đến, bạn vui lòng kiểm tra thêm mục <strong>Thư rác (Spam)</strong> hoặc <strong>Quảng cáo / Cập nhật</strong>.
+                </span>
+              </div>
             </div>
 
             <Button type="submit" fullWidth disabled={loading}>

@@ -57,12 +57,20 @@ public class EmailService : IEmailService
                     ? $"{_options.SenderName} <{senderEmail}>"
                     : $"{_options.SenderName} <onboarding@resend.dev>";
 
+                var plainText = System.Text.RegularExpressions.Regex.Replace(htmlBody, "<[^>]+>", " ")
+                    .Replace("&nbsp;", " ")
+                    .Replace("&lt;", "<")
+                    .Replace("&gt;", ">")
+                    .Replace("&amp;", "&");
+                plainText = System.Text.RegularExpressions.Regex.Replace(plainText, @"\s+", " ").Trim();
+
                 var payload = new
                 {
                     from = fromAddress,
                     to = new[] { toEmail },
                     subject = subject,
-                    html = htmlBody
+                    html = htmlBody,
+                    text = plainText
                 };
 
                 var content = new StringContent(JsonSerializer.Serialize(payload), Encoding.UTF8, "application/json");
@@ -81,7 +89,8 @@ public class EmailService : IEmailService
                         from = $"{_options.SenderName} <onboarding@resend.dev>",
                         to = new[] { toEmail },
                         subject = subject,
-                        html = htmlBody
+                        html = htmlBody,
+                        text = plainText
                     };
                     var fallbackContent = new StringContent(JsonSerializer.Serialize(fallbackPayload), Encoding.UTF8, "application/json");
                     var fallbackResponse = await httpClient.PostAsync("https://api.resend.com/emails", fallbackContent, ct);
