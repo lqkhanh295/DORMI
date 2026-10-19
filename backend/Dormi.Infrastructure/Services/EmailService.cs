@@ -52,7 +52,8 @@ public class EmailService : IEmailService
                 using var httpClient = new HttpClient { Timeout = TimeSpan.FromSeconds(8) };
                 httpClient.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", _options.ResendApiKey.Trim());
 
-                var fromAddress = !string.IsNullOrWhiteSpace(_options.SenderEmail) && _options.SenderEmail.EndsWith("@dormi.space")
+                var fromAddress = !string.IsNullOrWhiteSpace(_options.SenderEmail) 
+                                  && !_options.SenderEmail.EndsWith("@gmail.com", StringComparison.OrdinalIgnoreCase)
                     ? $"{_options.SenderName} <{_options.SenderEmail}>"
                     : $"{_options.SenderName} <onboarding@resend.dev>";
 
