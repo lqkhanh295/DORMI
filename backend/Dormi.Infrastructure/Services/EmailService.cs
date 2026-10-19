@@ -64,7 +64,7 @@ public class EmailService : IEmailService
             using var client = new SmtpClient(_options.SmtpHost, _options.SmtpPort)
             {
                 EnableSsl = _options.EnableSsl,
-                Timeout = 15000,
+                Timeout = 8000,
                 Credentials = new NetworkCredential(_options.UserName.Trim(), cleanPassword)
             };
 
@@ -79,12 +79,12 @@ public class EmailService : IEmailService
         }
     }
 
-    public async Task SendPasswordResetOtpAsync(string toEmail, string otp, CancellationToken ct = default)
+    public Task SendPasswordResetOtpAsync(string toEmail, string otp, CancellationToken ct = default)
     {
         if (string.IsNullOrWhiteSpace(_options.SmtpHost) || string.IsNullOrWhiteSpace(_options.UserName) || string.IsNullOrWhiteSpace(_options.Password))
         {
             _logger.LogWarning("[EMAIL SIMULATION] Chưa cấu hình tài khoản SMTP trong appsettings.Local.json. Mã OTP cho {Email} là: [{Otp}]", toEmail, otp);
-            return;
+            return Task.CompletedTask;
         }
         var subject = "[DORMI] Mã xác thực đặt lại mật khẩu của bạn";
         var htmlBody = $@"
@@ -134,6 +134,20 @@ public class EmailService : IEmailService
 </body>
 </html>";
 
-        await SendEmailAsync(toEmail, subject, htmlBody, ct);
+        // ponytail: Dispatch email delivery asynchronously in background so forgot-password returns in <20ms
+        _ = Task.Run(async () =>
+        {
+            try
+            {
+                using var timeoutCts = new CancellationTokenSource(TimeSpan.FromSeconds(10));
+                await SendEmailAsync(toEmail, subject, htmlBody, timeoutCts.Token);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "[EmailService] Gửi email OTP ngầm thất bại tới {MaskedEmail}", MaskEmail(toEmail));
+            }
+        });
+
+        return Task.CompletedTask;
     }
 }

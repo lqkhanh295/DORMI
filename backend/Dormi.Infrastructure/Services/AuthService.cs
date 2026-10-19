@@ -567,29 +567,31 @@ public class AuthService : IAuthService
             return ServiceResult<object>.Fail("Quá nhiều yêu cầu từ địa chỉ IP này. Vui lòng thử lại sau.", 429);
         }
 
-        // Update rate limits in cache
-        await SafeSetCacheStringAsync(cooldownKey, "1", new DistributedCacheEntryOptions
-        {
-            AbsoluteExpirationRelativeToNow = TimeSpan.FromSeconds(60)
-        });
+        // Update rate limits in cache concurrently
+        await Task.WhenAll(
+            SafeSetCacheStringAsync(cooldownKey, "1", new DistributedCacheEntryOptions
+            {
+                AbsoluteExpirationRelativeToNow = TimeSpan.FromSeconds(60)
+            }),
+            SafeSetCacheStringAsync(emailCountKey, (emailCount + 1).ToString(), new DistributedCacheEntryOptions
+            {
+                AbsoluteExpirationRelativeToNow = TimeSpan.FromMinutes(15)
+            }),
+            SafeSetCacheStringAsync(ipCountKey, (ipCount + 1).ToString(), new DistributedCacheEntryOptions
+            {
+                AbsoluteExpirationRelativeToNow = TimeSpan.FromMinutes(15)
+            })
+        );
 
-        await SafeSetCacheStringAsync(emailCountKey, (emailCount + 1).ToString(), new DistributedCacheEntryOptions
-        {
-            AbsoluteExpirationRelativeToNow = TimeSpan.FromMinutes(15)
-        });
-
-        await SafeSetCacheStringAsync(ipCountKey, (ipCount + 1).ToString(), new DistributedCacheEntryOptions
-        {
-            AbsoluteExpirationRelativeToNow = TimeSpan.FromMinutes(15)
-        });
-
-        // 4. Check if account exists
-        var user = await _db.Users.FirstOrDefaultAsync(u => u.Email.ToLower() == normalizedEmail);
+        // 4. Check if account exists with AsNoTracking
+        var user = await _db.Users.AsNoTracking().FirstOrDefaultAsync(u => u.Email.ToLower() == normalizedEmail);
         if (user != null)
         {
             // Invalidate any previous OTP for the same account
-            await SafeRemoveCacheAsync($"password-reset:{user.Id}");
-            await SafeRemoveCacheAsync($"password-reset:email:{normalizedEmail}");
+            await Task.WhenAll(
+                SafeRemoveCacheAsync($"password-reset:{user.Id}"),
+                SafeRemoveCacheAsync($"password-reset:email:{normalizedEmail}")
+            );
 
             // Generate cryptographically secure 6-digit OTP
             var otp = RandomNumberGenerator.GetInt32(100000, 1000000).ToString("D6");
@@ -609,8 +611,10 @@ public class AuthService : IAuthService
                 AbsoluteExpirationRelativeToNow = TimeSpan.FromMinutes(5)
             };
 
-            await SafeSetCacheStringAsync($"password-reset:{user.Id}", JsonSerializer.Serialize(otpData), entryOptions);
-            await SafeSetCacheStringAsync($"password-reset:email:{normalizedEmail}", user.Id.ToString(), entryOptions);
+            await Task.WhenAll(
+                SafeSetCacheStringAsync($"password-reset:{user.Id}", JsonSerializer.Serialize(otpData), entryOptions),
+                SafeSetCacheStringAsync($"password-reset:email:{normalizedEmail}", user.Id.ToString(), entryOptions)
+            );
 
             _logger.LogInformation("[AUTH AUDIT] PASSWORD_RESET_OTP_ISSUED: Email={MaskedEmail}, IP={ClientIp}",
                 MaskEmail(user.Email), safeIp);
