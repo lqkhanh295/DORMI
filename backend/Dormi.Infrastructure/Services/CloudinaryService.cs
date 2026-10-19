@@ -16,9 +16,15 @@ namespace Dormi.Infrastructure.Services
 
         public CloudinaryService(IConfiguration config)
         {
-            var cloudName = config["CloudinarySettings:CloudName"];
-            var apiKey = config["CloudinarySettings:ApiKey"];
-            var apiSecret = config["CloudinarySettings:ApiSecret"];
+            var cloudName = config["CloudinarySettings:CloudName"]
+                ?? Environment.GetEnvironmentVariable("CLOUDINARY_CLOUD_NAME")
+                ?? Environment.GetEnvironmentVariable("CloudinarySettings__CloudName");
+            var apiKey = config["CloudinarySettings:ApiKey"]
+                ?? Environment.GetEnvironmentVariable("CLOUDINARY_API_KEY")
+                ?? Environment.GetEnvironmentVariable("CloudinarySettings__ApiKey");
+            var apiSecret = config["CloudinarySettings:ApiSecret"]
+                ?? Environment.GetEnvironmentVariable("CLOUDINARY_API_SECRET")
+                ?? Environment.GetEnvironmentVariable("CloudinarySettings__ApiSecret");
 
             if (!string.IsNullOrWhiteSpace(cloudName) && !string.IsNullOrWhiteSpace(apiKey) && !string.IsNullOrWhiteSpace(apiSecret))
             {
