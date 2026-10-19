@@ -608,7 +608,7 @@ public class AuthService : IAuthService
 
             var entryOptions = new DistributedCacheEntryOptions
             {
-                AbsoluteExpirationRelativeToNow = TimeSpan.FromMinutes(5)
+                AbsoluteExpirationRelativeToNow = TimeSpan.FromMinutes(15)
             };
 
             await Task.WhenAll(

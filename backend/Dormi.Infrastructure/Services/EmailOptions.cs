@@ -11,4 +11,5 @@ public class EmailOptions
     public string SenderName { get; set; } = "DORMI Platform";
     public string UserName { get; set; } = string.Empty;
     public string Password { get; set; } = string.Empty;
+    public string ResendApiKey { get; set; } = string.Empty;
 }

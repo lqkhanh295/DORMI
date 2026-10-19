@@ -1,6 +1,10 @@
 using System;
 using System.Net;
+using System.Net.Http;
+using System.Net.Http.Headers;
 using System.Net.Mail;
+using System.Text;
+using System.Text.Json;
 using System.Threading;
 using System.Threading.Tasks;
 using Dormi.Application.Interfaces;
@@ -39,6 +43,45 @@ public class EmailService : IEmailService
         }
 
         var maskedEmail = MaskEmail(toEmail);
+
+        // 1. Ultra-fast Transactional Delivery via Resend HTTPS REST API (<1s, zero greylisting)
+        if (!string.IsNullOrWhiteSpace(_options.ResendApiKey))
+        {
+            try
+            {
+                using var httpClient = new HttpClient { Timeout = TimeSpan.FromSeconds(8) };
+                httpClient.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", _options.ResendApiKey.Trim());
+
+                var fromAddress = !string.IsNullOrWhiteSpace(_options.SenderEmail) && _options.SenderEmail.EndsWith("@dormi.space")
+                    ? $"{_options.SenderName} <{_options.SenderEmail}>"
+                    : $"{_options.SenderName} <onboarding@resend.dev>";
+
+                var payload = new
+                {
+                    from = fromAddress,
+                    to = new[] { toEmail },
+                    subject = subject,
+                    html = htmlBody
+                };
+
+                var content = new StringContent(JsonSerializer.Serialize(payload), Encoding.UTF8, "application/json");
+                var response = await httpClient.PostAsync("https://api.resend.com/emails", content, ct);
+                if (response.IsSuccessStatusCode)
+                {
+                    _logger.LogInformation("[EmailService:Resend] Email delivered to {MaskedEmail} via Resend REST API in <1s.", maskedEmail);
+                    return;
+                }
+                else
+                {
+                    var errBody = await response.Content.ReadAsStringAsync(ct);
+                    _logger.LogWarning("[EmailService:Resend] Resend API returned {StatusCode}: {Error}, falling back to SMTP...", response.StatusCode, errBody);
+                }
+            }
+            catch (Exception ex)
+            {
+                _logger.LogWarning(ex, "[EmailService:Resend] Resend API call failed, falling back to SMTP...");
+            }
+        }
 
         // If SMTP credentials are not configured, log dev simulation and return
         if (string.IsNullOrWhiteSpace(_options.SmtpHost) || string.IsNullOrWhiteSpace(_options.UserName) || string.IsNullOrWhiteSpace(_options.Password))
@@ -117,7 +160,7 @@ public class EmailService : IEmailService
     </p>
 
     <div class='otp-card'>
-      <div class='badge'>HIỆU LỰC TRONG 5 PHÚT</div>
+      <div class='badge'>HIỆU LỰC TRONG 15 PHÚT</div>
       <div class='otp-code'>{otp}</div>
       <p style='font-size: 12px; color: #64748B; margin: 8px 0 0 0;'>Mã chỉ sử dụng được 01 lần duy nhất</p>
     </div>
