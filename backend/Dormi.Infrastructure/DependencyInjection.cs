@@ -117,6 +117,15 @@ public static class DependencyInjection
                 ?? configuration["EMAIL_SENDER"]
                 ?? configuration["SENDER_EMAIL"];
             if (!string.IsNullOrWhiteSpace(senderEmail)) options.SenderEmail = senderEmail;
+
+            var resendApiKey = configuration["Email:ResendApiKey"]
+                ?? configuration["Email__ResendApiKey"]
+                ?? configuration["RESEND_API_KEY"]
+                ?? configuration["RESEND_KEY"]
+                ?? configuration["ResendApiKey"]
+                ?? Environment.GetEnvironmentVariable("RESEND_API_KEY")
+                ?? Environment.GetEnvironmentVariable("Email__ResendApiKey");
+            if (!string.IsNullOrWhiteSpace(resendApiKey)) options.ResendApiKey = resendApiKey;
         });
         services.AddScoped<IEmailService, EmailService>();
         services.AddScoped<IImageService, CloudinaryService>();
