@@ -3,7 +3,8 @@ using System.Text.Json;
 using PayOS.Crypto;
 using PayOS.Models.Webhooks;
 
-var checksumKey = "56819d8221058ef46ccae6cf31a35f386816a2a4b9d4d6d2eea9b7e1031e2e03";
+var checksumKey = Environment.GetEnvironmentVariable("PAYOS_CHECKSUM_KEY") 
+    ?? "sample_payos_checksum_key_replace_with_env";
 
 long orderCode = args.Length > 0 ? long.Parse(args[0]) : 123;
 long amount = args.Length > 1 ? long.Parse(args[1]) : 1000;

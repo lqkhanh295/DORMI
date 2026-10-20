@@ -346,14 +346,14 @@ public class BackendLogicTests
     public void PayOSClient_ShouldInitializeSuccessfully()
     {
         var client = new PayOS.PayOSClient(
-            "730eb904-a5fb-4691-8ff2-3325d5e47060",
-            "3929c2cc-5021-4049-970a-32fe5f185137",
-            "56819d8221058ef46ccae6cf31a35f386816a2a4b9d4d6d2eea9b7e1031e2e03"
+            "sample-client-id-00000000-0000",
+            "sample-api-key-00000000-0000",
+            "sample-checksum-key-0000000000000000000000000000000000000000000000"
         );
         Assert.NotNull(client);
-        Assert.Equal("730eb904-a5fb-4691-8ff2-3325d5e47060", client.ClientId);
-        Assert.Equal("3929c2cc-5021-4049-970a-32fe5f185137", client.ApiKey);
-        Assert.Equal("56819d8221058ef46ccae6cf31a35f386816a2a4b9d4d6d2eea9b7e1031e2e03", client.ChecksumKey);
+        Assert.Equal("sample-client-id-00000000-0000", client.ClientId);
+        Assert.Equal("sample-api-key-00000000-0000", client.ApiKey);
+        Assert.Equal("sample-checksum-key-0000000000000000000000000000000000000000000000", client.ChecksumKey);
     }
 
     [Fact]

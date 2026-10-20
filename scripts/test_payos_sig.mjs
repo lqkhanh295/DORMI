@@ -1,6 +1,6 @@
 import crypto from 'crypto';
 
-const checksumKey = '56819d8221058ef46ccae6cf31a35f386816a2a4b9d4d6d2eea9b7e1031e2e03';
+const checksumKey = process.env.PAYOS_CHECKSUM_KEY || 'sample_payos_checksum_key_replace_with_env';
 
 // PayOS sort algorithm: sort keys alphabetically, join key=value with &, null/empty excluded
 function createPayOSSignature(data, key) {
