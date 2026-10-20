@@ -7,8 +7,9 @@ export function GlobalFooter() {
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-8 pb-10 border-b border-[#E2E8F0]">
           {/* Brand info */}
           <div className="lg:col-span-2 space-y-3">
-            <Link to="/" className="text-[22px] font-black tracking-wider text-[#00153D] inline-flex items-center">
-              DORMI<span className="text-[#F2A900] ml-0.5">.</span>
+            <Link to="/" className="text-[22px] font-black tracking-wider text-[#00153D] inline-flex items-center gap-2">
+              <img src="/logo.png" alt="DORMI" className="w-7 h-7 rounded-lg object-cover shadow-xs shrink-0" />
+              <span>DORMI<span className="text-[#F2A900] ml-0.5">.</span></span>
             </Link>
             <p className="text-sm text-[#64748B] max-w-sm">
               Nền tảng tìm kiếm phòng trọ và kết nối bạn ở ghép thông minh, minh bạch tại TP. Hồ Chí Minh.

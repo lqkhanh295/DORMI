@@ -100,11 +100,14 @@ export function GlobalNav() {
           )}
           <Link 
             to="/" 
-            className="text-[22px] font-black tracking-wider text-[#00153D] flex items-center select-none"
+            className="text-[22px] font-black tracking-wider text-[#00153D] flex items-center select-none gap-2"
           >
-            DORMI<span className="text-[#F2A900] ml-0.5">.</span>
+            <img src="/logo.png" alt="DORMI" className="w-8 h-8 rounded-lg object-cover shadow-xs shrink-0" />
+            <span className="flex items-center">
+              DORMI<span className="text-[#F2A900] ml-0.5">.</span>
+            </span>
             {currentUser?.role === 'Landlord' && (
-              <span className="text-[11px] font-medium text-slate-600 bg-slate-100 border border-slate-200/60 px-1.5 py-0.5 rounded-md ml-1.5 tracking-normal">
+              <span className="text-[11px] font-medium text-slate-600 bg-slate-100 border border-slate-200/60 px-1.5 py-0.5 rounded-md ml-1 tracking-normal">
                 Chủ trọ
               </span>
             )}

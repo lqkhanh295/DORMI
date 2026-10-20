@@ -26,9 +26,10 @@ export default function AdminLayout() {
       {/* Sidebar */}
       <aside className="w-64 bg-[#00153D] text-white hidden md:flex md:flex-col border-r border-slate-800 sticky top-0 h-screen shrink-0 overflow-y-auto z-30">
         <div className="p-6 shrink-0 border-b border-white/10">
-          <Link to="/" className="text-xl font-black tracking-wider text-white select-none">
-            DORMI<span className="text-[#F2A900] ml-0.5">.</span>
-            <span className="text-[11px] font-bold text-slate-300 bg-white/10 border border-white/20 px-1.5 py-0.5 rounded-md ml-2 tracking-normal">
+          <Link to="/" className="text-xl font-black tracking-wider text-white select-none inline-flex items-center gap-2">
+            <img src="/logo.png" alt="DORMI" className="w-7 h-7 rounded-lg object-cover shadow-xs shrink-0" />
+            <span>DORMI<span className="text-[#F2A900] ml-0.5">.</span></span>
+            <span className="text-[11px] font-bold text-slate-300 bg-white/10 border border-white/20 px-1.5 py-0.5 rounded-md ml-1 tracking-normal">
               ADMIN
             </span>
           </Link>
