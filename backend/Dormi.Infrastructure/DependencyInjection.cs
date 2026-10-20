@@ -132,9 +132,15 @@ public static class DependencyInjection
         services.AddScoped<IJwtTokenGenerator, JwtTokenGenerator>();
 
         // Register PayOS Payment Gateway
-        var payOsClientId = configuration["PayOS:ClientId"] ?? configuration["PAYOS_CLIENT_ID"];
-        var payOsApiKey = configuration["PayOS:ApiKey"] ?? configuration["PAYOS_API_KEY"];
-        var payOsChecksumKey = configuration["PayOS:ChecksumKey"] ?? configuration["PAYOS_CHECKSUM_KEY"];
+        var payOsClientId = !string.IsNullOrWhiteSpace(configuration["PayOS:ClientId"])
+            ? configuration["PayOS:ClientId"]
+            : (configuration["PAYOS_CLIENT_ID"] ?? Environment.GetEnvironmentVariable("PAYOS_CLIENT_ID"));
+        var payOsApiKey = !string.IsNullOrWhiteSpace(configuration["PayOS:ApiKey"])
+            ? configuration["PayOS:ApiKey"]
+            : (configuration["PAYOS_API_KEY"] ?? Environment.GetEnvironmentVariable("PAYOS_API_KEY"));
+        var payOsChecksumKey = !string.IsNullOrWhiteSpace(configuration["PayOS:ChecksumKey"])
+            ? configuration["PayOS:ChecksumKey"]
+            : (configuration["PAYOS_CHECKSUM_KEY"] ?? Environment.GetEnvironmentVariable("PAYOS_CHECKSUM_KEY"));
         if (!string.IsNullOrWhiteSpace(payOsClientId) && !string.IsNullOrWhiteSpace(payOsApiKey) && !string.IsNullOrWhiteSpace(payOsChecksumKey))
         {
             services.AddSingleton(new PayOS.PayOSClient(payOsClientId, payOsApiKey, payOsChecksumKey));
