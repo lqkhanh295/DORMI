@@ -131,10 +131,10 @@ export default function ContentModeration() {
   const handleAction = async (roomId: string, status: number) => {
     try {
       await adminApi.updateRoomStatus(roomId, status);
-      toast.success('Đã cập nhật trạng thái phòng trọ thành công!');
+      toast.success('Đã cập nhật trạng thái phòng trọ!');
       loadRooms();
     } catch {
-      toast.error('Thao tác không thành công.');
+      toast.error('Không thể cập nhật trạng thái.');
     }
   };
 
@@ -144,7 +144,7 @@ export default function ContentModeration() {
       toast.success(nextActive ? 'Đã duyệt hiển thị bài đăng!' : 'Đã ẩn bài đăng vi phạm!');
       loadRoommatePosts();
     } catch {
-      toast.error('Thao tác cập nhật bài đăng thất bại.');
+      toast.error('Không thể cập nhật bài đăng.');
     }
   };
 
@@ -634,7 +634,7 @@ export default function ContentModeration() {
                 </button>
                 <h3 className="font-bold text-h3 text-[#0F172A]">Chân dung Chủ trọ</h3>
                 <div className="w-48 h-48 rounded-full overflow-hidden border-4 border-[#00153D] shadow-lg bg-[#F8FAFC]">
-                  <img src={previewAvatar} alt="Chân dung chủ nhà" className="w-full h-full object-cover" />
+                  <img src={previewAvatar} alt="Chân dung chủ trọ" className="w-full h-full object-cover" />
                 </div>
                 <p className="text-caption text-[#64748B] font-semibold">{selectedRoom?.landlordName}</p>
                 <Button variant="secondary" size="sm" onClick={() => setPreviewAvatar(null)} className="w-full">Đóng</Button>

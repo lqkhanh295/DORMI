@@ -87,7 +87,7 @@ export function TenantRatingModal({
         isAnonymous
       });
 
-      toast.success('Đã gửi đánh giá uy tín khách thuê thành công!');
+      toast.success('Đã gửi đánh giá khách thuê!');
       if (onSuccess) onSuccess();
       onClose();
     } catch (err: any) {

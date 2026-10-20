@@ -148,7 +148,7 @@ export default function PrivacyPolicy() {
                     <FileCheck className="w-4 h-4 text-emerald-600" />
                     Hồ sơ thuê & Ứng tuyển
                   </p>
-                  <p className="text-slate-600">Nghề nghiệp, trường học/cơ quan, thu nhập tự khai báo và số lượng người dự kiến ở cùng để chủ nhà thẩm định.</p>
+                  <p className="text-slate-600">Nghề nghiệp, trường học/cơ quan, thu nhập tự khai báo và số lượng người dự kiến ở cùng để chủ trọ xét duyệt.</p>
                 </div>
 
                 <div className="p-3.5 bg-slate-50 border border-slate-200 rounded-xl space-y-1">
@@ -219,7 +219,7 @@ export default function PrivacyPolicy() {
               </p>
               <ul className="list-disc pl-5 space-y-1.5 text-xs sm:text-sm">
                 <li>DORMI <strong>không bao giờ lưu trữ số thẻ tín dụng</strong>, mã CVV/CVC, hay thông tin đăng nhập Internet Banking của bạn trên hệ thống.</li>
-                <li>Mọi giao dịch được tạo mã tham chiếu thanh toán riêng biệt (TransactionRef) và được đối soát tức thời bằng chữ ký điện tử an toàn.</li>
+                <li>Mọi giao dịch được tạo mã tham chiếu thanh toán riêng biệt (TransactionRef) và được kiểm tra đối chiếu tức thời bằng chữ ký điện tử an toàn.</li>
               </ul>
             </section>
 

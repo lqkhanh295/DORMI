@@ -142,13 +142,13 @@ export default function TermsOfService() {
                   <strong>Cung cấp thông tin trung thực:</strong> Khách thuê cam kết cung cấp chính xác họ tên, số điện thoại, trường học/nghề nghiệp và thông tin thu nhập khi nộp hồ sơ ứng tuyển thuê phòng hoặc tạo hồ sơ tìm bạn ở ghép.
                 </li>
                 <li>
-                  <strong>Tôn trọng lịch hẹn xem phòng:</strong> Khi đã đặt lịch hẹn xem phòng với Chủ trọ, Khách thuê có trách nhiệm đến đúng giờ hoặc thực hiện thao tác dời lịch/hủy lịch trên hệ thống trước ít nhất 02 giờ.
+                  <strong>Tôn trọng lịch hẹn xem phòng:</strong> Khi đã đặt lịch hẹn xem phòng với Chủ trọ, Khách thuê có trách nhiệm đến đúng giờ hoặc đổi lịch/hủy lịch trên hệ thống trước ít nhất 02 giờ.
                 </li>
                 <li>
                   <strong>Tuân thủ nội quy và nghĩa vụ thanh toán:</strong> Thanh toán tiền thuê, tiền điện nước và các chi phí dịch vụ đúng thời hạn quy định trong Hợp đồng thuê đã ký kết. Giữ gìn trật tự an ninh, vệ sinh chung và bảo quản tài sản được bàn giao.
                 </li>
                 <li>
-                  <strong>Quyền được bảo vệ:</strong> Khách thuê có quyền yêu cầu hoàn trả tiền cọc đúng theo cam kết hợp đồng nếu thực hiện đúng nghĩa vụ khi chấm dứt thời hạn thuê; có quyền báo cáo vi phạm nếu phát hiện phòng trọ ảo, chủ nhà gian lận hoặc thông tin sai lệch thực tế.
+                  <strong>Quyền được bảo vệ:</strong> Khách thuê có quyền yêu cầu hoàn trả tiền cọc đúng theo cam kết hợp đồng nếu thực hiện đúng nghĩa vụ khi chấm dứt thời hạn thuê; có quyền báo cáo vi phạm nếu phát hiện phòng trọ ảo, chủ trọ gian lận hoặc thông tin sai lệch thực tế.
                 </li>
               </ul>
             </section>

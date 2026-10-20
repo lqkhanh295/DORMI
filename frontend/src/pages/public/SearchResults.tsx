@@ -284,7 +284,7 @@ export default function SearchResults() {
         <div className="px-6 pt-6 pb-2 space-y-3">
           <div className="flex flex-wrap items-center justify-between gap-4">
             <div>
-              <h2 className="text-h3 font-bold text-[#0F172A]">{filteredListings.length} phòng được tìm thấy</h2>
+              <h2 className="text-h3 font-bold text-[#0F172A]">Tìm thấy {filteredListings.length} phòng</h2>
             </div>
             
             {/* Sort Dropdown */}
@@ -370,9 +370,9 @@ export default function SearchResults() {
                 <ul className="text-caption text-[#0F172A] font-semibold text-left space-y-2 bg-[#F8FAFC] p-4 rounded-[12px]">
                   <li>• Mở rộng khu vực tìm kiếm</li>
                   <li>• Tăng ngân sách thêm 500.000đ</li>
-                  <li>• Bỏ bớt một bộ lọc quá hẹp</li>
+                  <li>• Bỏ bớt điều kiện lọc</li>
                 </ul>
-                <Button fullWidth onClick={clearAllFilters}>Mở rộng tìm kiếm</Button>
+                <Button fullWidth onClick={clearAllFilters}>Xóa bộ lọc</Button>
               </motion.div>
             ) : (
               /* Room List Cards with 25ms Cohesive Stagger */

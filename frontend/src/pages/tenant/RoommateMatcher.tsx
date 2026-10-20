@@ -153,7 +153,7 @@ export default function RoommateMatcher() {
         
         <div className="bg-white rounded-[18px] shadow-clay-soft p-3 mb-3 shrink-0 flex flex-col sm:flex-row sm:items-center justify-between gap-2 border border-[#E2E8F0]/60">
           <div>
-            <span className="text-caption font-bold text-[#00153D]">Thuật toán đối soát độ tương thích lối sống</span>
+            <span className="text-caption font-bold text-[#00153D]">Độ hợp về thói quen sinh hoạt</span>
             <p className="text-[11px] text-[#64748B]">Kết nối bạn cùng phòng và các căn phòng đang có sẵn trên Marketplace</p>
           </div>
           <div className="flex bg-[#E2E8F0] p-1 rounded-xl text-caption font-semibold">

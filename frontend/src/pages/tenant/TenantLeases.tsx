@@ -166,7 +166,7 @@ export default function TenantLeases() {
         signatureData: finalSignature,
         agreedToTerms: true
       });
-      toast.success('Ký hợp đồng thuê phòng thành công! Hợp đồng hiện đã có hiệu lực.');
+      toast.success('Đã ký hợp đồng thành công! Hợp đồng đã có hiệu lực.');
       setSigningLease(null);
       fetchLeases();
     } catch (err: any) {
@@ -249,7 +249,7 @@ export default function TenantLeases() {
         <div>
           <h1 className="text-2xl font-black text-[#00153D] tracking-tight">Hợp đồng thuê phòng của tôi</h1>
           <p className="text-xs sm:text-sm text-[#64748B] mt-1">
-            Quản lý hợp đồng lưu trú, ký điện tử bảo mật và thực hiện các quyền lợi hậu thuê phòng.
+            Quản lý hợp đồng thuê phòng, ký hợp đồng online và xem lịch sử thanh toán.
           </p>
         </div>
 
@@ -324,7 +324,7 @@ export default function TenantLeases() {
           </div>
           <h3 className="text-lg font-bold text-[#0F172A]">Chưa có hợp đồng nào trong mục này</h3>
           <p className="text-sm text-[#64748B] max-w-md mx-auto">
-            Sau khi hồ sơ ứng tuyển của bạn được chủ nhà chấp thuận, chủ nhà sẽ khởi tạo hợp đồng để bạn xem và ký điện tử tại đây.
+            Sau khi hồ sơ được chấp thuận, chủ trọ sẽ tạo hợp đồng để bạn xem và ký tại đây.
           </p>
         </div>
       ) : (
@@ -446,7 +446,7 @@ export default function TenantLeases() {
                       className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-[#F1F5F9] hover:bg-[#E2E8F0] text-[#00153D] text-xs font-semibold rounded-lg transition-colors"
                     >
                       <MessageSquare className="w-3.5 h-3.5" />
-                      Nhắn tin chủ nhà
+                      Nhắn tin chủ trọ
                     </button>
                   </div>
 
@@ -527,7 +527,7 @@ export default function TenantLeases() {
                     <div className="p-3.5 bg-[#F8FAFC] rounded-xl border border-[#E2E8F0] space-y-2">
                       <p><span className="font-semibold text-[#00153D]">Phòng thuê:</span> {signingLease.roomTitle}</p>
                       <p><span className="font-semibold text-[#00153D]">Địa chỉ:</span> {signingLease.roomAddress}</p>
-                      <p><span className="font-semibold text-[#00153D]">Bên cho thuê (Chủ nhà):</span> {signingLease.landlordName}</p>
+                      <p><span className="font-semibold text-[#00153D]">Bên cho thuê (Chủ trọ):</span> {signingLease.landlordName}</p>
                       <p><span className="font-semibold text-[#00153D]">Giá thuê hàng tháng:</span> <span className="font-bold text-emerald-700">{signingLease.monthlyRent.toLocaleString('vi-VN')} đ/tháng</span></p>
                       <p><span className="font-semibold text-[#00153D]">Tiền đặt cọc:</span> {signingLease.deposit.toLocaleString('vi-VN')} đ</p>
                       <p><span className="font-semibold text-[#00153D]">Thời hạn thuê:</span> {formatDate(signingLease.startDate)} đến {formatDate(signingLease.endDate)}</p>
@@ -535,7 +535,7 @@ export default function TenantLeases() {
 
                     {signingLease.termsAndConditions && (
                       <div className="p-3.5 bg-slate-50 rounded-xl border border-slate-200">
-                        <p className="font-bold text-[#00153D] mb-1.5">Điều khoản & Quy định của chủ nhà:</p>
+                        <p className="font-bold text-[#00153D] mb-1.5">Điều khoản & Quy định của chủ trọ:</p>
                         <p className="whitespace-pre-line text-[#64748B] max-h-36 overflow-y-auto pr-1">{signingLease.termsAndConditions}</p>
                       </div>
                     )}

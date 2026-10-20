@@ -151,7 +151,7 @@ export default function RoomDetail() {
       });
       setSchedulerStep(3);
     } catch (err: any) {
-      toast.error(err.message || 'Đặt lịch hẹn xem phòng thất bại. Vui lòng kiểm tra lại thời gian hoặc đăng nhập.');
+      toast.error(err.message || 'Không thể đặt lịch xem phòng. Vui lòng chọn lại thời gian hoặc đăng nhập.');
     }
   };
 
@@ -207,7 +207,7 @@ export default function RoomDetail() {
         <div className="space-y-2 max-w-md mx-auto">
           <h1 className="text-h2 font-bold text-[#0F172A]">Không tìm thấy phòng trọ</h1>
           <p className="text-body text-[#64748B]">
-            Phòng trọ này không tồn tại hoặc đã được chủ phòng gỡ xuống khỏi hệ thống.
+            Phòng trọ này không còn hoặc chủ trọ đã gỡ tin.
           </p>
         </div>
         <div className="flex gap-4">
@@ -445,7 +445,7 @@ export default function RoomDetail() {
               <p className="text-[32px] font-bold text-[#00153D] leading-none mb-1.5">
                 {roomData ? `${Number(roomData.price).toLocaleString('vi-VN')}đ` : '0đ'} <span className="text-caption text-slate-500 font-normal">/ tháng</span>
               </p>
-              <p className="text-caption text-slate-500 font-medium">Giá thuê niêm yết chủ nhà</p>
+              <p className="text-caption text-slate-500 font-medium">Giá thuê niêm yết của chủ trọ</p>
             </div>
 
             {/* Deposit & Move-in Budget Preview */}
@@ -584,7 +584,7 @@ export default function RoomDetail() {
                 className="flex items-center justify-center gap-2"
               >
                 <MessageSquare className="w-4 h-4 text-[#00153D]" />
-                Nhắn tin với chủ nhà
+                Nhắn tin với chủ trọ
               </Button>
             </div>
           </Card>
@@ -678,7 +678,7 @@ export default function RoomDetail() {
                 <div className="space-y-3 text-body text-[#0F172A]">
                   <div className="flex items-center gap-3 p-3 bg-[#F8FAFC] rounded-xl border border-[#E2E8F0]">
                     <CheckCircle className="w-5 h-5 text-[#16803C]" />
-                    <span>Danh tính người đăng đã đối soát CCCD</span>
+                    <span>Chủ trọ đã xác minh CCCD</span>
                   </div>
                   <div className="flex items-center gap-3 p-3 bg-[#F8FAFC] rounded-xl border border-[#E2E8F0]">
                     <CheckCircle className="w-5 h-5 text-[#16803C]" />
@@ -687,7 +687,7 @@ export default function RoomDetail() {
                 </div>
 
                 <div className="text-caption text-[#64748B] border-t border-[#E2E8F0] pt-4 text-center">
-                  Lần đối soát kiểm duyệt gần nhất: <span className="font-semibold text-[#0F172A]">12/08/2026</span>
+                  Lần duyệt tin gần nhất: <span className="font-semibold text-[#0F172A]">12/08/2026</span>
                 </div>
               </motion.div>
             </div>
@@ -781,13 +781,13 @@ export default function RoomDetail() {
                     <CalendarCheck className="w-8 h-8" />
                   </div>
                   <div className="space-y-2">
-                    <h4 className="text-h3 font-bold text-[#0F172A]">Gửi yêu cầu lịch hẹn thành công!</h4>
+                    <h4 className="text-h3 font-bold text-[#0F172A]">Đã gửi lịch xem phòng!</h4>
                     <div className="bg-[#F8FAFC] shadow-clay-inset p-4 rounded-[12px] text-body font-semibold text-[#00153D] space-y-1">
                       <p>Ngày: {selectedDate}</p>
                       <p>Giờ dự kiến: {selectedTime}</p>
                     </div>
                     <p className="text-caption text-[#64748B]">
-                      Chủ nhà {roomData?.landlordName || 'Lê Văn B'} sẽ xác nhận qua tin nhắn trong thời gian sớm nhất.
+                      Chủ trọ sẽ xác nhận lịch hẹn qua tin nhắn sớm nhất.
                     </p>
                   </div>
                   <Button 
@@ -804,7 +804,7 @@ export default function RoomDetail() {
                       });
                     }}
                   >
-                    Xem lịch & Chat với chủ nhà
+                    Xem lịch & Nhắn tin với chủ trọ
                   </Button>
                 </div>
               )}

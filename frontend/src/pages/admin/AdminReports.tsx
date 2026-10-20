@@ -118,7 +118,7 @@ export default function AdminReports() {
         actionTaken: modalAction,
         moderatorNotes: moderatorNotes.trim() || 'Đã kiểm duyệt theo quy trình Trust & Safety'
       });
-      toast.success('Đã cập nhật trạng thái kiểm duyệt thành công!');
+      toast.success('Đã cập nhật trạng thái kiểm duyệt!');
       setSelectedReport(null);
       fetchReports();
     } catch (err: any) {
@@ -364,7 +364,7 @@ export default function AdminReports() {
                     {/* Resolved notes if resolved */}
                     {r.status !== 'Pending' && r.actionTaken && (
                       <div className="p-3 bg-emerald-50/60 rounded-xl border border-emerald-100 text-xs text-emerald-900 space-y-0.5">
-                        <p><strong>Hành động đã thực hiện:</strong> {r.actionTaken}</p>
+                        <p><strong>Hành động đã xử lý:</strong> {r.actionTaken}</p>
                         {r.moderatorNotes && <p><strong>Ghi chú kiểm duyệt:</strong> {r.moderatorNotes}</p>}
                         {r.resolvedAt && <p className="text-[11px] text-emerald-700">Xử lý lúc: {new Date(r.resolvedAt).toLocaleString('vi-VN')}</p>}
                       </div>
@@ -443,10 +443,10 @@ export default function AdminReports() {
                   <thead className="bg-slate-50 text-slate-600 font-semibold border-b border-slate-200">
                     <tr>
                       <th className="py-3 px-4">Thời gian</th>
-                      <th className="py-3 px-4">Người thực hiện</th>
+                      <th className="py-3 px-4">Người xử lý</th>
                       <th className="py-3 px-4">Hành động</th>
                       <th className="py-3 px-4">Đối tượng</th>
-                      <th className="py-3 px-4">Chi tiết thao tác</th>
+                      <th className="py-3 px-4">Chi tiết</th>
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-slate-100">
@@ -569,7 +569,7 @@ export default function AdminReports() {
                     onClick={handleConfirmResolve}
                     className="bg-[#00153D] hover:bg-[#073372] text-white shadow-xs"
                   >
-                    {resolving ? 'Đang thực hiện...' : 'Xác nhận xử lý & Ghi log'}
+                    {resolving ? 'Đang xử lý...' : 'Xác nhận xử lý & Ghi log'}
                   </Button>
                 </div>
               </motion.div>

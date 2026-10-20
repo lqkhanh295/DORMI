@@ -88,17 +88,17 @@ export default function LandlordViewings() {
       if (actionType === 'reschedule') {
         const targetIso = `${newDate}T${newTime}:00Z`;
         await appointmentsApi.rescheduleAppointment(selectedApp.id, targetIso, actionReason.trim() || undefined);
-        toast.success('Đã đề xuất dời lịch xem phòng thành công!');
+        toast.success('Đã gửi đề xuất đổi lịch xem phòng!');
       } else if (actionType === 'reject') {
         await appointmentsApi.updateStatus(selectedApp.id, 'Rejected', actionReason.trim() || undefined);
-        toast.success('Đã từ chối lịch hẹn xem phòng.');
+        toast.success('Đã từ chối lịch xem phòng.');
       }
       setSelectedApp(null);
       setActionType(null);
       setActionReason('');
       fetchAppointments();
     } catch (err: any) {
-      toast.error(err?.message || 'Không thể xử lý thao tác.');
+      toast.error(err?.message || 'Không thể cập nhật lịch xem phòng.');
     } finally {
       setSubmittingAction(false);
     }

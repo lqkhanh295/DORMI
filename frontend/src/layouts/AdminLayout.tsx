@@ -15,8 +15,8 @@ export default function AdminLayout() {
 
   const navItems = [
     { name: 'Tổng quan', path: '/admin', icon: LayoutDashboard },
-    { name: 'Xác minh chủ phòng', path: '/admin/verify', icon: UserCheck },
-    { name: 'Kiểm duyệt phòng', path: '/admin/rooms', icon: Home },
+    { name: 'Xác minh chủ trọ', path: '/admin/verify', icon: UserCheck },
+    { name: 'Duyệt tin đăng', path: '/admin/rooms', icon: Home },
     { name: 'Người dùng', path: '/admin/users', icon: Users },
     { name: 'Báo cáo vi phạm', path: '/admin/reports', icon: AlertTriangle },
   ];

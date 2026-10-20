@@ -151,7 +151,7 @@ export default function LandlordDashboard() {
         <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-6 border-b border-slate-100 pb-4">
           <div>
             <h3 className="text-lg font-bold text-[#0F172A] tracking-tight">Hiệu quả chuyển đổi người thuê</h3>
-            <p className="text-xs text-slate-500 mt-0.5">Tỷ lệ tương tác từ lượt xem sang lịch hẹn thực tế</p>
+            <p className="text-xs text-slate-500 mt-0.5">Tỷ lệ từ lượt xem chuyển thành lịch xem phòng thực tế</p>
           </div>
         </div>
         

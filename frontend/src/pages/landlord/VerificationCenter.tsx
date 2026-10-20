@@ -84,9 +84,9 @@ export default function VerificationCenter() {
       if (url) {
         if (side === 'front') setFrontImageUrl(url);
         else setBackImageUrl(url);
-        toast.success(`Đã tải lên ảnh mặt ${side === 'front' ? 'trước' : 'sau'} thành công!`);
+        toast.success(`Đã tải lên ảnh mặt ${side === 'front' ? 'trước' : 'sau'}!`);
       } else {
-        toast.error('Tải ảnh lên thất bại. Vui lòng thử lại.');
+        toast.error('Không thể tải ảnh lên. Vui lòng thử lại.');
       }
     } catch {
       toast.error('Lỗi khi tải ảnh.');
@@ -107,9 +107,9 @@ export default function VerificationCenter() {
       if (url) {
         if (side === 'front') setPropFrontUrl(url);
         else setPropBackUrl(url);
-        toast.success(`Đã tải lên ảnh giấy tờ thành công!`);
+        toast.success(`Đã tải lên ảnh giấy tờ!`);
       } else {
-        toast.error('Tải ảnh lên thất bại. Vui lòng thử lại.');
+        toast.error('Không thể tải ảnh lên. Vui lòng thử lại.');
       }
     } catch {
       toast.error('Lỗi khi tải ảnh.');
@@ -134,7 +134,7 @@ export default function VerificationCenter() {
         frontImageUrl,
         backImageUrl
       });
-      toast.success('Hồ sơ xác minh CCCD đã được gửi thành công!', {
+      toast.success('Đã gửi hồ sơ xác minh CCCD!', {
         description: 'Ban quản trị sẽ duyệt hồ sơ của bạn trong vòng 24 giờ làm việc.'
       });
       fetchStatusAndRooms();
@@ -166,8 +166,8 @@ export default function VerificationCenter() {
         frontImageUrl: propFrontUrl,
         backImageUrl: propBackUrl
       });
-      toast.success('Đã gửi hồ sơ xác minh chủ quyền bất động sản thành công!', {
-        description: 'Ban quản trị sẽ kiểm tra đối chiếu trong 24 giờ. Căn phòng sẽ nhận ngay +20 điểm DORMI Trust Score khi được phê duyệt.'
+      toast.success('Đã gửi hồ sơ xác minh quyền cho thuê!', {
+        description: 'Ban quản trị sẽ kiểm tra đối chiếu trong 24 giờ. Căn phòng sẽ nhận ngay +20 điểm Uy tín khi được phê duyệt.'
       });
       setPropertySubmittedSuccess(true);
     } catch (err: any) {
@@ -229,10 +229,10 @@ export default function VerificationCenter() {
       {/* KYC Flow Progression Tracker */}
       <div className="p-4 bg-white rounded-[16px] border border-[#E2E8F0] shadow-xs">
         <div className="flex items-center justify-between text-xs font-semibold text-[#64748B] mb-2">
-          <span>Tiến trình thẩm định</span>
+          <span>Tiến trình xác minh</span>
           <span className="text-[#00153D] font-bold">
             {currentStatus?.status === 'Approved' ? 'Đã hoàn tất (100%)' :
-             currentStatus?.status === 'Pending' ? 'Đang đối soát (75%)' :
+             currentStatus?.status === 'Pending' ? 'Đang kiểm tra (75%)' :
              (frontImageUrl && backImageUrl) ? 'Sẵn sàng nộp (50%)' : 'Chờ tải lên (25%)'}
           </span>
         </div>
@@ -486,7 +486,7 @@ export default function VerificationCenter() {
               <div className="space-y-1">
                 <h3 className="text-h3 font-bold text-slate-900">Đã tiếp nhận hồ sơ xác minh chủ quyền!</h3>
                 <p className="text-body text-slate-600 max-w-md mx-auto">
-                  Hồ sơ giấy tờ của căn phòng đã được chuyển tới bộ phận thẩm định pháp lý DORMI. Kết quả đối soát sẽ có trong vòng 24 giờ.
+                  Giấy tờ phòng trọ đã được chuyển tới ban quản trị Dormi để xác thực. Kết quả sẽ có trong vòng 24 giờ.
                 </p>
               </div>
               <Button 

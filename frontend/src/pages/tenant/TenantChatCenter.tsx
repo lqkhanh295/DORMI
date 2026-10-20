@@ -330,7 +330,7 @@ export default function TenantChatCenter() {
                 <h3 className="font-bold text-[#0F172A] text-h3">Chưa có hội thoại</h3>
                 <p className="text-body text-center max-w-sm">
                   {contacts.length === 0
-                    ? 'Bạn chưa có cuộc trò chuyện nào. Hãy kết nối với bạn ở ghép hoặc liên hệ chủ phòng trọ để bắt đầu trao đổi.'
+                    ? 'Bạn chưa có cuộc trò chuyện nào. Hãy kết nối với bạn ở ghép hoặc liên hệ chủ trọ để bắt đầu nhắn tin.'
                     : 'Chọn một cuộc hội thoại từ danh sách bên trái để bắt đầu trò chuyện.'}
                 </p>
               </div>

@@ -78,7 +78,7 @@ export default function SmartListingForm() {
           if (uploadedUrl && !uploadedUrl.startsWith('data:')) {
             setImageUrls(prev => [...prev, uploadedUrl]);
           } else {
-            alert(`Tải ảnh "${file.name}" thất bại. Vui lòng thử lại.`);
+            alert(`Không thể tải ảnh "${file.name}". Vui lòng thử lại.`);
           }
         } catch {
           alert(`Lỗi khi tải ảnh "${file.name}". Vui lòng thử lại.`);
@@ -263,7 +263,7 @@ export default function SmartListingForm() {
     });
 
     if (success) {
-      alert('Đăng bài trọ thành công! Tin đăng đang chờ Ban quản trị phê duyệt.');
+      alert('Đã đăng phòng trọ! Tin đăng đang chờ duyệt.');
       navigate('/landlord');
     } else {
       alert('Không thể tạo bài đăng. Vui lòng kiểm tra lại thông tin.');

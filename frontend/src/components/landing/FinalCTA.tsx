@@ -9,11 +9,11 @@ export function FinalCTA() {
       
       <div className="container-dormi relative z-10 text-center max-w-3xl mx-auto space-y-6">
         <h2 className="text-3xl md:text-4xl font-black tracking-tight text-white leading-tight">
-          Bắt đầu tìm phòng hoặc kết nối người ở ghép ngay hôm nay
+          Tìm phòng trọ hoặc tìm bạn ở ghép ngay hôm nay
         </h2>
         
         <p className="text-slate-300 text-base max-w-xl mx-auto font-normal leading-relaxed">
-          Hàng trăm căn phòng được xác minh thực tế và những người bạn cùng phòng lý tưởng đang chờ bạn trên DORMI.
+          Hàng trăm phòng trọ đã xác minh và bạn cùng phòng phù hợp đang chờ bạn.
         </p>
 
         <div className="flex flex-col sm:flex-row items-center justify-center gap-3.5 pt-4">
@@ -29,7 +29,7 @@ export function FinalCTA() {
             className="w-full sm:w-auto bg-white/10 hover:bg-white/20 text-white border border-white/20 font-bold px-7 py-3.5 rounded-xl transition-all text-sm flex items-center justify-center gap-2 active:scale-[0.98]"
           >
             <Plus className="w-4 h-4" />
-            <span>Dành cho chủ nhà trọ</span>
+            <span>Dành cho chủ trọ</span>
           </Link>
         </div>
       </div>

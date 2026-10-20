@@ -141,9 +141,9 @@ export function RoommateMatcherPreview() {
               
               <div className="flex items-center justify-between border-b border-slate-100 pb-4">
                 <span className="text-emerald-700 bg-emerald-50 border border-emerald-200 text-xs font-semibold px-2.5 py-1 rounded-md">
-                  {matchScore}% tương thích
+                  {matchScore}% phù hợp
                 </span>
-                <span className="text-caption text-slate-500 font-medium">Đối soát thói quen sống</span>
+                <span className="text-caption text-slate-500 font-medium">Độ hợp thói quen sinh hoạt</span>
               </div>
 
               <div className="flex items-center gap-4">
@@ -180,7 +180,7 @@ export function RoommateMatcherPreview() {
               </div>
 
               <div className="pt-2 flex items-center justify-between">
-                <p className="text-xs text-slate-500">Đã kích hoạt bảo vệ thông tin cá nhân và số điện thoại.</p>
+                <p className="text-xs text-slate-500">Thông tin cá nhân và số điện thoại được bảo mật.</p>
                 <Link 
                   to="/tenant/match" 
                   className="inline-flex items-center justify-center bg-white text-[#00153D] border border-slate-300 hover:bg-slate-50 font-semibold px-5 py-2.5 rounded-xl transition-colors text-caption min-h-[40px] gap-1.5 shadow-xs"

@@ -115,7 +115,7 @@ export function FeaturedRooms({
           <div className="space-y-1">
             <div className="flex items-center gap-2">
               <h2 className="text-xl sm:text-2xl font-bold text-[#0F172A]">
-                Phòng đang cho thuê sẵn sàng dọn vào
+                Phòng đang cho thuê
               </h2>
               <span className="hidden sm:inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-bold bg-slate-100 text-slate-700 border border-slate-200">
                 {rooms.length} phòng
@@ -145,7 +145,7 @@ export function FeaturedRooms({
               className="inline-flex items-center gap-1.5 px-3.5 py-2 text-xs font-bold text-[#00153D] bg-slate-50 hover:bg-slate-100 border border-slate-200 rounded-xl transition-all shadow-2xs"
             >
               <SlidersHorizontal className="w-3.5 h-3.5 text-blue-700" />
-              <span>Xem đầy đủ & Bản đồ</span>
+              <span>Xem trên bản đồ</span>
             </Link>
           </div>
         </div>
@@ -219,7 +219,7 @@ export function FeaturedRooms({
               to="/search"
               className="inline-flex items-center gap-2 px-6 py-3 bg-[#00153D] hover:bg-[#073372] text-white text-xs sm:text-sm font-bold rounded-xl transition-all shadow-xs hover:shadow-md active:scale-[0.98]"
             >
-              <span>Khám phá thêm phòng trọ trên Bản đồ tương tác</span>
+              <span>Xem tất cả phòng trên bản đồ</span>
               <ArrowRight className="w-4 h-4" />
             </Link>
           </div>

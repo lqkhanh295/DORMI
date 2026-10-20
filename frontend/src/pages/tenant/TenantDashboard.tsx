@@ -377,14 +377,14 @@ export default function TenantDashboard() {
                 <Clock className="w-10 h-10 text-[#94A3B8] mx-auto" />
                 <p className="text-sm font-semibold text-[#0F172A]">Bạn chưa có lịch hẹn xem phòng nào</p>
                 <p className="text-xs text-[#64748B] max-w-md mx-auto">
-                  Khi tìm thấy căn phòng ưng ý, hãy nhấn nút "Đặt lịch xem phòng" để hẹn gặp trực tiếp chủ nhà.
+                  Khi tìm thấy phòng ưng ý, hãy bấm "Đặt lịch xem phòng" để hẹn gặp trực tiếp chủ trọ.
                 </p>
                 <button
                   type="button"
                   onClick={() => navigate('/search')}
                   className="px-4 py-2 bg-[#00153D] hover:bg-[#073372] text-white text-xs font-bold rounded-xl transition-colors mt-2"
                 >
-                  Khám phá phòng trên Bản đồ
+                  Xem phòng trên bản đồ
                 </button>
               </Card>
             ) : (

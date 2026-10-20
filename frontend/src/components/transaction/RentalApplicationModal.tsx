@@ -122,7 +122,7 @@ export default function RentalApplicationModal({
       });
 
       setSubmittedSuccess(true);
-      toast.success('Hồ sơ thuê phòng đã được gửi thành công!');
+      toast.success('Đã gửi hồ sơ thuê phòng!');
       if (onSuccess) onSuccess();
     } catch (err: any) {
       toast.error(err?.message || 'Không thể gửi hồ sơ thuê. Vui lòng kiểm tra lại thông tin.');
@@ -186,9 +186,9 @@ export default function RentalApplicationModal({
                   <CheckCircle className="w-10 h-10" />
                 </motion.div>
                 <div className="space-y-2">
-                  <h3 className="text-xl font-bold text-[#0F172A]">Hồ sơ đã được gửi thành công!</h3>
+                  <h3 className="text-xl font-bold text-[#0F172A]">Đã gửi hồ sơ thuê phòng!</h3>
                   <p className="text-sm text-[#64748B] max-w-md mx-auto">
-                    Chủ nhà <span className="font-semibold text-[#0F172A]">{landlordName}</span> đã nhận được hồ sơ của bạn. Bạn có thể theo dõi tiến độ duyệt và chuẩn bị hợp đồng tại trang quản lý hồ sơ.
+                    Chủ trọ <span className="font-semibold text-[#0F172A]">{landlordName}</span> đã nhận được hồ sơ của bạn. Bạn có thể theo dõi tiến độ duyệt và chuẩn bị hợp đồng tại trang quản lý hồ sơ.
                   </p>
                 </div>
                 <div className="flex flex-col sm:flex-row gap-3 justify-center pt-2">
@@ -220,7 +220,7 @@ export default function RentalApplicationModal({
                 <div>
                   <p className="font-semibold">Hồ sơ được bảo mật theo tiêu chuẩn DORMI Trust</p>
                   <p className="text-blue-700 mt-0.5">
-                    Thông tin thu nhập và tài liệu của bạn chỉ được chuyển tới chủ nhà để thẩm định khả năng thuê phòng.
+                    Thông tin thu nhập và tài liệu của bạn chỉ được gửi cho chủ trọ để xét duyệt hồ sơ.
                   </p>
                 </div>
               </div>
@@ -250,7 +250,7 @@ export default function RentalApplicationModal({
                   </span>
                 </div>
                 <p className="text-[10px] text-slate-500 italic">
-                  * Tiền cọc được hoàn trả lại cho bạn khi hết hạn hợp đồng. Mức cọc chính thức sẽ được thỏa thuận và xác lập trên Hợp đồng thuê sau khi chủ nhà duyệt hồ sơ.
+                  * Tiền cọc được hoàn trả lại cho bạn khi hết hạn hợp đồng. Mức cọc chính thức sẽ được thỏa thuận và ghi rõ trên Hợp đồng thuê sau khi chủ trọ duyệt hồ sơ.
                 </p>
               </div>
 
@@ -371,7 +371,7 @@ export default function RentalApplicationModal({
             {/* Note to Landlord */}
             <div>
               <label className="block text-xs font-semibold text-[#475569] uppercase mb-1.5">
-                Lời nhắn gửi tới chủ nhà
+                Lời nhắn gửi tới chủ trọ
               </label>
               <textarea
                 rows={3}
@@ -389,7 +389,7 @@ export default function RentalApplicationModal({
                   <h4 className="text-xs font-semibold text-[#475569] uppercase">
                     Tài liệu chứng minh (CCCD / Bảng lương / Thẻ sinh viên)
                   </h4>
-                  <p className="text-xs text-[#94A3B8]">Tăng 30% tốc độ phê duyệt hồ sơ từ chủ nhà</p>
+                  <p className="text-xs text-[#94A3B8]">Giúp chủ trọ phản hồi hồ sơ nhanh hơn</p>
                 </div>
                 <label className="cursor-pointer inline-flex items-center gap-1.5 px-3 py-1.5 bg-[#F1F5F9] hover:bg-[#E2E8F0] text-[#00153D] text-xs font-semibold rounded-lg transition-colors">
                   <Upload className="w-3.5 h-3.5" />

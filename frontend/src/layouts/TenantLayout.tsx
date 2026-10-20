@@ -16,8 +16,8 @@ export default function TenantLayout() {
   const subNavItems = [
     { name: 'Tổng quan', path: '/tenant', icon: Home },
     { name: 'Hồ sơ thuê', path: '/tenant/applications', icon: FileText },
-    { name: 'Hợp đồng điện tử', path: '/tenant/leases', icon: FileCheck },
-    { name: 'Lịch hẹn xem', path: '/tenant/viewings', icon: Calendar },
+    { name: 'Hợp đồng thuê', path: '/tenant/leases', icon: FileCheck },
+    { name: 'Lịch xem phòng', path: '/tenant/viewings', icon: Calendar },
     { name: 'Tin nhắn', path: '/tenant/chat', icon: MessageCircle },
     { name: 'Ở ghép', path: '/tenant/match', icon: Users },
   ];

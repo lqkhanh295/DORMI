@@ -62,9 +62,9 @@ export default function PaymentReturn() {
               {paymentState === 'pending' && 'Đang xử lý kết quả...'}
             </h2>
             <p className="text-xs sm:text-sm text-[#64748B] mt-1">
-              {paymentState === 'success' && 'Hệ thống PayOS đã tự động xác thực và cập nhật trạng thái thanh toán.'}
-              {paymentState === 'cancelled' && 'Bạn đã huỷ giao dịch hoặc chưa hoàn tất thao tác chuyển khoản.'}
-              {paymentState === 'pending' && 'Đang liên hệ với cổng thanh toán để đối soát giao dịch.'}
+              {paymentState === 'success' && 'Giao dịch đã được xác nhận thành công.'}
+              {paymentState === 'cancelled' && 'Bạn đã hủy giao dịch hoặc chưa hoàn tất chuyển khoản.'}
+              {paymentState === 'pending' && 'Đang kiểm tra kết quả giao dịch từ ngân hàng.'}
             </p>
           </div>
         </div>
@@ -80,7 +80,7 @@ export default function PaymentReturn() {
 
           {orderCode && (
             <div className="flex justify-between items-center py-1 border-b border-[#E2E8F0]">
-              <span className="text-[#64748B]">Mã đơn hàng (Order Code)</span>
+              <span className="text-[#64748B]">Mã đơn hàng</span>
               <span className="font-mono font-bold text-[#0F172A]">{orderCode}</span>
             </div>
           )}
@@ -93,13 +93,13 @@ export default function PaymentReturn() {
           </div>
 
           <div className="flex justify-between items-center py-1">
-            <span className="text-[#64748B]">Trạng thái đối soát</span>
+            <span className="text-[#64748B]">Trạng thái giao dịch</span>
             <span className={`px-2 py-0.5 rounded-full font-bold text-[11px] ${
               paymentState === 'success' ? 'bg-emerald-100 text-emerald-800' :
               paymentState === 'cancelled' ? 'bg-amber-100 text-amber-800' :
               'bg-blue-100 text-blue-800'
             }`}>
-              {paymentState === 'success' && 'Đã quyết toán'}
+              {paymentState === 'success' && 'Thành công'}
               {paymentState === 'cancelled' && 'Đã huỷ'}
               {paymentState === 'pending' && 'Đang xử lý'}
             </span>
@@ -110,7 +110,7 @@ export default function PaymentReturn() {
         <div className="flex items-start gap-2.5 p-3 bg-blue-50/60 rounded-xl border border-blue-100 text-xs text-[#00153D]">
           <ShieldCheck className="w-4 h-4 text-blue-600 shrink-0 mt-0.5" />
           <p className="text-[11px] leading-relaxed text-[#334155]">
-            Mọi giao dịch trên Dormi được bảo mật 2 lớp qua chữ ký số HMAC-SHA256 và bảo hộ bởi ngân hàng liên kết VietQR.
+            Giao dịch được bảo mật và xử lý an toàn qua cổng VietQR.
           </p>
         </div>
 

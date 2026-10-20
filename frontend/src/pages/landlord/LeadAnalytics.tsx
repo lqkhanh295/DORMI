@@ -87,9 +87,9 @@ export default function LeadAnalytics() {
         paymentMethod: 'VNPay'
       });
       setBoostCheckout(res);
-      toast.info(`Đã khởi tạo đơn hàng đẩy tin ${selectedBoostType}. Vui lòng thanh toán để kích hoạt.`);
+      toast.info(`Đã tạo đơn đẩy tin ${selectedBoostType}. Vui lòng thanh toán để kích hoạt.`);
     } catch (err: any) {
-      toast.error(err?.message || 'Khởi tạo đẩy tin thất bại.');
+      toast.error(err?.message || 'Không thể tạo đơn đẩy tin.');
     } finally {
       setIsSubmittingBoost(false);
     }
@@ -101,19 +101,19 @@ export default function LeadAnalytics() {
       setIsVerifyingBoost(true);
       if (import.meta.env.DEV) {
         const res = await landlordApi.simulateGatewayPayment(boostCheckout.transactionRef);
-        toast.success(res.message || 'Thanh toán đẩy tin mô phỏng thành công!');
+        toast.success(res.message || 'Thanh toán thử nghiệm thành công!');
         setBoostingRoom(null);
         setBoostCheckout(null);
         fetchAnalytics();
       } else {
         const statusRes = await landlordApi.checkPaymentStatus(boostCheckout.transactionRef);
         if (statusRes.status === 'Completed') {
-          toast.success('Thanh toán thành công! Tin đăng của bạn đã được ưu tiên hiển thị.');
+          toast.success('Thanh toán thành công! Tin đăng đã được ưu tiên hiển thị.');
           setBoostingRoom(null);
           setBoostCheckout(null);
           fetchAnalytics();
         } else {
-          toast.info('Hệ thống đang chờ đối tác thanh toán ghi nhận. Vui lòng thử lại sau giây lát.');
+          toast.info('Hệ thống đang chờ ngân hàng xác nhận giao dịch. Vui lòng thử lại sau giây lát.');
         }
       }
     } catch (err: any) {

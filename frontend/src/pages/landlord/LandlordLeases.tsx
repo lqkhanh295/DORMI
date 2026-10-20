@@ -162,7 +162,7 @@ export default function LandlordLeases() {
       };
 
       await leasesApi.createLease(payload);
-      toast.success('Khởi tạo hợp đồng thuê thành công! Đã gửi thông báo cho khách thuê ký nhận.');
+      toast.success('Đã tạo hợp đồng! Đã gửi thông báo cho khách thuê xem và ký.');
       setIsCreateOpen(false);
       fetchLeases();
     } catch (err: any) {

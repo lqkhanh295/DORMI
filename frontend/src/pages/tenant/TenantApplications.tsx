@@ -233,7 +233,7 @@ export default function TenantApplications() {
           <div>
             <h3 className="text-lg font-bold text-[#0F172A]">Chưa có hồ sơ thuê phòng nào</h3>
             <p className="text-sm text-[#64748B] max-w-md mx-auto mt-1">
-              Bạn có thể tìm kiếm phòng trọ ưng ý và gửi hồ sơ trực tiếp từ trang chi tiết phòng để chủ nhà xét duyệt.
+              Bạn có thể tìm kiếm phòng trọ ưng ý và gửi hồ sơ trực tiếp từ trang chi tiết phòng để chủ trọ xét duyệt.
             </p>
           </div>
           <Link
@@ -306,7 +306,7 @@ export default function TenantApplications() {
                     className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-[#F1F5F9] hover:bg-[#E2E8F0] text-[#00153D] text-xs font-semibold rounded-lg transition-colors"
                   >
                     <MessageSquare className="w-3.5 h-3.5" />
-                    Nhắn tin chủ nhà
+                    Nhắn tin chủ trọ
                   </button>
                   {(app.status === ApplicationStatus.Submitted || app.status === ApplicationStatus.UnderReview) && (
                     <button
@@ -361,17 +361,17 @@ export default function TenantApplications() {
                     <div>
                       <p className="font-bold text-sm">
                         {isNeedSign 
-                          ? 'Chủ nhà đã gửi hợp đồng thuê điện tử!'
+                          ? 'Chủ trọ đã gửi hợp đồng thuê!'
                           : isActiveLease
                           ? 'Hợp đồng thuê phòng đang có hiệu lực'
-                          : 'Hồ sơ đã được phê duyệt thành công!'}
+                          : 'Hồ sơ đã được phê duyệt!'}
                       </p>
                       <p className="mt-0.5 opacity-90">
                         {isNeedSign
-                          ? 'Hợp đồng đã được chủ nhà soạn thảo và chờ bạn ký nhận. Hãy kiểm tra các điều khoản và ký hợp đồng điện tử để kích hoạt hợp đồng thuê phòng.'
+                          ? 'Chủ trọ đã gửi hợp đồng. Vui lòng kiểm tra các điều khoản và ký hợp đồng để kích hoạt.'
                           : isActiveLease
-                          ? 'Bạn đã hoàn tất ký hợp đồng điện tử. Bạn có thể xem lại hợp đồng và theo dõi các khoản thanh toán tiền cọc, tiền thuê tại mục Hợp đồng.'
-                          : 'Chủ nhà đã đồng ý duyệt hồ sơ của bạn! Hệ thống đang chờ chủ nhà khởi tạo hợp đồng thuê điện tử. Bạn có thể nhắn tin nhắc chủ nhà hoặc kiểm tra mục Hợp đồng.'}
+                          ? 'Bạn đã ký hợp đồng xong. Bạn có thể xem lại hợp đồng và theo dõi thanh toán tiền cọc, tiền thuê tại mục Hợp đồng.'
+                          : 'Chủ trọ đã duyệt hồ sơ của bạn. Vui lòng đợi chủ trọ tạo hợp đồng, hoặc bạn có thể nhắn tin nhắc chủ trọ.'}
                       </p>
                     </div>
                   </div>
@@ -384,7 +384,7 @@ export default function TenantApplications() {
                         className="inline-flex items-center justify-center gap-1.5 px-4 py-2 bg-amber-600 hover:bg-amber-700 text-white font-bold rounded-lg transition-colors whitespace-nowrap shadow-sm"
                       >
                         <PenTool className="w-3.5 h-3.5" />
-                        <span>Ký hợp đồng điện tử ngay</span>
+                        <span>Ký hợp đồng ngay</span>
                         <ArrowRight className="w-3.5 h-3.5" />
                       </button>
                     ) : isActiveLease ? (
@@ -411,7 +411,7 @@ export default function TenantApplications() {
                           className="inline-flex items-center justify-center gap-1.5 px-3.5 py-2 bg-[#00153D] hover:bg-[#002266] text-white font-bold rounded-lg transition-colors whitespace-nowrap shadow-sm"
                         >
                           <MessageSquare className="w-3.5 h-3.5" />
-                          <span>Nhắn tin cho chủ nhà</span>
+                          <span>Nhắn tin cho chủ trọ</span>
                         </button>
                         <button
                           type="button"
@@ -431,7 +431,7 @@ export default function TenantApplications() {
                 <div className="p-3.5 bg-amber-50 border border-amber-200 rounded-xl flex items-start gap-3 text-xs text-amber-900 mt-3">
                   <AlertCircle className="w-5 h-5 text-amber-600 shrink-0 mt-0.5" />
                   <div className="space-y-1">
-                    <p className="font-bold">Yêu cầu bổ sung thông tin từ chủ nhà</p>
+                    <p className="font-bold">Yêu cầu bổ sung thông tin từ chủ trọ</p>
                     <p className="text-amber-800">
                       {app.rejectionReason || 'Vui lòng bổ sung giấy tờ tùy thân hoặc thông tin xác minh thu nhập qua tin nhắn.'}
                     </p>

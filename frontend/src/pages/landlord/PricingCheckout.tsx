@@ -94,9 +94,9 @@ export default function PricingCheckout() {
       setInitiating(true);
       const res = await landlordApi.checkout(plan);
       setCheckoutData(res);
-      toast.info(`Đã khởi tạo đơn hàng gói ${plan}. Vui lòng quét mã để thanh toán.`);
+      toast.info(`Đã tạo đơn hàng gói ${plan}. Vui lòng quét mã để thanh toán.`);
     } catch (err: any) {
-      toast.error(err?.message || 'Khởi tạo thanh toán thất bại.');
+      toast.error(err?.message || 'Không thể tạo đơn thanh toán.');
     } finally {
       setInitiating(false);
     }
@@ -114,9 +114,9 @@ export default function PricingCheckout() {
         paymentMethod: 'PayOS'
       });
       setCheckoutData(res);
-      toast.info(`Đã khởi tạo đơn hàng đẩy tin ${selectedBoostType}. Vui lòng quét mã để kích hoạt.`);
+      toast.info(`Đã tạo đơn hàng đẩy tin ${selectedBoostType}. Vui lòng quét mã để thanh toán.`);
     } catch (err: any) {
-      toast.error(err?.message || 'Khởi tạo đẩy tin thất bại.');
+      toast.error(err?.message || 'Không thể tạo đơn đẩy tin.');
     } finally {
       setInitiating(false);
     }
@@ -174,7 +174,7 @@ export default function PricingCheckout() {
       toast.success(res.message || 'Thanh toán mô phỏng (DEV) thành công! Dịch vụ đã được kích hoạt.');
       setCheckoutData(null);
     } catch (err: any) {
-      toast.error(err?.message || 'Mô phỏng thanh toán thất bại.');
+      toast.error(err?.message || 'Không thể thử nghiệm thanh toán.');
     } finally {
       setVerifying(false);
     }
@@ -459,7 +459,7 @@ export default function PricingCheckout() {
                   className="bg-amber-600 hover:bg-amber-700 text-white font-bold text-xs py-2.5 flex items-center justify-center gap-2"
                 >
                   {initiating ? (
-                    'Đang khởi tạo đơn...'
+                    'Đang tạo đơn...'
                   ) : (
                     <>
                       <Zap className="w-4 h-4" />

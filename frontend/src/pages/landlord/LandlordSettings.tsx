@@ -45,7 +45,7 @@ export default function LandlordSettings() {
     e.preventDefault();
     try {
       await profilesApi.updateLandlordProfile({ phoneNumber });
-      toast.success('Cập nhật số điện thoại liên hệ thành công!');
+      toast.success('Đã cập nhật số điện thoại!');
     } catch {
       toast.error('Không thể lưu cài đặt.');
     }
@@ -72,7 +72,7 @@ export default function LandlordSettings() {
       setCurrentPassword('');
       setNewPassword('');
       setConfirmPassword('');
-      toast.success(res?.message || 'Đổi mật khẩu thành công!');
+      toast.success(res?.message || 'Đã đổi mật khẩu!');
     } catch (err: any) {
       toast.error(err?.message || 'Không thể đổi mật khẩu. Vui lòng kiểm tra lại mật khẩu hiện tại.');
     } finally {

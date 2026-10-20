@@ -79,10 +79,10 @@ export default function CreateRoommatePost() {
         roomId: attachedRoomId
       });
 
-      toast.success('Đã đăng bài tìm bạn ở ghép thành công!');
+      toast.success('Đã đăng tin tìm bạn ở ghép!');
       navigate('/tenant/match');
     } catch (err: any) {
-      toast.error(err?.message || 'Đăng tin thất bại. Vui lòng kiểm tra lại thông tin.');
+      toast.error(err?.message || 'Không thể đăng tin. Vui lòng kiểm tra lại thông tin.');
     } finally {
       setSubmitting(false);
     }

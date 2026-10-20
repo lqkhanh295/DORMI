@@ -26,10 +26,10 @@ export function VerificationSection() {
                 <span className="text-xs font-mono font-bold text-slate-400">01</span>
               </div>
               <h3 className="text-h3 text-[#0F172A] mb-2 font-bold">
-                Xác thực chủ nhà & người đăng
+                Xác minh danh tính chủ trọ
               </h3>
               <p className="text-body text-[#64748B] leading-relaxed text-sm">
-                Xác nhận CCCD và quyền quản lý phòng trọ trước khi duyệt tin. Ngăn chặn triệt để môi giới trung gian thu phí trái phép.
+                Kiểm tra CCCD và quyền cho thuê trước khi duyệt tin. Tránh nguy cơ môi giới thu phí trái phép.
               </p>
             </div>
           </div>

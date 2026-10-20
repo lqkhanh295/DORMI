@@ -145,7 +145,7 @@ export default function TrustScoreModal({ isOpen, onClose, roomId, roomTitle }: 
                   {/* Breakdown Factors List */}
                   <div>
                     <h3 className="text-xs font-semibold text-slate-700 mb-3">
-                      Chi tiết các tiêu chí đối soát ({breakdown.factors?.length || 0})
+                      Chi tiết các tiêu chí đánh giá ({breakdown.factors?.length || 0})
                     </h3>
                     <div className="space-y-2.5">
                       {breakdown.factors?.map((factor, index) => (

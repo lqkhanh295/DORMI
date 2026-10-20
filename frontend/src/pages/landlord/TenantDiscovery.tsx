@@ -105,7 +105,7 @@ export default function TenantDiscovery() {
         }
       });
     } catch (err: any) {
-      toast.error(err?.message || 'Gửi lời mời thất bại. Vui lòng thử lại.');
+      toast.error(err?.message || 'Không thể gửi lời mời. Vui lòng thử lại.');
     } finally {
       setInviting(false);
     }

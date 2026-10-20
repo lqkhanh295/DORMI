@@ -260,7 +260,7 @@ export default function RoomManagement() {
     if (!window.confirm('Bạn có chắc chắn muốn xóa bài đăng phòng trọ này không? Hành động này không thể hoàn tác.')) return;
     try {
       await roomsApi.deleteRoom(roomId);
-      toast.success('Đã xóa phòng trọ thành công!');
+      toast.success('Đã xóa phòng trọ!');
       loadRooms();
     } catch {
       toast.error('Không thể xóa phòng trọ.');
@@ -316,7 +316,7 @@ export default function RoomManagement() {
               : img.imageUrl) 
           : []
       });
-      toast.success('Đã lưu thay đổi thông tin phòng thành công!');
+      toast.success('Đã lưu thay đổi thông tin phòng!');
       setEditingRoom(null);
       loadRooms();
     } catch {
@@ -362,7 +362,7 @@ export default function RoomManagement() {
         virtual3DUrl: newRoom.virtual3DUrl,
         imageUrls: finalImages
       });
-      toast.success('Đăng bài phòng trọ mới thành công!');
+      toast.success('Đã đăng phòng trọ mới!');
       setIsAdding(false);
       setNewRoom({
         title: '',

@@ -88,7 +88,7 @@ export default function LandlordApplications() {
       fetchApplications();
 
       if (reviewAction === 'Approve') {
-        toast.success('Đã phê duyệt hồ sơ thuê phòng thành công!', {
+        toast.success('Đã duyệt hồ sơ thuê phòng!', {
           action: {
             label: 'Tạo hợp đồng ngay',
             onClick: () => navigate('/landlord/leases', { state: { prefillApp: approvedApp } })
@@ -182,7 +182,7 @@ export default function LandlordApplications() {
             <h1 className="text-2xl font-black text-[#00153D]">Hồ sơ khách nộp thuê phòng</h1>
           </div>
           <p className="text-sm text-[#64748B] mt-1">
-            Thẩm định hồ sơ lý lịch, thu nhập và phê duyệt khách thuê để tiến hành tạo hợp đồng
+            Kiểm tra thông tin, thu nhập và duyệt khách thuê để tạo hợp đồng
           </p>
         </div>
         <button
@@ -514,7 +514,7 @@ export default function LandlordApplications() {
                     <div className="p-3 bg-emerald-50 rounded-xl border border-emerald-200 text-emerald-900 space-y-1">
                       <p className="font-bold">Xác nhận phê duyệt khách thuê này?</p>
                       <p className="text-[11px] text-emerald-800">
-                        Khách thuê sẽ nhận được thông báo chấp thuận. Bạn có thể tiến hành thảo luận điều khoản và ký hợp đồng thuê trên hệ thống.
+                        Khách thuê sẽ nhận được thông báo chấp thuận. Bạn có thể trao đổi điều khoản và ký hợp đồng trên hệ thống.
                       </p>
                     </div>
                   )}

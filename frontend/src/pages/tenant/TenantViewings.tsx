@@ -84,7 +84,7 @@ export default function TenantViewings() {
       setSavingReschedule(true);
       const targetIso = `${newDate}T${newTime}:00Z`;
       await appointmentsApi.rescheduleAppointment(reschedulingItem.id, targetIso, rescheduleReason.trim() || undefined);
-      toast.success('Đã gửi yêu cầu đổi lịch xem phòng thành công!');
+      toast.success('Đã gửi yêu cầu đổi lịch xem phòng!');
       setReschedulingItem(null);
       setRescheduleReason('');
       fetchAppointments();
@@ -156,7 +156,7 @@ export default function TenantViewings() {
         return (
           <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md text-xs font-semibold bg-amber-50 text-amber-800 border border-amber-200">
             <Clock className="w-3.5 h-3.5 text-amber-600" />
-            Chờ chủ nhà xác nhận
+            Chờ chủ trọ xác nhận
           </span>
         );
     }
@@ -331,7 +331,7 @@ export default function TenantViewings() {
                       className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-[#F1F5F9] hover:bg-[#E2E8F0] text-[#00153D] text-xs font-semibold rounded-lg transition-colors"
                     >
                       <MessageSquare className="w-3.5 h-3.5" />
-                      Nhắn tin chủ nhà
+                      Nhắn tin chủ trọ
                     </button>
 
                     {isUpcoming && (
@@ -381,7 +381,7 @@ export default function TenantViewings() {
                       <div>
                         <p className="font-bold text-sm">Bạn đã xem phòng này!</p>
                         <p className="text-slate-600 mt-0.5">
-                          Nếu bạn ưng ý với không gian thực tế, hãy nộp hồ sơ thuê ngay để chủ nhà giữ phòng và tạo hợp đồng.
+                          Nếu bạn ưng ý với không gian thực tế, hãy nộp hồ sơ thuê ngay để chủ trọ giữ phòng và tạo hợp đồng.
                         </p>
                       </div>
                     </div>

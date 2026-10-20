@@ -339,7 +339,7 @@ export default function AuthPage() {
               <p className="text-body text-[#64748B] mt-1">
                 {isRegister 
                   ? 'Bắt đầu hành trình thuê và quản lý phòng trọ minh bạch.' 
-                  : 'Một tài khoản cho toàn bộ hệ sinh thái thuê phòng và quản lý.'}
+                  : 'Đăng nhập để tìm phòng, tìm bạn ở ghép và quản lý hợp đồng.'}
               </p>
             </div>
 
@@ -357,7 +357,7 @@ export default function AuthPage() {
                 className={`flex-1 py-2 text-caption font-semibold rounded-lg transition-all duration-150 active:scale-[0.98] min-h-[40px] ${isRegister ? 'bg-[#00153D] text-white shadow-xs font-bold' : 'text-slate-600 hover:text-slate-900'}`}
                 onClick={() => toggleTab(true)}
               >
-                Đăng ký tài khoản
+                Đăng ký
               </button>
             </div>
 
@@ -366,7 +366,7 @@ export default function AuthPage() {
               <div className="mb-4 p-3.5 bg-red-50 border border-red-200 text-red-700 rounded-xl text-caption flex items-start gap-2.5">
                 <Lock className="w-5 h-5 text-red-600 shrink-0 mt-0.5" />
                 <div>
-                  <p className="font-bold text-red-900">Tài khoản đang bị tạm khóa an toàn</p>
+                  <p className="font-bold text-red-900">Tài khoản đang bị tạm khóa</p>
                   <p className="mt-1 flex items-center gap-1 text-red-700 font-medium">
                     <Clock className="w-3.5 h-3.5 text-red-600" />
                     <span>Thời gian mở khóa: </span>
@@ -383,7 +383,7 @@ export default function AuthPage() {
               <div className="mb-4 p-3 bg-amber-50 border border-amber-200 text-amber-800 rounded-xl text-caption flex items-center gap-2">
                 <ShieldAlert className="w-4 h-4 text-amber-600 shrink-0" />
                 <span>
-                  Cảnh báo bảo mật: Bạn còn <strong>{remainingAttempts}</strong> lần thử trước khi tài khoản bị khóa tạm thời.
+                  Bạn còn <strong>{remainingAttempts}</strong> lần thử trước khi tài khoản bị tạm khóa.
                 </span>
               </div>
             )}
@@ -400,7 +400,7 @@ export default function AuthPage() {
               {isRegister && (
                 <div className="space-y-2 mb-4">
                   <label className="text-caption font-semibold text-[#0F172A] block">
-                    Mục đích sử dụng của bạn:
+                    Bạn tham gia với vai trò:
                   </label>
                   <div className="grid grid-cols-2 gap-3">
                     <button
@@ -577,9 +577,9 @@ export default function AuthPage() {
                 className="min-h-[44px] mt-2"
               >
                 {loading 
-                  ? 'Đang xác thực an toàn...' 
+                  ? 'Đang đăng nhập...' 
                   : isRegister 
-                    ? `Đăng ký tài khoản (${intention === 'Landlord' ? 'Chủ trọ' : 'Khách thuê'})` 
+                    ? `Đăng ký (${intention === 'Landlord' ? 'Chủ trọ' : 'Khách thuê'})` 
                     : 'Đăng nhập'}
               </Button>
             </form>

@@ -47,7 +47,7 @@ export default function TenantSettings() {
 
   const handleSaveNotifications = () => {
     localStorage.setItem('dormi_notifications_settings', JSON.stringify({ matchNotify, chatNotify, promoNotify }));
-    toast.success('Đã lưu cấu hình thông báo thành công!');
+    toast.success('Đã lưu cài đặt thông báo!');
   };
 
   const handleUpdatePassword = async (e: React.FormEvent) => {
@@ -84,7 +84,7 @@ export default function TenantSettings() {
       await profilesApi.updateCustomerProfile({
         isLookingForRoommate: allowMatching
       });
-      toast.success('Đã lưu tùy chọn quyền riêng tư lên hệ thống thành công!');
+      toast.success('Đã lưu cài đặt quyền riêng tư!');
     } catch (err: any) {
       toast.error(err?.message || 'Không thể lưu cài đặt quyền riêng tư.');
     } finally {
@@ -200,7 +200,7 @@ export default function TenantSettings() {
                   <div className="flex items-center justify-between">
                     <div>
                       <h4 className="text-body font-semibold text-[#0F172A]">Khuyến mãi & Tin tức</h4>
-                      <p className="text-caption text-[#64748B]">Nhận ưu đãi phòng trọ từ các chủ nhà đã xác minh.</p>
+                      <p className="text-caption text-[#64748B]">Nhận ưu đãi phòng trọ từ các chủ trọ đã xác minh.</p>
                     </div>
                     <button 
                       type="button"
@@ -223,7 +223,7 @@ export default function TenantSettings() {
                     onClick={() => {
                       if ('Notification' in window) {
                         Notification.requestPermission().then(perm => {
-                          if (perm === 'granted') toast.success('Đã kích hoạt thông báo đẩy thành công!');
+                          if (perm === 'granted') toast.success('Đã bật thông báo đẩy!');
                           else toast.info('Bạn đã từ chối nhận thông báo trên trình duyệt.');
                         });
                       } else {
@@ -286,8 +286,8 @@ export default function TenantSettings() {
                 <div className="space-y-6">
                   <div className="flex items-center justify-between">
                     <div>
-                      <h4 className="text-body font-semibold text-[#0F172A]">Hiển thị số điện thoại cho chủ nhà</h4>
-                      <p className="text-caption text-[#64748B]">Cho phép chủ nhà liên hệ trực tiếp khi bạn đặt lịch xem phòng.</p>
+                      <h4 className="text-body font-semibold text-[#0F172A]">Hiển thị số điện thoại cho chủ trọ</h4>
+                      <p className="text-caption text-[#64748B]">Cho phép chủ trọ liên hệ trực tiếp khi bạn đặt lịch xem phòng.</p>
                     </div>
                     <button 
                       type="button"
@@ -300,7 +300,7 @@ export default function TenantSettings() {
 
                   <div className="flex items-center justify-between">
                     <div>
-                      <h4 className="text-body font-semibold text-[#0F172A]">Hiển thị hồ sơ trong thuật toán Matcher</h4>
+                      <h4 className="text-body font-semibold text-[#0F172A]">Hiển thị hồ sơ khi tìm bạn ở ghép</h4>
                       <p className="text-caption text-[#64748B]">Cho phép gợi ý hồ sơ của bạn cho những người cùng sở thích tìm bạn ở ghép.</p>
                     </div>
                     <button 
@@ -333,7 +333,7 @@ export default function TenantSettings() {
               <div className="space-y-6">
                 <div className="border-b border-red-200 pb-3">
                   <h2 className="text-h3 font-bold text-red-600">Vùng nguy hiểm</h2>
-                  <p className="text-caption text-[#64748B] mt-0.5">Các thao tác ảnh hưởng vĩnh viễn tới dữ liệu tài khoản.</p>
+                  <p className="text-caption text-[#64748B] mt-0.5">Hành động này sẽ ảnh hưởng vĩnh viễn đến dữ liệu tài khoản.</p>
                 </div>
 
                 <div className="p-4 rounded-xl bg-red-50 border border-red-200 flex flex-col sm:flex-row sm:items-center justify-between gap-4">

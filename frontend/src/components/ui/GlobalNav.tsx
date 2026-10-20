@@ -163,7 +163,7 @@ export function GlobalNav() {
               <Link
                 to={currentUser.role === 'Tenant' ? '/tenant/chat' : '/landlord/chat'}
                 className="p-1.5 text-[#64748B] hover:text-[#00153D] hover:bg-slate-100 rounded-lg transition-colors relative"
-                title="Tin nhắn trao đổi"
+                title="Tin nhắn"
               >
                 <MessageCircle className="w-5 h-5" />
               </Link>
@@ -220,7 +220,7 @@ export function GlobalNav() {
                             className="flex items-center gap-2.5 px-3 py-2 rounded-lg hover:bg-slate-100 hover:text-[#00153D] transition-colors"
                           >
                             <Home className="w-4 h-4 text-slate-500" />
-                            <span>Phòng của tôi (Tổng quan)</span>
+                            <span>Tổng quan</span>
                           </Link>
                           <Link
                             to="/tenant/applications"
@@ -236,7 +236,7 @@ export function GlobalNav() {
                             className="flex items-center gap-2.5 px-3 py-2 rounded-lg hover:bg-slate-100 hover:text-[#00153D] transition-colors"
                           >
                             <FileCheck className="w-4 h-4 text-slate-500" />
-                            <span>Hợp đồng điện tử</span>
+                            <span>Hợp đồng thuê</span>
                           </Link>
                           <Link
                             to="/tenant/viewings"
@@ -244,7 +244,7 @@ export function GlobalNav() {
                             className="flex items-center gap-2.5 px-3 py-2 rounded-lg hover:bg-slate-100 hover:text-[#00153D] transition-colors"
                           >
                             <Calendar className="w-4 h-4 text-slate-500" />
-                            <span>Lịch hẹn xem phòng</span>
+                            <span>Lịch xem phòng</span>
                           </Link>
                           <Link
                             to="/tenant/chat"
@@ -252,7 +252,7 @@ export function GlobalNav() {
                             className="flex items-center gap-2.5 px-3 py-2 rounded-lg hover:bg-slate-100 hover:text-[#00153D] transition-colors"
                           >
                             <MessageCircle className="w-4 h-4 text-slate-500" />
-                            <span>Tin nhắn trao đổi</span>
+                            <span>Tin nhắn</span>
                           </Link>
                         </>
                       )}
@@ -265,7 +265,7 @@ export function GlobalNav() {
                             className="flex items-center gap-2.5 px-3 py-2 rounded-lg hover:bg-slate-100 hover:text-[#00153D] transition-colors"
                           >
                             <LayoutDashboard className="w-4 h-4 text-slate-500" />
-                            <span>Bảng quản trị Chủ trọ</span>
+                            <span>Tổng quan</span>
                           </Link>
                           <Link
                             to="/landlord/rooms"
@@ -281,7 +281,7 @@ export function GlobalNav() {
                             className="flex items-center gap-2.5 px-3 py-2 rounded-lg hover:bg-slate-100 hover:text-[#00153D] transition-colors"
                           >
                             <FileCheck className="w-4 h-4 text-slate-500" />
-                            <span>Quản lý hợp đồng</span>
+                            <span>Hợp đồng thuê</span>
                           </Link>
                         </>
                       )}

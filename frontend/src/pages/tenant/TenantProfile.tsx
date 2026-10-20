@@ -162,7 +162,7 @@ export default function TenantProfile() {
         await profilesApi.updateAvatar(cdnUrl);
       }
 
-      toast.success('Cập nhật ảnh đại diện thành công!');
+      toast.success('Đã cập nhật ảnh đại diện!');
     } catch (err: any) {
       console.error('Lỗi khi tải ảnh đại diện:', err);
       toast.error(err?.message || 'Không thể tải ảnh đại diện lên máy chủ. Vui lòng thử lại.');
@@ -282,7 +282,7 @@ export default function TenantProfile() {
         preferences: 'Phòng yên tĩnh, sạch sẽ',
         isLookingForRoommate
       });
-      toast.success('Lưu thông tin hồ sơ thành công!');
+      toast.success('Đã lưu thông tin hồ sơ!');
     } catch (err: any) {
       console.warn('Profile update warning:', err);
       toast.error('Không thể cập nhật hồ sơ: ' + (err?.message || 'Lỗi kết nối'));

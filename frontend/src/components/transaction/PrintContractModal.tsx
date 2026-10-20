@@ -709,7 +709,7 @@ export default function PrintContractModal({ lease, onClose, initialLeaveBlank }
               • <strong>Mã băm toàn vẹn (SHA-256 Checksum):</strong> <code className="font-mono text-[9px] bg-white px-1 py-0.5 border border-slate-200 rounded print:border-none">{checksum}</code>
             </p>
             <p className="italic text-[9px] text-slate-500 pt-0.5">
-              Hợp đồng được khởi tạo và bảo vệ tính toàn vẹn trên nền tảng số DORMI căn cứ theo Luật Giao dịch điện tử 2023 và Bộ luật Dân sự 2015. Mã băm SHA-256 bảo đảm tính bất biến, chống tẩy xóa hoặc chỉnh sửa nội dung sau khi hai bên ký kết.
+              Hợp đồng được tạo và bảo vệ tính toàn vẹn trên nền tảng DORMI căn cứ theo Luật Giao dịch điện tử 2023 và Bộ luật Dân sự 2015. Mã băm SHA-256 bảo đảm tính bất biến, chống tẩy xóa hoặc chỉnh sửa nội dung sau khi hai bên ký kết.
             </p>
           </div>
 

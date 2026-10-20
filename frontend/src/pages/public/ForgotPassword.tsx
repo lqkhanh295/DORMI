@@ -74,7 +74,7 @@ export default function ForgotPassword() {
     try {
       const res = await authApi.verifyOtp({ email, otp: cleanOtp });
       setResetToken(res.resetToken);
-      setMessage(res.message || 'Xác thực OTP thành công. Vui lòng nhập mật khẩu mới.');
+      setMessage(res.message || 'Mã OTP hợp lệ. Vui lòng nhập mật khẩu mới.');
       setStep(3);
     } catch (err: any) {
       setError(err.message || 'Mã OTP không chính xác hoặc đã hết hạn.');
@@ -97,10 +97,10 @@ export default function ForgotPassword() {
     setError(null);
     try {
       const res = await authApi.resetPassword({ resetToken, newPassword });
-      setMessage(res.message || 'Đặt lại mật khẩu thành công!');
+      setMessage(res.message || 'Đổi mật khẩu thành công!');
       setSuccess(true);
     } catch (err: any) {
-      setError(err.message || 'Đặt lại mật khẩu thất bại. Vui lòng thực hiện lại từ đầu.');
+      setError(err.message || 'Không thể đặt lại mật khẩu. Vui lòng thử lại từ đầu.');
     } finally {
       setLoading(false);
     }

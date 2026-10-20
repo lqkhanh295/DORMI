@@ -140,7 +140,7 @@ export default function PostRentalModal({ lease, isLandlord, onClose, onRefresh 
         dueDate: new Date(newPayment.dueDate).toISOString(),
         landlordNotes: newPayment.landlordNotes
       });
-      toast.success('Đã tạo hóa đơn thanh toán mới thành công!');
+      toast.success('Đã tạo hóa đơn thanh toán mới!');
       setIsAddingPayment(false);
       setNewPayment({
         type: 'Utilities',
@@ -164,8 +164,8 @@ export default function PostRentalModal({ lease, isLandlord, onClose, onRefresh 
       });
       toast.success(
         isLandlord
-          ? 'Đã xác nhận thanh toán thành công!'
-          : 'Đã gửi thông tin chuyển khoản! Vui lòng chờ chủ nhà xác nhận.'
+          ? 'Đã xác nhận thanh toán!'
+          : 'Đã gửi thông tin chuyển khoản! Vui lòng chờ chủ trọ xác nhận.'
       );
       setPayingSchedule(null);
       setPaymentRefCode('');
@@ -181,7 +181,7 @@ export default function PostRentalModal({ lease, isLandlord, onClose, onRefresh 
       const res = await postRentalApi.createDepositCheckout(lease.id);
       if (res && res.checkoutUrl) {
         setPayOSCheckout(res);
-        toast.success('Đã tạo liên kết thanh toán cọc VietQR thành công!');
+        toast.success('Đã tạo mã thanh toán đặt cọc VietQR!');
       } else {
         toast.error('Không nhận được dữ liệu thanh toán PayOS.');
       }
@@ -211,7 +211,7 @@ export default function PostRentalModal({ lease, isLandlord, onClose, onRefresh 
         category: newMaintenance.category,
         priority: newMaintenance.priority
       });
-      toast.success('Đã gửi yêu cầu sửa chữa đến chủ nhà thành công!');
+      toast.success('Đã gửi yêu cầu sửa chữa đến chủ trọ!');
       setIsAddingMaintenance(false);
       setNewMaintenance({
         title: '',
@@ -267,7 +267,7 @@ export default function PostRentalModal({ lease, isLandlord, onClose, onRefresh 
         proposedEndDate: new Date(renewalDate).toISOString(),
         notes: renewalNotes.trim()
       });
-      toast.success('Đã gửi đề xuất gia hạn hợp đồng thuê thành công!');
+      toast.success('Đã gửi đề xuất gia hạn hợp đồng thuê!');
       loadData();
       onRefresh();
     } catch (err: any) {
@@ -517,7 +517,7 @@ export default function PostRentalModal({ lease, isLandlord, onClose, onRefresh 
                       <h3 className="font-bold text-sm md:text-base">Quy trình vận hành hợp đồng thuê DORMI</h3>
                     </div>
                     <p className="text-xs text-blue-100 leading-relaxed">
-                      DORMI tách biệt hoàn toàn tiền thanh toán phòng giữa khách & chủ nhà (Rail A) và phí dịch vụ nền tảng (Rail B). 
+                      DORMI không giữ tiền thuê phòng. Tiền thuê chuyển trực tiếp giữa khách thuê và chủ trọ.
                       Mọi biên bản kiểm tra sự cố, phân công thợ và quyết toán trả phòng đều được lưu vết minh bạch.
                     </p>
                     <div className="flex flex-wrap gap-2 pt-2">
@@ -621,7 +621,7 @@ export default function PostRentalModal({ lease, isLandlord, onClose, onRefresh 
                                   </span>
                                 ) : isPendingConfirm ? (
                                   <span className="px-2 py-0.5 rounded-full text-[11px] font-bold bg-blue-100 text-blue-800 flex items-center gap-1">
-                                    <Clock className="w-3 h-3" /> Chờ chủ nhà xác nhận
+                                    <Clock className="w-3 h-3" /> Chờ chủ trọ xác nhận
                                   </span>
                                 ) : (
                                   <span className="px-2 py-0.5 rounded-full text-[11px] font-bold bg-amber-100 text-amber-800 flex items-center gap-1">
@@ -637,7 +637,7 @@ export default function PostRentalModal({ lease, isLandlord, onClose, onRefresh 
                                 <p className="text-xs text-[#475569] italic">Ghi chú: {sch.landlordNotes}</p>
                               )}
                               {sch.paymentReference && (
-                                <p className="text-xs text-[#64748B]">Mã giao dịch / đối soát: <span className="font-medium text-[#0F172A]">{sch.paymentReference}</span></p>
+                                <p className="text-xs text-[#64748B]">Mã giao dịch: <span className="font-medium text-[#0F172A]">{sch.paymentReference}</span></p>
                               )}
                             </div>
 
@@ -717,7 +717,7 @@ export default function PostRentalModal({ lease, isLandlord, onClose, onRefresh 
                             </p>
                           ) : (
                             <p className="text-slate-600 mt-1">
-                              Vui lòng chuyển khoản tiền tới chủ nhà ({lease.landlordName}{lease.landlordPhone ? ` - SĐT: ${lease.landlordPhone}` : ''}), sau đó nhập mã giao dịch ngân hàng bên dưới để chủ nhà đối soát.
+                              Vui lòng chuyển khoản tiền tới chủ trọ ({lease.landlordName}{lease.landlordPhone ? ` - SĐT: ${lease.landlordPhone}` : ''}), sau đó nhập mã giao dịch ngân hàng bên dưới để chủ trọ kiểm tra.
                             </p>
                           )}
                         </div>
@@ -749,7 +749,7 @@ export default function PostRentalModal({ lease, isLandlord, onClose, onRefresh 
 
                         <div>
                           <label className="text-xs font-semibold text-[#0F172A] block mb-1">
-                            {isLandlord ? 'Ghi chú đối soát / Mã giao dịch nhận' : 'Mã giao dịch / Nội dung chuyển khoản ngân hàng'}
+                            {isLandlord ? 'Ghi chú kiểm tra / Mã giao dịch nhận' : 'Mã giao dịch / Nội dung chuyển khoản ngân hàng'}
                           </label>
                           <input
                             type="text"
@@ -790,7 +790,7 @@ export default function PostRentalModal({ lease, isLandlord, onClose, onRefresh 
                             </div>
                             <div>
                               <h4 className="font-bold text-base text-[#0F172A]">Thanh toán cọc qua VietQR</h4>
-                              <p className="text-caption text-[#64748B]">Cổng thanh toán PayOS đối soát tự động</p>
+                              <p className="text-caption text-[#64748B]">Cổng thanh toán PayOS kiểm tra tự động</p>
                             </div>
                           </div>
                           <button 
@@ -1379,7 +1379,7 @@ export default function PostRentalModal({ lease, isLandlord, onClose, onRefresh 
                     </div>
 
                     <p className="text-xs text-[#64748B] leading-relaxed">
-                      Khi kết thúc kỳ thuê, hai bên thực hiện biên bản kiểm tra phòng. 
+                      Khi hết hạn thuê, hai bên sẽ lập biên bản kiểm tra phòng. 
                       Sau khi khấu trừ các chi phí hợp lý (nếu có), số tiền cọc còn lại sẽ được hoàn tất quyết toán và phòng sẽ tự động mở lại trạng thái Còn trống để đón khách mới.
                     </p>
 
