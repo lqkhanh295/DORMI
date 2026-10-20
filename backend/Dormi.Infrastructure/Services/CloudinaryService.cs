@@ -16,15 +16,9 @@ namespace Dormi.Infrastructure.Services
 
         public CloudinaryService(IConfiguration config)
         {
-            var cloudName = config["CloudinarySettings:CloudName"]
-                ?? Environment.GetEnvironmentVariable("CLOUDINARY_CLOUD_NAME")
-                ?? Environment.GetEnvironmentVariable("CloudinarySettings__CloudName");
-            var apiKey = config["CloudinarySettings:ApiKey"]
-                ?? Environment.GetEnvironmentVariable("CLOUDINARY_API_KEY")
-                ?? Environment.GetEnvironmentVariable("CloudinarySettings__ApiKey");
-            var apiSecret = config["CloudinarySettings:ApiSecret"]
-                ?? Environment.GetEnvironmentVariable("CLOUDINARY_API_SECRET")
-                ?? Environment.GetEnvironmentVariable("CloudinarySettings__ApiSecret");
+            var cloudName = GetConfigValue(config, "CloudinarySettings:CloudName", "CLOUDINARY_CLOUD_NAME", "CloudinarySettings__CloudName");
+            var apiKey = GetConfigValue(config, "CloudinarySettings:ApiKey", "CLOUDINARY_API_KEY", "CloudinarySettings__ApiKey");
+            var apiSecret = GetConfigValue(config, "CloudinarySettings:ApiSecret", "CLOUDINARY_API_SECRET", "CloudinarySettings__ApiSecret");
 
             if (!string.IsNullOrWhiteSpace(cloudName) && !string.IsNullOrWhiteSpace(apiKey) && !string.IsNullOrWhiteSpace(apiSecret))
             {
@@ -32,6 +26,18 @@ namespace Dormi.Infrastructure.Services
                 _cloudinary = new Cloudinary(acc);
                 _hasValidConfig = true;
             }
+        }
+
+        private static string? GetConfigValue(IConfiguration config, string key, params string[] envVars)
+        {
+            var val = config[key];
+            if (!string.IsNullOrWhiteSpace(val)) return val.Trim();
+            foreach (var env in envVars)
+            {
+                val = Environment.GetEnvironmentVariable(env) ?? config[env];
+                if (!string.IsNullOrWhiteSpace(val)) return val.Trim();
+            }
+            return null;
         }
 
         public async Task<string?> UploadImageAsync(Stream fileStream, string fileName)

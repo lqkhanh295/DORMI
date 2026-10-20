@@ -144,7 +144,7 @@ export default function TenantProfile() {
       // 2. Upload binary to Cloudinary storage
       const uploadRes = await imagesApi.uploadImage(file);
       const cdnUrl = uploadRes?.imageUrl;
-      if (!cdnUrl || cdnUrl.startsWith('data:')) {
+      if (!cdnUrl || cdnUrl.startsWith('data:') || cdnUrl.includes('photo-1522708323590-d24dbb6b0267')) {
         throw new Error('Đường dẫn ảnh không hợp lệ.');
       }
 
