@@ -111,7 +111,8 @@ var allowedOrigins = builder.Configuration.GetSection("Cors:AllowedOrigins").Get
     "http://127.0.0.1:5173",
     "http://127.0.0.1:3000",
     "https://dormi.space",
-    "https://www.dormi.space"
+    "https://www.dormi.space",
+    "https://api.dormi.space"
 };
 
 builder.Services.AddCors(options =>
@@ -128,6 +129,7 @@ builder.Services.AddCors(options =>
                              uri.Host == "127.0.0.1" || 
                              uri.Host == "dormi.space" ||
                              uri.Host == "www.dormi.space" ||
+                             uri.Host.EndsWith(".dormi.space") ||
                              allowedOrigins.Contains(origin);
                   }
                   catch
