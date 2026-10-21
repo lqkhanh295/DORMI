@@ -310,9 +310,11 @@ public class TrustSafetyService : ITrustSafetyService
 
     public async Task<ServiceResult<List<AuditLogDto>>> GetAuditLogsAsync(int limit = 50)
     {
+        var safeLimit = Math.Clamp(limit, 1, 200);
         var logs = await _db.AuditLogs
+            .AsNoTracking()
             .OrderByDescending(a => a.CreatedAt)
-            .Take(limit)
+            .Take(safeLimit)
             .Select(a => new AuditLogDto
             {
                 Id = a.Id,

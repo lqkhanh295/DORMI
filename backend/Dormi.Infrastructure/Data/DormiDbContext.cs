@@ -263,9 +263,20 @@ public class DormiDbContext : DbContext
                 ?? httpContext?.User?.Identity?.Name
                 ?? string.Empty;
 
-            var clientIp = httpContext?.Connection?.RemoteIpAddress?.ToString()
-                ?? httpContext?.Request?.Headers["X-Forwarded-For"].FirstOrDefault()
+            // Immutability Guard: Prevent any modification or deletion of audit logs
+            foreach (var aEntry in ChangeTracker.Entries<AuditLog>())
+            {
+                if (aEntry.State == EntityState.Modified || aEntry.State == EntityState.Deleted)
+                {
+                    throw new InvalidOperationException("Bảo mật: Bản ghi kiểm toán (AuditLog) là bất biến (append-only), không được phép chỉnh sửa hoặc xóa.");
+                }
+            }
+
+            var rawIp = httpContext?.Request?.Headers["X-Forwarded-For"].FirstOrDefault()
+                ?? httpContext?.Connection?.RemoteIpAddress?.ToString()
                 ?? "127.0.0.1";
+            var clientIp = rawIp.Split(',')[0].Trim();
+            if (clientIp.Length > 45) clientIp = clientIp.Substring(0, 45);
 
             var auditEntries = new List<AuditLog>();
 
