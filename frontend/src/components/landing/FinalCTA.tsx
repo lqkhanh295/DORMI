@@ -57,7 +57,7 @@ export function FinalCTA() {
           </h2>
           
           <p className="text-slate-300 text-sm md:text-base max-w-2xl mx-auto font-normal leading-relaxed">
-            Hàng trăm phòng trọ đã xác thực 3 lớp, tour 3D thực tế và thuật toán gợi ý bạn cùng phòng tương thích đang sẵn sàng phục vụ bạn.
+            Hàng trăm phòng trọ đã xác thực 3 lớp, tọa độ bản đồ số chính xác và thuật toán gợi ý bạn cùng phòng tương thích đang sẵn sàng phục vụ bạn.
           </p>
         </div>
 

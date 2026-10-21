@@ -80,8 +80,7 @@ public class TrustSafetyService : ITrustSafetyService
 
         // 3. Address & Room Details (+15 max)
         bool hasGeoLocation = room.Latitude.HasValue && room.Longitude.HasValue && !string.IsNullOrWhiteSpace(room.Address);
-        bool hasVirtualTour = !string.IsNullOrWhiteSpace(room.Virtual3DUrl);
-        int addressPts = (hasGeoLocation ? 10 : 0) + (hasVirtualTour ? 5 : 0);
+        int addressPts = hasGeoLocation ? 15 : (!string.IsNullOrWhiteSpace(room.Address) ? 8 : 0);
         factors.Add(new TrustFactorItemDto
         {
             Key = "address_details",
@@ -90,7 +89,7 @@ public class TrustSafetyService : ITrustSafetyService
             MaxPoints = 15,
             Passed = addressPts >= 10,
             Explanation = hasGeoLocation
-                ? (hasVirtualTour ? "Địa chỉ đầy đủ, định vị bản đồ chính xác và có tour thực tế ảo 3D." : "Địa chỉ cụ thể và có tọa độ định vị GPS chính xác.")
+                ? "Địa chỉ cụ thể và có tọa độ định vị GPS chính xác trên bản đồ."
                 : "Địa chỉ phòng chưa hoàn thiện tọa độ GPS."
         });
 

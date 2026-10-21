@@ -59,8 +59,8 @@ xychart-beta
 
 > [!TIP]
 > **2. Tách nhỏ gói mã nguồn (Reduce unused JavaScript - Tiết kiệm ~226 KiB):**
-> - Trang chủ hiện đang gộp chung các thư viện nặng như Three.js (`three`, `@react-three/fiber` cho phòng 3D) và Leaflet (`leaflet` cho bản đồ).
-> - **Khắc phục:** Áp dụng `React.lazy()` và dynamic `import()` cho module 3D Room Viewer và Map, chỉ tải khi người dùng cuộn đến hoặc bấm xem bản đồ/3D.
+> - Trang chủ trước đây gộp chung các thư viện bản đồ và UI động lớn (`leaflet` cho bản đồ, `framer-motion` cho animation).
+> - **Khắc phục:** Áp dụng `React.lazy()` và dynamic `import()` cho module Map và các modal tương tác, chỉ tải khi người dùng chuyển hướng hoặc kích hoạt tính năng.
 
 ---
 
@@ -68,13 +68,12 @@ xychart-beta
 
 1. **Domain Canonical:** Đặt `https://www.dormi.space` làm canonical URL duy nhất trên Vercel DNS để xóa bỏ độ trễ redirect 1.2s.
 2. **Code-Splitting Vite:**
-   Trong `vite.config.ts`, cấu hình `manualChunks` tách `three` và `leaflet` ra khỏi `vendor.js`:
+   Trong `vite.config.ts`, cấu hình `manualChunks` tách `leaflet` ra khỏi `vendor.js`:
    ```ts
    build: {
      rollupOptions: {
        output: {
          manualChunks: {
-           three: ['three', '@react-three/fiber', '@react-three/drei'],
            map: ['leaflet'],
          }
        }

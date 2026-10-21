@@ -1,19 +1,19 @@
 # DORMI — Smart Rental & Roommate Matching Platform
 
-> An end-to-end rental ecosystem connecting tenants and landlords with interactive 3D virtual room tours, geospatial search, intelligent roommate matching, and real-time moderation.
+> An end-to-end rental ecosystem connecting tenants and landlords with authentic verified rooms, geospatial search, intelligent roommate matching, and real-time moderation.
 
 ---
 
 ## 📖 Overview
 
-**DORMI** is a modern housing and rental management platform designed to streamline accommodation discovery for students, young professionals, and property managers. It eliminates uncertainty in the rental process by integrating in-browser 3D virtual room inspections, location-aware search, compatibility-based roommate matching, and real-time messaging into a unified platform.
+**DORMI** is a modern housing and rental management platform designed to streamline accommodation discovery for students, young professionals, and property managers. It eliminates uncertainty in the rental process by integrating strict multi-layer room verification, location-aware search, compatibility-based roommate matching, and real-time messaging into a unified platform.
 
 ---
 
 ## ✨ Key Features
 
 - 🔍 **Geospatial Room Discovery**: Search and filter properties by budget, amenities, room types, and geographic radius using PostgreSQL **PostGIS** spatial queries.
-- 🕶️ **Virtual 3D Room Tours**: Inspect properties directly in the browser with interactive 3D spatial models powered by Three.js and React Three Fiber.
+- 🛡️ **Multi-Layer Room Verification**: Inspect genuine property photos, landlord ownership credentials, and periodic photo audit cycles (every 5-8 months) to eliminate fake listings.
 - 🤝 **Roommate Matching (Jaccard Compatibility)**: Connect with compatible roommates using lifestyle, habit, budget, and personality preference scoring.
 - 💬 **Real-Time Communication & Live Moderation**: 
   - Instant messaging between landlords, tenants, and roommates powered by ASP.NET Core SignalR.
@@ -68,7 +68,6 @@ Dormi/
 - **Build Tool**: [Vite](https://vitejs.dev/)
 - **Styling**: [Tailwind CSS v4](https://tailwindcss.com/)
 - **State Management**: [Zustand](https://github.com/pmndrs/zustand)
-- **3D Graphics**: [Three.js](https://threejs.org/), [@react-three/fiber](https://docs.pmnd.rs/react-three-fiber), [@react-three/drei](https://github.com/pmndrs/drei)
 - **Maps**: [Leaflet](https://leafletjs.com/) & [React-Leaflet](https://react-leaflet.js.org/)
 - **Icons & Animation**: [Lucide React](https://lucide.dev/), [Framer Motion](https://www.framer.com/motion/)
 

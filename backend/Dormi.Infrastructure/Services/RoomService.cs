@@ -1095,7 +1095,7 @@ public class RoomService : IRoomService
             // Suppress analytics failure
         }
 
-        return ServiceResult<object>.Ok(new { message = "Ghi nhận lượt trải nghiệm 3D thành công." });
+        return ServiceResult<object>.Ok(new { message = "Ghi nhận tương tác thành công." });
     }
 
     public async Task<ServiceResult<object>> UploadGeneralImageAsync(IFormFile file)

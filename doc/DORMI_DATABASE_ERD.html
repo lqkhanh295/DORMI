@@ -411,7 +411,7 @@ erDiagram
         <tr><td>RoomType</td><td class="type">varchar(50)</td><td></td><td>NOT NULL</td><td>Loại phòng (Phòng đơn, Ký túc xá, Căn hộ mini, Studio)</td></tr>
         <tr><td>Address</td><td class="type">text</td><td></td><td>NOT NULL</td><td>Địa chỉ chi tiết (Số nhà, đường, phường, quận, TP.HCM)</td></tr>
         <tr><td>Location</td><td class="type">geography(Point, 4326)</td><td>SPATIAL</td><td>NULL</td><td>Tọa độ không gian PostGIS phục vụ tìm kiếm bán kính km</td></tr>
-        <tr><td>Virtual3DUrl</td><td class="type">text</td><td></td><td>NULL</td><td>Đường dẫn mô hình 3D thực tế ảo (Three.js WebGL)</td></tr>
+        <tr><td>Virtual3DUrl</td><td class="type">text</td><td></td><td>NULL</td><td>Trường lưu trữ URL liên kết mở rộng (Deprecated / Tùy chọn)</td></tr>
         <tr><td>Status</td><td class="type">int</td><td>INDEX</td><td>NOT NULL</td><td>0 = Available (Đang trống), 1 = Rented (Đã thuê), 2 = PendingApproval (Chờ duyệt), 3 = Hidden (Ẩn)</td></tr>
         <tr><td>IsBoosted</td><td class="type">boolean</td><td></td><td>NOT NULL</td><td>Trạng thái tin VIP được ghim/đẩy ưu tiên</td></tr>
         <tr><td>IsPropertyVerified</td><td class="type">boolean</td><td></td><td>NOT NULL</td><td>Đã được Admin xác thực giấy tờ quyền sở hữu</td></tr>

@@ -1801,7 +1801,6 @@ public class BackendLogicTests
             Address = "12 Nguyễn Thị Minh Khai, Q1",
             Latitude = 10.776,
             Longitude = 106.700,
-            Virtual3DUrl = "https://my.matterport.com/show/?m=example",
             IsPropertyVerified = true, // +20 points
             Status = RoomStatus.Available
         };
@@ -1841,7 +1840,7 @@ public class BackendLogicTests
         var breakdown = scoreRes.Data!;
         Assert.Equal(20, breakdown.IdentityPoints);
         Assert.Equal(20, breakdown.PropertyPoints);
-        Assert.Equal(15, breakdown.AddressAndDetailsPoints); // Lat/lng + 3D
+        Assert.Equal(15, breakdown.AddressAndDetailsPoints); // Lat/lng & Map Coordinates
         Assert.Equal(15, breakdown.PhotosPoints); // 3 images
         Assert.Equal(15, breakdown.ReportsDeduction); // 1 pending report = -15
         Assert.True(breakdown.TotalScore >= 50);
