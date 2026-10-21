@@ -1,0 +1,615 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>DORMI — Sơ đồ cấu trúc cơ sở dữ liệu (Database Schema & ERD)</title>
+  <script src="https://cdn.jsdelivr.net/npm/mermaid@10/dist/mermaid.min.js"></script>
+  <style>
+    :root {
+      --primary: #00153D;
+      --accent: #F2A900;
+      --bg: #F8FAFC;
+      --card-bg: #FFFFFF;
+      --text: #0F172A;
+      --muted: #64748B;
+      --border: #E2E8F0;
+    }
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+      background-color: var(--bg);
+      color: var(--text);
+      line-height: 1.6;
+      padding: 32px 16px;
+    }
+    .container {
+      max-width: 1200px;
+      margin: 0 auto;
+    }
+    header {
+      background: var(--primary);
+      color: white;
+      padding: 32px;
+      border-radius: 16px;
+      margin-bottom: 32px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      flex-wrap: wrap;
+      gap: 16px;
+    }
+    .header-title h1 {
+      font-size: 26px;
+      font-weight: 800;
+      letter-spacing: -0.5px;
+    }
+    .header-title p {
+      font-size: 14px;
+      color: #94A3B8;
+      margin-top: 4px;
+    }
+    .badge {
+      display: inline-block;
+      padding: 4px 10px;
+      border-radius: 6px;
+      font-size: 12px;
+      font-weight: 700;
+      background: var(--accent);
+      color: var(--primary);
+      text-transform: uppercase;
+    }
+    .actions {
+      display: flex;
+      gap: 12px;
+    }
+    .btn {
+      background: var(--accent);
+      color: var(--primary);
+      border: none;
+      padding: 10px 20px;
+      border-radius: 8px;
+      font-size: 13px;
+      font-weight: 700;
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      transition: all 0.2s;
+    }
+    .btn:hover {
+      opacity: 0.9;
+      transform: translateY(-1px);
+    }
+    .section-title {
+      font-size: 20px;
+      font-weight: 800;
+      color: var(--primary);
+      margin: 32px 0 16px 0;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .card {
+      background: var(--card-bg);
+      border: 1px solid var(--border);
+      border-radius: 16px;
+      padding: 24px;
+      margin-bottom: 24px;
+      box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+    }
+    .erd-container {
+      overflow-x: auto;
+      background: white;
+      padding: 20px;
+      border-radius: 12px;
+    }
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 13px;
+      margin-top: 12px;
+    }
+    th, td {
+      padding: 10px 14px;
+      text-align: left;
+      border-bottom: 1px solid var(--border);
+    }
+    th {
+      background: #F1F5F9;
+      color: var(--primary);
+      font-weight: 700;
+    }
+    tr:hover {
+      background: #F8FAFC;
+    }
+    .key-pk {
+      color: #D97706;
+      font-weight: 700;
+      font-family: monospace;
+    }
+    .key-fk {
+      color: #2563EB;
+      font-weight: 700;
+      font-family: monospace;
+    }
+    .type {
+      font-family: monospace;
+      color: #475569;
+      font-size: 12px;
+    }
+    .db-info-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+      gap: 16px;
+      margin-bottom: 24px;
+    }
+    .db-stat {
+      background: white;
+      padding: 16px;
+      border-radius: 12px;
+      border: 1px solid var(--border);
+    }
+    .db-stat-label {
+      font-size: 12px;
+      color: var(--muted);
+      font-weight: 600;
+    }
+    .db-stat-value {
+      font-size: 16px;
+      font-weight: 700;
+      color: var(--primary);
+      margin-top: 4px;
+    }
+    @media print {
+      body {
+        padding: 0;
+        background: white;
+      }
+      header {
+        background: #00153D !important;
+        -webkit-print-color-adjust: exact;
+        print-color-adjust: exact;
+      }
+      .btn {
+        display: none;
+      }
+      .card {
+        box-shadow: none;
+        break-inside: avoid;
+        page-break-inside: avoid;
+      }
+      table {
+        font-size: 11px;
+      }
+    }
+  </style>
+</head>
+<body>
+
+<div class="container">
+  <header>
+    <div class="header-title">
+      <span class="badge">EXE101 — Học phần Khởi nghiệp Đổi mới Sáng tạo</span>
+      <h1 style="margin-top: 8px;">DORMI — Sơ đồ Cấu trúc Dữ liệu & ERD</h1>
+      <p>Hệ quản trị CSDL: Supabase Cloud PostgreSQL (PostGIS Extension v3.3+)</p>
+    </div>
+    <div class="actions">
+      <button class="btn" onclick="window.print()">
+        <svg width="16" height="16" fill="currentColor" viewBox="0 0 16 16"><path d="M2.5 8a.5.5 0 1 0 0-1 .5.5 0 0 0 0 1z"/><path d="M5 1a2 2 0 0 0-2 2v2H2a2 2 0 0 0-2 2v3a2 2 0 0 0 2 2h1v1a2 2 0 0 0 2 2h6a2 2 0 0 0 2-2v-1h1a2 2 0 0 0 2-2V7a2 2 0 0 0-2-2h-1V3a2 2 0 0 0-2-2H5zM4 3a1 1 0 0 1 1-1h6a1 1 0 0 1 1 1v2H4V3zm1 5a2 2 0 0 0-2 2v1H2a1 1 0 0 1-1-1V7a1 1 0 0 1 1-1h12a1 1 0 0 1 1 1v3a1 1 0 0 1-1 1h-1v-1a2 2 0 0 0-2-2H5zm7 2v3a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1v-3a1 1 0 0 1 1-1h6a1 1 0 0 1 1 1z"/></svg>
+        Lưu PDF / In tài liệu (Ctrl + P)
+      </button>
+    </div>
+  </header>
+
+  <div class="db-info-grid">
+    <div class="db-stat">
+      <div class="db-stat-label">HỆ QUẢN TRỊ CSDL</div>
+      <div class="db-stat-value">PostgreSQL 15 (Supabase Cloud)</div>
+    </div>
+    <div class="db-stat">
+      <div class="db-stat-label">MỞ RỘNG ĐỊA LÝ KHÔNG GIAN</div>
+      <div class="db-stat-value">PostGIS (geography::Point, 4326)</div>
+    </div>
+    <div class="db-stat">
+      <div class="db-stat-label">TỔNG SỐ BẢNG THỰC THỂ</div>
+      <div class="db-stat-value">22 Tables (Clean Architecture)</div>
+    </div>
+    <div class="db-stat">
+      <div class="db-stat-label">CỔNG DỊCH VỤ TRUY VẤN</div>
+      <div class="db-stat-value">Port 5432 (Session Mode Pool)</div>
+    </div>
+  </div>
+
+  <!-- PHẦN 1: SƠ ĐỒ ERD (ENTITY RELATIONSHIP DIAGRAM) -->
+  <h2 class="section-title">1. Sơ đồ Quan hệ Thực thể (Entity Relationship Diagram - ERD)</h2>
+  <div class="card">
+    <div class="erd-container">
+      <pre class="mermaid">
+erDiagram
+    USERS ||--o{ ROOMS : "sở hữu (LandlordId)"
+    USERS ||--o{ FAVORITE_ROOMS : "lưu yêu thích"
+    USERS ||--o{ VIEWING_APPOINTMENTS : "đặt hẹn xem"
+    USERS ||--o{ RENTAL_APPLICATIONS : "nộp đơn thuê"
+    USERS ||--o{ LEASE_CONTRACTS : "ký hợp đồng"
+    USERS ||--o{ ROOMMATE_POSTS : "đăng tin ở ghép"
+    USERS ||--o{ MESSAGES : "gửi/nhận"
+    USERS ||--o{ VERIFICATION_REQUESTS : "xác minh CCCD"
+    USERS ||--o{ NOTIFICATIONS : "nhận thông báo"
+    USERS ||--o{ LANDLORD_SUBSCRIPTIONS : "mua gói VIP"
+
+    ROOMS ||--o{ ROOM_IMAGES : "hình ảnh (1-n)"
+    ROOMS ||--o{ FAVORITE_ROOMS : "được yêu thích"
+    ROOMS ||--o{ VIEWING_APPOINTMENTS : "có lịch xem"
+    ROOMS ||--o{ RENTAL_APPLICATIONS : "nhận hồ sơ"
+    ROOMS ||--o{ LEASE_CONTRACTS : "đối tượng thuê"
+    ROOMS ||--o{ ROOM_REVIEWS : "nhận đánh giá"
+    ROOMS ||--o{ ROOM_REPORTS : "báo cáo vi phạm"
+    ROOMS ||--o{ ROOM_VIEWS : "lượt xem"
+
+    RENTAL_APPLICATIONS ||--o{ APPLICATION_DOCUMENTS : "giấy tờ kèm theo"
+    RENTAL_APPLICATIONS ||--o| LEASE_CONTRACTS : "chuyển thành hợp đồng"
+
+    LEASE_CONTRACTS ||--o{ LEASE_DOCUMENTS : "bản scan ký số"
+    LEASE_CONTRACTS ||--o{ RENTAL_PAYMENT_SCHEDULES : "lịch thanh toán cọc/tiền nhà"
+    LEASE_CONTRACTS ||--o{ MAINTENANCE_REQUESTS : "yêu cầu bảo trì"
+
+    USERS {
+        uuid Id PK
+        string Email UK
+        string PasswordHash
+        string FullName
+        int Role
+        boolean IsVerified
+        string PhoneNumber
+        string Preferences
+        string Lifestyle
+        datetime CreatedAt
+    }
+
+    ROOMS {
+        uuid Id PK
+        uuid LandlordId FK
+        string Title
+        decimal Price
+        float Area
+        string Address
+        geography Location
+        int Status
+        string Virtual3DUrl
+        boolean IsBoosted
+        boolean IsPropertyVerified
+        datetime CreatedAt
+    }
+
+    RENTAL_APPLICATIONS {
+        uuid Id PK
+        uuid RoomId FK
+        uuid TenantId FK
+        int Status
+        decimal MonthlyIncome
+        string Occupation
+        int OccupantsCount
+        datetime DesiredMoveInDate
+        datetime CreatedAt
+    }
+
+    LEASE_CONTRACTS {
+        uuid Id PK
+        uuid RoomId FK
+        uuid LandlordId FK
+        uuid TenantId FK
+        uuid RentalApplicationId FK
+        decimal MonthlyRent
+        decimal Deposit
+        string Status
+        boolean LandlordSigned
+        boolean TenantSigned
+        datetime StartDate
+        datetime EndDate
+    }
+
+    RENTAL_PAYMENT_SCHEDULES {
+        uuid Id PK
+        uuid LeaseContractId FK
+        string Type
+        string Title
+        decimal Amount
+        datetime DueDate
+        string Status
+        datetime PaidAt
+        string PaymentMethod
+    }
+
+    MAINTENANCE_REQUESTS {
+        uuid Id PK
+        uuid LeaseContractId FK
+        uuid TenantId FK
+        uuid LandlordId FK
+        uuid RoomId FK
+        string Title
+        string Priority
+        string Status
+        decimal ActualCost
+    }
+
+    VIEWING_APPOINTMENTS {
+        uuid Id PK
+        uuid RoomId FK
+        uuid CustomerId FK
+        datetime AppointmentDate
+        string Status
+        string Notes
+    }
+      </pre>
+    </div>
+  </div>
+
+  <!-- PHẦN 2: BẢNG MÔ TẢ CHI TIẾT CÁC BẢNG VÀ TRƯỜNG CHÍNH -->
+  <h2 class="section-title">2. Danh mục Bảng & Mô tả Các Trường Dữ Liệu Chính</h2>
+
+  <!-- Table 1: Users -->
+  <div class="card">
+    <h3 style="color: var(--primary);">2.1 Bảng: <code style="color: #2563EB;">Users</code> — Người dùng hệ thống</h3>
+    <p style="font-size: 13px; color: var(--muted); margin-top: 4px;">
+      Lưu trữ thông tin tài khoản bao gồm 3 vai trò phân quyền: Khách thuê (Tenant = 0), Chủ trọ (Landlord = 1), và Quản trị viên (Admin = 2).
+    </p>
+    <table>
+      <thead>
+        <tr>
+          <th>Tên trường (Column)</th>
+          <th>Kiểu dữ liệu (Type)</th>
+          <th>Khóa (Key)</th>
+          <th>Bắt buộc (Null?)</th>
+          <th>Mô tả chi tiết</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr><td><span class="key-pk">Id</span></td><td class="type">uuid</td><td>PK</td><td>NOT NULL</td><td>Định danh duy nhất của người dùng</td></tr>
+        <tr><td>Email</td><td class="type">varchar(256)</td><td>UNIQUE</td><td>NOT NULL</td><td>Địa chỉ email dùng để đăng nhập và nhận thông báo OTP</td></tr>
+        <tr><td>PasswordHash</td><td class="type">text</td><td></td><td>NOT NULL</td><td>Chuỗi băm mật khẩu bảo mật chuẩn ASP.NET Core Identity PBKDF2</td></tr>
+        <tr><td>FullName</td><td class="type">varchar(150)</td><td></td><td>NOT NULL</td><td>Họ và tên đầy đủ</td></tr>
+        <tr><td>Role</td><td class="type">int</td><td></td><td>NOT NULL</td><td>0 = Customer/Tenant, 1 = Landlord, 2 = Admin</td></tr>
+        <tr><td>IsVerified</td><td class="type">boolean</td><td></td><td>NOT NULL</td><td>Trạng thái đã xác minh CCCD/chính chủ (True/False)</td></tr>
+        <tr><td>PhoneNumber</td><td class="type">varchar(20)</td><td></td><td>NULL</td><td>Số điện thoại liên hệ</td></tr>
+        <tr><td>AvatarUrl</td><td class="type">text</td><td></td><td>NULL</td><td>Đường dẫn ảnh đại diện tối ưu hóa trên Cloudinary</td></tr>
+        <tr><td>Preferences</td><td class="type">text</td><td></td><td>NULL</td><td>Sở thích cá nhân (gần trường học, yên tĩnh, ban công...)</td></tr>
+        <tr><td>Lifestyle</td><td class="type">text</td><td></td><td>NULL</td><td>Thói quen sinh hoạt (dậy sớm, cú đêm, nấu ăn, thú cưng...)</td></tr>
+        <tr><td>IsLookingForRoommate</td><td class="type">boolean</td><td></td><td>NOT NULL</td><td>Cờ đánh dấu đang có nhu cầu tìm bạn ở ghép</td></tr>
+        <tr><td>CreatedAt</td><td class="type">timestamptz</td><td></td><td>NOT NULL</td><td>Thời gian tạo tài khoản</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <!-- Table 2: Rooms -->
+  <div class="card">
+    <h3 style="color: var(--primary);">2.2 Bảng: <code style="color: #2563EB;">Rooms</code> — Tin đăng phòng trọ</h3>
+    <p style="font-size: 13px; color: var(--muted); margin-top: 4px;">
+      Thực thể trung tâm lưu trữ thông tin phòng trọ, tích hợp tọa độ không gian PostGIS và mô hình thực tế ảo 3D.
+    </p>
+    <table>
+      <thead>
+        <tr>
+          <th>Tên trường</th>
+          <th>Kiểu dữ liệu</th>
+          <th>Khóa</th>
+          <th>Bắt buộc</th>
+          <th>Mô tả chi tiết</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr><td><span class="key-pk">Id</span></td><td class="type">uuid</td><td>PK</td><td>NOT NULL</td><td>Mã phòng trọ duy nhất</td></tr>
+        <tr><td><span class="key-fk">LandlordId</span></td><td class="type">uuid</td><td>FK -> Users.Id</td><td>NOT NULL</td><td>Chủ sở hữu tin đăng phòng trọ</td></tr>
+        <tr><td>Title</td><td class="type">varchar(255)</td><td></td><td>NOT NULL</td><td>Tiêu đề bài đăng phòng trọ</td></tr>
+        <tr><td>Description</td><td class="type">text</td><td></td><td>NOT NULL</td><td>Mô tả chi tiết phòng trọ, quy định và phụ phí</td></tr>
+        <tr><td>Price</td><td class="type">decimal(18,2)</td><td>INDEX</td><td>NOT NULL</td><td>Giá thuê hàng tháng (VNĐ)</td></tr>
+        <tr><td>Area</td><td class="type">float8</td><td></td><td>NOT NULL</td><td>Diện tích phòng (m²)</td></tr>
+        <tr><td>RoomType</td><td class="type">varchar(50)</td><td></td><td>NOT NULL</td><td>Loại phòng (Phòng đơn, Ký túc xá, Căn hộ mini, Studio)</td></tr>
+        <tr><td>Address</td><td class="type">text</td><td></td><td>NOT NULL</td><td>Địa chỉ chi tiết (Số nhà, đường, phường, quận, TP.HCM)</td></tr>
+        <tr><td>Location</td><td class="type">geography(Point, 4326)</td><td>SPATIAL</td><td>NULL</td><td>Tọa độ không gian PostGIS phục vụ tìm kiếm bán kính km</td></tr>
+        <tr><td>Virtual3DUrl</td><td class="type">text</td><td></td><td>NULL</td><td>Đường dẫn mô hình 3D thực tế ảo (Three.js WebGL)</td></tr>
+        <tr><td>Status</td><td class="type">int</td><td>INDEX</td><td>NOT NULL</td><td>0 = Available (Đang trống), 1 = Rented (Đã thuê), 2 = PendingApproval (Chờ duyệt), 3 = Hidden (Ẩn)</td></tr>
+        <tr><td>IsBoosted</td><td class="type">boolean</td><td></td><td>NOT NULL</td><td>Trạng thái tin VIP được ghim/đẩy ưu tiên</td></tr>
+        <tr><td>IsPropertyVerified</td><td class="type">boolean</td><td></td><td>NOT NULL</td><td>Đã được Admin xác thực giấy tờ quyền sở hữu</td></tr>
+        <tr><td>CreatedAt</td><td class="type">timestamptz</td><td>INDEX</td><td>NOT NULL</td><td>Thời gian đăng tin</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <!-- Table 3: RentalApplications -->
+  <div class="card">
+    <h3 style="color: var(--primary);">2.3 Bảng: <code style="color: #2563EB;">RentalApplications</code> — Đơn đề nghị thuê phòng</h3>
+    <p style="font-size: 13px; color: var(--muted); margin-top: 4px;">
+      Quản lý hồ sơ ứng tuyển thuê trọ của khách thuê (Tenant) gửi đến chủ trọ trước khi ký hợp đồng.
+    </p>
+    <table>
+      <thead>
+        <tr>
+          <th>Tên trường</th>
+          <th>Kiểu dữ liệu</th>
+          <th>Khóa</th>
+          <th>Bắt buộc</th>
+          <th>Mô tả chi tiết</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr><td><span class="key-pk">Id</span></td><td class="type">uuid</td><td>PK</td><td>NOT NULL</td><td>Mã đơn thuê duy nhất</td></tr>
+        <tr><td><span class="key-fk">RoomId</span></td><td class="type">uuid</td><td>FK -> Rooms.Id</td><td>NOT NULL</td><td>Phòng trọ khách muốn thuê</td></tr>
+        <tr><td><span class="key-fk">TenantId</span></td><td class="type">uuid</td><td>FK -> Users.Id</td><td>NOT NULL</td><td>Khách thuê nộp hồ sơ</td></tr>
+        <tr><td>Status</td><td class="type">int</td><td>INDEX</td><td>NOT NULL</td><td>0 = Submitted (Đã nộp), 1 = UnderReview (Đang duyệt), 2 = Approved (Chấp thuận), 3 = Rejected (Từ chối), 4 = Withdrawn (Rút đơn)</td></tr>
+        <tr><td>MonthlyIncome</td><td class="type">decimal(18,2)</td><td></td><td>NOT NULL</td><td>Thu nhập hàng tháng để chứng minh khả năng chi trả</td></tr>
+        <tr><td>Occupation</td><td class="type">varchar(100)</td><td></td><td>NOT NULL</td><td>Nghề nghiệp / Sinh viên trường nào</td></tr>
+        <tr><td>OccupantsCount</td><td class="type">int</td><td></td><td>NOT NULL</td><td>Số lượng người dự kiến ở thực tế</td></tr>
+        <tr><td>DesiredMoveInDate</td><td class="type">timestamptz</td><td></td><td>NOT NULL</td><td>Ngày mong muốn dọn vào ở</td></tr>
+        <tr><td>LeaseDurationMonths</td><td class="type">int</td><td></td><td>NOT NULL</td><td>Thời hạn hợp đồng mong muốn (6 tháng, 12 tháng)</td></tr>
+        <tr><td>NoteToLandlord</td><td class="type">text</td><td></td><td>NULL</td><td>Lời nhắn gửi chủ trọ</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <!-- Table 4: LeaseContracts -->
+  <div class="card">
+    <h3 style="color: var(--primary);">2.4 Bảng: <code style="color: #2563EB;">LeaseContracts</code> — Hợp đồng thuê trọ điện tử</h3>
+    <p style="font-size: 13px; color: var(--muted); margin-top: 4px;">
+      Văn bản pháp lý số ràng buộc giữa Chủ trọ và Khách thuê, quản lý toàn bộ vòng đời thuê từ ký số đến hoàn cọc.
+    </p>
+    <table>
+      <thead>
+        <tr>
+          <th>Tên trường</th>
+          <th>Kiểu dữ liệu</th>
+          <th>Khóa</th>
+          <th>Bắt buộc</th>
+          <th>Mô tả chi tiết</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr><td><span class="key-pk">Id</span></td><td class="type">uuid</td><td>PK</td><td>NOT NULL</td><td>Mã hợp đồng thuê</td></tr>
+        <tr><td><span class="key-fk">RoomId</span></td><td class="type">uuid</td><td>FK -> Rooms.Id</td><td>NOT NULL</td><td>Phòng trọ trong hợp đồng</td></tr>
+        <tr><td><span class="key-fk">LandlordId</span></td><td class="type">uuid</td><td>FK -> Users.Id</td><td>NOT NULL</td><td>Bên cho thuê (Chủ trọ)</td></tr>
+        <tr><td><span class="key-fk">TenantId</span></td><td class="type">uuid</td><td>FK -> Users.Id</td><td>NOT NULL</td><td>Bên thuê (Người thuê)</td></tr>
+        <tr><td>MonthlyRent</td><td class="type">decimal(18,2)</td><td></td><td>NOT NULL</td><td>Tiền thuê hàng tháng</td></tr>
+        <tr><td>Deposit</td><td class="type">decimal(18,2)</td><td></td><td>NOT NULL</td><td>Số tiền đặt cọc giữ phòng và cam kết hợp đồng</td></tr>
+        <tr><td>StartDate / EndDate</td><td class="type">timestamptz</td><td></td><td>NOT NULL</td><td>Ngày bắt đầu và ngày kết thúc thời hạn thuê</td></tr>
+        <tr><td>Status</td><td class="type">varchar(50)</td><td>INDEX</td><td>NOT NULL</td><td>Draft, PendingSignature, Active, ExpiringSoon, Terminated, Expired</td></tr>
+        <tr><td>LandlordSigned</td><td class="type">boolean</td><td></td><td>NOT NULL</td><td>Chủ trọ đã ký xác nhận</td></tr>
+        <tr><td>TenantSigned</td><td class="type">boolean</td><td></td><td>NOT NULL</td><td>Người thuê đã ký điện tử</td></tr>
+        <tr><td>ContractDocumentUrl</td><td class="type">text</td><td></td><td>NULL</td><td>Đường dẫn tải hợp đồng điện tử PDF</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <!-- Table 5: RentalPaymentSchedules -->
+  <div class="card">
+    <h3 style="color: var(--primary);">2.5 Bảng: <code style="color: #2563EB;">RentalPaymentSchedules</code> — Lịch thanh toán tiền thuê & tiền cọc</h3>
+    <p style="font-size: 13px; color: var(--muted); margin-top: 4px;">
+      Quản lý các đợt thu tiền cọc, tiền nhà định kỳ hàng tháng, tích hợp cổng thanh toán VietQR PayOS tự động gạch nợ.
+    </p>
+    <table>
+      <thead>
+        <tr>
+          <th>Tên trường</th>
+          <th>Kiểu dữ liệu</th>
+          <th>Khóa</th>
+          <th>Bắt buộc</th>
+          <th>Mô tả chi tiết</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr><td><span class="key-pk">Id</span></td><td class="type">uuid</td><td>PK</td><td>NOT NULL</td><td>Mã kỳ thanh toán</td></tr>
+        <tr><td><span class="key-fk">LeaseContractId</span></td><td class="type">uuid</td><td>FK -> LeaseContracts.Id</td><td>NOT NULL</td><td>Thuộc hợp đồng thuê nào</td></tr>
+        <tr><td>Type</td><td class="type">varchar(30)</td><td></td><td>NOT NULL</td><td>Loại thu: 'Deposit' (Tiền cọc), 'Rent' (Tiền nhà tháng), 'Utilities' (Điện nước)</td></tr>
+        <tr><td>Title</td><td class="type">varchar(150)</td><td></td><td>NOT NULL</td><td>Nội dung thu (ví dụ: 'Tiền cọc hợp đồng', 'Tiền nhà Tháng 10/2026')</td></tr>
+        <tr><td>Amount</td><td class="type">decimal(18,2)</td><td></td><td>NOT NULL</td><td>Số tiền cần thanh toán</td></tr>
+        <tr><td>DueDate</td><td class="type">timestamptz</td><td>INDEX</td><td>NOT NULL</td><td>Hạn chót thanh toán</td></tr>
+        <tr><td>Status</td><td class="type">varchar(30)</td><td>INDEX</td><td>NOT NULL</td><td>'Pending' (Chờ thanh toán), 'Paid' (Đã thanh toán), 'Overdue' (Quá hạn)</td></tr>
+        <tr><td>PaidAt</td><td class="type">timestamptz</td><td></td><td>NULL</td><td>Thời điểm thanh toán thành công (Webhook PayOS xác nhận)</td></tr>
+        <tr><td>PaymentMethod</td><td class="type">varchar(50)</td><td></td><td>NULL</td><td>Phương thức: PayOS VietQR, Chuyển khoản, Tiền mặt</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <!-- Table 6: ViewingAppointments -->
+  <div class="card">
+    <h3 style="color: var(--primary);">2.6 Bảng: <code style="color: #2563EB;">ViewingAppointments</code> — Lịch hẹn xem phòng trực tiếp</h3>
+    <table>
+      <thead>
+        <tr><th>Tên trường</th><th>Kiểu dữ liệu</th><th>Khóa</th><th>Bắt buộc</th><th>Mô tả chi tiết</th></tr>
+      </thead>
+      <tbody>
+        <tr><td><span class="key-pk">Id</span></td><td class="type">uuid</td><td>PK</td><td>NOT NULL</td><td>Mã cuộc hẹn</td></tr>
+        <tr><td><span class="key-fk">RoomId</span></td><td class="type">uuid</td><td>FK -> Rooms.Id</td><td>NOT NULL</td><td>Phòng đăng ký xem</td></tr>
+        <tr><td><span class="key-fk">CustomerId</span></td><td class="type">uuid</td><td>FK -> Users.Id</td><td>NOT NULL</td><td>Khách đặt hẹn</td></tr>
+        <tr><td>AppointmentDate</td><td class="type">timestamptz</td><td></td><td>NOT NULL</td><td>Thời gian hẹn gặp xem phòng</td></tr>
+        <tr><td>Status</td><td class="type">varchar(50)</td><td>INDEX</td><td>NOT NULL</td><td>Requested, Confirmed, Rescheduled, Completed, Cancelled</td></tr>
+        <tr><td>Notes</td><td class="type">text</td><td></td><td>NULL</td><td>Ghi chú hẹn gặp hoặc lý do hủy lịch</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <!-- Table 7: RoommatePosts -->
+  <div class="card">
+    <h3 style="color: var(--primary);">2.7 Bảng: <code style="color: #2563EB;">RoommatePosts</code> — Tin tìm bạn ở ghép</h3>
+    <table>
+      <thead>
+        <tr><th>Tên trường</th><th>Kiểu dữ liệu</th><th>Khóa</th><th>Bắt buộc</th><th>Mô tả chi tiết</th></tr>
+      </thead>
+      <tbody>
+        <tr><td><span class="key-pk">Id</span></td><td class="type">uuid</td><td>PK</td><td>NOT NULL</td><td>Mã bài đăng ở ghép</td></tr>
+        <tr><td><span class="key-fk">CustomerId</span></td><td class="type">uuid</td><td>FK -> Users.Id</td><td>NOT NULL</td><td>Người đăng bài</td></tr>
+        <tr><td>Title</td><td class="type">varchar(255)</td><td></td><td>NOT NULL</td><td>Tiêu đề bài viết</td></tr>
+        <tr><td>Budget</td><td class="type">decimal(18,2)</td><td></td><td>NOT NULL</td><td>Ngân sách chia sẻ hàng tháng (VNĐ)</td></tr>
+        <tr><td>Location</td><td class="type">varchar(255)</td><td></td><td>NOT NULL</td><td>Khu vực mong muốn (Quận, tên trường đại học)</td></tr>
+        <tr><td>GenderPreference</td><td class="type">varchar(20)</td><td></td><td>NOT NULL</td><td>Yêu cầu giới tính: 'Any', 'Male', 'Female'</td></tr>
+        <tr><td>LifestyleTraits</td><td class="type">text</td><td></td><td>NOT NULL</td><td>Đặc điểm thói quen dùng cho thuật toán Jaccard Compatibility</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <!-- Table 8: MaintenanceRequests -->
+  <div class="card">
+    <h3 style="color: var(--primary);">2.8 Bảng: <code style="color: #2563EB;">MaintenanceRequests</code> — Yêu cầu bảo trì / sửa chữa</h3>
+    <table>
+      <thead>
+        <tr><th>Tên trường</th><th>Kiểu dữ liệu</th><th>Khóa</th><th>Bắt buộc</th><th>Mô tả chi tiết</th></tr>
+      </thead>
+      <tbody>
+        <tr><td><span class="key-pk">Id</span></td><td class="type">uuid</td><td>PK</td><td>NOT NULL</td><td>Mã phiếu bảo trì</td></tr>
+        <tr><td><span class="key-fk">LeaseContractId</span></td><td class="type">uuid</td><td>FK -> LeaseContracts.Id</td><td>NOT NULL</td><td>Thuộc hợp đồng thuê nào</td></tr>
+        <tr><td><span class="key-fk">TenantId / LandlordId</span></td><td class="type">uuid</td><td>FK -> Users.Id</td><td>NOT NULL</td><td>Người gửi và người tiếp nhận xử lý</td></tr>
+        <tr><td>Title / Description</td><td class="type">text</td><td></td><td>NOT NULL</td><td>Vấn đề phát sinh (điện nước, máy lạnh, rỉ nước...)</td></tr>
+        <tr><td>Priority</td><td class="type">varchar(20)</td><td></td><td>NOT NULL</td><td>Mức độ ưu tiên: Low, Medium, High, Urgent</td></tr>
+        <tr><td>Status</td><td class="type">varchar(30)</td><td>INDEX</td><td>NOT NULL</td><td>OPEN -> ASSIGNED -> IN_PROGRESS -> RESOLVED -> CLOSED</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <!-- Table 9: Other Supplementary Tables -->
+  <div class="card">
+    <h3 style="color: var(--primary);">2.9 Các bảng bổ trợ hệ thống khác</h3>
+    <table>
+      <thead>
+        <tr><th>Bảng (Table)</th><th>Mục đích</th><th>Các trường chính</th></tr>
+      </thead>
+      <tbody>
+        <tr><td><code>RoomImages</code></td><td>Lưu trữ thư viện ảnh phòng trọ</td><td>Id, RoomId (FK), ImageUrl, IsPrimary</td></tr>
+        <tr><td><code>FavoriteRooms</code></td><td>Danh sách phòng yêu thích của người dùng (Many-to-Many)</td><td>CustomerId (FK), RoomId (FK), CreatedAt</td></tr>
+        <tr><td><code>Messages</code></td><td>Tin nhắn trực tuyến tức thời (SignalR Hub)</td><td>Id, SenderId (FK), ReceiverId (FK), Content, SentAt, IsRead</td></tr>
+        <tr><td><code>RoomReviews</code></td><td>Đánh giá chất lượng phòng trọ & tiện ích</td><td>Id, RoomId (FK), CustomerId (FK), Rating (1-5), Comment</td></tr>
+        <tr><td><code>TenantReviews</code></td><td>Đánh giá khách thuê 2 chiều (bảo vệ chủ trọ)</td><td>Id, LandlordId (FK), TenantId (FK), Rating, CleanlinessRating</td></tr>
+        <tr><td><code>VerificationRequests</code></td><td>Hồ sơ xác minh CCCD / quyền cho thuê</td><td>Id, UserId (FK), DocumentType, FrontImageUrl, BackImageUrl, Status</td></tr>
+        <tr><td><code>RoomReports</code></td><td>Tiếp nhận tố cáo phòng ảo / lừa đảo</td><td>Id, RoomId (FK), ReporterId (FK), Reason, Status, AdminNotes</td></tr>
+        <tr><td><code>PaymentTransactions</code></td><td>Nhật ký giao dịch tài chính hệ thống</td><td>Id, UserId (FK), Amount, PaymentMethod, Status, TransactionRef</td></tr>
+        <tr><td><code>LandlordSubscriptions</code></td><td>Gói nâng cấp tin đăng VIP của chủ nhà</td><td>Id, LandlordId (FK), PackageType, StartDate, EndDate, IsActive</td></tr>
+        <tr><td><code>Notifications</code></td><td>Thông báo chuông real-time</td><td>Id, UserId (FK), Title, Content, Type, IsRead, CreatedAt</td></tr>
+        <tr><td><code>AuditLogs</code></td><td>Nhật ký kiểm toán thao tác quản trị viên</td><td>Id, ActorId, ActorEmail, Action, EntityName, EntityId, Timestamp</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <footer style="text-align: center; margin-top: 40px; color: var(--muted); font-size: 13px; padding-bottom: 24px;">
+    DORMI Platform © 2026 — Đề tài học phần EXE101 Khởi nghiệp Đổi mới Sáng tạo.<br>
+    Tài liệu thiết kế cơ sở dữ liệu được phát sinh tự động và đồng bộ trực tiếp với mã nguồn hệ thống.
+  </footer>
+</div>
+
+<script>
+  mermaid.initialize({ 
+    startOnLoad: true,
+    theme: 'neutral',
+    themeVariables: {
+      primaryColor: '#00153D',
+      primaryTextColor: '#FFFFFF',
+      primaryBorderColor: '#00153D',
+      lineColor: '#2563EB',
+      secondaryColor: '#F8FAFC',
+      tertiaryColor: '#FFFFFF'
+    }
+  });
+</script>
+</body>
+</html>
