@@ -7,7 +7,6 @@ import {
   CheckCircle, 
   Mail, 
   Phone, 
-  MapPin, 
   Copy, 
   Check, 
   X, 
@@ -182,15 +181,11 @@ export function FinalCTA() {
                 </button>
               </div>
 
-              {/* Working hours & Location */}
-              <div className="p-3.5 rounded-xl bg-slate-50 border border-slate-200/80 space-y-2">
+              {/* Working hours */}
+              <div className="p-3.5 rounded-xl bg-slate-50 border border-slate-200/80">
                 <div className="flex items-start gap-2.5">
                   <Clock className="w-4 h-4 text-amber-500 shrink-0 mt-0.5" />
                   <span className="text-slate-600">Thời gian phản hồi: 08:00 - 22:00 tất cả các ngày trong tuần.</span>
-                </div>
-                <div className="flex items-start gap-2.5">
-                  <MapPin className="w-4 h-4 text-rose-500 shrink-0 mt-0.5" />
-                  <span className="text-slate-600">Địa chỉ: Khu Công nghệ cao, TP. Thủ Đức, TP. Hồ Chí Minh.</span>
                 </div>
               </div>
             </div>

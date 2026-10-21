@@ -6,7 +6,6 @@ import { KeyFeaturesSection } from '../../components/landing/KeyFeaturesSection'
 import { VerificationSection } from '../../components/landing/VerificationSection';
 import { RoommateMatcherPreview } from '../../components/landing/RoommateMatcherPreview';
 import { FinalCTA } from '../../components/landing/FinalCTA';
-import { TeamInfoSection } from '../../components/landing/TeamInfoSection';
 
 export default function LandingPage() {
   const [district, setDistrict] = useState('');
@@ -59,9 +58,6 @@ export default function LandingPage() {
 
       {/* 7. CALL TO ACTION (ĐĂNG KÝ / LIÊN HỆ / DÙNG THỬ / APP STORE) */}
       <FinalCTA />
-
-      {/* 8. THÔNG TIN NHÓM THỰC HIỆN ĐỀ TÀI (TEAM INFO) */}
-      <TeamInfoSection />
     </div>
   );
 }
