@@ -85,6 +85,7 @@ public static class DependencyInjection
         }
 
         // Register In-Memory Cache (L1 Cache for hot room details & fast lookups)
+        services.AddHttpContextAccessor();
         services.AddMemoryCache();
 
         // Register Core Infrastructure Services

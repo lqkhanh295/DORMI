@@ -1,12 +1,37 @@
+using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Security.Claims;
+using System.Threading;
+using System.Threading.Tasks;
 using Dormi.Domain.Entities;
+using Microsoft.AspNetCore.Http;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore.ChangeTracking;
 
 namespace Dormi.Infrastructure.Data;
 
 public class DormiDbContext : DbContext
 {
-    public DormiDbContext(DbContextOptions<DormiDbContext> options) : base(options)
+    private readonly IHttpContextAccessor? _httpContextAccessor;
+
+    public DormiDbContext(
+        DbContextOptions<DormiDbContext> options,
+        IHttpContextAccessor? httpContextAccessor = null) : base(options)
     {
+        _httpContextAccessor = httpContextAccessor;
+    }
+
+    public override async Task<int> SaveChangesAsync(CancellationToken cancellationToken = default)
+    {
+        OnBeforeSaveChanges();
+        return await base.SaveChangesAsync(cancellationToken);
+    }
+
+    public override int SaveChanges()
+    {
+        OnBeforeSaveChanges();
+        return base.SaveChanges();
     }
 
     public DbSet<User> Users { get; set; } = null!;
@@ -219,5 +244,288 @@ public class DormiDbContext : DbContext
             .HasIndex(m => new { m.SenderId, m.ReceiverId, m.SentAt });
         modelBuilder.Entity<Message>()
             .HasIndex(m => new { m.ReceiverId, m.IsRead });
+    }
+
+    private void OnBeforeSaveChanges()
+    {
+        try
+        {
+            ChangeTracker.DetectChanges();
+
+            var httpContext = _httpContextAccessor?.HttpContext;
+            var currentUserIdStr = httpContext?.User?.FindFirst(ClaimTypes.NameIdentifier)?.Value
+                ?? httpContext?.User?.FindFirst("id")?.Value
+                ?? httpContext?.User?.FindFirst("sub")?.Value;
+            Guid? currentUserId = Guid.TryParse(currentUserIdStr, out var parsedId) ? parsedId : null;
+
+            var currentEmail = httpContext?.User?.FindFirst(ClaimTypes.Email)?.Value
+                ?? httpContext?.User?.FindFirst("email")?.Value
+                ?? httpContext?.User?.Identity?.Name
+                ?? string.Empty;
+
+            var clientIp = httpContext?.Connection?.RemoteIpAddress?.ToString()
+                ?? httpContext?.Request?.Headers["X-Forwarded-For"].FirstOrDefault()
+                ?? "127.0.0.1";
+
+            var auditEntries = new List<AuditLog>();
+
+            foreach (var entry in ChangeTracker.Entries())
+            {
+                // Never audit AuditLog itself to prevent recursion; also ignore high-frequency noise
+                if (entry.Entity is AuditLog ||
+                    entry.Entity is RoomView ||
+                    entry.Entity is Notification ||
+                    entry.Entity is Message ||
+                    entry.Entity is FavoriteRoom ||
+                    entry.Entity is RoomImage ||
+                    entry.Entity is ApplicationDocument ||
+                    entry.Entity is LeaseDocument)
+                {
+                    continue;
+                }
+
+                if (entry.State != EntityState.Added &&
+                    entry.State != EntityState.Modified &&
+                    entry.State != EntityState.Deleted)
+                {
+                    continue;
+                }
+
+                var auditLog = CreateAuditLogForEntry(entry, currentUserId, currentEmail, clientIp);
+                if (auditLog != null)
+                {
+                    auditEntries.Add(auditLog);
+                }
+            }
+
+            if (auditEntries.Count > 0)
+            {
+                AuditLogs.AddRange(auditEntries);
+            }
+        }
+        catch
+        {
+            // Fail-safe: Audit logging should never prevent core domain operations from succeeding
+        }
+    }
+
+    private static AuditLog? CreateAuditLogForEntry(
+        EntityEntry entry,
+        Guid? currentUserId,
+        string currentEmail,
+        string clientIp)
+    {
+        var action = string.Empty;
+        var entityType = entry.Entity.GetType().Name;
+        var entityId = string.Empty;
+        var details = string.Empty;
+        Guid? actorId = currentUserId;
+        var actorEmail = currentEmail;
+
+        switch (entry.Entity)
+        {
+            case User u:
+                entityId = u.Id.ToString();
+                if (entry.State == EntityState.Added)
+                {
+                    action = "UserRegistration";
+                    details = $"Đăng ký tài khoản: {u.FullName} ({u.Email}) - Vai trò: {u.Role}";
+                    actorId = u.Id;
+                    actorEmail = u.Email;
+                }
+                else if (entry.State == EntityState.Modified)
+                {
+                    action = "UserUpdated";
+                    details = $"Cập nhật thông tin tài khoản: {u.FullName} ({u.Email})";
+                    if (string.IsNullOrEmpty(actorEmail)) actorEmail = u.Email;
+                }
+                else if (entry.State == EntityState.Deleted)
+                {
+                    action = "UserDeleted";
+                    details = $"Xóa tài khoản người dùng: {u.FullName} ({u.Email})";
+                }
+                break;
+
+            case Room r:
+                entityId = r.Id.ToString();
+                actorId ??= r.LandlordId;
+                if (entry.State == EntityState.Added)
+                {
+                    action = "RoomCreated";
+                    details = $"Đăng tin phòng trọ: \"{r.Title}\" - Giá: {r.Price:N0} đ/tháng - Địa chỉ: {r.Address}";
+                }
+                else if (entry.State == EntityState.Modified)
+                {
+                    action = "RoomUpdated";
+                    details = $"Cập nhật tin phòng trọ: \"{r.Title}\" - Trạng thái: {r.Status} - Giá: {r.Price:N0} đ";
+                }
+                else if (entry.State == EntityState.Deleted)
+                {
+                    action = "RoomDeleted";
+                    details = $"Xóa tin phòng trọ: \"{r.Title}\"";
+                }
+                break;
+
+            case RentalApplication ra:
+                entityId = ra.Id.ToString();
+                actorId ??= ra.TenantId;
+                if (entry.State == EntityState.Added)
+                {
+                    action = "ApplicationSubmitted";
+                    details = $"Nộp hồ sơ thuê phòng (Phòng ID: {ra.RoomId}, Thu nhập: {ra.MonthlyIncome:N0} đ/tháng)";
+                }
+                else if (entry.State == EntityState.Modified)
+                {
+                    action = "ApplicationStatusChanged";
+                    details = $"Cập nhật trạng thái hồ sơ thuê phòng ID: {ra.RoomId} sang: {ra.Status}";
+                }
+                else if (entry.State == EntityState.Deleted)
+                {
+                    action = "ApplicationDeleted";
+                    details = $"Xóa hồ sơ thuê phòng ID: {ra.RoomId}";
+                }
+                break;
+
+            case LeaseContract lc:
+                entityId = lc.Id.ToString();
+                actorId ??= lc.LandlordId != Guid.Empty ? lc.LandlordId : lc.TenantId;
+                if (entry.State == EntityState.Added)
+                {
+                    action = "LeaseCreated";
+                    details = $"Khởi tạo hợp đồng thuê (Phòng ID: {lc.RoomId}, Giá thuê: {lc.MonthlyRent:N0} đ, Tiền cọc: {lc.Deposit:N0} đ)";
+                }
+                else if (entry.State == EntityState.Modified)
+                {
+                    action = "LeaseUpdated";
+                    details = $"Cập nhật hợp đồng thuê: Trạng thái {lc.Status} (Chủ trọ ký: {(lc.LandlordSigned ? "Rồi" : "Chưa")}, Khách ký: {(lc.TenantSigned ? "Rồi" : "Chưa")})";
+                }
+                else if (entry.State == EntityState.Deleted)
+                {
+                    action = "LeaseDeleted";
+                    details = $"Hủy / Xóa hợp đồng thuê ID: {lc.Id}";
+                }
+                break;
+
+            case ViewingAppointment va:
+                entityId = va.Id.ToString();
+                actorId ??= va.CustomerId;
+                if (entry.State == EntityState.Added)
+                {
+                    action = "AppointmentCreated";
+                    details = $"Đặt lịch xem phòng ID: {va.RoomId} vào ngày {va.AppointmentDate:dd/MM/yyyy HH:mm}";
+                }
+                else if (entry.State == EntityState.Modified)
+                {
+                    action = "AppointmentUpdated";
+                    details = $"Cập nhật lịch xem phòng ID: {va.RoomId}: Trạng thái {va.Status}";
+                }
+                else if (entry.State == EntityState.Deleted)
+                {
+                    action = "AppointmentCancelled";
+                    details = $"Hủy lịch xem phòng ID: {va.RoomId}";
+                }
+                break;
+
+            case PaymentTransaction pt:
+                entityId = pt.Id.ToString();
+                actorId ??= pt.UserId;
+                if (entry.State == EntityState.Added)
+                {
+                    action = "PaymentCreated";
+                    details = $"Khởi tạo thanh toán: {pt.Amount:N0} đ qua {pt.PaymentMethod} - Mã GD: {pt.TransactionRef}";
+                }
+                else if (entry.State == EntityState.Modified)
+                {
+                    action = "PaymentUpdated";
+                    details = $"Cập nhật giao dịch: {pt.Amount:N0} đ ({pt.Status}) - Mã GD: {pt.TransactionRef}";
+                }
+                break;
+
+            case VerificationRequest vr:
+                entityId = vr.Id.ToString();
+                actorId ??= vr.UserId;
+                if (entry.State == EntityState.Added)
+                {
+                    action = "VerificationSubmitted";
+                    details = $"Gửi hồ sơ xác minh danh tính ({vr.DocumentType})";
+                }
+                else if (entry.State == EntityState.Modified)
+                {
+                    action = "VerificationModerated";
+                    details = $"Xử lý xác minh danh tính ({vr.DocumentType}): Trạng thái {vr.Status}";
+                }
+                break;
+
+            case RoomReport rr:
+                entityId = rr.Id.ToString();
+                actorId ??= rr.ReporterId;
+                if (entry.State == EntityState.Added)
+                {
+                    action = "RoomReported";
+                    details = $"Gửi báo cáo vi phạm phòng ID: {rr.RoomId} - Lý do: {rr.Reason}";
+                }
+                else if (entry.State == EntityState.Modified)
+                {
+                    action = "ReportResolved";
+                    details = $"Xử lý báo cáo vi phạm phòng ID: {rr.RoomId} - Trạng thái: {rr.Status}";
+                }
+                break;
+
+            case RoommatePost rp:
+                entityId = rp.Id.ToString();
+                actorId ??= rp.CustomerId;
+                if (entry.State == EntityState.Added)
+                {
+                    action = "RoommatePostCreated";
+                    details = $"Đăng tin tìm bạn ở ghép: \"{rp.Title}\" - Ngân sách: {rp.Budget:N0} đ";
+                }
+                else if (entry.State == EntityState.Modified)
+                {
+                    action = "RoommatePostUpdated";
+                    details = $"Cập nhật tin tìm bạn ở ghép: \"{rp.Title}\"";
+                }
+                else if (entry.State == EntityState.Deleted)
+                {
+                    action = "RoommatePostDeleted";
+                    details = $"Xóa tin tìm bạn ở ghép: \"{rp.Title}\"";
+                }
+                break;
+
+            case MaintenanceRequest mr:
+                entityId = mr.Id.ToString();
+                actorId ??= mr.TenantId;
+                if (entry.State == EntityState.Added)
+                {
+                    action = "MaintenanceRequested";
+                    details = $"Yêu cầu bảo trì: \"{mr.Title}\" - Mức ưu tiên: {mr.Priority}";
+                }
+                else if (entry.State == EntityState.Modified)
+                {
+                    action = "MaintenanceUpdated";
+                    details = $"Cập nhật yêu cầu bảo trì: \"{mr.Title}\" - Trạng thái: {mr.Status}";
+                }
+                break;
+
+            default:
+                return null;
+        }
+
+        if (string.IsNullOrEmpty(action))
+        {
+            return null;
+        }
+
+        return new AuditLog
+        {
+            Id = Guid.NewGuid(),
+            ActorId = actorId,
+            ActorEmail = !string.IsNullOrWhiteSpace(actorEmail) ? actorEmail : "system@dormi.vn",
+            Action = action,
+            EntityType = entityType,
+            EntityId = entityId,
+            Details = details,
+            IpAddress = clientIp,
+            CreatedAt = DateTime.UtcNow
+        };
     }
 }

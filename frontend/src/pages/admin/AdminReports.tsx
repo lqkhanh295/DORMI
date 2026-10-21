@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import { createPortal } from 'react-dom';
 import { Link } from 'react-router-dom';
 import { Card } from '../../components/ui/Card';
@@ -14,6 +14,7 @@ import {
   ShieldAlert, 
   FileText, 
   History, 
+  Search, 
   Eye, 
   ShieldCheck, 
   UserX, 
@@ -51,6 +52,37 @@ export default function AdminReports() {
 
   // Audit log state
   const [auditLogs, setAuditLogs] = useState<AuditLogItem[]>([]);
+  const [auditSearchQuery, setAuditSearchQuery] = useState('');
+
+  const filteredAuditLogs = useMemo(() => {
+    if (!auditSearchQuery.trim()) return auditLogs;
+    const q = auditSearchQuery.toLowerCase();
+    return auditLogs.filter(log => 
+      (log.action && log.action.toLowerCase().includes(q)) ||
+      (log.actorEmail && log.actorEmail.toLowerCase().includes(q)) ||
+      (log.entityType && log.entityType.toLowerCase().includes(q)) ||
+      (log.details && log.details.toLowerCase().includes(q))
+    );
+  }, [auditLogs, auditSearchQuery]);
+
+  const getActionBadgeClass = (action: string) => {
+    if (action.includes('Fail') || action.includes('Reject') || action.includes('Ban') || action.includes('Delete') || action.includes('Lock') || action.includes('Hide')) {
+      return 'bg-rose-50 text-rose-700 border border-rose-200';
+    }
+    if (action.includes('Approve') || action.includes('Resolve') || action.includes('Verified')) {
+      return 'bg-emerald-50 text-emerald-700 border border-emerald-200';
+    }
+    if (action.includes('Login') || action.includes('Password')) {
+      return 'bg-amber-50 text-amber-700 border border-amber-200';
+    }
+    if (action.includes('Created') || action.includes('Registration') || action.includes('Submitted')) {
+      return 'bg-sky-50 text-sky-700 border border-sky-200';
+    }
+    if (action.includes('Updated') || action.includes('Changed')) {
+      return 'bg-indigo-50 text-indigo-700 border border-indigo-200';
+    }
+    return 'bg-slate-50 text-slate-700 border border-slate-200';
+  };
   const [loadingAudit, setLoadingAudit] = useState(false);
 
   const fetchReports = async () => {
@@ -422,20 +454,32 @@ export default function AdminReports() {
       {activeTab === 'audit' && (
         <div className="space-y-4">
           <Card className="bg-white rounded-2xl border border-slate-200 overflow-hidden shadow-sm">
-            <div className="p-4 border-b border-slate-100 flex items-center justify-between bg-slate-50/50">
+            <div className="p-4 border-b border-slate-100 flex flex-col sm:flex-row sm:items-center justify-between gap-3 bg-slate-50/50">
               <div className="flex items-center gap-2">
                 <History className="w-5 h-5 text-slate-600" />
-                <h3 className="font-bold text-slate-900 text-sm">Nhật ký hoạt động Quản trị & Kiểm duyệt</h3>
+                <h3 className="font-bold text-slate-900 text-sm">Nhật ký hoạt động Quản trị & Hệ thống (Audit Logs)</h3>
+                <span className="text-xs bg-slate-200/70 text-slate-700 font-medium px-2 py-0.5 rounded-full">
+                  {filteredAuditLogs.length} sự kiện
+                </span>
               </div>
-              <span className="text-xs text-slate-500">{auditLogs.length} sự kiện gần nhất</span>
+              <div className="relative w-full sm:w-64">
+                <Search className="w-4 h-4 text-slate-400 absolute left-3 top-1/2 -translate-y-1/2" />
+                <input
+                  type="text"
+                  placeholder="Tìm theo email, hành động..."
+                  value={auditSearchQuery}
+                  onChange={e => setAuditSearchQuery(e.target.value)}
+                  className="w-full pl-9 pr-3 py-1.5 text-xs bg-white border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500/20 focus:border-primary-500 transition-all"
+                />
+              </div>
             </div>
 
             {loadingAudit ? (
               <SkeletonTable rows={5} cols={5} />
-            ) : auditLogs.length === 0 ? (
+            ) : filteredAuditLogs.length === 0 ? (
               <div className="p-12 text-center text-slate-400">
                 <Info className="w-8 h-8 mx-auto mb-2 text-slate-300" />
-                <p className="text-sm">Chưa có bản ghi kiểm toán nào trong hệ thống.</p>
+                <p className="text-sm">Không tìm thấy bản ghi kiểm toán nào phù hợp.</p>
               </div>
             ) : (
               <div className="overflow-x-auto">
@@ -443,29 +487,27 @@ export default function AdminReports() {
                   <thead className="bg-slate-50 text-slate-600 font-semibold border-b border-slate-200">
                     <tr>
                       <th className="py-3 px-4">Thời gian</th>
-                      <th className="py-3 px-4">Người xử lý</th>
+                      <th className="py-3 px-4">Người thực hiện</th>
                       <th className="py-3 px-4">Hành động</th>
                       <th className="py-3 px-4">Đối tượng</th>
-                      <th className="py-3 px-4">Chi tiết</th>
+                      <th className="py-3 px-4">Chi tiết sự kiện</th>
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-slate-100">
-                    {auditLogs.map(log => (
+                    {filteredAuditLogs.map(log => (
                       <tr key={log.id} className="hover:bg-slate-50/80 transition-colors">
                         <td className="py-3 px-4 whitespace-nowrap text-slate-500">
                           {new Date(log.createdAt).toLocaleString('vi-VN')}
                         </td>
                         <td className="py-3 px-4 font-semibold text-slate-800 whitespace-nowrap">
-                          {log.actorEmail}
+                          {log.actorEmail ? (
+                            <span>{log.actorEmail}</span>
+                          ) : (
+                            <span className="text-slate-400 font-normal italic">Hệ thống (System)</span>
+                          )}
                         </td>
                         <td className="py-3 px-4 whitespace-nowrap">
-                          <span className={`px-2 py-0.5 rounded-md font-medium text-xs ${
-                            log.action.includes('Hide') || log.action.includes('Reject') || log.action.includes('Ban')
-                              ? 'bg-rose-50 text-rose-700 border border-rose-200'
-                              : log.action.includes('Approve') || log.action.includes('Resolve')
-                              ? 'bg-emerald-50 text-emerald-700 border border-emerald-200'
-                              : 'bg-blue-50 text-blue-700 border border-blue-200'
-                          }`}>
+                          <span className={`px-2 py-0.5 rounded-md font-medium text-xs ${getActionBadgeClass(log.action)}`}>
                             {log.action}
                           </span>
                         </td>

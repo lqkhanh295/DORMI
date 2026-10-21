@@ -242,6 +242,7 @@ public class AuthService : IAuthService
             var remainingSeconds = (int)(lockoutUntil - DateTime.UtcNow).TotalSeconds;
             var remainingMinutes = Math.Max(1, (int)Math.Ceiling(remainingSeconds / 60.0));
             _logger.LogWarning("[AUTH AUDIT] LOCKED_ACCOUNT_ATTEMPT: Email={Email}, IP={IP}, RemainingSeconds={Sec}", normalizedEmail, clientIp, remainingSeconds);
+            await LogSecurityEventAsync("UserAccountLocked", normalizedEmail, null, "Cảnh báo bảo mật: Cố gắng đăng nhập vào tài khoản đang bị tạm khóa", clientIp);
 
             return ServiceResult<AuthResponseDto>.Fail(
                 $"Tài khoản tạm thời bị khóa do nhập sai mật khẩu nhiều lần. Vui lòng thử lại sau {remainingMinutes} phút hoặc đặt lại mật khẩu.", 
@@ -370,6 +371,7 @@ public class AuthService : IAuthService
         // 7. Standard Token Generation for Non-MFA Users
         var token = _tokenGenerator.GenerateToken(user);
         _logger.LogInformation("[AUTH AUDIT] LOGIN_SUCCESS: IP={IP}, Email={Email}, UserId={UserId}, Role={Role}", clientIp, user.Email, user.Id, user.Role);
+        await LogSecurityEventAsync("UserLogin", user.Email, user.Id, $"Đăng nhập thành công vào hệ thống (Vai trò: {user.Role})", clientIp);
 
         return ServiceResult<AuthResponseDto>.Ok(new AuthResponseDto
         {
@@ -430,6 +432,8 @@ public class AuthService : IAuthService
             var challengeRes = await GenerateCaptchaChallengeAsync();
             captchaChallenge = challengeRes.Data;
         }
+
+        await LogSecurityEventAsync("UserLoginFailed", normalizedEmail, null, $"Đăng nhập thất bại: Sai mật khẩu hoặc chưa kích hoạt (Số lần sai: {failedAttempts})", clientIp);
 
         return ServiceResult<AuthResponseDto>.Fail(
             $"Email hoặc mật khẩu không chính xác. Bạn còn {remaining} lần thử trước khi tài khoản bị tạm khóa.",
@@ -498,6 +502,7 @@ public class AuthService : IAuthService
 
         var token = _tokenGenerator.GenerateToken(user);
         _logger.LogInformation("[AUTH AUDIT] MFA_VERIFIED_SUCCESS: Email={Email}, Role={Role}, IP={IP}", user.Email, user.Role, clientIp);
+        await LogSecurityEventAsync("UserLoginMfa", user.Email, user.Id, $"Đăng nhập thành công qua xác thực 2 bước MFA (Vai trò: {user.Role})", clientIp);
 
         return ServiceResult<AuthResponseDto>.Ok(new AuthResponseDto
         {
@@ -904,6 +909,7 @@ public class AuthService : IAuthService
         await SafeRemoveCacheAsync($"pwd_reset_{user.Email.ToLowerInvariant()}");
 
         _logger.LogInformation("[AUTH AUDIT] PASSWORD_RESET_COMPLETED: UserId={UserId}, Email={MaskedEmail}", user.Id, MaskEmail(user.Email));
+        await LogSecurityEventAsync("PasswordReset", user.Email, user.Id, "Khôi phục / Đặt lại mật khẩu tài khoản thành công qua OTP", "127.0.0.1");
 
         return ServiceResult<object>.Ok(new 
         { 
@@ -939,6 +945,31 @@ public class AuthService : IAuthService
         await _db.SaveChangesAsync();
 
         _logger.LogInformation("[AUTH AUDIT] PASSWORD_CHANGED: UserId={UserId}", userId);
+        await LogSecurityEventAsync("PasswordChanged", user.Email, user.Id, "Đổi mật khẩu tài khoản người dùng thành công", "127.0.0.1");
         return ServiceResult<object>.Ok(new { message = "Đổi mật khẩu thành công!" });
+    }
+
+    private async Task LogSecurityEventAsync(string action, string email, Guid? userId, string details, string ip = "127.0.0.1")
+    {
+        try
+        {
+            _db.AuditLogs.Add(new AuditLog
+            {
+                Id = Guid.NewGuid(),
+                ActorId = userId,
+                ActorEmail = !string.IsNullOrWhiteSpace(email) ? email : "anonymous@dormi.vn",
+                Action = action,
+                EntityType = "User",
+                EntityId = userId?.ToString() ?? string.Empty,
+                Details = details,
+                IpAddress = ip,
+                CreatedAt = DateTime.UtcNow
+            });
+            await _db.SaveChangesAsync();
+        }
+        catch
+        {
+            // Fail-safe: security audit log failure must not block authentication flow
+        }
     }
 }

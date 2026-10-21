@@ -1864,9 +1864,8 @@ public class BackendLogicTests
         // Verify Audit Log
         var auditLogs = await service.GetAuditLogsAsync(10);
         Assert.True(auditLogs.Success);
-        Assert.Single(auditLogs.Data!);
-        Assert.Equal("ResolveReport", auditLogs.Data![0].Action);
-        Assert.Equal("admin@dormi.vn", auditLogs.Data![0].ActorEmail);
+        Assert.NotEmpty(auditLogs.Data!);
+        Assert.Contains(auditLogs.Data!, a => a.Action == "ResolveReport" && a.ActorEmail == "admin@dormi.vn");
     }
 
     [Fact]
