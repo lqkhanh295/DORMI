@@ -44,9 +44,6 @@ export function KeyFeaturesSection() {
           <h2 className="text-2xl md:text-3xl lg:text-4xl font-black text-[#00153D] tracking-tight">
             Nền tảng công nghệ toàn diện cho thuê trọ hiện đại
           </h2>
-          <p className="text-sm md:text-base text-slate-600 leading-relaxed">
-            Kết hợp sức mạnh kiến trúc Clean Architecture .NET 10, Supabase PostgreSQL và React 19 để mang đến trải nghiệm mượt mà, tin cậy.
-          </p>
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
