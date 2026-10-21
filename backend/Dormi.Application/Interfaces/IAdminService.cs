@@ -19,4 +19,5 @@ public interface IAdminService
     Task<ServiceResult<object>> UpdateReportStatusAsync(Guid reportId, string status);
     Task<ServiceResult<object>> GetRoommatePostsForModerationAsync();
     Task<ServiceResult<object>> UpdateRoommatePostStatusAsync(Guid id, bool isActive);
+    Task<ServiceResult<List<PaymentTransactionDto>>> GetTransactionsAsync();
 }

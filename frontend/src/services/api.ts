@@ -646,7 +646,27 @@ export const adminApi = {
       method: 'PATCH'
     });
   }
+,
+
+  getTransactions: async () => {
+    return request<PaymentTransactionResponse[]>('/admin/transactions');
+  }
 };
+
+export interface PaymentTransactionResponse {
+  id: string;
+  userId: string;
+  userEmail?: string;
+  userFullName?: string;
+  subscriptionId?: string;
+  amount: number;
+  paymentMethod: string;
+  transactionRef: string;
+  description: string;
+  status: string;
+  createdAt: string;
+  completedAt?: string;
+}
 
 export interface TenantDiscoveryCandidate {
   id: string;

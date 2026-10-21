@@ -418,4 +418,30 @@ public class AdminService : IAdminService
 
         return ServiceResult<object>.Ok(new { message = isActive ? "Đã hiển thị lại bài đăng." : "Đã ẩn bài đăng vi phạm." });
     }
+
+    public async Task<ServiceResult<List<PaymentTransactionDto>>> GetTransactionsAsync()
+    {
+        var transactions = await _db.PaymentTransactions
+            .AsNoTracking()
+            .Include(t => t.User)
+            .OrderByDescending(t => t.CreatedAt)
+            .Select(t => new PaymentTransactionDto
+            {
+                Id = t.Id,
+                UserId = t.UserId,
+                UserEmail = t.User != null ? t.User.Email : null,
+                UserFullName = t.User != null ? t.User.FullName : null,
+                SubscriptionId = t.SubscriptionId,
+                Amount = t.Amount,
+                PaymentMethod = t.PaymentMethod,
+                TransactionRef = t.TransactionRef,
+                Description = t.Description,
+                Status = t.Status,
+                CreatedAt = t.CreatedAt,
+                CompletedAt = t.CompletedAt
+            })
+            .ToListAsync();
+
+        return ServiceResult<List<PaymentTransactionDto>>.Ok(transactions);
+    }
 }

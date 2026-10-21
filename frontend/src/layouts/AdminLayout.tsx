@@ -1,6 +1,6 @@
 import { Outlet, Link, useNavigate, useLocation } from 'react-router-dom';
 import { useStore } from '../store/useStore';
-import { LayoutDashboard, UserCheck, Home, Users, AlertTriangle } from 'lucide-react';
+import { LayoutDashboard, UserCheck, Home, Users, AlertTriangle, Receipt } from 'lucide-react';
 import { GlobalFooter } from '../components/ui/GlobalFooter';
 
 export default function AdminLayout() {
@@ -18,6 +18,7 @@ export default function AdminLayout() {
     { name: 'Xác minh chủ trọ', path: '/admin/verify', icon: UserCheck },
     { name: 'Duyệt tin đăng', path: '/admin/rooms', icon: Home },
     { name: 'Người dùng', path: '/admin/users', icon: Users },
+    { name: 'Lịch sử giao dịch', path: '/admin/transactions', icon: Receipt },
     { name: 'Báo cáo vi phạm', path: '/admin/reports', icon: AlertTriangle },
   ];
 

@@ -222,6 +222,8 @@ public class PaymentTransactionDto
 {
     public Guid Id { get; set; }
     public Guid UserId { get; set; }
+    public string? UserEmail { get; set; }
+    public string? UserFullName { get; set; }
     public Guid? SubscriptionId { get; set; }
     public decimal Amount { get; set; }
     public string PaymentMethod { get; set; } = string.Empty;

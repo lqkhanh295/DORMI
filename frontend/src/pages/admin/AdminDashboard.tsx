@@ -168,7 +168,9 @@ export default function AdminDashboard() {
           <p className="text-2xl font-extrabold text-emerald-600 truncate min-h-[36px] flex items-center">
             {loading ? <span className="inline-block w-28 h-7 rounded-lg skeleton-shimmer" /> : `${Number(stats.totalRevenue).toLocaleString('vi-VN')} đ`}
           </p>
-          <p className="text-xs text-slate-400 mt-2">Đã thanh toán thực tế</p>
+          <Link to="/admin/transactions" className="text-xs font-semibold text-emerald-700 hover:underline inline-flex items-center gap-1 mt-2">
+            Lịch sử giao dịch <ArrowRight className="w-3 h-3" />
+          </Link>
         </Card>
       </div>
 

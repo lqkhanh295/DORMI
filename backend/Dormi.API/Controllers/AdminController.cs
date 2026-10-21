@@ -90,4 +90,11 @@ public class AdminController : BaseApiController
         var result = await _adminService.UpdateRoommatePostStatusAsync(id, isActive);
         return HandleResult(result);
     }
+
+    [HttpGet("transactions")]
+    public async Task<IActionResult> GetTransactions()
+    {
+        var result = await _adminService.GetTransactionsAsync();
+        return HandleResult(result);
+    }
 }

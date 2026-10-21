@@ -54,6 +54,7 @@ const VerificationModeration = lazy(() => import('../pages/admin/VerificationMod
 const ContentModeration = lazy(() => import('../pages/admin/ContentModeration'));
 const AdminUsers = lazy(() => import('../pages/admin/AdminUsers'));
 const AdminReports = lazy(() => import('../pages/admin/AdminReports'));
+const AdminTransactions = lazy(() => import('../pages/admin/AdminTransactions'));
 
 function RouteLoading() {
   return (
@@ -139,6 +140,7 @@ export default function AppRoutes() {
           <Route path="content" element={<ContentModeration />} />
           <Route path="users" element={<AdminUsers />} />
           <Route path="reports" element={<AdminReports />} />
+          <Route path="transactions" element={<AdminTransactions />} />
         </Route>
       </Route>
 
