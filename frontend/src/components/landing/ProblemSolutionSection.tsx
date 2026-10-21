@@ -1,4 +1,4 @@
-import { AlertTriangle, CheckCircle2, ShieldCheck, Eye, Users, FileSignature } from 'lucide-react';
+import { AlertTriangle, CheckCircle2, ShieldCheck, MapPin, Users, FileSignature } from 'lucide-react';
 
 export function ProblemSolutionSection() {
   const problems = [
@@ -32,10 +32,10 @@ export function ProblemSolutionSection() {
       desc: 'Admin kiểm tra đối chiếu CCCD chủ trọ và quyền cho thuê. 100% tin đăng phải qua kiểm duyệt trước khi hiển thị công khai.'
     },
     {
-      icon: Eye,
-      badge: 'Công nghệ 3D',
-      title: 'Tham quan 3D Virtual Tour & PostGIS',
-      desc: 'Khách thuê có thể tương tác không gian phòng 3D trực tiếp trên trình duyệt và định vị chính xác vị trí, tiện ích lân cận qua bản đồ số.'
+      icon: MapPin,
+      badge: 'Bản đồ số',
+      title: 'Bản đồ số PostGIS & Tra cứu thực tế',
+      desc: 'Khách thuê có thể định vị chính xác vị trí phòng trọ, đo khoảng cách đến trường học/nơi làm việc và xem tiện ích lân cận qua bản đồ số.'
     },
     {
       icon: Users,
@@ -76,8 +76,8 @@ export function ProblemSolutionSection() {
                   <AlertTriangle className="w-5 h-5" />
                 </div>
                 <div>
-                  <span className="text-xs font-bold text-rose-600 uppercase tracking-wider">Thực trạng thị trường</span>
-                  <h3 className="text-lg font-black text-slate-900">Vấn đề người thuê & chủ trọ gặp phải</h3>
+                  <h3 className="text-lg font-bold text-slate-900">4 Rủi ro khi thuê trọ truyền thống</h3>
+                  <p className="text-xs text-slate-500">Thực trạng phổ biến sinh viên & người đi làm thường gặp</p>
                 </div>
               </div>
 
@@ -86,12 +86,12 @@ export function ProblemSolutionSection() {
                   const Icon = p.icon;
                   return (
                     <div key={idx} className="flex items-start gap-3.5">
-                      <div className="w-6 h-6 rounded-full bg-rose-100 text-rose-600 flex items-center justify-center shrink-0 mt-0.5">
+                      <div className="w-6 h-6 rounded-lg bg-rose-50 text-rose-500 flex items-center justify-center shrink-0 mt-0.5">
                         <Icon className="w-3.5 h-3.5" />
                       </div>
                       <div>
-                        <h4 className="text-sm font-bold text-slate-900">{p.title}</h4>
-                        <p className="text-xs sm:text-sm text-slate-600 mt-0.5 leading-relaxed">{p.desc}</p>
+                        <h4 className="text-sm font-bold text-slate-800">{p.title}</h4>
+                        <p className="text-xs text-slate-600 mt-1 leading-relaxed">{p.desc}</p>
                       </div>
                     </div>
                   );
@@ -99,8 +99,8 @@ export function ProblemSolutionSection() {
               </div>
             </div>
 
-            <div className="mt-6 pt-4 border-t border-slate-100 text-xs text-rose-700 font-medium bg-rose-50/60 p-3 rounded-xl">
-              Hậu quả: 68% sinh viên và người trẻ từng gặp rủi ro mất cọc hoặc phải chuyển trọ trong 3 tháng đầu vì thông tin thiếu minh bạch.
+            <div className="mt-8 pt-4 border-t border-rose-50 text-xs text-rose-600 font-medium">
+              Dẫn đến mất tiền, tốn thời gian di chuyển và bất an kéo dài khi sinh hoạt.
             </div>
           </div>
 
@@ -109,11 +109,11 @@ export function ProblemSolutionSection() {
             <div>
               <div className="flex items-center gap-3 pb-4 mb-6 border-b border-blue-100">
                 <div className="w-10 h-10 rounded-xl bg-blue-50 text-blue-700 flex items-center justify-center font-bold">
-                  <ShieldCheck className="w-5 h-5" />
+                  <CheckCircle2 className="w-5 h-5" />
                 </div>
                 <div>
-                  <span className="text-xs font-bold text-blue-700 uppercase tracking-wider">Hệ sinh thái công nghệ</span>
-                  <h3 className="text-lg font-black text-slate-900">Giải pháp đột phá của DORMI</h3>
+                  <h3 className="text-lg font-bold text-slate-900">4 Giải pháp công nghệ từ DORMI</h3>
+                  <p className="text-xs text-slate-500">Chuẩn hóa an toàn và tối ưu trải nghiệm người dùng</p>
                 </div>
               </div>
 
@@ -122,17 +122,17 @@ export function ProblemSolutionSection() {
                   const Icon = s.icon;
                   return (
                     <div key={idx} className="flex items-start gap-3.5">
-                      <div className="w-6 h-6 rounded-full bg-emerald-100 text-emerald-700 flex items-center justify-center shrink-0 mt-0.5">
+                      <div className="w-6 h-6 rounded-lg bg-blue-50 text-blue-700 flex items-center justify-center shrink-0 mt-0.5">
                         <Icon className="w-3.5 h-3.5" />
                       </div>
                       <div>
-                        <div className="flex items-center gap-2 flex-wrap">
-                          <h4 className="text-sm font-bold text-slate-900">{s.title}</h4>
-                          <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-blue-50 text-blue-700 border border-blue-200">
+                        <div className="flex items-center gap-2">
+                          <h4 className="text-sm font-bold text-slate-800">{s.title}</h4>
+                          <span className="text-[10px] font-bold px-1.5 py-0.5 rounded-sm bg-blue-100 text-blue-800">
                             {s.badge}
                           </span>
                         </div>
-                        <p className="text-xs sm:text-sm text-slate-600 mt-0.5 leading-relaxed">{s.desc}</p>
+                        <p className="text-xs text-slate-600 mt-1 leading-relaxed">{s.desc}</p>
                       </div>
                     </div>
                   );
@@ -140,8 +140,8 @@ export function ProblemSolutionSection() {
               </div>
             </div>
 
-            <div className="mt-6 pt-4 border-t border-slate-100 text-xs text-emerald-800 font-medium bg-emerald-50/60 p-3 rounded-xl">
-              Cam kết: 100% phòng hiển thị trạng thái khả dụng thực tế, bảo vệ tiền cọc trực tuyến và hỗ trợ xuyên suốt thời gian thuê trọ.
+            <div className="mt-8 pt-4 border-t border-blue-50 text-xs text-blue-700 font-medium">
+              Đảm bảo 100% phòng thật, người thật và giao dịch được mã hóa an toàn.
             </div>
           </div>
         </div>

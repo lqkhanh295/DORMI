@@ -692,16 +692,7 @@ export default function RoomManagement() {
                 />
               </div>
 
-              <div>
-                <label className="block text-caption font-semibold text-[#64748B] mb-1">Link VR 3D Tour (Tùy chọn)</label>
-                <input 
-                  type="text" 
-                  value={newRoom.virtual3DUrl}
-                  onChange={e => setNewRoom({...newRoom, virtual3DUrl: e.target.value})}
-                  className="w-full bg-[#F8FAFC] shadow-clay-inset border border-[#E2E8F0] rounded-[12px] px-4 py-2.5 text-body text-[#0F172A] focus:outline-none focus:ring-1 focus:ring-[#00153D] focus:bg-white"
-                  placeholder="https://my.matterport.com/show/?m=..."
-                />
-              </div>
+
 
               <div>
                 <label className="block text-caption font-semibold text-[#64748B] mb-2">Hình ảnh thực tế (Tự động nén & Lưu CSDL)</label>

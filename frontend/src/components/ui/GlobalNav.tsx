@@ -66,10 +66,16 @@ export function GlobalNav() {
           { name: 'Phòng của tôi', path: '/landlord/rooms', icon: Home },
           { name: 'Quản lý trọ', path: '/landlord', icon: LayoutDashboard },
         ]
-      : [
-          { name: 'Tìm phòng', path: '/search', icon: Search },
-          { name: 'Ở ghép', path: '/tenant/match', icon: Users },
-        ];
+      : currentUser?.role === 'Admin'
+        ? [
+            { name: 'Bảng điều khiển', path: '/admin', icon: LayoutDashboard },
+            { name: 'Lịch sử giao dịch', path: '/admin/transactions', icon: Receipt },
+            { name: 'Duyệt tin đăng', path: '/admin/rooms', icon: Home },
+          ]
+        : [
+            { name: 'Tìm phòng', path: '/search', icon: Search },
+            { name: 'Ở ghép', path: '/tenant/match', icon: Users },
+          ];
 
   // Close dropdown when clicking outside
   useEffect(() => {
@@ -110,6 +116,11 @@ export function GlobalNav() {
             {currentUser?.role === 'Landlord' && (
               <span className="text-[11px] font-medium text-slate-600 bg-slate-100 border border-slate-200/60 px-1.5 py-0.5 rounded-md ml-1 tracking-normal">
                 Chủ trọ
+              </span>
+            )}
+            {currentUser?.role === 'Admin' && (
+              <span className="text-[11px] font-bold text-amber-700 bg-amber-50 border border-amber-200/60 px-1.5 py-0.5 rounded-md ml-1 tracking-normal">
+                Admin
               </span>
             )}
           </Link>
@@ -291,6 +302,43 @@ export function GlobalNav() {
                           >
                             <Receipt className="w-4 h-4 text-slate-500" />
                             <span>Lịch sử giao dịch</span>
+                          </Link>
+                        </>
+                      )}
+
+                      {currentUser.role === 'Admin' && (
+                        <>
+                          <Link
+                            to="/admin"
+                            onClick={() => setDropdownOpen(false)}
+                            className="flex items-center gap-2.5 px-3 py-2 rounded-lg hover:bg-slate-100 hover:text-[#00153D] transition-colors"
+                          >
+                            <LayoutDashboard className="w-4 h-4 text-slate-500" />
+                            <span>Bảng điều khiển Admin</span>
+                          </Link>
+                          <Link
+                            to="/admin/transactions"
+                            onClick={() => setDropdownOpen(false)}
+                            className="flex items-center gap-2.5 px-3 py-2 rounded-lg hover:bg-emerald-50 hover:text-emerald-700 transition-colors"
+                          >
+                            <Receipt className="w-4 h-4 text-emerald-600" />
+                            <span className="font-bold text-emerald-700">Lịch sử giao dịch</span>
+                          </Link>
+                          <Link
+                            to="/admin/rooms"
+                            onClick={() => setDropdownOpen(false)}
+                            className="flex items-center gap-2.5 px-3 py-2 rounded-lg hover:bg-slate-100 hover:text-[#00153D] transition-colors"
+                          >
+                            <Home className="w-4 h-4 text-slate-500" />
+                            <span>Duyệt tin đăng phòng</span>
+                          </Link>
+                          <Link
+                            to="/admin/users"
+                            onClick={() => setDropdownOpen(false)}
+                            className="flex items-center gap-2.5 px-3 py-2 rounded-lg hover:bg-slate-100 hover:text-[#00153D] transition-colors"
+                          >
+                            <Users className="w-4 h-4 text-slate-500" />
+                            <span>Quản lý người dùng</span>
                           </Link>
                         </>
                       )}

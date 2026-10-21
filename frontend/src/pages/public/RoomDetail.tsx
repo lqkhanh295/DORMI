@@ -433,7 +433,7 @@ export default function RoomDetail() {
                 </span>
               </div>
               <p className="text-caption text-slate-600 leading-relaxed">
-                DORMI áp dụng công nghệ rà soát ảnh để ngăn chặn ảnh photoshop quá đà hoặc ảnh 3D không thực tế. Chủ phòng được khuyến cáo định kỳ cập nhật ảnh chụp mới mỗi 5 - 8 tháng để đảm bảo phòng giống 100% so với thực tế khi khách đến xem.
+                DORMI áp dụng công nghệ rà soát ảnh để ngăn chặn ảnh photoshop quá đà hoặc sai lệch thực tế. Chủ phòng được khuyến cáo định kỳ cập nhật ảnh chụp mới mỗi 5 - 8 tháng để đảm bảo phòng giống 100% so với thực tế khi khách đến xem.
               </p>
             </div>
           </div>

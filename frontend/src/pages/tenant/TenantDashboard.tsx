@@ -323,7 +323,7 @@ export default function TenantDashboard() {
                   <span className="text-white">Bạn muốn tìm phòng theo khu vực cụ thể và mức giá mong muốn?</span>
                 </h3>
                 <p className="text-xs text-slate-200">
-                  Sử dụng công cụ Bản đồ tìm kiếm toàn diện với các bộ lọc thông minh (Quận huyện, Giá thuê, Tiện ích, Tour 3D).
+                  Sử dụng công cụ Bản đồ tìm kiếm toàn diện với các bộ lọc thông minh (Quận huyện, Giá thuê, Tiện ích, Phòng đã xác minh).
                 </p>
               </div>
               <button

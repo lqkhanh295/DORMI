@@ -47,7 +47,7 @@ export function VerificationSection() {
                 Đối chiếu hình ảnh thực tế
               </h3>
               <p className="text-body text-[#64748B] leading-relaxed text-sm">
-                Kiểm duyệt hình ảnh và không gian thực của từng phòng trọ. Cam kết không dùng ảnh render 3D ảo làm giả phòng thực tế.
+                Kiểm duyệt hình ảnh và không gian thực của từng phòng trọ. Cam kết 100% hình ảnh thực tế minh bạch, không qua chỉnh sửa sai lệch.
               </p>
             </div>
           </div>

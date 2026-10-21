@@ -1,4 +1,4 @@
-import { Compass, Box, Users2, MessageSquare, CreditCard, LayoutDashboard } from 'lucide-react';
+import { Compass, Camera, Users2, MessageSquare, CreditCard, LayoutDashboard } from 'lucide-react';
 
 export function KeyFeaturesSection() {
   const features = [
@@ -8,9 +8,9 @@ export function KeyFeaturesSection() {
       desc: 'Tra cứu phòng trọ theo bán kính trường đại học, khu công nghệ cao hoặc quận huyện với thuật toán không gian PostGIS chuẩn xác đến từng mét.'
     },
     {
-      icon: Box,
-      title: 'Tham quan thực tế ảo 3D (Three.js)',
-      desc: 'Xem chi tiết kết cấu căn phòng qua mô hình 3D tương tác trực tiếp trong trình duyệt, đánh giá không gian mà không cần di chuyển.'
+      icon: Camera,
+      title: 'Kiểm định hình ảnh thực tế',
+      desc: 'Quy trình kiểm duyệt hình ảnh chụp trực tiếp tại chỗ, cam kết 100% ảnh thật trung thực, không góc rộng phóng đại hoặc photoshop sai lệch.'
     },
     {
       icon: Users2,

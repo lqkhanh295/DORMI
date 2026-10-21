@@ -75,7 +75,7 @@ export function TeamInfoSection() {
             </div>
             <div className="bg-slate-50 p-3.5 rounded-xl border border-slate-100">
               <span className="font-bold text-slate-900 block mb-1">Giao diện người dùng</span>
-              <span>React 19, TypeScript, Tailwind CSS v4, Three.js 3D</span>
+              <span>React 19, TypeScript, Tailwind CSS v4, Leaflet GIS</span>
             </div>
             <div className="bg-slate-50 p-3.5 rounded-xl border border-slate-100">
               <span className="font-bold text-slate-900 block mb-1">Cơ sở dữ liệu & Đám mây</span>

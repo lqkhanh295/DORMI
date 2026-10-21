@@ -4,7 +4,7 @@ import { Card } from '../../components/ui/Card';
 import { Button } from '../../components/ui/Button';
 import { adminApi } from '../../services/api';
 import { toast } from 'sonner';
-import { CheckCircle2, Clock, XCircle, ShieldCheck, Mail, Phone, UserCheck, ZoomIn, Check, Globe, X } from 'lucide-react';
+import { CheckCircle2, Clock, XCircle, ShieldCheck, Mail, Phone, UserCheck, ZoomIn, Check, X } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { modalBackdropVariants, modalContentVariants } from '../../utils/motion';
 import { PageMotion } from '../../components/common/Motion';
@@ -406,15 +406,7 @@ export default function ContentModeration() {
                   </Card>
                 )}
 
-                {/* 6. Virtual 3D Tour */}
-                {selectedRoom.virtual3DUrl && (
-                  <Card className="p-4 bg-[#F8FAFC] shadow-clay-inset rounded-[12px] border border-[#E2E8F0]">
-                    <h4 className="font-semibold text-caption text-[#64748B] mb-1">Link 3D Virtual Tour</h4>
-                    <a href={selectedRoom.virtual3DUrl} target="_blank" rel="noreferrer" className="text-body text-[#00153D] font-bold underline hover:text-blue-600 break-all inline-flex items-center gap-1.5">
-                      <Globe className="w-4 h-4 text-blue-600" /> {selectedRoom.virtual3DUrl}
-                    </a>
-                  </Card>
-                )}
+
               </div>
 
               <div className="p-6 border-t border-[#E2E8F0] bg-[#F8FAFC] flex items-center justify-between gap-3">
