@@ -11,7 +11,9 @@ import {
   Copy, 
   Check, 
   X, 
-  Clock 
+  Clock,
+  ExternalLink,
+  MessageCircle
 } from 'lucide-react';
 import { toast } from 'sonner';
 
@@ -20,15 +22,20 @@ export function FinalCTA() {
   const [copiedEmail, setCopiedEmail] = useState(false);
   const [copiedPhone, setCopiedPhone] = useState(false);
 
+  const contactPhone = '0911887141';
+  const displayPhone = '0911 887 141';
+  const contactEmail = 'lqkhanh292005@gmail.com';
+  const zaloUrl = 'https://zalo.me/0911887141';
+
   const handleCopy = (text: string, type: 'email' | 'phone') => {
     navigator.clipboard.writeText(text);
     if (type === 'email') {
       setCopiedEmail(true);
-      toast.success('Đã sao chép địa chỉ email hỗ trợ!');
+      toast.success('Đã sao chép email: ' + text);
       setTimeout(() => setCopiedEmail(false), 2000);
     } else {
       setCopiedPhone(true);
-      toast.success('Đã sao chép số điện thoại hotline!');
+      toast.success('Đã sao chép số Zalo/Hotline: ' + text);
       setTimeout(() => setCopiedPhone(false), 2000);
     }
   };
@@ -117,27 +124,39 @@ export function FinalCTA() {
             </div>
 
             <div className="space-y-3.5 text-xs sm:text-sm">
-              {/* Hotline / Phone */}
+              {/* Hotline & Zalo */}
               <div className="p-3.5 rounded-xl bg-slate-50 border border-slate-200/80 flex items-center justify-between">
                 <div className="flex items-center gap-3">
                   <div className="w-8 h-8 rounded-lg bg-emerald-50 text-emerald-600 flex items-center justify-center shrink-0">
                     <Phone className="w-4 h-4" />
                   </div>
                   <div>
-                    <span className="text-[11px] text-slate-400 block font-medium">Hotline / Zalo hỗ trợ</span>
-                    <a href="tel:0901234567" className="font-bold text-slate-800 hover:text-blue-600 transition-colors">
-                      0901 234 567
+                    <span className="text-[11px] text-slate-400 block font-medium">Hotline & Zalo hỗ trợ</span>
+                    <a href={`tel:${contactPhone}`} className="font-bold text-slate-800 hover:text-blue-600 transition-colors text-sm">
+                      {displayPhone}
                     </a>
                   </div>
                 </div>
-                <button
-                  type="button"
-                  onClick={() => handleCopy('0901234567', 'phone')}
-                  className="p-2 text-slate-500 hover:text-slate-800 hover:bg-white rounded-lg border border-slate-200 transition-all cursor-pointer"
-                  title="Sao chép số điện thoại"
-                >
-                  {copiedPhone ? <Check className="w-4 h-4 text-emerald-600" /> : <Copy className="w-4 h-4" />}
-                </button>
+                <div className="flex items-center gap-1.5">
+                  <a
+                    href={zaloUrl}
+                    target="_blank"
+                    rel="noreferrer"
+                    className="px-2.5 py-1.5 text-xs font-semibold text-blue-600 bg-blue-50 hover:bg-blue-100 rounded-lg transition-colors flex items-center gap-1"
+                    title="Mở trò chuyện Zalo"
+                  >
+                    <MessageCircle className="w-3.5 h-3.5" />
+                    <span>Zalo</span>
+                  </a>
+                  <button
+                    type="button"
+                    onClick={() => handleCopy(contactPhone, 'phone')}
+                    className="p-1.5 text-slate-500 hover:text-slate-800 hover:bg-white rounded-lg border border-slate-200 transition-all cursor-pointer"
+                    title="Sao chép số Zalo/Hotline"
+                  >
+                    {copiedPhone ? <Check className="w-4 h-4 text-emerald-600" /> : <Copy className="w-4 h-4" />}
+                  </button>
+                </div>
               </div>
 
               {/* Email */}
@@ -147,16 +166,16 @@ export function FinalCTA() {
                     <Mail className="w-4 h-4" />
                   </div>
                   <div>
-                    <span className="text-[11px] text-slate-400 block font-medium">Email chính thức</span>
-                    <a href="mailto:contact@dormi.space" className="font-bold text-slate-800 hover:text-blue-600 transition-colors">
-                      contact@dormi.space
+                    <span className="text-[11px] text-slate-400 block font-medium">Email hỗ trợ</span>
+                    <a href={`mailto:${contactEmail}`} className="font-bold text-slate-800 hover:text-blue-600 transition-colors break-all">
+                      {contactEmail}
                     </a>
                   </div>
                 </div>
                 <button
                   type="button"
-                  onClick={() => handleCopy('contact@dormi.space', 'email')}
-                  className="p-2 text-slate-500 hover:text-slate-800 hover:bg-white rounded-lg border border-slate-200 transition-all cursor-pointer"
+                  onClick={() => handleCopy(contactEmail, 'email')}
+                  className="p-2 text-slate-500 hover:text-slate-800 hover:bg-white rounded-lg border border-slate-200 transition-all cursor-pointer shrink-0"
                   title="Sao chép email"
                 >
                   {copiedEmail ? <Check className="w-4 h-4 text-emerald-600" /> : <Copy className="w-4 h-4" />}
@@ -178,16 +197,25 @@ export function FinalCTA() {
 
             <div className="mt-5 flex gap-2">
               <a
-                href="mailto:contact@dormi.space"
-                className="flex-1 py-2.5 px-4 bg-blue-600 hover:bg-blue-700 text-white font-bold text-xs rounded-xl text-center transition-colors flex items-center justify-center gap-1.5"
+                href={zaloUrl}
+                target="_blank"
+                rel="noreferrer"
+                className="flex-1 py-2.5 px-3 bg-blue-600 hover:bg-blue-700 text-white font-bold text-xs rounded-xl text-center transition-colors flex items-center justify-center gap-1.5"
+              >
+                <ExternalLink className="w-3.5 h-3.5" />
+                <span>Nhắn tin Zalo</span>
+              </a>
+              <a
+                href={`mailto:${contactEmail}`}
+                className="py-2.5 px-3 bg-slate-100 hover:bg-slate-200 text-slate-800 font-bold text-xs rounded-xl text-center transition-colors flex items-center justify-center gap-1.5"
               >
                 <Mail className="w-3.5 h-3.5" />
-                <span>Gửi email ngay</span>
+                <span>Gửi Email</span>
               </a>
               <button
                 type="button"
                 onClick={() => setShowContactModal(false)}
-                className="py-2.5 px-4 bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold text-xs rounded-xl transition-colors cursor-pointer"
+                className="py-2.5 px-3 bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold text-xs rounded-xl transition-colors cursor-pointer"
               >
                 Đóng
               </button>

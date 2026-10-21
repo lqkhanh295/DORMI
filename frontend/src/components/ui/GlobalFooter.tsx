@@ -14,7 +14,10 @@ export function GlobalFooter() {
             <p className="text-sm text-[#64748B] max-w-sm">
               Nền tảng tìm kiếm phòng trọ và kết nối bạn ở ghép thông minh, minh bạch tại TP. Hồ Chí Minh.
             </p>
-
+            <div className="pt-1 text-xs text-slate-500 space-y-1">
+              <p>Hotline / Zalo: <a href="https://zalo.me/0911887141" target="_blank" rel="noreferrer" className="font-semibold text-slate-700 hover:text-blue-600 transition-colors">0911 887 141</a></p>
+              <p>Email: <a href="mailto:lqkhanh292005@gmail.com" className="font-semibold text-slate-700 hover:text-blue-600 transition-colors">lqkhanh292005@gmail.com</a></p>
+            </div>
           </div>
 
           {/* Người thuê */}
