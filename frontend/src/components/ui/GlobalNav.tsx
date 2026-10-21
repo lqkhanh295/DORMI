@@ -17,7 +17,8 @@ import {
   Calendar,
   MessageCircle,
   User,
-  Home
+  Home,
+  Receipt
 } from 'lucide-react';
 import { useStore } from '../../store/useStore';
 import { NotificationBell } from '../common/NotificationBell';
@@ -282,6 +283,14 @@ export function GlobalNav() {
                           >
                             <FileCheck className="w-4 h-4 text-slate-500" />
                             <span>Hợp đồng thuê</span>
+                          </Link>
+                          <Link
+                            to="/landlord/billing"
+                            onClick={() => setDropdownOpen(false)}
+                            className="flex items-center gap-2.5 px-3 py-2 rounded-lg hover:bg-slate-100 hover:text-[#00153D] transition-colors"
+                          >
+                            <Receipt className="w-4 h-4 text-slate-500" />
+                            <span>Lịch sử giao dịch</span>
                           </Link>
                         </>
                       )}

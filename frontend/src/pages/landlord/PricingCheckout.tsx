@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { createPortal } from 'react-dom';
-import { useSearchParams } from 'react-router-dom';
+import { useSearchParams, Link } from 'react-router-dom';
 import { Card } from '../../components/ui/Card';
 import { Button } from '../../components/ui/Button';
 import { landlordApi, roomsApi } from '../../services/api';
@@ -13,7 +13,8 @@ import {
   Building2, 
   Zap,
   ExternalLink,
-  Loader2
+  Loader2,
+  Receipt
 } from 'lucide-react';
 
 export default function PricingCheckout() {
@@ -191,31 +192,41 @@ export default function PricingCheckout() {
           Tối ưu hóa phễu tiếp cận khách thuê, khẳng định uy tín với huy hiệu bảo chứng và tiếp cận hàng ngàn khách thuê tiềm năng mỗi ngày.
         </p>
 
-        {/* Tab switch */}
-        <div className="inline-flex p-1 bg-white rounded-2xl border border-slate-200 shadow-xs mt-3">
-          <button
-            type="button"
-            onClick={() => setActiveTab('plans')}
-            className={`px-6 py-2 rounded-xl text-xs font-bold transition-all duration-150 active:scale-[0.98] ${
-              activeTab === 'plans' 
-                ? 'bg-[#00153D] text-white shadow-xs' 
-                : 'text-slate-500 hover:text-slate-900'
-            }`}
+        {/* Tab switch & Billing History Link */}
+        <div className="flex flex-wrap items-center justify-center gap-3 mt-3">
+          <div className="inline-flex p-1 bg-white rounded-2xl border border-slate-200 shadow-xs">
+            <button
+              type="button"
+              onClick={() => setActiveTab('plans')}
+              className={`px-6 py-2 rounded-xl text-xs font-bold transition-all duration-150 active:scale-[0.98] ${
+                activeTab === 'plans' 
+                  ? 'bg-[#00153D] text-white shadow-xs' 
+                  : 'text-slate-500 hover:text-slate-900'
+              }`}
+            >
+              Gói Hội Viên Chủ Trọ
+            </button>
+            <button
+              type="button"
+              onClick={() => setActiveTab('boosts')}
+              className={`inline-flex items-center gap-1.5 px-6 py-2 rounded-xl text-xs font-bold transition-all duration-150 active:scale-[0.98] ${
+                activeTab === 'boosts' 
+                  ? 'bg-amber-600 text-white shadow-xs' 
+                  : 'text-slate-500 hover:text-slate-900'
+              }`}
+            >
+              <Flame className="w-3.5 h-3.5" />
+              Đẩy Tin Nổi Bật (Boosts)
+            </button>
+          </div>
+
+          <Link
+            to="/landlord/billing"
+            className="inline-flex items-center gap-1.5 px-4 py-2 bg-white hover:bg-slate-50 text-[#00153D] border border-slate-200 rounded-2xl text-xs font-bold shadow-xs transition-colors"
           >
-            Gói Hội Viên Chủ Trọ
-          </button>
-          <button
-            type="button"
-            onClick={() => setActiveTab('boosts')}
-            className={`inline-flex items-center gap-1.5 px-6 py-2 rounded-xl text-xs font-bold transition-all duration-150 active:scale-[0.98] ${
-              activeTab === 'boosts' 
-                ? 'bg-amber-600 text-white shadow-xs' 
-                : 'text-slate-500 hover:text-slate-900'
-            }`}
-          >
-            <Flame className="w-3.5 h-3.5" />
-            Đẩy Tin Nổi Bật (Boosts)
-          </button>
+            <Receipt className="w-3.5 h-3.5 text-blue-600" />
+            <span>Lịch sử giao dịch</span>
+          </Link>
         </div>
       </div>
 

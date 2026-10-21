@@ -10,6 +10,7 @@ import {
   BarChart3, 
   MessageCircle,
   Zap,
+  Receipt,
   Settings
 } from 'lucide-react';
 
@@ -24,6 +25,7 @@ export default function LandlordLayout() {
     { name: 'Lịch xem phòng', path: '/landlord/viewings', icon: Calendar },
     { name: 'Thống kê tin đăng', path: '/landlord/analytics', icon: BarChart3 },
     { name: 'Gói dịch vụ', path: '/landlord/pricing', icon: Zap },
+    { name: 'Lịch sử giao dịch', path: '/landlord/billing', icon: Receipt },
     { name: 'Tin nhắn', path: '/landlord/chat', icon: MessageCircle },
     { name: 'Cài đặt', path: '/landlord/settings', icon: Settings },
   ];
