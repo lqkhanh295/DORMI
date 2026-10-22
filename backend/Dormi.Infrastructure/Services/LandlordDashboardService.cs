@@ -54,7 +54,7 @@ public class LandlordDashboardService : ILandlordDashboardService
 
     public async Task<ServiceResult<LandlordAnalyticsDto>> GetAnalyticsAsync(Guid landlordId)
     {
-        var cacheKey = $"landlord_analytics:{landlordId}";
+        var cacheKey = $"landlord_analytics_v2:{landlordId}";
         if (_memCache != null && _memCache.TryGetValue(cacheKey, out LandlordAnalyticsDto? memCached) && memCached != null)
         {
             return ServiceResult<LandlordAnalyticsDto>.Ok(memCached);
@@ -104,6 +104,28 @@ public class LandlordDashboardService : ILandlordDashboardService
 
         var conversionRate = totalViews > 0 ? Math.Round((double)totalAppointments / totalViews * 100.0, 1) : 0.0;
 
+        var now = DateTime.UtcNow;
+        var activeSub = await _db.LandlordSubscriptions
+            .AsNoTracking()
+            .Where(s => s.LandlordId == landlordId && s.IsActive && s.EndDate > now)
+            .OrderByDescending(s => s.EndDate)
+            .FirstOrDefaultAsync();
+
+        var planName = activeSub?.PlanName ?? "Free";
+        int maxRooms = planName.Equals("Business", StringComparison.OrdinalIgnoreCase) || planName.Equals("Enterprise", StringComparison.OrdinalIgnoreCase)
+            ? 999
+            : (planName.Equals("Pro", StringComparison.OrdinalIgnoreCase) ? 15 : 2);
+
+        // Calculate quota consumed by landlord's rooms (exclude Hidden and Rented, matching RoomService)
+        var roomsUsed = roomCounts
+            .Where(x => x.Status != RoomStatus.Rented && x.Status != RoomStatus.Hidden)
+            .Sum(x => x.Count);
+
+        if (roomsUsed == 0 && totalListings > 0)
+        {
+            roomsUsed = activeListings > 0 ? activeListings : totalListings;
+        }
+
         var analytics = new LandlordAnalyticsDto
         {
             TotalListings = totalListings,
@@ -111,7 +133,11 @@ public class LandlordDashboardService : ILandlordDashboardService
             TotalAppointments = totalAppointments,
             PendingAppointments = pendingAppointments,
             TotalViews = totalViews,
-            ConversionRate = conversionRate
+            ConversionRate = conversionRate,
+            CurrentPlan = planName,
+            CurrentPlanEndDate = activeSub?.EndDate,
+            MaxRoomLimit = maxRooms,
+            RoomsUsed = roomsUsed
         };
 
         _memCache?.Set(cacheKey, analytics, TimeSpan.FromMinutes(2));
@@ -189,10 +215,19 @@ public class LandlordDashboardService : ILandlordDashboardService
 
         if (rooms.Count == 0)
         {
+            var emptySub = await _db.LandlordSubscriptions
+                .AsNoTracking()
+                .Where(s => s.LandlordId == landlordId && s.IsActive && s.EndDate > now)
+                .OrderByDescending(s => s.EndDate)
+                .FirstOrDefaultAsync();
+            var emptyPlan = emptySub?.PlanName ?? "Free";
+
             var emptyDto = new RealLeadAnalyticsDto
             {
                 DailyMetrics = new List<DailyLeadMetricDto>(),
-                TopRooms = new List<RoomLeadPerformanceDto>()
+                TopRooms = new List<RoomLeadPerformanceDto>(),
+                CurrentPlan = emptyPlan,
+                IsGated = emptyPlan.Equals("Free", StringComparison.OrdinalIgnoreCase)
             };
             _memCache?.Set(cacheKey, emptyDto, TimeSpan.FromMinutes(2));
             return ServiceResult<RealLeadAnalyticsDto>.Ok(emptyDto);
@@ -315,6 +350,13 @@ public class LandlordDashboardService : ILandlordDashboardService
             BoostExpiresAt = r.BoostExpiresAt
         }).ToList();
 
+        var leadActiveSub = await _db.LandlordSubscriptions
+            .AsNoTracking()
+            .Where(s => s.LandlordId == landlordId && s.IsActive && s.EndDate > now)
+            .OrderByDescending(s => s.EndDate)
+            .FirstOrDefaultAsync();
+        var leadPlanName = leadActiveSub?.PlanName ?? "Free";
+
         var resultDto = new RealLeadAnalyticsDto
         {
             TotalViews = totalViews,
@@ -334,7 +376,9 @@ public class LandlordDashboardService : ILandlordDashboardService
             ApproveToLeaseRate = approveToLeaseRate,
             OverallConversionRate = overallConversionRate,
             DailyMetrics = dailyMetrics,
-            TopRooms = topRooms
+            TopRooms = topRooms,
+            CurrentPlan = leadPlanName,
+            IsGated = leadPlanName.Equals("Free", StringComparison.OrdinalIgnoreCase)
         };
 
         _memCache?.Set(cacheKey, resultDto, TimeSpan.FromMinutes(2));

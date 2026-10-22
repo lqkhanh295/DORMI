@@ -1617,6 +1617,84 @@ public class BackendLogicTests
     }
 
     [Fact]
+    public async Task LandlordDashboardService_GetAnalytics_ShouldReturnSubscriptionQuotaAndRoomsUsed()
+    {
+        var options = new DbContextOptionsBuilder<DormiDbContext>()
+            .UseInMemoryDatabase(databaseName: "AnalyticsQuotaDb_" + Guid.NewGuid())
+            .Options;
+        using var db = new DormiDbContext(options);
+
+        var landlordId = Guid.NewGuid();
+        var user = new User
+        {
+            Id = landlordId,
+            Email = "landlord_quota@dormi.vn",
+            FullName = "Chủ trọ Test Quota",
+            Role = UserRole.Landlord,
+            IsVerified = true
+        };
+        db.Users.Add(user);
+
+        // Add active Pro subscription
+        var sub = new LandlordSubscription
+        {
+            Id = Guid.NewGuid(),
+            LandlordId = landlordId,
+            PlanName = "Pro",
+            Price = 199000,
+            StartDate = DateTime.UtcNow.AddDays(-10),
+            EndDate = DateTime.UtcNow.AddDays(30),
+            IsActive = true
+        };
+        db.LandlordSubscriptions.Add(sub);
+
+        // Add 3 active rooms and 1 hidden room
+        for (int i = 1; i <= 3; i++)
+        {
+            db.Rooms.Add(new Room
+            {
+                Id = Guid.NewGuid(),
+                LandlordId = landlordId,
+                Title = $"Phòng {i}",
+                Description = "Mô tả",
+                Address = "Địa chỉ",
+                Price = 3000000,
+                Area = 25,
+                RoomType = "Phòng trọ",
+                Status = RoomStatus.Available,
+                CreatedAt = DateTime.UtcNow
+            });
+        }
+        db.Rooms.Add(new Room
+        {
+            Id = Guid.NewGuid(),
+            LandlordId = landlordId,
+            Title = "Phòng Ẩn",
+            Description = "Mô tả",
+            Address = "Địa chỉ",
+            Price = 3000000,
+            Area = 25,
+            RoomType = "Phòng trọ",
+            Status = RoomStatus.Hidden,
+            CreatedAt = DateTime.UtcNow
+        });
+
+        await db.SaveChangesAsync();
+
+        var config = new ConfigurationBuilder().Build();
+        var env = new TestWebHostEnvironment();
+        var service = new LandlordDashboardService(db, config, env, null);
+
+        var res = await service.GetAnalyticsAsync(landlordId);
+        Assert.True(res.Success);
+        Assert.NotNull(res.Data);
+        Assert.Equal("Pro", res.Data.CurrentPlan);
+        Assert.Equal(15, res.Data.MaxRoomLimit);
+        Assert.Equal(3, res.Data.RoomsUsed); // 3 active available rooms, hidden excluded from active quota
+        Assert.Equal(4, res.Data.TotalListings);
+    }
+
+    [Fact]
     public async Task PostRentalService_CompletePostRentalLifecycle_ShouldTrackPaymentsMaintenanceRenewalAndMoveOut()
     {
         var options = new DbContextOptionsBuilder<DormiDbContext>()

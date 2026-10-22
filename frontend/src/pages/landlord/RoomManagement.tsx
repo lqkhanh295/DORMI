@@ -59,16 +59,24 @@ export default function RoomManagement() {
         landlordApi.getAnalytics()
       ]);
 
+      let loadedRooms: RoomResponse[] = [];
       if (roomsRes.status === 'fulfilled' && roomsRes.value?.data) {
-        setMyRooms(roomsRes.value.data);
+        loadedRooms = roomsRes.value.data;
+        setMyRooms(loadedRooms);
       }
 
       if (analyticsRes.status === 'fulfilled' && analyticsRes.value) {
+        const activeRoomsCount = loadedRooms.filter(r => Number(r.status) !== 1 && Number(r.status) !== 3).length;
         setPlanInfo({
           currentPlan: analyticsRes.value.currentPlan || 'Free',
-          roomsUsed: analyticsRes.value.roomsUsed ?? 0,
+          roomsUsed: analyticsRes.value.roomsUsed || activeRoomsCount || loadedRooms.length,
           maxRoomLimit: analyticsRes.value.maxRoomLimit ?? 2
         });
+      } else {
+        setPlanInfo(prev => ({
+          ...prev,
+          roomsUsed: loadedRooms.length
+        }));
       }
     } catch (err) {
       console.warn('Failed to load rooms or plan info from API:', err);
@@ -408,7 +416,7 @@ export default function RoomManagement() {
                 ? `Toàn quyền Admin: Không giới hạn (${myRooms.length} phòng)`
                 : (planInfo.currentPlan.toLowerCase().includes('business') 
                   ? `Gói Doanh Nghiệp (${planInfo.roomsUsed} phòng)` 
-                  : `${planInfo.currentPlan === 'Pro' ? 'Gói Pro' : 'Gói Miễn Phí'}: ${planInfo.roomsUsed}/${planInfo.maxRoomLimit} tin`)}
+                  : `${planInfo.currentPlan.toLowerCase().includes('pro') ? 'Gói Pro' : 'Gói Miễn Phí'}: ${planInfo.roomsUsed}/${planInfo.maxRoomLimit} tin`)}
             </span>
             {!isAdmin && planInfo.roomsUsed >= planInfo.maxRoomLimit && planInfo.maxRoomLimit < 999 && (
               <button 
