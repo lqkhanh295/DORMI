@@ -53,7 +53,7 @@ export default function AdminLayout() {
             <img src="/logo.png" alt="DORMI" className="w-7 h-7 rounded-lg object-cover shadow-xs shrink-0" />
             <span>DORMI<span className="text-[#F2A900] ml-0.5">.</span></span>
             <span className="text-[11px] font-bold text-slate-300 bg-white/10 border border-white/20 px-1.5 py-0.5 rounded-md ml-1 tracking-normal">
-              SUPER ADMIN
+              ADMIN
             </span>
           </Link>
         </div>

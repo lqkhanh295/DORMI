@@ -298,7 +298,7 @@ export default function AdminDashboard() {
             </p>
           </div>
           <span className="text-xs font-bold text-amber-700 bg-amber-50 border border-amber-200 px-2.5 py-1 rounded-lg w-fit">
-            Toàn quyền Super Admin
+            Toàn quyền Quản trị viên
           </span>
         </div>
 
