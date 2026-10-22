@@ -9,6 +9,7 @@ import { Pencil, Eye, EyeOff, Trash2, CheckCircle2, Clock, XCircle, Image as Ima
 import { motion, AnimatePresence } from 'framer-motion';
 import { modalBackdropVariants, modalContentVariants } from '../../utils/motion';
 import { PageMotion } from '../../components/common/Motion';
+import { useStore } from '../../store/useStore';
 
 const UTILITY_OPTIONS = [
   'Wifi', 'Máy lạnh', 'Tủ lạnh', 'Máy giặt', 'Ban công', 
@@ -18,6 +19,8 @@ const UTILITY_OPTIONS = [
 
 export default function RoomManagement() {
   const navigate = useNavigate();
+  const currentUser = useStore(state => state.currentUser);
+  const isAdmin = currentUser?.role === 'Admin';
   const [myRooms, setMyRooms] = useState<RoomResponse[]>([]);
   const [loading, setLoading] = useState(true);
   const [editingRoom, setEditingRoom] = useState<RoomResponse | null>(null);
@@ -404,16 +407,20 @@ export default function RoomManagement() {
         <div className="flex items-center gap-3">
           <div className="text-xs px-3.5 py-1.5 rounded-xl bg-white border border-slate-200 text-slate-700 shadow-xs flex items-center gap-2">
             <span className={`w-2 h-2 rounded-full ${
-              planInfo.currentPlan.toLowerCase().includes('pro') 
-                ? 'bg-blue-600' 
-                : (planInfo.currentPlan.toLowerCase().includes('business') ? 'bg-purple-600' : 'bg-emerald-600')
+              isAdmin
+                ? 'bg-amber-500'
+                : (planInfo.currentPlan.toLowerCase().includes('pro') 
+                  ? 'bg-blue-600' 
+                  : (planInfo.currentPlan.toLowerCase().includes('business') ? 'bg-purple-600' : 'bg-emerald-600'))
             }`} />
             <span className="font-bold">
-              {planInfo.currentPlan.toLowerCase().includes('business') 
-                ? `Gói Doanh Nghiệp (${planInfo.roomsUsed} phòng)` 
-                : `${planInfo.currentPlan === 'Pro' ? 'Gói Pro' : 'Gói Miễn Phí'}: ${planInfo.roomsUsed}/${planInfo.maxRoomLimit} tin`}
+              {isAdmin
+                ? `Toàn quyền Admin: Không giới hạn (${myRooms.length} phòng)`
+                : (planInfo.currentPlan.toLowerCase().includes('business') 
+                  ? `Gói Doanh Nghiệp (${planInfo.roomsUsed} phòng)` 
+                  : `${planInfo.currentPlan === 'Pro' ? 'Gói Pro' : 'Gói Miễn Phí'}: ${planInfo.roomsUsed}/${planInfo.maxRoomLimit} tin`)}
             </span>
-            {planInfo.roomsUsed >= planInfo.maxRoomLimit && planInfo.maxRoomLimit < 999 && (
+            {!isAdmin && planInfo.roomsUsed >= planInfo.maxRoomLimit && planInfo.maxRoomLimit < 999 && (
               <button 
                 type="button" 
                 onClick={() => navigate('/landlord/pricing')}
