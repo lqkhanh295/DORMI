@@ -15,14 +15,14 @@ export default function TermsOfService() {
   const [activeSection, setActiveSection] = useState('section-1');
 
   const sections = [
-    { id: 'section-1', title: '1. Quy định chung & Định nghĩa' },
-    { id: 'section-2', title: '2. Quyền & Nghĩa vụ của Khách thuê' },
-    { id: 'section-3', title: '3. Quyền & Nghĩa vụ của Chủ trọ' },
-    { id: 'section-4', title: '4. Hợp đồng điện tử & Tiền đặt cọc' },
-    { id: 'section-5', title: '5. Phí dịch vụ & Thanh toán trực tuyến' },
-    { id: 'section-6', title: '6. Hành vi nghiêm cấm & Xử lý vi phạm' },
-    { id: 'section-7', title: '7. Giải quyết tranh chấp & Khiếu nại' },
-    { id: 'section-8', title: '8. Giới hạn trách nhiệm & Hiệu lực' },
+    { id: 'section-1', title: 'I. Quy định chung & Định nghĩa' },
+    { id: 'section-2', title: 'II. Quyền & Nghĩa vụ của Khách thuê' },
+    { id: 'section-3', title: 'III. Quyền & Nghĩa vụ của Chủ trọ' },
+    { id: 'section-4', title: 'IV. Hợp đồng điện tử & Tiền đặt cọc' },
+    { id: 'section-5', title: 'V. Phí dịch vụ & Thanh toán trực tuyến' },
+    { id: 'section-6', title: 'VI. Hành vi nghiêm cấm & Xử lý vi phạm' },
+    { id: 'section-7', title: 'VII. Giải quyết tranh chấp & Khiếu nại' },
+    { id: 'section-8', title: 'VIII. Giới hạn trách nhiệm & Hiệu lực' },
   ];
 
   const scrollToSection = (id: string) => {

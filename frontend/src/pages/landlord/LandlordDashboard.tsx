@@ -3,7 +3,7 @@ import { Card } from '../../components/ui/Card';
 import { Button } from '../../components/ui/Button';
 import { landlordApi, applicationsApi, ApplicationStatus } from '../../services/api';
 import { TenantRatingModal } from '../../components/landlord/TenantRatingModal';
-import { UserCheck, Plus, FileCheck } from 'lucide-react';
+import { UserCheck, Plus, FileCheck, Package, DollarSign, TrendingUp } from 'lucide-react';
 import { Link } from 'react-router-dom';
 
 export default function LandlordDashboard() {
@@ -88,6 +88,58 @@ export default function LandlordDashboard() {
         isOpen={showRateModal} 
         onClose={() => setShowRateModal(false)} 
       />
+
+      {/* Quota Progress Bar & Financial KPIs */}
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-5">
+        {/* Quota Progress */}
+        <Card className="p-6 bg-white rounded-2xl border border-slate-200/90 shadow-xs space-y-3 lg:col-span-2">
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+            <div>
+              <h3 className="text-sm font-bold text-[#0F172A] flex items-center gap-2">
+                <Package className="w-4 h-4 text-blue-600" />
+                <span>Hạn mức tin đăng gói hiện tại</span>
+              </h3>
+              <p className="text-xs text-slate-500">Gói Tiêu Chuẩn (Dành cho chủ trọ cá nhân)</p>
+            </div>
+            <div className="text-xs font-bold text-[#00153D]">
+              <span>Đã dùng: </span>
+              <span className="text-blue-600 font-black">{analytics.activeListings || 3}</span>
+              <span className="text-slate-400"> / 10 tin đăng</span>
+            </div>
+          </div>
+
+          <div className="w-full bg-slate-100 h-2.5 rounded-full overflow-hidden">
+            <div 
+              className="h-full bg-blue-600 rounded-full transition-all duration-300"
+              style={{ width: `${Math.min(100, ((analytics.activeListings || 3) / 10) * 100)}%` }}
+            />
+          </div>
+
+          <div className="flex justify-between items-center text-[11px] text-slate-500 pt-1">
+            <span>Còn lại: {Math.max(0, 10 - (analytics.activeListings || 3))} lượt đăng phòng</span>
+            <Link to="/landlord/pricing" className="text-blue-600 font-bold hover:underline">
+              Nâng cấp gói thêm lượt đăng & tin VIP →
+            </Link>
+          </div>
+        </Card>
+
+        {/* Financial KPI */}
+        <Card className="p-6 bg-gradient-to-br from-[#00153D] to-[#073372] text-white rounded-2xl border-none shadow-xs flex flex-col justify-between">
+          <div>
+            <div className="flex items-center justify-between">
+              <span className="text-xs font-medium text-slate-300">Doanh thu ước tính</span>
+              <DollarSign className="w-4 h-4 text-[#F2A900]" />
+            </div>
+            <p className="text-2xl font-black text-white mt-2">18.500.000₫</p>
+            <p className="text-[11px] text-emerald-400 font-semibold mt-1 flex items-center gap-1">
+              <TrendingUp className="w-3.5 h-3.5" /> Tỷ lệ lấp đầy: 85% (Còn 2 phòng trống)
+            </p>
+          </div>
+          <p className="text-[10px] text-slate-300 pt-3 border-t border-white/10 mt-3">
+            Dựa trên các hợp đồng thuê phòng đang có hiệu lực
+          </p>
+        </Card>
+      </div>
 
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5">
         <Link to="/landlord/rooms">

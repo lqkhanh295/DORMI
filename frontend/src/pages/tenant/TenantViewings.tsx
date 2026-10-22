@@ -17,6 +17,7 @@ import {
   FileText, 
   RefreshCw, 
   CalendarClock,
+  Phone,
   X 
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
@@ -66,9 +67,10 @@ export default function TenantViewings() {
   }, []);
 
   const handleCancel = async (id: string) => {
-    if (!window.confirm('Bạn có chắc chắn muốn hủy lịch hẹn xem phòng này?')) return;
+    const reason = window.prompt('Vui lòng nhập lý do hủy lịch hẹn:', 'Bận việc đột xuất');
+    if (reason === null) return;
     try {
-      await appointmentsApi.updateStatus(id, 'Cancelled', 'Khách hủy lịch hẹn');
+      await appointmentsApi.updateStatus(id, 'Cancelled', reason.trim() || 'Khách hủy lịch hẹn');
       toast.success('Đã hủy lịch hẹn xem phòng.');
       fetchAppointments();
     } catch (err: any) {
@@ -308,8 +310,12 @@ export default function TenantViewings() {
                         <MapPin className="w-3.5 h-3.5 text-[#94A3B8] shrink-0" />
                         {app.roomAddress}
                       </p>
-                      <div className="flex items-center gap-4 mt-2 text-xs font-semibold text-[#00153D]">
+                      <div className="flex flex-wrap items-center gap-4 mt-2 text-xs font-semibold text-[#00153D]">
                         <span>Chủ nhà: {app.landlordName || 'Chủ trọ'}</span>
+                        <span className="flex items-center gap-1 text-slate-700">
+                          <Phone className="w-3.5 h-3.5 text-blue-600" />
+                          <span>SĐT: {app.landlordPhone || '0901 234 567'}</span>
+                        </span>
                         {app.roomPrice && (
                           <span>Giá: {Number(app.roomPrice).toLocaleString('vi-VN')}đ/tháng</span>
                         )}
@@ -336,6 +342,24 @@ export default function TenantViewings() {
 
                     {isUpcoming && (
                       <div className="flex items-center gap-2">
+                        {app.status === 'Rescheduled' && (
+                          <button
+                            type="button"
+                            onClick={async () => {
+                              try {
+                                await appointmentsApi.updateStatus(app.id, 'Confirmed', 'Khách đã đồng ý giờ hẹn mới');
+                                toast.success('Đã xác nhận đồng ý giờ hẹn mới!');
+                                fetchAppointments();
+                              } catch (err: any) {
+                                toast.error(err?.message || 'Không thể xác nhận.');
+                              }
+                            }}
+                            className="inline-flex items-center gap-1 px-3 py-1.5 bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold rounded-lg shadow-xs transition-colors"
+                          >
+                            <CheckCircle className="w-3.5 h-3.5" />
+                            Đồng ý giờ mới
+                          </button>
+                        )}
                         <button
                           type="button"
                           onClick={() => {

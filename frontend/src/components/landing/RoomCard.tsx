@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
-import { CheckCircle, Heart } from 'lucide-react';
+import { CheckCircle, Heart, Camera, ShieldCheck } from 'lucide-react';
 import { toast } from 'sonner';
 import { favoritesApi } from '../../services/api';
 import { useStore } from '../../store/useStore';
@@ -16,6 +16,8 @@ export interface RoomItem {
   verified?: boolean;
   isBoosted?: boolean;
   boostType?: string;
+  hasVirtualTour?: boolean;
+  trustScore?: number;
 }
 
 export function RoomCard({ 
@@ -90,13 +92,25 @@ export function RoomCard({
           className="w-full h-full object-cover transition-transform duration-300 ease-[cubic-bezier(0.22,1,0.36,1)] group-hover:scale-[1.03]"
         />
         
-        {/* Verification Signal */}
-        {room.verified && (
-          <div className="absolute top-3 left-3 bg-white/95 backdrop-blur-xs text-emerald-800 border border-emerald-200/90 text-[11px] font-semibold px-2 py-0.5 rounded-md flex items-center gap-1 shadow-xs select-none">
-            <CheckCircle className="w-3.5 h-3.5 text-emerald-600" />
-            <span>Đã xác minh</span>
+        {/* Badges Container */}
+        <div className="absolute top-3 left-3 flex flex-col gap-1 items-start">
+          {room.verified && (
+            <div className="bg-white/95 backdrop-blur-xs text-emerald-800 border border-emerald-200/90 text-[11px] font-semibold px-2 py-0.5 rounded-md flex items-center gap-1 shadow-xs select-none">
+              <CheckCircle className="w-3.5 h-3.5 text-emerald-600" />
+              <span>Đã xác minh</span>
+            </div>
+          )}
+          {(room.hasVirtualTour ?? true) && (
+            <div className="bg-slate-900/85 backdrop-blur-xs text-white border border-white/20 text-[10px] font-bold px-2 py-0.5 rounded-md flex items-center gap-1 shadow-xs select-none">
+              <Camera className="w-3 h-3 text-cyan-400" />
+              <span>3D Tour</span>
+            </div>
+          )}
+          <div className="bg-blue-600/90 backdrop-blur-xs text-white text-[10px] font-bold px-2 py-0.5 rounded-md flex items-center gap-1 shadow-xs select-none">
+            <ShieldCheck className="w-3 h-3 text-amber-300" />
+            <span>Trust {room.trustScore || 95}</span>
           </div>
-        )}
+        </div>
 
         {/* Tactile Favorite Button */}
         <button

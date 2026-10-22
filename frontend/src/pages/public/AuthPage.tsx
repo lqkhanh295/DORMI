@@ -301,7 +301,7 @@ export default function AuthPage() {
               </div>
             )}
 
-            <form onSubmit={handleVerifyMfa} className="space-y-4">
+            <form onSubmit={handleVerifyMfa} noValidate className="space-y-4">
               <div>
                 <label className="text-caption font-semibold text-[#0F172A] block mb-1">
                   Mã xác thực OTP (6 chữ số)
@@ -411,7 +411,7 @@ export default function AuthPage() {
               </div>
             )}
 
-            <form onSubmit={handleSubmit} className="space-y-4">
+            <form onSubmit={handleSubmit} noValidate className="space-y-4">
               {/* Onboarding Intention Selection (Only during Registration) */}
               {isRegister && (
                 <div className="space-y-2 mb-4">

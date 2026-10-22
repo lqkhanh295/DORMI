@@ -1,15 +1,17 @@
 import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
-import { ArrowRight, MapPin, SlidersHorizontal, RotateCcw } from 'lucide-react';
+import { ArrowRight, MapPin, SlidersHorizontal, RotateCcw, Flame } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { RoomCard, type RoomItem } from './RoomCard';
 import { roomsApi } from '../../services/api';
 import { staggerListContainer, staggerListItem } from '../../utils/motion';
+import { UNIVERSITIES, normalizeVietnamese } from '../../utils/geoUtils';
 
 interface FeaturedRoomsProps {
   district?: string;
   price?: string;
   query?: string;
+  roomType?: string;
   verifiedOnly?: boolean;
   onResetFilters?: () => void;
 }
@@ -18,6 +20,7 @@ export function FeaturedRooms({
   district,
   price,
   query,
+  roomType,
   verifiedOnly = false,
   onResetFilters
 }: FeaturedRoomsProps) {
@@ -44,14 +47,31 @@ export function FeaturedRooms({
       minPrice = 8000000;
     }
 
+    // Check if query corresponds to a university
+    let targetDistrict = district;
+    let targetQuery = query ? query.trim() : undefined;
+    if (query) {
+      const normQ = normalizeVietnamese(query);
+      const matchedUni = UNIVERSITIES.find(u => 
+        u.aliases.some(alias => normQ.includes(alias) || alias.includes(normQ)) ||
+        normalizeVietnamese(u.name).includes(normQ) ||
+        normalizeVietnamese(u.shortName).includes(normQ)
+      );
+      if (matchedUni && !targetDistrict && matchedUni.districts.length > 0) {
+        // If searching a university, filter by that university's primary district or search term
+        targetDistrict = matchedUni.districts[0];
+      }
+    }
+
     const timer = setTimeout(() => {
       roomsApi.getRooms({ 
         page: 1, 
         pageSize: 12,
-        district: district || undefined,
+        district: targetDistrict || undefined,
+        roomType: roomType || undefined,
         minPrice,
         maxPrice,
-        query: query ? query.trim() : undefined,
+        query: targetQuery,
         sortBy: 'verified'
       })
         .then(res => {
@@ -102,9 +122,9 @@ export function FeaturedRooms({
       isMounted = false;
       clearTimeout(timer);
     };
-  }, [district, price, query, verifiedOnly]);
+  }, [district, price, query, roomType, verifiedOnly]);
 
-  const hasFilterActive = Boolean(district || price || query || verifiedOnly);
+  const hasFilterActive = Boolean(district || price || query || roomType || verifiedOnly);
 
   return (
     <section className="py-8 md:py-12 bg-white">
@@ -112,10 +132,14 @@ export function FeaturedRooms({
         
         {/* Header Bar */}
         <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-4 mb-8">
-          <div className="space-y-1">
+          <div className="space-y-1.5">
+            <div className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-xs font-bold bg-amber-50 text-amber-800 border border-amber-200 shadow-2xs">
+              <Flame className="w-3.5 h-3.5 fill-amber-500 text-amber-500" />
+              <span>Phòng trọ nổi bật</span>
+            </div>
             <div className="flex items-center gap-2">
               <h2 className="text-xl sm:text-2xl font-bold text-[#0F172A]">
-                Phòng đang cho thuê
+                Phòng trọ nổi bật đang cho thuê
               </h2>
               <span className="hidden sm:inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-bold bg-slate-100 text-slate-700 border border-slate-200">
                 {rooms.length} phòng

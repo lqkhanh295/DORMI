@@ -210,13 +210,10 @@ export function TenantRatingModal({
                         key={v}
                         type="button"
                         onClick={() => setPunctualityScore(v)}
-                        className={`w-7 h-7 rounded-lg text-xs font-bold transition-[background-color,color,box-shadow,transform] duration-150 ease-out active:scale-95 ${
-                          punctualityScore === v
-                            ? 'bg-[#2563EB] text-white shadow-xs'
-                            : 'bg-[#F1F5F9] text-[#64748B] hover:bg-[#E2E8F0]'
-                        }`}
+                        className="p-1 hover:scale-110 active:scale-95 transition-transform"
+                        title={`${v} sao`}
                       >
-                        {v}
+                        <Star className={`w-5 h-5 ${v <= punctualityScore ? 'fill-amber-400 text-amber-400' : 'text-slate-300'}`} />
                       </button>
                     ))}
                   </div>
@@ -231,13 +228,10 @@ export function TenantRatingModal({
                         key={v}
                         type="button"
                         onClick={() => setCleanlinessScore(v)}
-                        className={`w-7 h-7 rounded-lg text-xs font-bold transition-[background-color,color,box-shadow,transform] duration-150 ease-out active:scale-95 ${
-                          cleanlinessScore === v
-                            ? 'bg-[#2563EB] text-white shadow-xs'
-                            : 'bg-[#F1F5F9] text-[#64748B] hover:bg-[#E2E8F0]'
-                        }`}
+                        className="p-1 hover:scale-110 active:scale-95 transition-transform"
+                        title={`${v} sao`}
                       >
-                        {v}
+                        <Star className={`w-5 h-5 ${v <= cleanlinessScore ? 'fill-amber-400 text-amber-400' : 'text-slate-300'}`} />
                       </button>
                     ))}
                   </div>

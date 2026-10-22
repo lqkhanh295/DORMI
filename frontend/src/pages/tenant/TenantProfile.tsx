@@ -32,6 +32,8 @@ export default function TenantProfile() {
   const [firstName, setFirstName] = useState('');
   const [lastName, setLastName] = useState('');
   const [phoneNumber, setPhoneNumber] = useState('');
+  const [occupation, setOccupation] = useState('Sinh viên ĐH Bách Khoa TP.HCM');
+  const [bio, setBio] = useState('Người thuê trọ sạch sẽ, giữ gìn vệ sinh chung, có trách nhiệm và tôn trọng không gian sống của mọi người.');
   const [isLookingForRoommate, setIsLookingForRoommate] = useState(false);
   const [loading, setLoading] = useState(true);
   const [isUploadingAvatar, setIsUploadingAvatar] = useState(false);
@@ -378,6 +380,17 @@ export default function TenantProfile() {
               <Input label="Tên" value={firstName} onChange={e => setFirstName(e.target.value)} placeholder="An" />
               <Input label="Email" type="email" value={currentUser?.email || "tenant@dormi.vn"} disabled />
               <Input label="Số điện thoại" value={phoneNumber} onChange={e => setPhoneNumber(e.target.value)} placeholder="0901234567" />
+              <Input label="Nghề nghiệp / Trường học" value={occupation} onChange={e => setOccupation(e.target.value)} placeholder="Sinh viên ĐH Bách Khoa / Nhân viên VP" />
+            </div>
+            <div className="mt-4 space-y-1.5">
+              <label className="text-caption font-semibold text-[#0F172A] block">Tiểu sử / Giới thiệu bản thân</label>
+              <textarea
+                rows={3}
+                value={bio}
+                onChange={e => setBio(e.target.value)}
+                placeholder="Giới thiệu thói quen sinh hoạt và mong muốn tìm phòng..."
+                className="w-full bg-[#F8FAFC] border border-[#E2E8F0] rounded-xl p-3 text-body text-[#0F172A] focus:outline-none focus:border-[#00153D]"
+              />
             </div>
           </div>
           <div className="pt-6 border-t border-[#E2E8F0]">

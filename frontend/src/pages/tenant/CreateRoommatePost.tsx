@@ -130,7 +130,7 @@ export default function CreateRoommatePost() {
       )}
 
       <Card className="bg-white rounded-2xl border border-slate-200/90 shadow-sm p-6 md:p-8">
-        <form onSubmit={handleSubmit} className="space-y-6">
+        <form onSubmit={handleSubmit} noValidate className="space-y-6">
           {/* Title */}
           <div className="space-y-1.5">
             <label className="text-caption font-semibold text-[#0F172A] block">

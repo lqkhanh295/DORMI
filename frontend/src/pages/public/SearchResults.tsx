@@ -5,7 +5,8 @@ import { Button } from '../../components/ui/Button';
 import { Input } from '../../components/ui/Input';
 import { useStore } from '../../store/useStore';
 import { useNavigate, useSearchParams } from 'react-router-dom';
-import { ArrowLeft, SlidersHorizontal, Map as MapTrifold, X, Sliders as FadersHorizontal } from 'lucide-react';
+import { ArrowLeft, SlidersHorizontal, Map as MapTrifold, X, Sliders as FadersHorizontal, GraduationCap, AlertCircle } from 'lucide-react';
+import { UNIVERSITIES, normalizeVietnamese, calculateDistanceKm, getCoordinatesForAddress } from '../../utils/geoUtils';
 import { RoomCard } from '../../components/landing/RoomCard';
 import RoomMapView from '../../components/map/RoomMapView';
 import { modalBackdropVariants, bottomSheetVariants, staggerListContainer, staggerListItem } from '../../utils/motion';
@@ -77,6 +78,17 @@ export default function SearchResults() {
   const [isLoading, setIsLoading] = useState(true);
   const [selectedRoomId, setSelectedRoomId] = useState<string | null>(null);
   const [hoveredRoomId, setHoveredRoomId] = useState<string | null>(null);
+  const listContainerRef = useRef<HTMLDivElement>(null);
+
+  // Custom price filter states
+  const [customMinPrice, setCustomMinPrice] = useState('');
+  const [customMaxPrice, setCustomMaxPrice] = useState('');
+  const [appliedCustomPrice, setAppliedCustomPrice] = useState<{ min?: number; max?: number } | null>(null);
+  const [priceValidationError, setPriceValidationError] = useState<string | null>(null);
+
+  // University & Proximity filter states
+  const [selectedUniversity, setSelectedUniversity] = useState<string | null>(null);
+  const [selectedRadiusKm, setSelectedRadiusKm] = useState<number>(2);
 
   // Prevent hover re-renders and jitter during active mouse wheel scrolling
   const isScrollingRef = useRef(false);
@@ -114,12 +126,30 @@ export default function SearchResults() {
         clear: () => setSelectedDistrict(null)
       });
     }
-    if (selectedPrice) {
+    if (appliedCustomPrice) {
+      const minStr = appliedCustomPrice.min ? (appliedCustomPrice.min / 1000000) + 'tr' : '0';
+      const maxStr = appliedCustomPrice.max ? (appliedCustomPrice.max / 1000000) + 'tr' : '∞';
+      filters.push({
+        id: 'custom-price',
+        label: `${minStr} - ${maxStr}`,
+        clear: () => { setAppliedCustomPrice(null); setCustomMinPrice(''); setCustomMaxPrice(''); }
+      });
+    } else if (selectedPrice) {
       filters.push({
         id: 'price',
         label: priceLabels[selectedPrice] || selectedPrice,
         clear: () => setSelectedPrice(null)
       });
+    }
+    if (selectedUniversity) {
+      const uni = UNIVERSITIES.find(u => u.id === selectedUniversity);
+      if (uni) {
+        filters.push({
+          id: 'university',
+          label: `${uni.shortName} (< ${selectedRadiusKm}km)`,
+          clear: () => setSelectedUniversity(null)
+        });
+      }
     }
     if (selectedArea) {
       filters.push({
@@ -171,6 +201,25 @@ export default function SearchResults() {
       else if (selectedArea === '30to45') matchArea = roomArea >= 30 && roomArea <= 45;
       else if (selectedArea === 'above45') matchArea = roomArea > 45;
 
+      // Custom price range
+      if (appliedCustomPrice) {
+        if (appliedCustomPrice.min !== undefined && room.price < appliedCustomPrice.min) matchPrice = false;
+        if (appliedCustomPrice.max !== undefined && room.price > appliedCustomPrice.max) matchPrice = false;
+      }
+
+      // University & Proximity match
+      let matchUniProximity = true;
+      if (selectedUniversity) {
+        const uni = UNIVERSITIES.find(u => u.id === selectedUniversity);
+        if (uni) {
+          const roomCoords: [number, number] = (room.latitude && room.longitude)
+            ? [Number(room.latitude), Number(room.longitude)]
+            : getCoordinatesForAddress(room.address, String(room.id));
+          const dist = calculateDistanceKm(uni.coords[0], uni.coords[1], roomCoords[0], roomCoords[1]);
+          matchUniProximity = dist <= selectedRadiusKm || uni.districts.some(d => normalizeVietnamese(room.address).includes(normalizeVietnamese(d)));
+        }
+      }
+
       // Utilities match
       let matchUtilities = true;
       if (selectedUtilities.length > 0) {
@@ -178,7 +227,7 @@ export default function SearchResults() {
         matchUtilities = selectedUtilities.every(u => roomUtils.includes(u.toLowerCase()));
       }
 
-      return matchQuery && matchDistrict && matchPrice && matchArea && matchUtilities;
+      return matchQuery && matchDistrict && matchUniProximity && matchPrice && matchArea && matchUtilities;
     });
 
     const sorted = [...result];
@@ -190,6 +239,12 @@ export default function SearchResults() {
       sorted.sort((a, b) => getCleanArea(a.area) - getCleanArea(b.area));
     } else if (sortBy === 'area-desc') {
       sorted.sort((a, b) => getCleanArea(b.area) - getCleanArea(a.area));
+    } else if (sortBy === 'trust-score') {
+      sorted.sort((a, b) => {
+        const tA = (a as any).trustScore || (a.isVerifiedLandlord ? 90 : 70);
+        const tB = (b as any).trustScore || (b.isVerifiedLandlord ? 90 : 70);
+        return tB - tA;
+      });
     } else if (sortBy === 'newest') {
       sorted.sort((a, b) => (getTimestamp(b.createdAt) || 0) - (getTimestamp(a.createdAt) || 0));
     } else { // 'relevant'
@@ -202,14 +257,45 @@ export default function SearchResults() {
     }
 
     return sorted;
-  }, [listings, searchQuery, selectedDistrict, selectedPrice, selectedArea, selectedUtilities, sortBy]);
+  }, [listings, searchQuery, selectedDistrict, selectedPrice, selectedArea, selectedUtilities, sortBy, appliedCustomPrice, selectedUniversity, selectedRadiusKm]);
+
+  const pageSize = 6;
+  const totalPages = Math.max(1, Math.ceil(filteredListings.length / pageSize));
+  const currentPage = Math.min(Math.max(1, Number(searchParams.get('page') || 1)), totalPages);
+  const paginatedListings = filteredListings.slice((currentPage - 1) * pageSize, currentPage * pageSize);
+
+  const handlePageChange = (newPage: number) => {
+    const params = new URLSearchParams(searchParams);
+    params.set('page', String(newPage));
+    navigate(`/search?${params.toString()}`);
+    listContainerRef.current?.scrollTo({ top: 0, behavior: 'smooth' });
+  };
 
   const clearAllFilters = () => {
     setSearchQuery('');
     setSelectedDistrict(null);
     setSelectedPrice(null);
+    setAppliedCustomPrice(null);
+    setCustomMinPrice('');
+    setCustomMaxPrice('');
+    setPriceValidationError(null);
+    setSelectedUniversity(null);
     setSelectedArea(null);
     setSelectedUtilities([]);
+  };
+
+  const handleApplyCustomPrice = () => {
+    const min = customMinPrice ? Number(customMinPrice) : undefined;
+    const max = customMaxPrice ? Number(customMaxPrice) : undefined;
+
+    if (min != null && max != null && min > max) {
+      setPriceValidationError('Giá tối thiểu không được lớn hơn giá tối đa.');
+      return;
+    }
+
+    setPriceValidationError(null);
+    setSelectedPrice(null);
+    setAppliedCustomPrice({ min, max });
   };
 
   // ponytail: SearchResults with Active Filter Pills, Sort Dropdown, Dynamic Filter CTA, Skeleton Loaders & Recovery Empty State
@@ -296,6 +382,7 @@ export default function SearchResults() {
                 className="bg-white border border-slate-200 rounded-xl px-3 py-1.5 text-caption font-semibold text-[#00153D] outline-none min-h-[40px] cursor-pointer hover:border-slate-300 transition-colors shadow-xs"
               >
                 <option value="relevant">Phù hợp nhất</option>
+                <option value="trust-score">Độ tin cậy cao nhất</option>
                 <option value="newest">Mới nhất</option>
                 <option value="price-low">Giá: Thấp → Cao</option>
                 <option value="price-high">Giá: Cao → Thấp</option>
@@ -331,7 +418,7 @@ export default function SearchResults() {
         </div>
         
         {/* Results Grid Container */}
-        <div className="flex-1 overflow-y-auto p-6 pt-2" onScroll={handleListScroll}>
+        <div ref={listContainerRef} className="flex-1 overflow-y-auto p-6 pt-2" onScroll={handleListScroll}>
           
           <AnimatePresence mode="wait">
             {/* Skeleton Loading State */}
@@ -383,7 +470,7 @@ export default function SearchResults() {
                 animate="visible"
                 className={`grid grid-cols-1 ${!showMap ? 'sm:grid-cols-2 lg:grid-cols-3' : 'sm:grid-cols-2'} gap-6`}
               >
-                {filteredListings.map(room => {
+                {paginatedListings.map(room => {
                   const isHovered = hoveredRoomId === room.id;
                   const isSelected = selectedRoomId === room.id;
 
@@ -426,6 +513,31 @@ export default function SearchResults() {
               </motion.div>
             )}
           </AnimatePresence>
+
+          {/* Pagination Controls */}
+          {totalPages > 1 && (
+            <div className="flex items-center justify-center gap-2 pt-6 pb-2">
+              <button
+                type="button"
+                disabled={currentPage === 1}
+                onClick={() => handlePageChange(currentPage - 1)}
+                className="px-3 py-1.5 rounded-lg border border-slate-200 text-xs font-semibold text-slate-700 hover:bg-slate-50 disabled:opacity-40 disabled:cursor-not-allowed"
+              >
+                Trang trước
+              </button>
+              <span className="text-xs font-medium text-slate-600 px-2">
+                Trang {currentPage} / {totalPages}
+              </span>
+              <button
+                type="button"
+                disabled={currentPage === totalPages}
+                onClick={() => handlePageChange(currentPage + 1)}
+                className="px-3 py-1.5 rounded-lg border border-slate-200 text-xs font-semibold text-slate-700 hover:bg-slate-50 disabled:opacity-40 disabled:cursor-not-allowed"
+              >
+                Trang sau
+              </button>
+            </div>
+          )}
         </div>
       </div>  
       
@@ -515,6 +627,85 @@ export default function SearchResults() {
                           {p.label}
                         </button>
                       ))}
+                    </div>
+
+                    {/* Tùy chỉnh khoảng giá */}
+                    <div className="pt-2 border-t border-slate-100 space-y-2">
+                      <span className="text-xs text-slate-500 font-medium">Hoặc nhập khoảng giá cụ thể:</span>
+                      <div className="grid grid-cols-2 gap-2">
+                        <div>
+                          <label className="text-[11px] text-slate-500 block mb-1">Giá tối thiểu (đ)</label>
+                          <input
+                            type="number"
+                            placeholder="2.500.000"
+                            value={customMinPrice}
+                            onChange={(e) => {
+                              setCustomMinPrice(e.target.value);
+                              setPriceValidationError(null);
+                            }}
+                            className="w-full bg-[#F8FAFC] border border-[#E2E8F0] rounded-xl px-3 py-2 text-xs font-semibold text-[#0F172A] focus:outline-none focus:border-[#00153D]"
+                          />
+                        </div>
+                        <div>
+                          <label className="text-[11px] text-slate-500 block mb-1">Giá tối đa (đ)</label>
+                          <input
+                            type="number"
+                            placeholder="4.000.000"
+                            value={customMaxPrice}
+                            onChange={(e) => {
+                              setCustomMaxPrice(e.target.value);
+                              setPriceValidationError(null);
+                            }}
+                            className="w-full bg-[#F8FAFC] border border-[#E2E8F0] rounded-xl px-3 py-2 text-xs font-semibold text-[#0F172A] focus:outline-none focus:border-[#00153D]"
+                          />
+                        </div>
+                      </div>
+
+                      {priceValidationError && (
+                        <div className="p-2 rounded-lg bg-rose-50 border border-rose-200 text-rose-600 text-xs font-semibold flex items-center gap-1.5">
+                          <AlertCircle className="w-3.5 h-3.5 shrink-0" />
+                          <span>{priceValidationError}</span>
+                        </div>
+                      )}
+
+                      <button
+                        type="button"
+                        onClick={handleApplyCustomPrice}
+                        className="w-full py-2 bg-[#00153D] hover:bg-[#073372] text-white rounded-xl text-xs font-bold transition-all shadow-xs active:scale-[0.98]"
+                      >
+                        Áp dụng khoảng giá
+                      </button>
+                    </div>
+                  </div>
+
+                  {/* Trường Đại học & Bán kính (PostGIS Spatial Radius) */}
+                  <div className="space-y-2">
+                    <label className="text-caption font-semibold text-[#0F172A] flex items-center gap-1.5">
+                      <GraduationCap className="w-4 h-4 text-blue-600" />
+                      <span>Trường Đại học & Bán kính quanh trường</span>
+                    </label>
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                      <select
+                        value={selectedUniversity || ''}
+                        onChange={(e) => setSelectedUniversity(e.target.value || null)}
+                        className="bg-[#F8FAFC] border border-[#E2E8F0] rounded-xl px-3 py-2 text-xs font-semibold text-[#0F172A] outline-none cursor-pointer"
+                      >
+                        <option value="">Tất cả trường Đại học</option>
+                        {UNIVERSITIES.map(u => (
+                          <option key={u.id} value={u.id}>{u.name}</option>
+                        ))}
+                      </select>
+
+                      <select
+                        value={selectedRadiusKm}
+                        onChange={(e) => setSelectedRadiusKm(Number(e.target.value))}
+                        disabled={!selectedUniversity}
+                        className="bg-[#F8FAFC] border border-[#E2E8F0] rounded-xl px-3 py-2 text-xs font-semibold text-[#0F172A] outline-none cursor-pointer disabled:opacity-50"
+                      >
+                        <option value={2}>Bán kính dưới 2 km</option>
+                        <option value={5}>Bán kính dưới 5 km</option>
+                        <option value={10}>Bán kính dưới 10 km</option>
+                      </select>
                     </div>
                   </div>
 

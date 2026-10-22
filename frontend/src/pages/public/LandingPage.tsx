@@ -11,12 +11,14 @@ export default function LandingPage() {
   const [district, setDistrict] = useState('');
   const [price, setPrice] = useState('');
   const [query, setQuery] = useState('');
+  const [roomType, setRoomType] = useState('');
   const [verifiedOnly, setVerifiedOnly] = useState(false);
 
   const handleResetFilters = () => {
     setDistrict('');
     setPrice('');
     setQuery('');
+    setRoomType('');
     setVerifiedOnly(false);
   };
 
@@ -30,6 +32,8 @@ export default function LandingPage() {
         onPriceChange={setPrice}
         query={query}
         onQueryChange={setQuery}
+        roomType={roomType}
+        onRoomTypeChange={setRoomType}
         verifiedOnly={verifiedOnly}
         onVerifiedOnlyChange={setVerifiedOnly}
         onResetFilters={handleResetFilters}
@@ -40,6 +44,7 @@ export default function LandingPage() {
         district={district}
         price={price}
         query={query}
+        roomType={roomType}
         verifiedOnly={verifiedOnly}
         onResetFilters={handleResetFilters}
       />

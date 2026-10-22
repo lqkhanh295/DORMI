@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
 import { createPortal } from 'react-dom';
 import { motion, AnimatePresence } from 'framer-motion';
-import { X, ShieldCheck, CheckCircle2, AlertCircle, Info, ShieldAlert, Award } from 'lucide-react';
+import { X, ShieldCheck, CheckCircle2, AlertCircle, Info, ShieldAlert, Award, UserCheck, Home, Camera, Star, MapPin } from 'lucide-react';
 import { trustSafetyApi, type TrustScoreBreakdown } from '../../services/api';
 import { modalBackdropVariants, modalContentVariants } from '../../utils/motion';
 
@@ -42,6 +42,16 @@ export default function TrustScoreModal({ isOpen, onClose, roomId, roomTitle }: 
 
     return () => window.removeEventListener('keydown', handleKeyDown);
   }, [isOpen, roomId, onClose]);
+
+  const getFactorIcon = (label: string) => {
+    const l = label.toLowerCase();
+    if (l.includes('cccd') || l.includes('định danh') || l.includes('chủ trọ')) return <UserCheck className="w-4 h-4 text-emerald-600" />;
+    if (l.includes('chủ quyền') || l.includes('sổ đỏ') || l.includes('nhà')) return <Home className="w-4 h-4 text-blue-600" />;
+    if (l.includes('ảnh') || l.includes('hình')) return <Camera className="w-4 h-4 text-purple-600" />;
+    if (l.includes('đánh giá') || l.includes('sao') || l.includes('review')) return <Star className="w-4 h-4 text-amber-500 fill-amber-500" />;
+    if (l.includes('địa chỉ') || l.includes('tọa độ') || l.includes('vị trí')) return <MapPin className="w-4 h-4 text-teal-600" />;
+    return <CheckCircle2 className="w-4 h-4 text-emerald-600" />;
+  };
 
   const getScoreColor = (score: number) => {
     if (score >= 85) return 'text-emerald-600';
@@ -116,14 +126,39 @@ export default function TrustScoreModal({ isOpen, onClose, roomId, roomTitle }: 
               ) : breakdown ? (
                 <>
                   {/* Score Overview Banner */}
-                  <div className="p-4 rounded-2xl bg-slate-50 border border-slate-100 flex items-center justify-between">
-                    <div>
-                      <span className="text-xs text-slate-500 font-medium">Điểm tín nhiệm chuẩn hóa</span>
-                      <div className="flex items-baseline gap-2 mt-0.5">
-                        <span className={`text-3xl font-black ${getScoreColor(breakdown.totalScore)}`}>
-                          {breakdown.totalScore}
-                        </span>
-                        <span className="text-xs text-slate-400 font-semibold">/ 100</span>
+                  <div className="p-4 rounded-2xl bg-slate-50 border border-slate-100 flex items-center justify-between gap-4">
+                    <div className="flex items-center gap-4">
+                      {/* Circular Progress Ring */}
+                      <div className="relative w-16 h-16 flex items-center justify-center shrink-0">
+                        <svg className="w-16 h-16 -rotate-90 transform" viewBox="0 0 36 36">
+                          <path
+                            className="text-slate-200"
+                            strokeWidth="3.5"
+                            stroke="currentColor"
+                            fill="none"
+                            d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831"
+                          />
+                          <path
+                            className={breakdown.totalScore >= 80 ? 'text-emerald-500' : 'text-blue-600'}
+                            strokeDasharray={`${breakdown.totalScore}, 100`}
+                            strokeWidth="3.5"
+                            strokeLinecap="round"
+                            stroke="currentColor"
+                            fill="none"
+                            d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831"
+                          />
+                        </svg>
+                        <div className="absolute inset-0 flex flex-col items-center justify-center text-center">
+                          <span className={`text-lg font-black ${getScoreColor(breakdown.totalScore)}`}>
+                            {breakdown.totalScore}
+                          </span>
+                        </div>
+                      </div>
+                      <div>
+                        <span className="text-xs text-slate-500 font-medium">Điểm tín nhiệm chuẩn hóa</span>
+                        <div className="text-xs text-slate-400 font-semibold mt-0.5">
+                          Thang điểm 100 DORMI Trust
+                        </div>
                       </div>
                     </div>
                     <div className="text-right">
@@ -156,7 +191,7 @@ export default function TrustScoreModal({ isOpen, onClose, roomId, roomTitle }: 
                           <div className="flex items-start gap-3 min-w-0">
                             <div className="mt-0.5">
                               {factor.passed || factor.points > 0 ? (
-                                <CheckCircle2 className="w-4 h-4 text-emerald-600" />
+                                getFactorIcon(factor.label)
                               ) : factor.points < 0 ? (
                                 <ShieldAlert className="w-4 h-4 text-rose-500" />
                               ) : (

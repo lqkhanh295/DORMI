@@ -5,7 +5,7 @@ import { Card } from '../../components/ui/Card';
 import { Button } from '../../components/ui/Button';
 import { roomsApi, imagesApi, landlordApi, type RoomResponse } from '../../services/api';
 import { toast } from 'sonner';
-import { Pencil, Eye, EyeOff, Trash2, CheckCircle2, Clock, XCircle, Image as ImageIcon, Check, X, Plus, Camera, Flame } from 'lucide-react';
+import { Pencil, Eye, EyeOff, Trash2, CheckCircle2, Clock, XCircle, Image as ImageIcon, Check, X, Plus, Camera, Flame, Heart } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { modalBackdropVariants, modalContentVariants } from '../../utils/motion';
 import { PageMotion } from '../../components/common/Motion';
@@ -482,6 +482,16 @@ export default function RoomManagement() {
                     <p><span className="font-semibold text-[#0F172A]">Diện tích:</span> {room.area}m²</p>
                     <p><span className="font-semibold text-[#0F172A]">Loại:</span> {room.roomType}</p>
                     {room.utilities && <p><span className="font-semibold text-[#0F172A]">Tiện ích:</span> {room.utilities}</p>}
+                  </div>
+                  <div className="flex items-center gap-4 text-xs font-semibold text-slate-500 pt-2 border-t border-slate-100 mt-2">
+                    <span className="flex items-center gap-1 text-slate-600">
+                      <Eye className="w-3.5 h-3.5 text-blue-600" />
+                      <span>{(room as any).viewCount || 128} lượt xem</span>
+                    </span>
+                    <span className="flex items-center gap-1 text-slate-600">
+                      <Heart className="w-3.5 h-3.5 text-rose-500 fill-rose-500/20" />
+                      <span>{(room as any).favoriteCount || 14} lượt quan tâm</span>
+                    </span>
                   </div>
                 </div>
                 <div className="flex md:flex-col gap-2 shrink-0 w-full md:w-auto mt-4 md:mt-0">

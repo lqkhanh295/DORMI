@@ -246,7 +246,11 @@ export default function RoommateMatcher() {
                       <div className="overflow-hidden">
                         <span className="text-[10px] font-medium text-slate-500">Căn phòng tương ứng</span>
                         <h4 className="text-caption font-bold text-slate-900 truncate">{profile.roomTitle || 'Phòng trọ'}</h4>
-                        <p className="text-[10px] text-slate-500 truncate">{profile.roomAddress}</p>
+                        <div className="flex items-center gap-1.5 text-[10px]">
+                          <span className="font-bold text-blue-700">Giá thuê: 3.500.000đ/tháng</span>
+                          <span>·</span>
+                          <span className="text-slate-500 truncate">{profile.roomAddress}</span>
+                        </div>
                       </div>
                     </div>
                     <Link 

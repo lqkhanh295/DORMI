@@ -126,6 +126,14 @@ export default function VerificationCenter() {
       return;
     }
 
+    if (docType === 'CCCD') {
+      const cccdRegex = /^[0-9]{12}$/;
+      if (!cccdRegex.test(docNumber.trim())) {
+        toast.error('Số CCCD không hợp lệ. Vui lòng nhập đúng 12 chữ số theo quy định.');
+        return;
+      }
+    }
+
     try {
       setSubmitting(true);
       await landlordApi.submitVerification({
@@ -353,9 +361,10 @@ export default function VerificationCenter() {
                   <div>
                     <label className="block text-caption font-semibold text-[#0F172A] mb-1.5">Số giấy tờ (CCCD / Hộ chiếu / GPKD)</label>
                     <Input 
-                      placeholder="Ví dụ: 079090001234"
+                      placeholder="Ví dụ: 079090001234 (12 chữ số)"
                       value={docNumber}
-                      onChange={e => setDocNumber(e.target.value)}
+                      maxLength={docType === 'CCCD' ? 12 : 20}
+                      onChange={e => setDocNumber(docType === 'CCCD' ? e.target.value.replace(/\D/g, '').slice(0, 12) : e.target.value)}
                       required
                     />
                   </div>

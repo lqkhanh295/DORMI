@@ -328,7 +328,6 @@ public class AuthService : IAuthService
         // 6. Multi-Factor Authentication (MFA / 2FA)
         // ponytail: temporarily disabled per user request ("tạm thời chưa cần nhập otp ở admin khi đăng nhập đâu")
         // High security accounts (Admin role or admin@ email) can directly log in without requiring MFA OTP
-        /*
         if (user.Role == UserRole.Admin || user.Email.ToLower().Contains("admin@"))
         {
             var otp = RandomNumberGenerator.GetInt32(100000, 1000000).ToString();
@@ -366,7 +365,6 @@ public class AuthService : IAuthService
                     : "Mã xác thực OTP đã được gửi đến kênh bảo mật của bạn. (Mã thử nghiệm: 123456)"
             });
         }
-        */
 
         // 7. Standard Token Generation for Non-MFA Users
         var token = _tokenGenerator.GenerateToken(user);

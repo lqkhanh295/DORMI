@@ -346,10 +346,10 @@ export default function PrintContractModal({ lease, onClose, initialLeaveBlank }
             {/* Bên Thuê (Bên B) */}
             <div className="space-y-1 text-black pt-2">
               <p className="font-bold uppercase">BÊN THUÊ (BÊN B):</p>
-              <p>- Ông/Bà: <strong>{lease.tenantName || '............................................................'}</strong></p>
-              <p>- CCCD/CMND số: <strong>Đã xác minh định danh trên hệ thống DORMI</strong></p>
-              <p>- Điện thoại di động: <strong>{lease.tenantPhone || '............................................................'}</strong></p>
-              <p>- Email: {lease.tenantEmail}</p>
+              <p>- Ông/Bà: <strong>{leaveBlankSignatures ? '............................................................' : (lease.tenantName || '............................................................')}</strong></p>
+              <p>- CCCD/CMND số: <strong>{leaveBlankSignatures ? '............................................................' : 'Đã xác minh định danh trên hệ thống DORMI'}</strong></p>
+              <p>- Điện thoại di động: <strong>{leaveBlankSignatures ? '............................................................' : (lease.tenantPhone || '............................................................')}</strong></p>
+              <p>- Email: <strong>{leaveBlankSignatures ? '............................................................' : lease.tenantEmail}</strong></p>
             </div>
           </div>
 

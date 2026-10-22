@@ -90,12 +90,10 @@ export default function LandlordApplications() {
       fetchApplications();
 
       if (reviewAction === 'Approve') {
-        toast.success('Đã duyệt hồ sơ thuê phòng!', {
-          action: {
-            label: 'Tạo hợp đồng ngay',
-            onClick: () => navigate(leasesPath, { state: { prefillApp: approvedApp } })
-          }
-        });
+        toast.success('Đã duyệt hồ sơ thuê phòng! Đang chuyển hướng sang tạo hợp đồng...');
+        setTimeout(() => {
+          navigate(leasesPath, { state: { prefillApp: approvedApp } });
+        }, 1000);
       } else {
         toast.success(
           reviewAction === 'Reject'

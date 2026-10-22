@@ -642,7 +642,7 @@ export default function TenantLeases() {
                     </button>
                     <button
                       type="submit"
-                      disabled={isSubmittingSign || !agreedTerms}
+                      disabled={isSubmittingSign}
                       className="px-5 py-2 bg-emerald-600 hover:bg-emerald-700 disabled:opacity-50 text-white font-bold text-xs rounded-xl shadow-sm transition-[background-color,box-shadow,transform] duration-150 ease-out active:scale-[0.98] flex items-center gap-2"
                     >
                       {isSubmittingSign ? (

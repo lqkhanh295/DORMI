@@ -5,6 +5,93 @@ export interface GeoLocation {
   lng: number;
 }
 
+export interface UniversityLandmark {
+  id: string;
+  name: string;
+  shortName: string;
+  coords: [number, number]; // [lat, lng]
+  districts: string[];
+  aliases: string[];
+}
+
+export const UNIVERSITIES: UniversityLandmark[] = [
+  {
+    id: 'fpt',
+    name: 'Đại học FPT TP.HCM',
+    shortName: 'ĐH FPT',
+    coords: [10.8546, 106.7932],
+    districts: ['Thủ Đức', 'Quận 9'],
+    aliases: ['fpt', 'dai hoc fpt', 'fpt university', 'khu cong nghe cao', 'cnc']
+  },
+  {
+    id: 'ueh',
+    name: 'Đại học Kinh Tế TP.HCM (UEH)',
+    shortName: 'ĐH Kinh Tế (UEH)',
+    coords: [10.7828, 106.6958],
+    districts: ['Quận 3', 'Quận 1', 'Quận 10', 'Bình Chánh'],
+    aliases: ['ueh', 'kinh te', 'dai hoc kinh te', 'kinh te tphcm']
+  },
+  {
+    id: 'vnuhcm',
+    name: 'Đại học Quốc gia TP.HCM',
+    shortName: 'ĐHQG TP.HCM',
+    coords: [10.8700, 106.7782],
+    districts: ['Thủ Đức', 'Dĩ An'],
+    aliases: ['dhqg', 'quoc gia', 'lang dai hoc', 'dai hoc quoc gia', 'ktx khu a', 'ktx khu b']
+  },
+  {
+    id: 'hcmut',
+    name: 'Đại học Bách Khoa TP.HCM',
+    shortName: 'ĐH Bách Khoa',
+    coords: [10.7726, 106.6577],
+    districts: ['Quận 10', 'Thủ Đức'],
+    aliases: ['bach khoa', 'hcmut', 'bk']
+  },
+  {
+    id: 'hcmute',
+    name: 'ĐH Sư Phạm Kỹ Thuật (HCMUTE)',
+    shortName: 'ĐH SPKT',
+    coords: [10.8510, 106.7720],
+    districts: ['Thủ Đức'],
+    aliases: ['spkt', 'su pham ky thuat', 'hcmute']
+  },
+  {
+    id: 'hcmus',
+    name: 'Đại học Khoa Học Tự Nhiên',
+    shortName: 'ĐH KHTN',
+    coords: [10.7632, 106.6822],
+    districts: ['Quận 5', 'Thủ Đức'],
+    aliases: ['khtn', 'khoa hoc tu nhien', 'hcmus']
+  },
+  {
+    id: 'rmit',
+    name: 'Đại học RMIT Nam Sài Gòn',
+    shortName: 'ĐH RMIT',
+    coords: [10.7300, 106.6950],
+    districts: ['Quận 7', 'Nhà Bè'],
+    aliases: ['rmit', 'dai hoc rmit']
+  },
+  {
+    id: 'tonducthang',
+    name: 'Đại học Tôn Đức Thắng (TDTU)',
+    shortName: 'ĐH Tôn Đức Thắng',
+    coords: [10.7325, 106.6992],
+    districts: ['Quận 7'],
+    aliases: ['tdtu', 'ton duc thang']
+  }
+];
+
+export function normalizeVietnamese(str: string): string {
+  if (!str) return '';
+  return str
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '')
+    .replace(/đ/g, 'd')
+    .replace(/Đ/g, 'D')
+    .toLowerCase()
+    .trim();
+}
+
 // Known landmarks and street coordinates across Ho Chi Minh City
 const STREET_COORDINATES: Record<string, [number, number]> = {
   // District 1

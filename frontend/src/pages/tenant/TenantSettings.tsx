@@ -12,9 +12,24 @@ type TabType = 'notifications' | 'security' | 'privacy' | 'danger';
 
 export default function TenantSettings() {
   const [activeTab, setActiveTab] = useState<TabType>('notifications');
-  const [matchNotify, setMatchNotify] = useState(true);
-  const [chatNotify, setChatNotify] = useState(true);
-  const [promoNotify, setPromoNotify] = useState(false);
+  const [matchNotify, setMatchNotify] = useState(() => {
+    try {
+      const saved = localStorage.getItem('dormi_notifications_settings');
+      return saved ? JSON.parse(saved).matchNotify ?? true : true;
+    } catch { return true; }
+  });
+  const [chatNotify, setChatNotify] = useState(() => {
+    try {
+      const saved = localStorage.getItem('dormi_notifications_settings');
+      return saved ? JSON.parse(saved).chatNotify ?? true : true;
+    } catch { return true; }
+  });
+  const [promoNotify, setPromoNotify] = useState(() => {
+    try {
+      const saved = localStorage.getItem('dormi_notifications_settings');
+      return saved ? JSON.parse(saved).promoNotify ?? false : false;
+    } catch { return false; }
+  });
 
   // Security tab state
   const [currentPassword, setCurrentPassword] = useState('');

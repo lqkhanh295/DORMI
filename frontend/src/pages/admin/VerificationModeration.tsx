@@ -138,9 +138,15 @@ export default function VerificationModeration() {
             </div>
           )}
           {!loading && queue.length === 0 && (
-            <p className="text-slate-400 text-center py-8 bg-white rounded-xl border border-dashed border-slate-200">
-              Không có yêu cầu xác minh nào đang chờ.
-            </p>
+            <div className="flex flex-col items-center justify-center py-12 px-4 bg-white rounded-2xl border border-dashed border-slate-200 text-center space-y-3">
+              <div className="w-12 h-12 rounded-full bg-emerald-50 text-emerald-600 flex items-center justify-center">
+                <ShieldCheck className="w-7 h-7" />
+              </div>
+              <div>
+                <p className="text-sm font-bold text-slate-800">Tất cả hồ sơ đã được xử lý</p>
+                <p className="text-xs text-slate-500 mt-0.5">Không có yêu cầu xác minh nào đang chờ phê duyệt.</p>
+              </div>
+            </div>
           )}
           {queue.map(item => (
             <Card 

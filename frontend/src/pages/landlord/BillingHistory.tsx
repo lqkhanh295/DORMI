@@ -8,6 +8,8 @@ import { Receipt, Clock, CheckCircle2, AlertCircle } from 'lucide-react';
 export default function BillingHistory() {
   const [transactions, setTransactions] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
+  const [currentPage, setCurrentPage] = useState(1);
+  const pageSize = 5;
 
   useEffect(() => {
     setLoading(true);
@@ -18,6 +20,9 @@ export default function BillingHistory() {
       .catch(err => console.warn('Failed to load billing history:', err))
       .finally(() => setLoading(false));
   }, []);
+
+  const totalPages = Math.max(1, Math.ceil(transactions.length / pageSize));
+  const paginatedTransactions = transactions.slice((currentPage - 1) * pageSize, currentPage * pageSize);
 
   const totalSpent = transactions
     .filter(t => t.status === 'Completed')
@@ -83,18 +88,20 @@ export default function BillingHistory() {
             Chưa có giao dịch nào phát sinh. Hãy đăng ký gói dịch vụ để nâng cao hiệu quả tin đăng!
           </div>
         ) : (
+          <>
           <table className="min-w-full divide-y divide-[#E2E8F0]">
             <thead className="bg-white">
               <tr>
                 <th className="px-6 py-3.5 text-left text-caption font-semibold text-[#64748B] uppercase tracking-wider">Ngày giao dịch</th>
                 <th className="px-6 py-3.5 text-left text-caption font-semibold text-[#64748B] uppercase tracking-wider">Mã tham chiếu</th>
+                <th className="px-6 py-3.5 text-left text-caption font-semibold text-[#64748B] uppercase tracking-wider">Dịch vụ đã mua</th>
                 <th className="px-6 py-3.5 text-left text-caption font-semibold text-[#64748B] uppercase tracking-wider">Phương thức</th>
                 <th className="px-6 py-3.5 text-left text-caption font-semibold text-[#64748B] uppercase tracking-wider">Số tiền</th>
                 <th className="px-6 py-3.5 text-left text-caption font-semibold text-[#64748B] uppercase tracking-wider">Trạng thái</th>
               </tr>
             </thead>
             <tbody className="bg-white divide-y divide-[#E2E8F0]">
-              {transactions.map((t: any) => (
+              {paginatedTransactions.map((t: any) => (
                 <tr key={t.id} className="hover:bg-slate-50 transition-colors">
                   <td className="px-6 py-4 whitespace-nowrap text-body text-[#64748B]">
                     {new Date(t.createdAt).toLocaleDateString('vi-VN')} {new Date(t.createdAt).toLocaleTimeString('vi-VN', { hour: '2-digit', minute: '2-digit' })}
@@ -127,6 +134,35 @@ export default function BillingHistory() {
               ))}
             </tbody>
           </table>
+          {totalPages > 1 && (
+            <div className="p-4 bg-[#F8FAFC] border-t border-[#E2E8F0] flex items-center justify-between">
+              <span className="text-xs text-slate-500">
+                Hiển thị {(currentPage - 1) * pageSize + 1} - {Math.min(currentPage * pageSize, transactions.length)} trong tổng số {transactions.length} giao dịch
+              </span>
+              <div className="flex items-center gap-2">
+                <button
+                  type="button"
+                  disabled={currentPage === 1}
+                  onClick={() => setCurrentPage(p => Math.max(1, p - 1))}
+                  className="px-3 py-1.5 text-xs font-semibold rounded-lg border border-slate-200 bg-white hover:bg-slate-50 disabled:opacity-40 disabled:cursor-not-allowed"
+                >
+                  Trang trước
+                </button>
+                <span className="text-xs font-bold text-slate-700 px-1">
+                  {currentPage} / {totalPages}
+                </span>
+                <button
+                  type="button"
+                  disabled={currentPage === totalPages}
+                  onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))}
+                  className="px-3 py-1.5 text-xs font-semibold rounded-lg border border-slate-200 bg-white hover:bg-slate-50 disabled:opacity-40 disabled:cursor-not-allowed"
+                >
+                  Trang sau
+                </button>
+              </div>
+            </div>
+          )}
+          </>
         )}
       </Card>
     </div>

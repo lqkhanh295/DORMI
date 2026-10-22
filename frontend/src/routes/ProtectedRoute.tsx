@@ -1,5 +1,7 @@
+import { useEffect } from 'react';
 import { Navigate, Outlet, useLocation } from 'react-router-dom';
 import { useStore } from '../store/useStore';
+import { toast } from 'sonner';
 
 interface ProtectedRouteProps {
   allowedRoles?: string[];
@@ -11,18 +13,23 @@ export default function ProtectedRoute({ allowedRoles }: ProtectedRouteProps) {
   const isAuthenticated = !!currentUser;
   const role = currentUser?.role || null;
 
+  const isUnauthorized = Boolean(allowedRoles && role && !allowedRoles.includes(role));
+
+  useEffect(() => {
+    if (isUnauthorized) {
+      toast.error('Bạn không có quyền truy cập vào phân hệ này.');
+    }
+  }, [isUnauthorized]);
+
   if (!isAuthenticated) {
-    // Preserve intended destination in location state for post-login redirect
     return <Navigate to="/auth" state={{ from: location }} replace />;
   }
 
-  // Admin has full superuser permissions to view and manage all functions
   if (role === 'Admin') {
     return <Outlet />;
   }
 
-  if (allowedRoles && role && !allowedRoles.includes(role)) {
-    // Redirect to user's authorized workspace if attempting to access an unauthorized route
+  if (isUnauthorized) {
     if (role === 'Landlord') return <Navigate to="/landlord" replace />;
     return <Navigate to="/tenant" replace />;
   }

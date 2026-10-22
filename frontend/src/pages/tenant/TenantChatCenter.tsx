@@ -209,9 +209,16 @@ export default function TenantChatCenter() {
                     <div className="flex-1 overflow-hidden">
                       <div className="flex justify-between items-baseline mb-1">
                         <h4 className="font-bold text-[#0F172A] truncate">{contact.name}</h4>
-                        <span className="text-[11px] font-medium px-1.5 py-0.5 rounded-md bg-slate-100 text-slate-600 border border-slate-200">
-                          {contact.role === 'Landlord' ? 'Chủ nhà' : (contact.role === 'Roommate' ? 'Bạn ở ghép' : 'Liên hệ')}
-                        </span>
+                        <div className="flex items-center gap-1.5">
+                          {contact.unreadCount ? (
+                            <span className="w-5 h-5 rounded-full bg-blue-600 text-white text-[10px] font-bold flex items-center justify-center shrink-0">
+                              {contact.unreadCount}
+                            </span>
+                          ) : null}
+                          <span className="text-[11px] font-medium px-1.5 py-0.5 rounded-md bg-slate-100 text-slate-600 border border-slate-200">
+                            {contact.role === 'Landlord' ? 'Chủ nhà' : (contact.role === 'Roommate' ? 'Bạn ở ghép' : 'Liên hệ')}
+                          </span>
+                        </div>
                       </div>
                       <p className={`text-sm truncate ${isSelected ? 'font-semibold text-[#00153D]' : 'text-[#64748B]'}`}>
                         {lastMessage}

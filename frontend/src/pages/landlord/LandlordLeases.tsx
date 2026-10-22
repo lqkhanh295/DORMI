@@ -1,3 +1,4 @@
+import { TenantRatingModal } from '../../components/landlord/TenantRatingModal';
 import { useState, useEffect } from 'react';
 import { createPortal } from 'react-dom';
 import { useLocation, useNavigate } from 'react-router-dom';
@@ -12,7 +13,8 @@ import {
   Building2, 
   MessageSquare, 
   X, 
-  Eye, 
+  Eye,
+  Star, 
   Ban, 
   ExternalLink, 
   Paperclip, 
@@ -38,6 +40,7 @@ export default function LandlordLeases() {
   const [isCreateOpen, setIsCreateOpen] = useState(false);
   const [viewingLease, setViewingLease] = useState<LeaseContractResponse | null>(null);
   const [managingRental, setManagingRental] = useState<LeaseContractResponse | null>(null);
+  const [ratingLeaseId, setRatingLeaseId] = useState<string | null>(null);
   const [printingLease, setPrintingLease] = useState<LeaseContractResponse | null>(null);
   const [terminatingLease, setTerminatingLease] = useState<LeaseContractResponse | null>(null);
   const [terminateReason, setTerminateReason] = useState('');
@@ -467,6 +470,15 @@ export default function LandlordLeases() {
                     >
                       <FileDown className="w-3.5 h-3.5 text-blue-700" />
                       Xuất PDF / In
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => setRatingLeaseId(lease.id)}
+                      className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-amber-50 hover:bg-amber-100 text-amber-900 border border-amber-200 text-xs font-semibold rounded-lg transition-colors"
+                      title="Đánh giá khách thuê"
+                    >
+                      <Star className="w-3.5 h-3.5 text-amber-600" />
+                      Đánh giá khách thuê
                     </button>
                     <button
                       type="button"
@@ -963,6 +975,12 @@ export default function LandlordLeases() {
       </AnimatePresence>,
       document.body
     )}
+
+      <TenantRatingModal
+        isOpen={!!ratingLeaseId}
+        onClose={() => setRatingLeaseId(null)}
+        initialLeaseId={ratingLeaseId || undefined}
+      />
 
       {/* Post-Rental Management Modal */}
       <AnimatePresence>

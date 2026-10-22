@@ -8,7 +8,8 @@ import {
   Home, 
   FileText, 
   ShieldCheck, 
-  CreditCard 
+  CreditCard,
+  RotateCcw
 } from 'lucide-react';
 
 export default function PaymentReturn() {
@@ -21,6 +22,7 @@ export default function PaymentReturn() {
   const orderCode = searchParams.get('orderCode') || searchParams.get('order_code');
   const leaseId = searchParams.get('leaseId');
   const type = searchParams.get('type') || 'deposit';
+  const amountParam = searchParams.get('amount');
 
   const [paymentState, setPaymentState] = useState<'success' | 'cancelled' | 'pending'>('pending');
 
@@ -85,6 +87,12 @@ export default function PaymentReturn() {
             </div>
           )}
 
+          {amountParam && (
+            <div className="flex justify-between items-center py-1 border-b border-[#E2E8F0]">
+              <span className="text-[#64748B]">Số tiền thanh toán</span>
+              <span className="font-bold text-[#00153D] text-sm">{Number(amountParam).toLocaleString('vi-VN')} đ</span>
+            </div>
+          )}
           <div className="flex justify-between items-center py-1 border-b border-[#E2E8F0]">
             <span className="text-[#64748B]">Loại giao dịch</span>
             <span className="font-semibold text-[#0F172A]">
@@ -116,15 +124,32 @@ export default function PaymentReturn() {
 
         {/* Action Buttons */}
         <div className="flex flex-col sm:flex-row gap-3 pt-2">
-          <button
-            type="button"
-            onClick={() => navigate(leaseId ? `/tenant/leases` : '/tenant/leases')}
-            className="flex-1 py-2.5 px-4 bg-[#00153D] hover:bg-[#002266] text-white font-bold text-xs rounded-xl flex items-center justify-center gap-2 shadow-xs transition-colors"
-          >
-            <FileText className="w-4 h-4" />
-            Xem hợp đồng thuê phòng
-            <ArrowRight className="w-3.5 h-3.5" />
-          </button>
+          {paymentState === 'cancelled' ? (
+            <button
+              type="button"
+              onClick={() => navigate(-1)}
+              className="flex-1 py-2.5 px-4 bg-amber-600 hover:bg-amber-700 text-white font-bold text-xs rounded-xl flex items-center justify-center gap-2 shadow-xs transition-colors"
+            >
+              <RotateCcw className="w-4 h-4" />
+              Thử thanh toán lại
+            </button>
+          ) : (
+            <button
+              type="button"
+              onClick={() => {
+                if (type === 'package' || type === 'subscription' || type === 'service') {
+                  navigate('/landlord/billing');
+                } else {
+                  navigate(leaseId ? `/tenant/leases` : '/tenant/leases');
+                }
+              }}
+              className="flex-1 py-2.5 px-4 bg-[#00153D] hover:bg-[#002266] text-white font-bold text-xs rounded-xl flex items-center justify-center gap-2 shadow-xs transition-colors"
+            >
+              <FileText className="w-4 h-4" />
+              {type === 'package' || type === 'subscription' || type === 'service' ? 'Xem gói dịch vụ đã mua' : 'Xem hợp đồng thuê phòng'}
+              <ArrowRight className="w-3.5 h-3.5" />
+            </button>
+          )}
 
           <button
             type="button"

@@ -228,10 +228,36 @@ public class RoomService : IRoomService
 
         if (!string.IsNullOrWhiteSpace(filter.Query))
         {
-            var searchTerm = filter.Query.Trim().ToLower();
-            query = query.Where(r => r.Title.ToLower().Contains(searchTerm) || 
-                                     r.Address.ToLower().Contains(searchTerm) ||
-                                     r.Description.ToLower().Contains(searchTerm));
+            var rawSearch = filter.Query.Trim().ToLower();
+
+            var isTanBinh = rawSearch.Contains("tan binh") || rawSearch.Contains("tân bình");
+            var isThuDuc = rawSearch.Contains("thu duc") || rawSearch.Contains("thủ đức");
+            var isBinhThanh = rawSearch.Contains("binh thanh") || rawSearch.Contains("bình thạnh");
+            var isQ10 = rawSearch.Contains("quan 10") || rawSearch.Contains("quận 10") || rawSearch.Contains("q10") || rawSearch.Contains("q.10");
+            var isQ1 = rawSearch.Contains("quan 1") || rawSearch.Contains("quận 1") || rawSearch.Contains("q1") || rawSearch.Contains("q.1");
+            var isQ3 = rawSearch.Contains("quan 3") || rawSearch.Contains("quận 3") || rawSearch.Contains("q3") || rawSearch.Contains("q.3");
+            var isQ7 = rawSearch.Contains("quan 7") || rawSearch.Contains("quận 7") || rawSearch.Contains("q7") || rawSearch.Contains("q.7");
+            var isFPT = rawSearch.Contains("fpt") || rawSearch.Contains("đại học fpt") || rawSearch.Contains("dai hoc fpt");
+            var isUEH = rawSearch.Contains("ueh") || rawSearch.Contains("kinh tế") || rawSearch.Contains("kinh te");
+            var isBK = rawSearch.Contains("bách khoa") || rawSearch.Contains("bach khoa");
+            var isGacLung = rawSearch.Contains("gác") || rawSearch.Contains("gac");
+
+            query = query.Where(r => 
+                r.Title.ToLower().Contains(rawSearch) || 
+                r.Address.ToLower().Contains(rawSearch) ||
+                r.Description.ToLower().Contains(rawSearch) ||
+                (isTanBinh && r.Address.ToLower().Contains("tân bình")) ||
+                (isThuDuc && (r.Address.ToLower().Contains("thủ đức") || r.Address.ToLower().Contains("quận 9"))) ||
+                (isBinhThanh && r.Address.ToLower().Contains("bình thạnh")) ||
+                (isQ10 && (r.Address.ToLower().Contains("quận 10") || r.Address.ToLower().Contains("q.10") || r.Address.ToLower().Contains("q10"))) ||
+                (isQ1 && (r.Address.ToLower().Contains("quận 1") || r.Address.ToLower().Contains("q.1"))) ||
+                (isQ3 && (r.Address.ToLower().Contains("quận 3") || r.Address.ToLower().Contains("q.3"))) ||
+                (isQ7 && (r.Address.ToLower().Contains("quận 7") || r.Address.ToLower().Contains("q.7"))) ||
+                (isFPT && (r.Address.ToLower().Contains("thủ đức") || r.Address.ToLower().Contains("quận 9") || r.Title.ToLower().Contains("fpt") || r.Description.ToLower().Contains("fpt"))) ||
+                (isUEH && (r.Address.ToLower().Contains("quận 10") || r.Address.ToLower().Contains("quận 3") || r.Address.ToLower().Contains("quận 1") || r.Description.ToLower().Contains("ueh") || r.Title.ToLower().Contains("ueh"))) ||
+                (isBK && (r.Address.ToLower().Contains("quận 10") || r.Address.ToLower().Contains("thủ đức") || r.Description.ToLower().Contains("bách khoa"))) ||
+                (isGacLung && (r.Title.ToLower().Contains("gác") || r.Description.ToLower().Contains("gác")))
+            );
         }
 
         if (!string.IsNullOrWhiteSpace(filter.RoomType))
@@ -317,6 +343,7 @@ public class RoomService : IRoomService
             "oldest" => query.OrderBy(r => r.CreatedAt),
             "area-desc" => query.OrderByDescending(r => r.Area),
             "area-asc" => query.OrderBy(r => r.Area),
+            "trust-score" or "trust" or "trustScore_desc" => query.OrderByDescending(r => r.IsPropertyVerified).ThenByDescending(r => r.Landlord.IsVerified).ThenByDescending(r => r.CreatedAt),
             "verified" => query.OrderByDescending(r => r.Landlord.IsVerified).ThenByDescending(r => r.CreatedAt),
             _ => query.OrderByDescending(r => r.IsBoosted && r.BoostExpiresAt > now).ThenByDescending(r => r.CreatedAt)
         };

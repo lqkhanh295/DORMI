@@ -9,11 +9,15 @@ import {
   Lock, 
   ShieldCheck, 
   Phone, 
-  Scale
+  Scale, 
+  CreditCard
 } from 'lucide-react';
 
 export default function LandlordSettings() {
-  const [activeTab, setActiveTab] = useState<'profile' | 'security' | 'legal'>('profile');
+  const [activeTab, setActiveTab] = useState<'profile' | 'security' | 'payout' | 'legal'>('profile');
+  const [bankName, setBankName] = useState(() => localStorage.getItem('dormi_bank_name') || 'Vietcombank');
+  const [bankAccount, setBankAccount] = useState(() => localStorage.getItem('dormi_bank_account') || '1023456789');
+  const [bankHolder, setBankHolder] = useState(() => localStorage.getItem('dormi_bank_holder') || 'NGUYEN VAN AN');
   const [phoneNumber, setPhoneNumber] = useState('0901234567');
   const [loading, setLoading] = useState(true);
 
@@ -119,6 +123,19 @@ export default function LandlordSettings() {
 
           <button
             type="button"
+            onClick={() => setActiveTab('payout')}
+            className={`w-full flex items-center gap-2.5 px-3.5 py-2.5 rounded-xl text-xs font-semibold text-left transition-colors ${
+              activeTab === 'payout'
+                ? 'bg-[#00153D] text-white shadow-xs'
+                : 'text-slate-600 hover:bg-white hover:text-slate-900'
+            }`}
+          >
+            <CreditCard className="w-4 h-4" />
+            <span>Tài khoản nhận tiền (Payout)</span>
+          </button>
+
+          <button
+            type="button"
             onClick={() => setActiveTab('legal')}
             className={`w-full flex items-center gap-2.5 px-3.5 py-2.5 rounded-xl text-xs font-semibold text-left transition-colors ${
               activeTab === 'legal'
@@ -203,7 +220,74 @@ export default function LandlordSettings() {
             )}
 
             {/* TAB 3: LEGAL & PRIVACY POLICY */}
-            {activeTab === 'legal' && (
+            {activeTab === 'payout' && (
+          <Card className="md:col-span-3 p-6 bg-white rounded-2xl border border-slate-200/90 shadow-xs space-y-6">
+            <div>
+              <h2 className="text-base font-bold text-[#0F172A] flex items-center gap-2">
+                <CreditCard className="w-5 h-5 text-blue-600" />
+                Tài khoản ngân hàng nhận tiền cọc & tiền thuê (Payout)
+              </h2>
+              <p className="text-xs text-[#64748B] mt-1">
+                DORMI sẽ giải ngân tự động tiền cọc và tiền thuê phòng từ khách thuê về tài khoản ngân hàng này.
+              </p>
+            </div>
+
+            <form
+              onSubmit={(e) => {
+                e.preventDefault();
+                localStorage.setItem('dormi_bank_name', bankName);
+                localStorage.setItem('dormi_bank_account', bankAccount);
+                localStorage.setItem('dormi_bank_holder', bankHolder);
+                toast.success('Đã lưu cấu hình tài khoản nhận tiền thành công!');
+              }}
+              className="space-y-4 max-w-lg"
+            >
+              <div>
+                <label className="text-caption font-semibold text-[#0F172A] block mb-1">Ngân hàng thụ hưởng</label>
+                <select
+                  value={bankName}
+                  onChange={e => setBankName(e.target.value)}
+                  className="w-full bg-[#F8FAFC] border border-[#E2E8F0] rounded-xl px-3 py-2 text-xs font-semibold text-[#0F172A] outline-none"
+                >
+                  <option value="Vietcombank">Vietcombank (VCB)</option>
+                  <option value="MB Bank">MB Bank (Quân Đội)</option>
+                  <option value="Techcombank">Techcombank (TCB)</option>
+                  <option value="ACB">ACB (Á Châu)</option>
+                  <option value="VPBank">VPBank</option>
+                  <option value="TPBank">TPBank</option>
+                  <option value="BIDV">BIDV</option>
+                  <option value="VietinBank">VietinBank</option>
+                </select>
+              </div>
+
+              <div>
+                <label className="text-caption font-semibold text-[#0F172A] block mb-1">Số tài khoản ngân hàng</label>
+                <Input
+                  value={bankAccount}
+                  onChange={e => setBankAccount(e.target.value)}
+                  placeholder="Ví dụ: 1023456789"
+                  required
+                />
+              </div>
+
+              <div>
+                <label className="text-caption font-semibold text-[#0F172A] block mb-1">Tên chủ tài khoản (In hoa không dấu)</label>
+                <Input
+                  value={bankHolder}
+                  onChange={e => setBankHolder(e.target.value.toUpperCase())}
+                  placeholder="Ví dụ: NGUYEN VAN AN"
+                  required
+                />
+              </div>
+
+              <Button type="submit" variant="primary">
+                Lưu tài khoản nhận tiền
+              </Button>
+            </form>
+          </Card>
+        )}
+
+        {activeTab === 'legal' && (
               <div className="space-y-6">
                 <div className="border-b border-slate-100 pb-3">
                   <h2 className="text-base font-bold text-slate-900">Chính sách bảo mật & Điều khoản dịch vụ</h2>

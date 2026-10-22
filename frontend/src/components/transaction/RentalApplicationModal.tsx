@@ -162,7 +162,7 @@ export default function RentalApplicationModal({
                   Nộp hồ sơ thuê phòng
                 </h2>
                 <p className="text-xs text-slate-300 mt-1 line-clamp-1">
-                  {roomTitle} — {roomPrice.toLocaleString()} VNĐ/tháng
+                  Gửi đến chủ trọ: <span className="font-bold text-white">{landlordName || 'Chủ trọ'}</span> · {roomTitle} ({roomPrice.toLocaleString('vi-VN')} đ/tháng)
                 </p>
               </div>
               <button 

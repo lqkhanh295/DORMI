@@ -16,7 +16,11 @@ import {
   FileCheck, 
   CheckCircle2, 
   Sparkles,
-  Search
+  Search,
+  Wrench,
+  Users,
+  CreditCard,
+  ShieldCheck
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { RoomCard } from '../../components/landing/RoomCard';
@@ -112,8 +116,62 @@ export default function TenantDashboard() {
         </div>
       </div>
 
+      {/* Active Lease Quick Actions Banner */}
+      {leases.some(l => l.status === 'Active' || l.status === 'Signed') && (
+        <div className="p-5 bg-gradient-to-r from-emerald-50 to-teal-50 border border-emerald-200 rounded-2xl flex flex-col sm:flex-row sm:items-center justify-between gap-4 shadow-xs">
+          <div className="space-y-1">
+            <div className="flex items-center gap-2">
+              <span className="px-2.5 py-0.5 rounded-full text-xs font-bold bg-emerald-600 text-white flex items-center gap-1">
+                <ShieldCheck className="w-3.5 h-3.5" /> Hợp đồng đang hiệu lực (Active)
+              </span>
+            </div>
+            <p className="text-xs text-emerald-900 font-medium">
+              Bạn đang thuê phòng với hợp đồng bảo vệ quyền lợi 100% từ Dormi. Cần hỗ trợ khẩn cấp hoặc thanh toán tiền phòng?
+            </p>
+          </div>
+          <div className="flex flex-wrap items-center gap-2 shrink-0">
+            <button
+              type="button"
+              onClick={() => toast.info('Chức năng đóng tiền phòng online sẽ mở khi đến kỳ thanh toán hàng tháng.')}
+              className="px-3.5 py-2 bg-emerald-700 hover:bg-emerald-800 text-white text-xs font-bold rounded-xl flex items-center gap-1.5 shadow-xs transition-colors"
+            >
+              <CreditCard className="w-3.5 h-3.5" />
+              <span>Đóng tiền phòng</span>
+            </button>
+            <button
+              type="button"
+              onClick={() => toast.info('Đã mở kênh gửi yêu cầu sửa chữa/bảo trì trực tiếp đến chủ trọ.')}
+              className="px-3.5 py-2 bg-white hover:bg-emerald-50 text-emerald-800 border border-emerald-300 text-xs font-bold rounded-xl flex items-center gap-1.5 shadow-xs transition-colors"
+            >
+              <Wrench className="w-3.5 h-3.5" />
+              <span>Báo cáo sự cố / sửa chữa</span>
+            </button>
+          </div>
+        </div>
+      )}
+
+      {/* Roommate Matcher Shortcut Banner */}
+      <div className="p-4 bg-indigo-50/70 border border-indigo-100 rounded-2xl flex items-center justify-between gap-4">
+        <div className="flex items-center gap-3">
+          <div className="w-10 h-10 rounded-xl bg-indigo-600 text-white flex items-center justify-center shrink-0">
+            <Users className="w-5 h-5" />
+          </div>
+          <div>
+            <h4 className="text-xs font-bold text-indigo-950">Tìm bạn ở ghép tương thích (Roommate Matcher)</h4>
+            <p className="text-[11px] text-indigo-700">Vuốt tìm bạn cùng phòng hợp thói quen sinh hoạt, ngân sách và lịch biểu</p>
+          </div>
+        </div>
+        <Link
+          to="/tenant/match"
+          className="px-3.5 py-2 bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-bold rounded-xl flex items-center gap-1.5 transition-colors shrink-0 shadow-xs"
+        >
+          <span>Khám phá ngay</span>
+          <ArrowRight className="w-3.5 h-3.5" />
+        </Link>
+      </div>
+
       {/* 2. SUMMARY HUB CARDS (CLICK DIRECTLY TO ACTION) */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4">
         
         {/* Card 1: Rental Applications */}
         <div 
@@ -191,7 +249,30 @@ export default function TenantDashboard() {
           </div>
         </div>
 
-        {/* Card 4: Wishlist / Favorites */}
+        {/* Card 5: Maintenance / Repairs */}
+        <div 
+          onClick={() => toast.info('Bạn hiện không có yêu cầu bảo trì/sửa chữa nào đang mở.')}
+          className="bg-white p-5 rounded-2xl border border-[#E2E8F0] shadow-xs hover:shadow-md hover:border-amber-300 transition-[box-shadow,border-color,transform] duration-150 cursor-pointer flex flex-col justify-between space-y-4 group"
+        >
+          <div className="flex items-start justify-between">
+            <div className="w-12 h-12 rounded-xl bg-amber-50 text-amber-600 flex items-center justify-center group-hover:bg-amber-600 group-hover:text-white transition-colors">
+              <Wrench className="w-6 h-6" />
+            </div>
+            <span className="text-[11px] font-semibold px-2 py-0.5 rounded-md bg-slate-50 text-slate-600 border border-slate-200">
+              0 đang xử lý
+            </span>
+          </div>
+          <div>
+            <span className="text-xs text-[#64748B] font-medium block">Yêu cầu bảo trì</span>
+            <span className="text-2xl font-black text-[#00153D]">0 yêu cầu</span>
+          </div>
+          <div className="flex items-center text-xs font-bold text-amber-700 group-hover:translate-x-1 transition-transform">
+            <span>Báo cáo sự cố phòng</span>
+            <ArrowRight className="w-3.5 h-3.5 ml-1" />
+          </div>
+        </div>
+
+                {/* Card 4: Wishlist / Favorites */}
         <div 
           onClick={() => setActiveTab('favorites')}
           className={`bg-white p-5 rounded-2xl border shadow-xs hover:shadow-md transition-[box-shadow,border-color,transform] duration-150 cursor-pointer flex flex-col justify-between space-y-4 group ${

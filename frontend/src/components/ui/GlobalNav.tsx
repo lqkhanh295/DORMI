@@ -109,6 +109,14 @@ export function GlobalNav() {
           )}
           <Link 
             to="/" 
+            onClick={(e) => {
+              if (location.pathname === '/') {
+                e.preventDefault();
+                window.scrollTo({ top: 0, behavior: 'smooth' });
+              } else {
+                window.scrollTo({ top: 0, behavior: 'smooth' });
+              }
+            }}
             className="text-[22px] font-black tracking-wider text-[#00153D] flex items-center select-none gap-2"
           >
             <img src="/logo.png" alt="DORMI" className="w-8 h-8 rounded-lg object-cover shadow-xs shrink-0" />
