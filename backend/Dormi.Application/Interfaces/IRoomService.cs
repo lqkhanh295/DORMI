@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Threading.Tasks;
 using Dormi.Application.Common;
 using Dormi.Application.DTOs;
+using Dormi.Domain.Enums;
 using Microsoft.AspNetCore.Http;
 
 namespace Dormi.Application.Interfaces;
@@ -14,6 +15,7 @@ public interface IRoomService
     Task<ServiceResult<RoomResponseDto>> GetRoomByIdAsync(Guid id, Guid? currentUserId, bool isAdmin, string? clientIp);
     Task<ServiceResult<RoomResponseDto>> CreateRoomAsync(CreateRoomDto dto, Guid landlordId);
     Task<ServiceResult<RoomResponseDto>> UpdateRoomAsync(Guid id, UpdateRoomDto dto, Guid currentUserId, bool isAdmin);
+    Task<ServiceResult<object>> UpdateRoomStatusAsync(Guid id, RoomStatus status, Guid currentUserId, bool isAdmin);
     Task<ServiceResult<object>> DeleteRoomAsync(Guid id, Guid currentUserId, bool isAdmin);
     Task<ServiceResult<List<RoomImageDto>>> GetRoomImagesAsync(Guid roomId);
     Task<ServiceResult<RoomImageDto>> AddRoomImageAsync(Guid roomId, IFormFile file, bool isPrimary, Guid currentUserId, bool isAdmin);

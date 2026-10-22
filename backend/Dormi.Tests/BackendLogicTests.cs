@@ -2696,6 +2696,90 @@ public class BackendLogicTests
         public Task<bool> DeleteImageAsync(string publicId) => Task.FromResult(true);
     }
 
+
+    [Fact]
+    public async Task Landlord_Can_Hide_And_Unhide_Room()
+    {
+        var options = new DbContextOptionsBuilder<DormiDbContext>()
+            .UseInMemoryDatabase(databaseName: Guid.NewGuid().ToString())
+            .Options;
+
+        using var db = new DormiDbContext(options);
+        var services = new ServiceCollection();
+        services.AddLogging();
+        services.AddSignalR();
+        services.AddMemoryCache();
+        services.AddDistributedMemoryCache();
+        var sp = services.BuildServiceProvider();
+
+        var hubContext = sp.GetRequiredService<IHubContext<ChatHub>>();
+        var distCache = sp.GetRequiredService<IDistributedCache>();
+        var memCache = sp.GetRequiredService<IMemoryCache>();
+        var scopeFactory = sp.GetRequiredService<IServiceScopeFactory>();
+        var kafkaProducer = new TestKafkaProducer();
+
+        var roomService = new RoomService(db, new TestImageService(), hubContext, distCache, memCache, scopeFactory, kafkaProducer);
+
+        var landlordId = Guid.NewGuid();
+        var landlord = new User { Id = landlordId, Email = "ll_toggle@test.vn", FullName = "Chu Tro Toggle", Role = UserRole.Landlord };
+        var room = new Room
+        {
+            Id = Guid.NewGuid(),
+            Title = "Phong Toggle",
+            Description = "Mo ta phong",
+            Price = 3000000,
+            Area = 20,
+            Address = "123 Nguyen Trai",
+            RoomType = "Studio",
+            LandlordId = landlordId,
+            Status = RoomStatus.Available,
+            CreatedAt = DateTime.UtcNow
+        };
+        db.Users.Add(landlord);
+        db.Rooms.Add(room);
+        await db.SaveChangesAsync();
+
+        // 1. Landlord hides room
+        var hideDto = new UpdateRoomDto
+        {
+            Title = room.Title,
+            Description = room.Description,
+            Price = room.Price,
+            Area = room.Area,
+            Address = room.Address,
+            RoomType = room.RoomType,
+            Status = RoomStatus.Hidden
+        };
+        var hideRes = await roomService.UpdateRoomAsync(room.Id, hideDto, landlordId, isAdmin: false);
+        Assert.True(hideRes.Success, "Hide failed: " + hideRes.ErrorMessage);
+
+        // 2. Landlord unhides room
+        var unhideDto = new UpdateRoomDto
+        {
+            Title = room.Title,
+            Description = room.Description,
+            Price = room.Price,
+            Area = room.Area,
+            Address = room.Address,
+            RoomType = room.RoomType,
+            Status = RoomStatus.Available
+        };
+        var unhideRes = await roomService.UpdateRoomAsync(room.Id, unhideDto, landlordId, isAdmin: false);
+        Assert.True(unhideRes.Success, "Unhide failed: " + unhideRes.ErrorMessage);
+
+        // 3. Landlord hides via UpdateRoomStatusAsync
+        var statusHideRes = await roomService.UpdateRoomStatusAsync(room.Id, RoomStatus.Hidden, landlordId, isAdmin: false);
+        Assert.True(statusHideRes.Success);
+        var r1 = await db.Rooms.FindAsync(room.Id);
+        Assert.Equal(RoomStatus.Hidden, r1?.Status);
+
+        // 4. Landlord unhides via UpdateRoomStatusAsync
+        var statusUnhideRes = await roomService.UpdateRoomStatusAsync(room.Id, RoomStatus.Available, landlordId, isAdmin: false);
+        Assert.True(statusUnhideRes.Success);
+        var r2 = await db.Rooms.FindAsync(room.Id);
+        Assert.Equal(RoomStatus.Available, r2?.Status);
+    }
+
     [Fact]
     public async Task Admin_Modifies_Hides_Or_Deletes_Room_Notifies_Landlord()
     {

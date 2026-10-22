@@ -79,6 +79,11 @@ public class UpdateRoomDto
     public List<string>? ImageUrls { get; set; }
 }
 
+public class UpdateRoomStatusDto
+{
+    public RoomStatus Status { get; set; }
+}
+
 public class RoomImageDto
 {
     public Guid Id { get; set; }

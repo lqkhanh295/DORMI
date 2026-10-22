@@ -855,7 +855,7 @@ public class RoomService : IRoomService
 
         if (dto.ImageUrls != null)
         {
-            await _db.RoomImages.Where(img => img.RoomId == id).ExecuteDeleteAsync();
+            _db.RoomImages.RemoveRange(room.Images);
 
             if (dto.ImageUrls.Count > 0)
             {
@@ -1007,6 +1007,100 @@ public class RoomService : IRoomService
 
         await InvalidateRoomsCacheAsync(id);
         return ServiceResult<RoomResponseDto>.Ok(responseDto);
+    }
+
+    public async Task<ServiceResult<object>> UpdateRoomStatusAsync(Guid id, RoomStatus status, Guid currentUserId, bool isAdmin)
+    {
+        var room = await _db.Rooms.Include(r => r.Landlord).FirstOrDefaultAsync(r => r.Id == id);
+        if (room == null) return ServiceResult<object>.NotFound("Không tìm thấy phòng trọ.");
+
+        if (!isAdmin && room.LandlordId != currentUserId)
+        {
+            return ServiceResult<object>.Forbidden();
+        }
+
+        var oldStatus = room.Status;
+        if (oldStatus == status)
+        {
+            return ServiceResult<object>.Ok(new { message = "Trạng thái phòng không thay đổi.", status = (int)room.Status });
+        }
+
+        if (!isAdmin)
+        {
+            if (room.Status == RoomStatus.PendingApproval && status == RoomStatus.Available)
+            {
+                return ServiceResult<object>.Fail("Phòng trọ đang chờ duyệt không thể tự chuyển sang trạng thái 'Đang cho thuê'.", 400);
+            }
+            if (status != RoomStatus.Available && status != RoomStatus.Rented && status != RoomStatus.Hidden)
+            {
+                return ServiceResult<object>.Fail("Chủ trọ chỉ có thể chuyển đổi trạng thái giữa 'Đang cho thuê', 'Đã thuê' hoặc 'Ẩn tin'.", 400);
+            }
+        }
+
+        room.Status = status;
+        await _db.SaveChangesAsync();
+
+        if (isAdmin && room.LandlordId != currentUserId)
+        {
+            string notifTitle = (status == RoomStatus.Hidden)
+                ? "Phòng trọ đã bị ẩn bởi Quản trị viên"
+                : (status == RoomStatus.Available ? "Phòng trọ đã được Quản trị viên mở hiển thị lại" : "Cập nhật trạng thái tin đăng");
+            string notifMessage = (status == RoomStatus.Hidden)
+                ? $"Quản trị viên đã ẩn bài đăng phòng '{room.Title}' của bạn trên hệ thống."
+                : (status == RoomStatus.Available ? $"Bài đăng phòng '{room.Title}' của bạn đã được Quản trị viên kích hoạt hiển thị lại trên hệ thống." : $"Tin đăng '{room.Title}' đã được quản trị viên đổi sang trạng thái: {status}.");
+
+            var notif = new Notification
+            {
+                Id = Guid.NewGuid(),
+                UserId = room.LandlordId,
+                Title = notifTitle,
+                Message = notifMessage,
+                Type = "Room",
+                LinkUrl = $"/rooms/{room.Id}",
+                CreatedAt = DateTime.UtcNow
+            };
+            _db.Notifications.Add(notif);
+            await _db.SaveChangesAsync();
+
+            if (_hubContext != null)
+            {
+                try
+                {
+                    await _hubContext.Clients.User(room.LandlordId.ToString()).SendAsync("ReceiveNotification", new
+                    {
+                        id = notif.Id,
+                        title = notif.Title,
+                        message = notif.Message,
+                        type = notif.Type,
+                        linkUrl = notif.LinkUrl,
+                        createdAt = notif.CreatedAt
+                    });
+                }
+                catch { }
+            }
+
+            if (_kafkaProducer != null)
+            {
+                try
+                {
+                    await _kafkaProducer.PublishNotificationAsync(new NotificationEvent
+                    {
+                        Id = notif.Id,
+                        EventType = (status == RoomStatus.Hidden) ? "RoomHiddenByAdmin" : "RoomRestoredByAdmin",
+                        UserId = room.LandlordId,
+                        Title = notifTitle,
+                        Message = notifMessage,
+                        Type = "Room",
+                        LinkUrl = notif.LinkUrl,
+                        CreatedAt = notif.CreatedAt
+                    });
+                }
+                catch { }
+            }
+        }
+
+        await InvalidateRoomsCacheAsync(id);
+        return ServiceResult<object>.Ok(new { message = "Cập nhật trạng thái thành công.", status = (int)room.Status });
     }
 
     public async Task<ServiceResult<object>> DeleteRoomAsync(Guid id, Guid currentUserId, bool isAdmin)

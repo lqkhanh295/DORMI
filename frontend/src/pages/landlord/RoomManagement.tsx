@@ -271,24 +271,14 @@ export default function RoomManagement() {
   };
 
   const handleToggleHideRoom = async (room: RoomResponse) => {
-    const newStatus = room.status === 3 ? 0 : 3;
+    const isCurrentlyHidden = Number(room.status) === 3;
+    const newStatus = isCurrentlyHidden ? 0 : 3;
     try {
-      await roomsApi.updateRoom(room.id, {
-        title: room.title,
-        description: room.description || 'Mô tả phòng trọ',
-        price: room.price,
-        area: room.area || 25,
-        utilities: room.utilities || 'Wifi',
-        roomType: room.roomType || 'Studio',
-        address: room.address,
-        virtual3DUrl: room.virtual3DUrl,
-        status: newStatus,
-        imageUrls: room.images ? room.images.map(img => img.imageUrl) : []
-      });
+      await roomsApi.updateRoomStatus(room.id, newStatus);
       toast.success(newStatus === 3 ? 'Đã ẩn phòng trọ khỏi trang công khai (Home/Search)!' : 'Đã hiển thị phòng trọ trở lại!');
       loadRooms();
-    } catch {
-      toast.error('Thao tác ẩn/hiện tin không thành công.');
+    } catch (err: any) {
+      toast.error(err?.message || 'Thao tác ẩn/hiện tin không thành công.');
     }
   };
 
@@ -310,9 +300,9 @@ export default function RoomManagement() {
         area: editingRoom.area || 25,
         utilities: editingRoom.utilities || 'Wifi',
         roomType: editingRoom.roomType || 'Studio',
-        address: editingRoom.address,
+        address: editingRoom.address || 'Chưa cập nhật địa chỉ',
         virtual3DUrl: editingRoom.virtual3DUrl,
-        status: editingRoom.status,
+        status: Number(editingRoom.status),
         imageUrls: editingRoom.images 
           ? editingRoom.images.map(img => img.imageUrl.startsWith('data:') 
               ? 'https://images.unsplash.com/photo-1522708323590-d24dbb6b0267?auto=format&fit=crop&w=800&q=80' 
@@ -472,10 +462,10 @@ export default function RoomManagement() {
                           <Flame className="w-3.5 h-3.5 fill-amber-500 text-amber-500" /> Đang đẩy tin ({room.boostType || 'VIP'})
                         </span>
                       )}
-                      {room.status === 0 && <span className="px-3 py-1 text-caption font-bold rounded-full border bg-[#F0FDF4] text-[#16803C] border-[#DCFCE7] inline-flex items-center gap-1"><CheckCircle2 className="w-3.5 h-3.5" /> Đã duyệt (Còn trống)</span>}
-                      {room.status === 2 && <span className="px-3 py-1 text-caption font-bold rounded-full border bg-[#FEF3C7] text-[#D97706] border-[#FDE68A] inline-flex items-center gap-1"><Clock className="w-3.5 h-3.5" /> Chờ phê duyệt</span>}
-                      {room.status === 3 && <span className="px-3 py-1 text-caption font-bold rounded-full border bg-[#FEF2F2] text-[#C62828] border-[#FECACA] inline-flex items-center gap-1"><XCircle className="w-3.5 h-3.5" /> Bị từ chối / Ẩn</span>}
-                      {room.status === 1 && <span className="px-3 py-1 text-caption font-bold rounded-full border bg-[#F1F5F9] text-[#475569] border-[#E2E8F0]">Đã thuê</span>}
+                      {Number(room.status) === 0 && <span className="px-3 py-1 text-caption font-bold rounded-full border bg-[#F0FDF4] text-[#16803C] border-[#DCFCE7] inline-flex items-center gap-1"><CheckCircle2 className="w-3.5 h-3.5" /> Đã duyệt (Còn trống)</span>}
+                      {Number(room.status) === 2 && <span className="px-3 py-1 text-caption font-bold rounded-full border bg-[#FEF3C7] text-[#D97706] border-[#FDE68A] inline-flex items-center gap-1"><Clock className="w-3.5 h-3.5" /> Chờ phê duyệt</span>}
+                      {Number(room.status) === 3 && <span className="px-3 py-1 text-caption font-bold rounded-full border bg-[#FEF2F2] text-[#C62828] border-[#FECACA] inline-flex items-center gap-1"><XCircle className="w-3.5 h-3.5" /> Bị từ chối / Ẩn</span>}
+                      {Number(room.status) === 1 && <span className="px-3 py-1 text-caption font-bold rounded-full border bg-[#F1F5F9] text-[#475569] border-[#E2E8F0]">Đã thuê</span>}
                     </div>
                   </div>
                   <p className="text-[#64748B] text-caption">{room.address}</p>
@@ -506,10 +496,10 @@ export default function RoomManagement() {
                   <Button 
                     variant="secondary" 
                     size="sm" 
-                    className={`w-full inline-flex items-center justify-center gap-1 ${room.status === 3 ? 'bg-emerald-50 text-emerald-700 border-emerald-200 hover:bg-emerald-100' : 'bg-amber-50 text-amber-700 border-amber-200 hover:bg-amber-100'}`}
+                    className={`w-full inline-flex items-center justify-center gap-1 ${Number(room.status) === 3 ? 'bg-emerald-50 text-emerald-700 border-emerald-200 hover:bg-emerald-100' : 'bg-amber-50 text-amber-700 border-amber-200 hover:bg-amber-100'}`}
                     onClick={() => handleToggleHideRoom(room)}
                   >
-                    {room.status === 3 ? <><Eye className="w-3.5 h-3.5" /> Hiện tin</> : <><EyeOff className="w-3.5 h-3.5" /> Ẩn tin</>}
+                    {Number(room.status) === 3 ? <><Eye className="w-3.5 h-3.5" /> Hiện tin</> : <><EyeOff className="w-3.5 h-3.5" /> Ẩn tin</>}
                   </Button>
                   <Button 
                     variant="secondary" 

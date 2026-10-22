@@ -276,6 +276,13 @@ export const roomsApi = {
     });
   },
 
+  updateRoomStatus: async (id: string, status: number) => {
+    return request<any>(`/rooms/${id}/status`, {
+      method: 'PATCH',
+      body: JSON.stringify({ status })
+    });
+  },
+
   deleteRoom: async (id: string) => {
     return request<any>(`/rooms/${id}`, {
       method: 'DELETE'

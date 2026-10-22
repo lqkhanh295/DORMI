@@ -65,6 +65,17 @@ public class RoomsController : BaseApiController
         return HandleResult(result);
     }
 
+    [HttpPatch("{id:guid}/status")]
+    [Authorize]
+    public async Task<IActionResult> UpdateRoomStatus(Guid id, [FromBody] UpdateRoomStatusDto dto)
+    {
+        var currentUserId = GetCurrentUserId();
+        if (!currentUserId.HasValue) return Unauthorized();
+
+        var result = await _roomService.UpdateRoomStatusAsync(id, dto.Status, currentUserId.Value, IsAdmin());
+        return HandleResult(result);
+    }
+
     [HttpDelete("{id:guid}")]
     [Authorize]
     public async Task<IActionResult> DeleteRoom(Guid id)
