@@ -166,7 +166,8 @@ public class KafkaProducer : IKafkaProducer, IDisposable
 
             if (evt.UserId.HasValue && evt.UserId.Value != Guid.Empty && evt.EventType != "PasswordResetOtp")
             {
-                var notification = new Notification
+                var existing = (evt.Id != Guid.Empty) ? await db.Notifications.FindAsync(evt.Id) : null;
+                var notification = existing ?? new Notification
                 {
                     Id = evt.Id == Guid.Empty ? Guid.NewGuid() : evt.Id,
                     UserId = evt.UserId.Value,
@@ -178,8 +179,11 @@ public class KafkaProducer : IKafkaProducer, IDisposable
                     CreatedAt = evt.CreatedAt != default ? evt.CreatedAt : DateTime.UtcNow
                 };
 
-                db.Notifications.Add(notification);
-                await db.SaveChangesAsync();
+                if (existing == null)
+                {
+                    db.Notifications.Add(notification);
+                    await db.SaveChangesAsync();
+                }
 
                 if (_hubContext != null)
                 {

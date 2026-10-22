@@ -252,8 +252,8 @@ public class AdminService : IAdminService
         Guid notifId = Guid.NewGuid();
         string notifTitle = status == RoomStatus.Available 
             ? "Tin đăng phòng đã được phê duyệt" 
-            : (status == RoomStatus.Hidden ? "Tin đăng phòng bị từ chối / ẩn" : "Cập nhật trạng thái tin đăng");
-        string notifMessage = $"Tin đăng '{room.Title}' đã được quản trị viên duyệt thành trạng thái: {status}.";
+            : (status == RoomStatus.Hidden ? "Phòng trọ đã bị ẩn bởi Quản trị viên" : "Cập nhật trạng thái tin đăng");
+        string notifMessage = status == RoomStatus.Hidden ? $"Quản trị viên đã ẩn bài đăng phòng '{room.Title}' của bạn trên hệ thống." : $"Tin đăng '{room.Title}' đã được quản trị viên duyệt thành trạng thái: {status}.";
 
         if (oldStatus != status)
         {

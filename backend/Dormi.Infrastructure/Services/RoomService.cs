@@ -784,12 +784,16 @@ public class RoomService : IRoomService
             return ServiceResult<RoomResponseDto>.Forbidden();
         }
 
+        bool isLandlordSelfEdit = (room.LandlordId == currentUserId);
+        bool isAdminEdit = isAdmin && !isLandlordSelfEdit;
+        var oldStatus = room.Status;
+
         bool criticalFieldsChanged = (room.Title != dto.Title) ||
                                      (room.Price != dto.Price) ||
                                      (room.Address != dto.Address) ||
                                      (room.Description != dto.Description);
 
-        if (room.Status == RoomStatus.Available && criticalFieldsChanged)
+        if (!isAdmin && room.Status == RoomStatus.Available && criticalFieldsChanged)
         {
             room.Status = RoomStatus.PendingApproval;
             _db.Notifications.Add(new Notification
@@ -805,23 +809,30 @@ public class RoomService : IRoomService
         }
         else if (dto.Status != room.Status)
         {
-            if (room.Status == RoomStatus.PendingApproval)
+            if (isAdmin)
             {
-                if (dto.Status == RoomStatus.Available)
-                {
-                    return ServiceResult<RoomResponseDto>.Fail("Phòng trọ đang chờ duyệt không thể tự chuyển sang trạng thái 'Đang cho thuê'.", 400);
-                }
-                room.Status = RoomStatus.PendingApproval;
+                room.Status = dto.Status;
             }
-            else if (room.Status == RoomStatus.Available || room.Status == RoomStatus.Rented || room.Status == RoomStatus.Hidden)
+            else
             {
-                if (dto.Status == RoomStatus.Available || dto.Status == RoomStatus.Rented || dto.Status == RoomStatus.Hidden)
+                if (room.Status == RoomStatus.PendingApproval)
                 {
-                    room.Status = dto.Status;
+                    if (dto.Status == RoomStatus.Available)
+                    {
+                        return ServiceResult<RoomResponseDto>.Fail("Phòng trọ đang chờ duyệt không thể tự chuyển sang trạng thái 'Đang cho thuê'.", 400);
+                    }
+                    room.Status = RoomStatus.PendingApproval;
                 }
-                else
+                else if (room.Status == RoomStatus.Available || room.Status == RoomStatus.Rented || room.Status == RoomStatus.Hidden)
                 {
-                    return ServiceResult<RoomResponseDto>.Fail("Chủ trọ chỉ có thể chuyển đổi trạng thái giữa 'Đang cho thuê', 'Đã thuê' hoặc 'Ẩn tin'.", 400);
+                    if (dto.Status == RoomStatus.Available || dto.Status == RoomStatus.Rented || dto.Status == RoomStatus.Hidden)
+                    {
+                        room.Status = dto.Status;
+                    }
+                    else
+                    {
+                        return ServiceResult<RoomResponseDto>.Fail("Chủ trọ chỉ có thể chuyển đổi trạng thái giữa 'Đang cho thuê', 'Đã thuê' hoặc 'Ẩn tin'.", 400);
+                    }
                 }
             }
         }
@@ -863,6 +874,88 @@ public class RoomService : IRoomService
         }
 
         await _db.SaveChangesAsync();
+
+        if (isAdminEdit)
+        {
+            string notifTitle;
+            string notifMessage;
+            string eventType;
+
+            if (dto.Status == RoomStatus.Hidden && oldStatus != RoomStatus.Hidden)
+            {
+                notifTitle = "Phòng trọ đã bị ẩn bởi Quản trị viên";
+                notifMessage = $"Quản trị viên đã ẩn bài đăng phòng '{room.Title}' của bạn trên hệ thống.";
+                eventType = "RoomHiddenByAdmin";
+            }
+            else if (dto.Status == RoomStatus.Available && oldStatus == RoomStatus.Hidden)
+            {
+                notifTitle = "Phòng trọ đã được Quản trị viên mở hiển thị lại";
+                notifMessage = $"Bài đăng phòng '{room.Title}' của bạn đã được Quản trị viên kích hoạt hiển thị lại trên hệ thống.";
+                eventType = "RoomRestoredByAdmin";
+            }
+            else
+            {
+                notifTitle = "Thông tin phòng trọ đã được Quản trị viên cập nhật";
+                notifMessage = $"Quản trị viên đã chỉnh sửa thông tin bài đăng phòng '{room.Title}' của bạn.";
+                eventType = "RoomUpdatedByAdmin";
+            }
+
+            var notif = new Notification
+            {
+                Id = Guid.NewGuid(),
+                UserId = room.LandlordId,
+                Title = notifTitle,
+                Message = notifMessage,
+                Type = "Room",
+                LinkUrl = $"/rooms/{room.Id}",
+                CreatedAt = DateTime.UtcNow
+            };
+            _db.Notifications.Add(notif);
+            await _db.SaveChangesAsync();
+
+            if (_hubContext != null)
+            {
+                try
+                {
+                    await _hubContext.Clients.User(room.LandlordId.ToString()).SendAsync("ReceiveNotification", new
+                    {
+                        id = notif.Id,
+                        title = notif.Title,
+                        message = notif.Message,
+                        type = notif.Type,
+                        linkUrl = notif.LinkUrl,
+                        createdAt = notif.CreatedAt
+                    });
+                }
+                catch { }
+            }
+
+            if (_kafkaProducer != null)
+            {
+                try
+                {
+                    await _kafkaProducer.PublishNotificationAsync(new NotificationEvent
+                    {
+                        Id = notif.Id,
+                        EventType = eventType,
+                        UserId = room.LandlordId,
+                        Title = notifTitle,
+                        Message = notifMessage,
+                        Type = "Room",
+                        LinkUrl = notif.LinkUrl,
+                        CreatedAt = notif.CreatedAt,
+                        Metadata = new Dictionary<string, object?>
+                        {
+                            ["roomId"] = room.Id.ToString(),
+                            ["roomTitle"] = room.Title,
+                            ["oldStatus"] = oldStatus.ToString(),
+                            ["newStatus"] = room.Status.ToString()
+                        }
+                    });
+                }
+                catch { }
+            }
+        }
 
         if (room.Status == RoomStatus.PendingApproval)
         {
@@ -926,8 +1019,70 @@ public class RoomService : IRoomService
             return ServiceResult<object>.Forbidden();
         }
 
+        bool isLandlordSelfDelete = (room.LandlordId == currentUserId);
+        bool isAdminDelete = isAdmin && !isLandlordSelfDelete;
+        var landlordId = room.LandlordId;
+        var roomTitle = room.Title;
+
         _db.Rooms.Remove(room);
         await _db.SaveChangesAsync();
+
+        if (isAdminDelete)
+        {
+            var notif = new Notification
+            {
+                Id = Guid.NewGuid(),
+                UserId = landlordId,
+                Title = "Phòng trọ đã bị gỡ bỏ bởi Quản trị viên",
+                Message = $"Bài đăng phòng '{roomTitle}' của bạn đã bị Quản trị viên xóa khỏi hệ thống.",
+                Type = "Room",
+                LinkUrl = "/landlord/rooms",
+                CreatedAt = DateTime.UtcNow
+            };
+            _db.Notifications.Add(notif);
+            await _db.SaveChangesAsync();
+
+            if (_hubContext != null)
+            {
+                try
+                {
+                    await _hubContext.Clients.User(landlordId.ToString()).SendAsync("ReceiveNotification", new
+                    {
+                        id = notif.Id,
+                        title = notif.Title,
+                        message = notif.Message,
+                        type = notif.Type,
+                        linkUrl = notif.LinkUrl,
+                        createdAt = notif.CreatedAt
+                    });
+                }
+                catch { }
+            }
+
+            if (_kafkaProducer != null)
+            {
+                try
+                {
+                    await _kafkaProducer.PublishNotificationAsync(new NotificationEvent
+                    {
+                        Id = notif.Id,
+                        EventType = "RoomDeletedByAdmin",
+                        UserId = landlordId,
+                        Title = notif.Title,
+                        Message = notif.Message,
+                        Type = "Room",
+                        LinkUrl = notif.LinkUrl,
+                        CreatedAt = notif.CreatedAt,
+                        Metadata = new Dictionary<string, object?>
+                        {
+                            ["roomId"] = id.ToString(),
+                            ["roomTitle"] = roomTitle
+                        }
+                    });
+                }
+                catch { }
+            }
+        }
 
         await InvalidateRoomsCacheAsync(id);
         return ServiceResult<object>.Ok(new { message = "Đã xoá phòng trọ thành công." });

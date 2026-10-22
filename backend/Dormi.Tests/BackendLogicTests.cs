@@ -9,9 +9,12 @@ using Dormi.Domain.Entities;
 using Dormi.Domain.Enums;
 using Dormi.Infrastructure.Data;
 using Dormi.Infrastructure.Services;
+using Dormi.Infrastructure.Hubs;
 using Microsoft.AspNetCore.Identity;
+using Microsoft.AspNetCore.SignalR;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Caching.Distributed;
+using Microsoft.Extensions.Caching.Memory;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Xunit;
@@ -2685,5 +2688,95 @@ public class BackendLogicTests
         public string ApplicationName { get; set; } = "Dormi.Tests";
         public string ContentRootPath { get; set; } = string.Empty;
         public Microsoft.Extensions.FileProviders.IFileProvider ContentRootFileProvider { get; set; } = null!;
+    }
+
+    private class TestImageService : IImageService
+    {
+        public Task<string?> UploadImageAsync(System.IO.Stream fileStream, string fileName) => Task.FromResult<string?>("https://test.url/img.jpg");
+        public Task<bool> DeleteImageAsync(string publicId) => Task.FromResult(true);
+    }
+
+    [Fact]
+    public async Task Admin_Modifies_Hides_Or_Deletes_Room_Notifies_Landlord()
+    {
+        var options = new DbContextOptionsBuilder<DormiDbContext>()
+            .UseInMemoryDatabase(databaseName: Guid.NewGuid().ToString())
+            .Options;
+
+        using var db = new DormiDbContext(options);
+        var services = new ServiceCollection();
+        services.AddLogging();
+        services.AddSignalR();
+        services.AddMemoryCache();
+        services.AddDistributedMemoryCache();
+        var sp = services.BuildServiceProvider();
+
+        var hubContext = sp.GetRequiredService<IHubContext<ChatHub>>();
+        var distCache = sp.GetRequiredService<IDistributedCache>();
+        var memCache = sp.GetRequiredService<IMemoryCache>();
+        var scopeFactory = sp.GetRequiredService<IServiceScopeFactory>();
+        var kafkaProducer = new TestKafkaProducer();
+
+        var roomService = new RoomService(db, new TestImageService(), hubContext, distCache, memCache, scopeFactory, kafkaProducer);
+
+        var adminId = Guid.NewGuid();
+        var landlordId = Guid.NewGuid();
+        var landlord = new User { Id = landlordId, Email = "landlord_notif@test.vn", FullName = "Chủ Trọ B", Role = UserRole.Landlord };
+        var admin = new User { Id = adminId, Email = "admin_notif@test.vn", FullName = "Admin", Role = UserRole.Admin };
+        var room = new Room
+        {
+            Id = Guid.NewGuid(),
+            Title = "Phòng Trọ Quận 1",
+            Description = "Phòng đẹp giá rẻ",
+            Price = 4000000,
+            Area = 25,
+            Address = "123 Lê Lợi, Q1",
+            RoomType = "Studio",
+            LandlordId = landlordId,
+            Status = RoomStatus.Available,
+            CreatedAt = DateTime.UtcNow
+        };
+        db.Users.AddRange(landlord, admin);
+        db.Rooms.Add(room);
+        await db.SaveChangesAsync();
+
+        // 1. Admin edits room details -> landlord gets notification
+        var updateDto = new UpdateRoomDto
+        {
+            Title = "Phòng Trọ Quận 1 - Đã sửa bởi Admin",
+            Description = "Mô tả mới cập nhật",
+            Price = 4500000,
+            Area = 25,
+            Address = "123 Lê Lợi, Q1",
+            RoomType = "Studio",
+            Status = RoomStatus.Available
+        };
+        var updateRes = await roomService.UpdateRoomAsync(room.Id, updateDto, adminId, isAdmin: true);
+        Assert.True(updateRes.Success);
+
+        var editNotif = await db.Notifications.FirstOrDefaultAsync(n => n.UserId == landlordId && n.Title.Contains("Quản trị viên"));
+        Assert.NotNull(editNotif);
+        Assert.Contains("chỉnh sửa", editNotif.Message);
+
+        // 2. Admin hides room -> landlord gets notification
+        updateDto.Status = RoomStatus.Hidden;
+        var hideRes = await roomService.UpdateRoomAsync(room.Id, updateDto, adminId, isAdmin: true);
+        Assert.True(hideRes.Success);
+
+        var hideNotif = await db.Notifications.FirstOrDefaultAsync(n => n.UserId == landlordId && n.Title.Contains("bị ẩn"));
+        Assert.NotNull(hideNotif);
+
+        // 3. Admin deletes room -> landlord gets notification
+        var deleteRes = await roomService.DeleteRoomAsync(room.Id, adminId, isAdmin: true);
+        Assert.True(deleteRes.Success);
+
+        var deleteNotif = await db.Notifications.FirstOrDefaultAsync(n => n.UserId == landlordId && n.Title.Contains("gỡ bỏ"));
+        Assert.NotNull(deleteNotif);
+        Assert.Contains(room.Title, deleteNotif.Message);
+
+        // Check Kafka events dispatched for all three
+        Assert.Contains(kafkaProducer.PublishedEvents, e => e.EventType == "RoomUpdatedByAdmin" && e.UserId == landlordId);
+        Assert.Contains(kafkaProducer.PublishedEvents, e => e.EventType == "RoomHiddenByAdmin" && e.UserId == landlordId);
+        Assert.Contains(kafkaProducer.PublishedEvents, e => e.EventType == "RoomDeletedByAdmin" && e.UserId == landlordId);
     }
 }
