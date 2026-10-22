@@ -3,7 +3,7 @@ import { Link } from 'react-router-dom';
 import { Card } from '../../components/ui/Card';
 import { Button } from '../../components/ui/Button';
 import { adminApi, RoomStatus } from '../../services/api';
-import { Users, UserCheck, Home, AlertTriangle, ArrowRight, DollarSign } from 'lucide-react';
+import { Users, UserCheck, Home, AlertTriangle, ArrowRight, DollarSign, Building2, FileText, FileCheck, Search, Compass, ShieldCheck } from 'lucide-react';
 import { toast } from 'sonner';
 import { PageMotion } from '../../components/common/Motion';
 
@@ -284,6 +284,73 @@ export default function AdminDashboard() {
             )}
           </div>
         </Card>
+      </div>
+      {/* Full Platform Management Hub for Admin */}
+      <div className="bg-white p-6 rounded-2xl border border-slate-200 shadow-sm space-y-4">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 pb-3 border-b border-slate-100">
+          <div>
+            <h2 className="text-base font-bold text-slate-900 flex items-center gap-2">
+              <ShieldCheck className="w-5 h-5 text-amber-600" />
+              <span>Trung tâm điều phối & Quản lý toàn bộ chức năng</span>
+            </h2>
+            <p className="text-xs text-slate-500 mt-0.5">
+              Quyền quản trị viên cấp cao: Xem, kiểm tra và quản lý trực tiếp tất cả phân hệ trên nền tảng DORMI.
+            </p>
+          </div>
+          <span className="text-xs font-bold text-amber-700 bg-amber-50 border border-amber-200 px-2.5 py-1 rounded-lg w-fit">
+            Toàn quyền Super Admin
+          </span>
+        </div>
+
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3.5 pt-1">
+          <Link to="/landlord/rooms" className="p-4 rounded-xl border border-slate-200 hover:border-[#00153D] hover:shadow-sm bg-slate-50/50 hover:bg-white transition-all group">
+            <div className="flex items-center gap-3 mb-2">
+              <div className="w-8 h-8 rounded-lg bg-blue-100 text-blue-700 flex items-center justify-center"><Building2 className="w-4 h-4" /></div>
+              <h3 className="text-sm font-bold text-slate-900 group-hover:text-[#00153D]">Quản lý phòng trọ</h3>
+            </div>
+            <p className="text-xs text-slate-500 leading-relaxed">Xem và chỉnh sửa toàn bộ bài đăng phòng, ẩn/hiện, cập nhật tiện ích và định vị GPS.</p>
+          </Link>
+
+          <Link to="/landlord/leases" className="p-4 rounded-xl border border-slate-200 hover:border-[#00153D] hover:shadow-sm bg-slate-50/50 hover:bg-white transition-all group">
+            <div className="flex items-center gap-3 mb-2">
+              <div className="w-8 h-8 rounded-lg bg-emerald-100 text-emerald-700 flex items-center justify-center"><FileCheck className="w-4 h-4" /></div>
+              <h3 className="text-sm font-bold text-slate-900 group-hover:text-[#00153D]">Hợp đồng & Ký số</h3>
+            </div>
+            <p className="text-xs text-slate-500 leading-relaxed">Quản lý tất cả hợp đồng thuê giữa chủ trọ và khách, tiền cọc, lịch đóng tiền.</p>
+          </Link>
+
+          <Link to="/landlord/applications" className="p-4 rounded-xl border border-slate-200 hover:border-[#00153D] hover:shadow-sm bg-slate-50/50 hover:bg-white transition-all group">
+            <div className="flex items-center gap-3 mb-2">
+              <div className="w-8 h-8 rounded-lg bg-indigo-100 text-indigo-700 flex items-center justify-center"><FileText className="w-4 h-4" /></div>
+              <h3 className="text-sm font-bold text-slate-900 group-hover:text-[#00153D]">Hồ sơ xin thuê</h3>
+            </div>
+            <p className="text-xs text-slate-500 leading-relaxed">Theo dõi và can thiệp duyệt/từ chối các đơn xin thuê phòng trọ từ khách.</p>
+          </Link>
+
+          <Link to="/tenant/match" className="p-4 rounded-xl border border-slate-200 hover:border-[#00153D] hover:shadow-sm bg-slate-50/50 hover:bg-white transition-all group">
+            <div className="flex items-center gap-3 mb-2">
+              <div className="w-8 h-8 rounded-lg bg-purple-100 text-purple-700 flex items-center justify-center"><Compass className="w-4 h-4" /></div>
+              <h3 className="text-sm font-bold text-slate-900 group-hover:text-[#00153D]">Ghép bạn ở ghép</h3>
+            </div>
+            <p className="text-xs text-slate-500 leading-relaxed">Trải nghiệm thuật toán Jaccard tính độ tương thích lối sống, tìm bạn cùng phòng.</p>
+          </Link>
+
+          <Link to="/search" className="p-4 rounded-xl border border-slate-200 hover:border-[#00153D] hover:shadow-sm bg-slate-50/50 hover:bg-white transition-all group">
+            <div className="flex items-center gap-3 mb-2">
+              <div className="w-8 h-8 rounded-lg bg-amber-100 text-amber-700 flex items-center justify-center"><Search className="w-4 h-4" /></div>
+              <h3 className="text-sm font-bold text-slate-900 group-hover:text-[#00153D]">Bản đồ số tìm phòng</h3>
+            </div>
+            <p className="text-xs text-slate-500 leading-relaxed">Tra cứu không gian PostGIS, bộ lọc giá, quận huyện và trải nghiệm của khách thuê.</p>
+          </Link>
+
+          <Link to="/tenant" className="p-4 rounded-xl border border-slate-200 hover:border-[#00153D] hover:shadow-sm bg-slate-50/50 hover:bg-white transition-all group">
+            <div className="flex items-center gap-3 mb-2">
+              <div className="w-8 h-8 rounded-lg bg-rose-100 text-rose-700 flex items-center justify-center"><Users className="w-4 h-4" /></div>
+              <h3 className="text-sm font-bold text-slate-900 group-hover:text-[#00153D]">Không gian Khách thuê</h3>
+            </div>
+            <p className="text-xs text-slate-500 leading-relaxed">Kiểm tra bảng điều khiển khách thuê, danh sách phòng đã thích, lịch xem phòng.</p>
+          </Link>
+        </div>
       </div>
     </PageMotion>
   );

@@ -18,7 +18,8 @@ import {
   MessageCircle,
   User,
   Home,
-  Receipt
+  Receipt,
+  Building2
 } from 'lucide-react';
 import { useStore } from '../../store/useStore';
 import { NotificationBell } from '../common/NotificationBell';
@@ -69,8 +70,10 @@ export function GlobalNav() {
       : currentUser?.role === 'Admin'
         ? [
             { name: 'Bảng điều khiển', path: '/admin', icon: LayoutDashboard },
+            { name: 'Khu vực Chủ trọ', path: '/landlord/rooms', icon: Building2 },
+            { name: 'Khu vực Khách thuê', path: '/tenant', icon: User },
+            { name: 'Tìm phòng', path: '/search', icon: Search },
             { name: 'Lịch sử giao dịch', path: '/admin/transactions', icon: Receipt },
-            { name: 'Duyệt tin đăng', path: '/admin/rooms', icon: Home },
           ]
         : [
             { name: 'Tìm phòng', path: '/search', icon: Search },
@@ -339,6 +342,35 @@ export function GlobalNav() {
                           >
                             <Users className="w-4 h-4 text-slate-500" />
                             <span>Quản lý người dùng</span>
+                          </Link>
+                          
+                          <div className="my-1.5 border-t border-slate-100" />
+                          <p className="px-3 py-1 text-[10px] font-bold uppercase tracking-wider text-slate-400">
+                            Truy cập toàn bộ chức năng
+                          </p>
+                          <Link
+                            to="/landlord/rooms"
+                            onClick={() => setDropdownOpen(false)}
+                            className="flex items-center gap-2.5 px-3 py-1.5 rounded-lg hover:bg-amber-50 hover:text-amber-800 transition-colors"
+                          >
+                            <Building2 className="w-3.5 h-3.5 text-amber-600" />
+                            <span>Quản lý phòng trọ (Chủ trọ)</span>
+                          </Link>
+                          <Link
+                            to="/landlord/leases"
+                            onClick={() => setDropdownOpen(false)}
+                            className="flex items-center gap-2.5 px-3 py-1.5 rounded-lg hover:bg-amber-50 hover:text-amber-800 transition-colors"
+                          >
+                            <FileCheck className="w-3.5 h-3.5 text-amber-600" />
+                            <span>Hợp đồng thuê (Chủ trọ)</span>
+                          </Link>
+                          <Link
+                            to="/tenant"
+                            onClick={() => setDropdownOpen(false)}
+                            className="flex items-center gap-2.5 px-3 py-1.5 rounded-lg hover:bg-blue-50 hover:text-blue-800 transition-colors"
+                          >
+                            <User className="w-3.5 h-3.5 text-blue-600" />
+                            <span>Không gian Khách thuê</span>
                           </Link>
                         </>
                       )}

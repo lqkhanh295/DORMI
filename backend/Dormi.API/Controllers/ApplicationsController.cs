@@ -66,7 +66,7 @@ public class ApplicationsController : BaseApiController
         var userId = GetCurrentUserId();
         if (!userId.HasValue) return Unauthorized();
 
-        var result = await _applicationService.ReviewApplicationAsync(id, userId.Value, dto);
+        var result = await _applicationService.ReviewApplicationAsync(id, userId.Value, dto, IsAdmin());
         return HandleResult(result);
     }
 

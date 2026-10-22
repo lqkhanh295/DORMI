@@ -274,7 +274,7 @@ public class RentalApplicationService : IRentalApplicationService
         return ServiceResult<RentalApplicationResponseDto>.Ok(MapToResponseDto(application, application.Room, application.Tenant));
     }
 
-    public async Task<ServiceResult<object>> ReviewApplicationAsync(Guid id, Guid landlordId, ReviewApplicationDto dto)
+    public async Task<ServiceResult<object>> ReviewApplicationAsync(Guid id, Guid landlordId, ReviewApplicationDto dto, bool isAdmin = false)
     {
         var application = await _db.RentalApplications
             .Include(a => a.Room)
@@ -286,7 +286,7 @@ public class RentalApplicationService : IRentalApplicationService
             return ServiceResult<object>.NotFound("Không tìm thấy hồ sơ thuê phòng.");
         }
 
-        if (application.Room.LandlordId != landlordId)
+        if (!isAdmin && application.Room.LandlordId != landlordId)
         {
             return ServiceResult<object>.Forbidden();
         }

@@ -10,7 +10,7 @@ namespace Dormi.API.Controllers;
 
 [ApiController]
 [Route("api/landlord")]
-[Authorize(Roles = "Landlord")]
+[Authorize(Roles = "Landlord,Admin")]
 public class LandlordDashboardController : BaseApiController
 {
     private readonly ILandlordDashboardService _dashboardService;

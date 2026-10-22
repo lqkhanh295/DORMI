@@ -1,6 +1,18 @@
 import { Outlet, Link, useNavigate, useLocation } from 'react-router-dom';
 import { useStore } from '../store/useStore';
-import { LayoutDashboard, UserCheck, Home, Users, AlertTriangle, Receipt } from 'lucide-react';
+import { 
+  LayoutDashboard, 
+  UserCheck, 
+  Home, 
+  Users, 
+  AlertTriangle, 
+  Receipt,
+  FileText,
+  FileCheck,
+  Search,
+  Building2,
+  Compass
+} from 'lucide-react';
 import { GlobalFooter } from '../components/ui/GlobalFooter';
 
 export default function AdminLayout() {
@@ -13,13 +25,21 @@ export default function AdminLayout() {
     navigate('/');
   };
 
-  const navItems = [
-    { name: 'Tổng quan', path: '/admin', icon: LayoutDashboard },
+  const coreAdminItems = [
+    { name: 'Tổng quan hệ thống', path: '/admin', icon: LayoutDashboard },
     { name: 'Xác minh chủ trọ', path: '/admin/verify', icon: UserCheck },
-    { name: 'Duyệt tin đăng', path: '/admin/rooms', icon: Home },
-    { name: 'Người dùng', path: '/admin/users', icon: Users },
+    { name: 'Duyệt tin đăng phòng', path: '/admin/rooms', icon: Home },
+    { name: 'Quản lý người dùng', path: '/admin/users', icon: Users },
     { name: 'Lịch sử giao dịch', path: '/admin/transactions', icon: Receipt },
     { name: 'Báo cáo vi phạm', path: '/admin/reports', icon: AlertTriangle },
+  ];
+
+  const fullPlatformItems = [
+    { name: 'Tất cả phòng trọ (Chủ trọ)', path: '/landlord/rooms', icon: Building2 },
+    { name: 'Quản lý hợp đồng thuê', path: '/landlord/leases', icon: FileCheck },
+    { name: 'Đơn đề nghị thuê phòng', path: '/landlord/applications', icon: FileText },
+    { name: 'Bản đồ số tìm trọ (PostGIS)', path: '/search', icon: Search },
+    { name: 'Cộng đồng tìm bạn ở ghép', path: '/tenant/match', icon: Compass },
   ];
 
   return (
@@ -31,31 +51,63 @@ export default function AdminLayout() {
             <img src="/logo.png" alt="DORMI" className="w-7 h-7 rounded-lg object-cover shadow-xs shrink-0" />
             <span>DORMI<span className="text-[#F2A900] ml-0.5">.</span></span>
             <span className="text-[11px] font-bold text-slate-300 bg-white/10 border border-white/20 px-1.5 py-0.5 rounded-md ml-1 tracking-normal">
-              ADMIN
+              SUPER ADMIN
             </span>
           </Link>
         </div>
-        <nav className="px-3 py-4 space-y-1.5 flex-1">
-          {navItems.map(item => {
-            const isActive = item.path === '/admin' 
-              ? location.pathname === '/admin' 
-              : location.pathname.startsWith(item.path);
-            const Icon = item.icon;
-            return (
-              <Link 
-                key={item.name}
-                to={item.path} 
-                className={`px-3.5 py-2.5 rounded-xl text-xs font-semibold transition-all duration-150 ease-out active:scale-[0.98] min-h-[40px] flex items-center gap-3 ${
-                  isActive 
-                    ? 'text-white bg-white/15 font-bold border border-white/20 shadow-xs' 
-                    : 'text-slate-300 hover:text-white hover:bg-white/10'
-                }`}
-              >
-                <Icon className={`w-4 h-4 shrink-0 ${isActive ? 'text-[#F2A900]' : 'text-slate-400'}`} />
-                <span>{item.name}</span>
-              </Link>
-            );
-          })}
+        <nav className="px-3 py-4 space-y-4 flex-1">
+          {/* Core admin group */}
+          <div className="space-y-1">
+            <p className="px-3 text-[10px] font-bold uppercase tracking-wider text-slate-400 mb-1.5">
+              Quản trị kiểm duyệt
+            </p>
+            {coreAdminItems.map(item => {
+              const isActive = item.path === '/admin' 
+                ? location.pathname === '/admin' 
+                : location.pathname.startsWith(item.path);
+              const Icon = item.icon;
+              return (
+                <Link 
+                  key={item.name}
+                  to={item.path} 
+                  className={`px-3 py-2 rounded-xl text-xs font-semibold transition-all duration-150 ease-out active:scale-[0.98] min-h-[38px] flex items-center gap-2.5 ${
+                    isActive 
+                      ? 'text-white bg-white/15 font-bold border border-white/20 shadow-xs' 
+                      : 'text-slate-300 hover:text-white hover:bg-white/10'
+                  }`}
+                >
+                  <Icon className={`w-4 h-4 shrink-0 ${isActive ? 'text-[#F2A900]' : 'text-slate-400'}`} />
+                  <span className="truncate">{item.name}</span>
+                </Link>
+              );
+            })}
+          </div>
+
+          {/* Full Platform Access Group */}
+          <div className="space-y-1 pt-2 border-t border-white/10">
+            <p className="px-3 text-[10px] font-bold uppercase tracking-wider text-amber-400/90 mb-1.5 flex items-center justify-between">
+              <span>Toàn bộ phân hệ</span>
+              <span className="text-[9px] bg-amber-500/20 text-amber-300 px-1.5 py-0.2 rounded font-mono">Full Access</span>
+            </p>
+            {fullPlatformItems.map(item => {
+              const isActive = location.pathname.startsWith(item.path);
+              const Icon = item.icon;
+              return (
+                <Link 
+                  key={item.name}
+                  to={item.path} 
+                  className={`px-3 py-2 rounded-xl text-xs font-semibold transition-all duration-150 ease-out active:scale-[0.98] min-h-[38px] flex items-center gap-2.5 ${
+                    isActive 
+                      ? 'text-white bg-white/15 font-bold border border-white/20 shadow-xs' 
+                      : 'text-slate-300 hover:text-white hover:bg-white/10'
+                  }`}
+                >
+                  <Icon className={`w-4 h-4 shrink-0 ${isActive ? 'text-[#F2A900]' : 'text-slate-400'}`} />
+                  <span className="truncate">{item.name}</span>
+                </Link>
+              );
+            })}
+          </div>
         </nav>
       </aside>
 

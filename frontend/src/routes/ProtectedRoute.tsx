@@ -16,10 +16,14 @@ export default function ProtectedRoute({ allowedRoles }: ProtectedRouteProps) {
     return <Navigate to="/auth" state={{ from: location }} replace />;
   }
 
+  // Admin has full superuser permissions to view and manage all functions
+  if (role === 'Admin') {
+    return <Outlet />;
+  }
+
   if (allowedRoles && role && !allowedRoles.includes(role)) {
     // Redirect to user's authorized workspace if attempting to access an unauthorized route
     if (role === 'Landlord') return <Navigate to="/landlord" replace />;
-    if (role === 'Admin') return <Navigate to="/admin" replace />;
     return <Navigate to="/tenant" replace />;
   }
 
