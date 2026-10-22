@@ -64,6 +64,8 @@ export default function AuthPage() {
 
   const navigate = useNavigate();
   const location = useLocation();
+  const currentUser = useStore(state => state.currentUser);
+  const logout = useStore(state => state.logout);
   const loginWithApi = useStore(state => state.loginWithApi);
   const verifyMfaWithApi = useStore(state => state.verifyMfaWithApi);
 
@@ -95,17 +97,10 @@ export default function AuthPage() {
     setSearchParams(registerMode ? { tab: 'register' } : {});
   };
 
-  // Only enable quick demo autofill in strict local development (localhost / 127.0.0.1)
-  const isLocalDev = Boolean(
-    import.meta.env.DEV &&
-    typeof window !== 'undefined' &&
-    (window.location.hostname === 'localhost' ||
-     window.location.hostname === '127.0.0.1' ||
-     window.location.hostname.endsWith('.local'))
-  );
-
   const handleFillDemo = (demoRole: 'Tenant' | 'Landlord' | 'Admin') => {
-    if (!isLocalDev) return;
+    if (currentUser) {
+      logout();
+    }
     if (demoRole === 'Landlord') {
       setEmail('landlord@dormi.vn');
       setPassword('Password123!');
@@ -395,6 +390,27 @@ export default function AuthPage() {
               </div>
             )}
 
+            {currentUser && (
+              <div className="mb-4 p-3 bg-amber-50 border border-amber-200 text-amber-900 rounded-xl text-xs flex items-center justify-between gap-2">
+                <div>
+                  <span>Đang đăng nhập: </span>
+                  <span className="font-bold">{currentUser.name}</span>
+                  <span className="text-slate-500"> ({currentUser.email} - {currentUser.role})</span>
+                </div>
+                <button
+                  type="button"
+                  onClick={() => {
+                    logout();
+                    setEmail('');
+                    setPassword('');
+                  }}
+                  className="font-bold text-rose-600 hover:text-rose-700 underline shrink-0 cursor-pointer"
+                >
+                  Đăng xuất
+                </button>
+              </div>
+            )}
+
             <form onSubmit={handleSubmit} className="space-y-4">
               {/* Onboarding Intention Selection (Only during Registration) */}
               {isRegister && (
@@ -584,40 +600,38 @@ export default function AuthPage() {
               </Button>
             </form>
 
-            {/* Quick Demo Fill (Only visible in Local Development) */}
-            {isLocalDev && (
-              <div className="mt-5 pt-4 border-t border-slate-100 space-y-2 text-caption">
-                <div className="flex items-center justify-between text-[#64748B]">
-                  <span className="flex items-center gap-1 text-xs">
-                    <Sparkles className="w-3.5 h-3.5 text-amber-500" />
-                    <span>Tài khoản kiểm thử nhanh (DEV):</span>
-                  </span>
-                </div>
-                <div className="flex flex-wrap gap-1.5">
-                  <button
-                    type="button"
-                    onClick={() => handleFillDemo('Tenant')}
-                    className="px-2.5 py-1 rounded-[10px] text-[12px] font-medium bg-[#F1F5F9] text-[#334155] hover:bg-[#E2E8F0] hover:text-[#0F172A] border border-[#E2E8F0] active:scale-95 transition-all"
-                  >
-                    Khách thuê
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => handleFillDemo('Landlord')}
-                    className="px-2.5 py-1 rounded-[10px] text-[12px] font-medium bg-[#F1F5F9] text-[#334155] hover:bg-[#E2E8F0] hover:text-[#0F172A] border border-[#E2E8F0] active:scale-95 transition-all"
-                  >
-                    Chủ trọ
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => handleFillDemo('Admin')}
-                    className="px-2.5 py-1 rounded-[10px] text-[12px] font-medium bg-[#F1F5F9] text-[#334155] hover:bg-[#E2E8F0] hover:text-[#0F172A] border border-[#E2E8F0] active:scale-95 transition-all"
-                  >
-                    Quản trị viên
-                  </button>
-                </div>
+            {/* Quick Demo Fill */}
+            <div className="mt-5 pt-4 border-t border-slate-100 space-y-2 text-caption">
+              <div className="flex items-center justify-between text-[#64748B]">
+                <span className="flex items-center gap-1 text-xs">
+                  <Sparkles className="w-3.5 h-3.5 text-amber-500" />
+                  <span>Điền nhanh tài khoản mẫu (Demo):</span>
+                </span>
               </div>
-            )}
+              <div className="flex flex-wrap gap-1.5">
+                <button
+                  type="button"
+                  onClick={() => handleFillDemo('Tenant')}
+                  className="px-2.5 py-1 rounded-[10px] text-[12px] font-medium bg-[#F1F5F9] text-[#334155] hover:bg-[#E2E8F0] hover:text-[#0F172A] border border-[#E2E8F0] active:scale-95 transition-all cursor-pointer"
+                >
+                  Khách thuê
+                </button>
+                <button
+                  type="button"
+                  onClick={() => handleFillDemo('Landlord')}
+                  className="px-2.5 py-1 rounded-[10px] text-[12px] font-medium bg-[#F1F5F9] text-[#334155] hover:bg-[#E2E8F0] hover:text-[#0F172A] border border-[#E2E8F0] active:scale-95 transition-all cursor-pointer"
+                >
+                  Chủ trọ
+                </button>
+                <button
+                  type="button"
+                  onClick={() => handleFillDemo('Admin')}
+                  className="px-2.5 py-1 rounded-[10px] text-[12px] font-medium bg-[#F1F5F9] text-[#334155] hover:bg-[#E2E8F0] hover:text-[#0F172A] border border-[#E2E8F0] active:scale-95 transition-all cursor-pointer"
+                >
+                  Quản trị viên
+                </button>
+              </div>
+            </div>
 
             {/* Bottom Toggle Note */}
             <div className="mt-5 text-center">
