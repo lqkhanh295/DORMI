@@ -504,36 +504,45 @@ export default function RoomDetail() {
             </div>
 
             <div className="space-y-3">
-              <Button 
-                variant="primary" 
-                fullWidth 
-                size="lg" 
-                onClick={() => {
-                  if (!currentUser) navigate('/auth');
-                  else setShowApplicationModal(true);
-                }}
-                className="flex items-center justify-center gap-2 shadow-clay-primary text-white"
-              >
-                <FileText className="w-5 h-5 text-white" />
-                <span>Nộp hồ sơ thuê ngay</span>
-              </Button>
+              {roomData?.status === 1 ? (
+                <div className="p-3.5 bg-rose-50 border border-rose-200 rounded-xl text-center space-y-1">
+                  <p className="text-caption font-bold text-rose-700">Căn phòng này đã được thuê</p>
+                  <p className="text-[11px] text-rose-600">Hiện tại chủ nhà không nhận thêm lịch xem hay hồ sơ thuê mới.</p>
+                </div>
+              ) : (
+                <>
+                  <Button 
+                    variant="primary" 
+                    fullWidth 
+                    size="lg" 
+                    onClick={() => {
+                      if (!currentUser) navigate('/auth');
+                      else setShowApplicationModal(true);
+                    }}
+                    className="flex items-center justify-center gap-2 shadow-clay-primary text-white"
+                  >
+                    <FileText className="w-5 h-5 text-white" />
+                    <span>Nộp hồ sơ thuê ngay</span>
+                  </Button>
 
-              <Button 
-                variant="outline" 
-                fullWidth 
-                size="md" 
-                onClick={() => {
-                  if (!currentUser) navigate('/auth');
-                  else {
-                    setSchedulerStep(1);
-                    setShowScheduler(true);
-                  }
-                }}
-                className="flex items-center justify-center gap-2 border-[#CBD5E1] text-[#00153D]"
-              >
-                <CalendarCheck className="w-4 h-4 text-[#00153D]" />
-                Đặt lịch xem phòng
-              </Button>
+                  <Button 
+                    variant="outline" 
+                    fullWidth 
+                    size="md" 
+                    onClick={() => {
+                      if (!currentUser) navigate('/auth');
+                      else {
+                        setSchedulerStep(1);
+                        setShowScheduler(true);
+                      }
+                    }}
+                    className="flex items-center justify-center gap-2 border-[#CBD5E1] text-[#00153D]"
+                  >
+                    <CalendarCheck className="w-4 h-4 text-[#00153D]" />
+                    Đặt lịch xem phòng
+                  </Button>
+                </>
+              )}
 
               <Button 
                 variant="outline" 

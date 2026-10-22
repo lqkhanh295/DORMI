@@ -376,7 +376,7 @@ export default function TenantDashboard() {
               </div>
             ) : (
               <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-                {listings.slice(0, 6).map(room => (
+                {listings.filter(r => !r.status || r.status === 'Available').slice(0, 6).map(room => (
                   <div key={room.id} className="cursor-pointer">
                     <RoomCard
                       room={{

@@ -321,14 +321,8 @@ public class RoomService : IRoomService
                 return ServiceResult<object>.Forbidden("Bạn không có quyền truy cập danh sách phòng ở trạng thái này.");
             }
 
-            if (filter.Status.HasValue && filter.Status.Value == RoomStatus.Rented)
-            {
-                query = query.Where(r => r.Status == RoomStatus.Rented);
-            }
-            else
-            {
-                query = query.Where(r => r.Status == RoomStatus.Available);
-            }
+            // Chỉ hiển thị phòng đang còn trống (Available) cho khách tìm thuê
+            query = query.Where(r => r.Status == RoomStatus.Available);
         }
 
         var totalItems = await query.CountAsync();

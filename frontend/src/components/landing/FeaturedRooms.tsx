@@ -101,9 +101,14 @@ export function FeaturedRooms({
               };
             });
 
-            if (verifiedOnly) {
-              apiItems = apiItems.filter(item => item.verified);
-            }
+            apiItems = apiItems.filter((item: any) => {
+              const raw = rawList.find((r: any) => (r.id || r.Id) === item.id);
+              const status = raw?.status ?? raw?.Status;
+              // Chỉ hiển thị phòng đang trống (Available = 0)
+              if (status !== undefined && status !== 0 && status !== 'Available') return false;
+              if (verifiedOnly && !item.verified) return false;
+              return true;
+            });
 
             setRooms(apiItems);
           } else {
