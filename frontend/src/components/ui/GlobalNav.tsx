@@ -374,6 +374,14 @@ export function GlobalNav() {
                             <span>Hồ sơ xin thuê phòng</span>
                           </Link>
                           <Link
+                            to="/admin/viewings"
+                            onClick={() => setDropdownOpen(false)}
+                            className="flex items-center gap-2.5 px-3 py-1.5 rounded-lg hover:bg-slate-100 hover:text-[#00153D] transition-colors text-xs"
+                          >
+                            <Calendar className="w-3.5 h-3.5 text-slate-500" />
+                            <span>Lịch hẹn xem phòng</span>
+                          </Link>
+                          <Link
                             to="/admin/match"
                             onClick={() => setDropdownOpen(false)}
                             className="flex items-center gap-2.5 px-3 py-1.5 rounded-lg hover:bg-slate-100 hover:text-[#00153D] transition-colors text-xs"

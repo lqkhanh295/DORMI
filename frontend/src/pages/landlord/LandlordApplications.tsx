@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { createPortal } from 'react-dom';
-import { Link, useNavigate } from 'react-router-dom';
+import { Link, useNavigate, useLocation } from 'react-router-dom';
 import { applicationsApi, type RentalApplicationResponse, ApplicationStatus } from '../../services/api';
 import { toast } from 'sonner';
 import { 
@@ -22,6 +22,8 @@ import { PageMotion } from '../../components/common/Motion';
 
 export default function LandlordApplications() {
   const navigate = useNavigate();
+  const location = useLocation();
+  const leasesPath = location.pathname.startsWith('/admin') ? '/admin/leases' : '/landlord/leases';
   const [applications, setApplications] = useState<RentalApplicationResponse[]>([]);
   const [loading, setLoading] = useState(true);
   const [activeTab, setActiveTab] = useState<'all' | 'pending' | 'approved' | 'rejected'>('pending');
@@ -91,7 +93,7 @@ export default function LandlordApplications() {
         toast.success('Đã duyệt hồ sơ thuê phòng!', {
           action: {
             label: 'Tạo hợp đồng ngay',
-            onClick: () => navigate('/landlord/leases', { state: { prefillApp: approvedApp } })
+            onClick: () => navigate(leasesPath, { state: { prefillApp: approvedApp } })
           }
         });
       } else {
@@ -436,7 +438,7 @@ export default function LandlordApplications() {
                       </div>
                       <button
                         type="button"
-                        onClick={() => navigate('/landlord/leases', { state: { prefillApp: app } })}
+                        onClick={() => navigate(leasesPath, { state: { prefillApp: app } })}
                         className="inline-flex items-center gap-1.5 px-3.5 py-1.5 bg-[#00153D] hover:bg-[#002266] text-white text-xs font-bold rounded-lg transition-colors shadow-sm"
                       >
                         <FileText className="w-3.5 h-3.5" />

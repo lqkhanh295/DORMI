@@ -46,7 +46,7 @@ public class ApplicationsController : BaseApiController
         var userId = GetCurrentUserId();
         if (!userId.HasValue) return Unauthorized();
 
-        var result = await _applicationService.GetLandlordApplicationsAsync(userId.Value, status);
+        var result = await _applicationService.GetLandlordApplicationsAsync(userId.Value, status, IsAdmin());
         return HandleResult(result);
     }
 

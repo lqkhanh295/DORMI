@@ -144,17 +144,21 @@ public class LeaseService : ILeaseService
         return ServiceResult<LeaseContractResponseDto>.Ok(MapToDto(lease, room, landlord, tenant));
     }
 
-    public async Task<ServiceResult<List<LeaseContractResponseDto>>> GetMyLeasesAsync(Guid userId)
+    public async Task<ServiceResult<List<LeaseContractResponseDto>>> GetMyLeasesAsync(Guid userId, bool isAdmin = false)
     {
-        var cacheKey = $"my_leases:{userId}";
+        var cacheKey = $"my_leases:{userId}:{(isAdmin ? "admin" : "user")}";
         if (_memCache != null && _memCache.TryGetValue(cacheKey, out List<LeaseContractResponseDto>? cached) && cached != null)
         {
             return ServiceResult<List<LeaseContractResponseDto>>.Ok(cached);
         }
 
-        var dtos = await _db.LeaseContracts
-            .AsNoTracking()
-            .Where(l => l.LandlordId == userId || l.TenantId == userId)
+        var query = _db.LeaseContracts.AsNoTracking();
+        if (!isAdmin)
+        {
+            query = query.Where(l => l.LandlordId == userId || l.TenantId == userId);
+        }
+
+        var dtos = await query
             .OrderByDescending(l => l.CreatedAt)
             .Select(l => new LeaseContractResponseDto
             {

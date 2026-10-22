@@ -175,30 +175,33 @@ public class RentalApplicationService : IRentalApplicationService
         return ServiceResult<List<RentalApplicationResponseDto>>.Ok(applications);
     }
 
-    public async Task<ServiceResult<List<RentalApplicationResponseDto>>> GetLandlordApplicationsAsync(Guid landlordId, ApplicationStatus? status = null)
+    public async Task<ServiceResult<List<RentalApplicationResponseDto>>> GetLandlordApplicationsAsync(Guid landlordId, ApplicationStatus? status = null, bool isAdmin = false)
     {
-        var cacheKey = $"landlord_apps:{landlordId}:{(status.HasValue ? status.Value.ToString() : "all")}";
+        var cacheKey = $"landlord_apps:{landlordId}:{(status.HasValue ? status.Value.ToString() : "all")}:{(isAdmin ? "admin" : "user")}";
         if (_memCache != null && _memCache.TryGetValue(cacheKey, out List<RentalApplicationResponseDto>? cached) && cached != null)
         {
             return ServiceResult<List<RentalApplicationResponseDto>>.Ok(cached);
         }
 
-        var landlordRoomIds = await _db.Rooms
-            .AsNoTracking()
-            .Where(r => r.LandlordId == landlordId)
-            .Select(r => r.Id)
-            .ToListAsync();
+        var query = _db.RentalApplications.AsNoTracking();
 
-        if (landlordRoomIds.Count == 0)
+        if (!isAdmin)
         {
-            var empty = new List<RentalApplicationResponseDto>();
-            _memCache?.Set(cacheKey, empty, TimeSpan.FromMinutes(2));
-            return ServiceResult<List<RentalApplicationResponseDto>>.Ok(empty);
-        }
+            var landlordRoomIds = await _db.Rooms
+                .AsNoTracking()
+                .Where(r => r.LandlordId == landlordId)
+                .Select(r => r.Id)
+                .ToListAsync();
 
-        var query = _db.RentalApplications
-            .AsNoTracking()
-            .Where(a => landlordRoomIds.Contains(a.RoomId));
+            if (landlordRoomIds.Count == 0)
+            {
+                var empty = new List<RentalApplicationResponseDto>();
+                _memCache?.Set(cacheKey, empty, TimeSpan.FromMinutes(2));
+                return ServiceResult<List<RentalApplicationResponseDto>>.Ok(empty);
+            }
+
+            query = query.Where(a => landlordRoomIds.Contains(a.RoomId));
+        }
 
         if (status.HasValue)
         {

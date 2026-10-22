@@ -35,7 +35,7 @@ public class AppointmentsController : BaseApiController
         var userId = GetCurrentUserId();
         if (!userId.HasValue) return Unauthorized();
 
-        var result = await _appointmentService.GetMyAppointmentsAsync(userId.Value);
+        var result = await _appointmentService.GetMyAppointmentsAsync(userId.Value, IsAdmin());
         return HandleResult(result);
     }
 
@@ -55,7 +55,7 @@ public class AppointmentsController : BaseApiController
         var userId = GetCurrentUserId();
         if (!userId.HasValue) return Unauthorized();
 
-        var result = await _appointmentService.RescheduleAsync(id, userId.Value, dto);
+        var result = await _appointmentService.RescheduleAsync(id, userId.Value, dto, IsAdmin());
         return HandleResult(result);
     }
 }

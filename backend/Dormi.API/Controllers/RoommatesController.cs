@@ -55,7 +55,7 @@ public class RoommatesController : BaseApiController
         var currentUserId = GetCurrentUserId();
         if (!currentUserId.HasValue) return Unauthorized();
 
-        var result = await _roommateService.UpdateRoommatePostAsync(id, currentUserId.Value, dto);
+        var result = await _roommateService.UpdateRoommatePostAsync(id, currentUserId.Value, dto, IsAdmin());
         return HandleResult(result);
     }
 
@@ -66,7 +66,7 @@ public class RoommatesController : BaseApiController
         var currentUserId = GetCurrentUserId();
         if (!currentUserId.HasValue) return Unauthorized();
 
-        var result = await _roommateService.DeleteRoommatePostAsync(id, currentUserId.Value);
+        var result = await _roommateService.DeleteRoommatePostAsync(id, currentUserId.Value, IsAdmin());
         return HandleResult(result);
     }
 

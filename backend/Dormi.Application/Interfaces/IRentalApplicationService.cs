@@ -11,7 +11,7 @@ public interface IRentalApplicationService
 {
     Task<ServiceResult<RentalApplicationResponseDto>> CreateApplicationAsync(Guid tenantId, CreateApplicationDto dto);
     Task<ServiceResult<List<RentalApplicationResponseDto>>> GetTenantApplicationsAsync(Guid tenantId);
-    Task<ServiceResult<List<RentalApplicationResponseDto>>> GetLandlordApplicationsAsync(Guid landlordId, ApplicationStatus? status = null);
+    Task<ServiceResult<List<RentalApplicationResponseDto>>> GetLandlordApplicationsAsync(Guid landlordId, ApplicationStatus? status = null, bool isAdmin = false);
     Task<ServiceResult<RentalApplicationResponseDto>> GetApplicationByIdAsync(Guid id, Guid currentUserId, bool isAdmin);
     Task<ServiceResult<object>> ReviewApplicationAsync(Guid id, Guid landlordId, ReviewApplicationDto dto, bool isAdmin = false);
     Task<ServiceResult<object>> WithdrawApplicationAsync(Guid id, Guid tenantId);

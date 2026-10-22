@@ -125,17 +125,21 @@ public class AppointmentService : IAppointmentService
         return ServiceResult<object>.Ok(new { id = appointment.Id, message = "Đặt lịch xem phòng thành công!" });
     }
 
-    public async Task<ServiceResult<List<AppointmentResponseDto>>> GetMyAppointmentsAsync(Guid userId)
+    public async Task<ServiceResult<List<AppointmentResponseDto>>> GetMyAppointmentsAsync(Guid userId, bool isAdmin = false)
     {
-        var cacheKey = $"appointments:{userId}";
+        var cacheKey = $"appointments:{userId}:{(isAdmin ? "admin" : "user")}";
         if (_memCache != null && _memCache.TryGetValue(cacheKey, out List<AppointmentResponseDto>? cached) && cached != null)
         {
             return ServiceResult<List<AppointmentResponseDto>>.Ok(cached);
         }
 
-        var appointments = await _db.ViewingAppointments
-            .AsNoTracking()
-            .Where(a => a.CustomerId == userId || a.Room.LandlordId == userId)
+        var query = _db.ViewingAppointments.AsNoTracking();
+        if (!isAdmin)
+        {
+            query = query.Where(a => a.CustomerId == userId || a.Room.LandlordId == userId);
+        }
+
+        var appointments = await query
             .OrderByDescending(a => a.AppointmentDate)
             .Select(a => new AppointmentResponseDto
             {
@@ -189,7 +193,7 @@ public class AppointmentService : IAppointmentService
             return ServiceResult<object>.Fail($"Lịch hẹn đã ở trạng thái kết thúc ({appointment.Status}), không thể thay đổi thêm.", 400);
         }
 
-        if (appointment.CustomerId == userId && appointment.Room.LandlordId != userId)
+        if (!isAdmin && appointment.CustomerId == userId && appointment.Room.LandlordId != userId)
         {
             if (dto.Status != "Cancelled")
             {
@@ -245,7 +249,7 @@ public class AppointmentService : IAppointmentService
         return ServiceResult<object>.Ok(new { message = "Cập nhật trạng thái lịch hẹn thành công." });
     }
 
-    public async Task<ServiceResult<object>> RescheduleAsync(Guid id, Guid userId, RescheduleAppointmentDto dto)
+    public async Task<ServiceResult<object>> RescheduleAsync(Guid id, Guid userId, RescheduleAppointmentDto dto, bool isAdmin = false)
     {
         if (dto.NewAppointmentDate <= DateTime.UtcNow)
         {
@@ -258,7 +262,7 @@ public class AppointmentService : IAppointmentService
 
         if (appointment == null) return ServiceResult<object>.NotFound("Không tìm thấy lịch hẹn.");
 
-        if (appointment.CustomerId != userId && appointment.Room.LandlordId != userId)
+        if (!isAdmin && appointment.CustomerId != userId && appointment.Room.LandlordId != userId)
         {
             return ServiceResult<object>.Forbidden();
         }

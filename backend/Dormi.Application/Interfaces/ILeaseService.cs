@@ -9,7 +9,7 @@ namespace Dormi.Application.Interfaces;
 public interface ILeaseService
 {
     Task<ServiceResult<LeaseContractResponseDto>> CreateLeaseAsync(Guid landlordId, CreateLeaseDto dto);
-    Task<ServiceResult<List<LeaseContractResponseDto>>> GetMyLeasesAsync(Guid userId);
+    Task<ServiceResult<List<LeaseContractResponseDto>>> GetMyLeasesAsync(Guid userId, bool isAdmin = false);
     Task<ServiceResult<LeaseContractResponseDto>> GetLeaseByIdAsync(Guid leaseId, Guid userId, bool isAdmin);
     Task<ServiceResult<LeaseContractResponseDto>> SignLeaseByTenantAsync(Guid leaseId, Guid tenantId, SignLeaseDto dto);
     Task<ServiceResult<LeaseContractResponseDto>> TerminateLeaseAsync(Guid leaseId, Guid userId, bool isAdmin, TerminateLeaseDto dto);

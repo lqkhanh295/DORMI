@@ -9,6 +9,7 @@ import {
   Receipt,
   FileText,
   FileCheck,
+  Calendar,
   Search,
   Building2,
   Compass
@@ -38,6 +39,7 @@ export default function AdminLayout() {
     { name: 'Quản lý phòng trọ', path: '/admin/all-rooms', icon: Building2 },
     { name: 'Quản lý hợp đồng thuê', path: '/admin/leases', icon: FileCheck },
     { name: 'Hồ sơ xin thuê phòng', path: '/admin/applications', icon: FileText },
+    { name: 'Lịch hẹn xem phòng', path: '/admin/viewings', icon: Calendar },
     { name: 'Cộng đồng tìm ở ghép', path: '/admin/match', icon: Compass },
     { name: 'Bản đồ số tìm trọ (PostGIS)', path: '/search', icon: Search },
   ];

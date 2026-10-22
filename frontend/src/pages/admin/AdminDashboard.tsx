@@ -3,7 +3,7 @@ import { Link } from 'react-router-dom';
 import { Card } from '../../components/ui/Card';
 import { Button } from '../../components/ui/Button';
 import { adminApi, RoomStatus } from '../../services/api';
-import { Users, UserCheck, Home, AlertTriangle, ArrowRight, DollarSign, Building2, FileText, FileCheck, Search, Compass, ShieldCheck } from 'lucide-react';
+import { Users, UserCheck, Home, AlertTriangle, ArrowRight, DollarSign, Building2, FileText, FileCheck, Calendar, Search, Compass, ShieldCheck } from 'lucide-react';
 import { toast } from 'sonner';
 import { PageMotion } from '../../components/common/Motion';
 
@@ -325,6 +325,14 @@ export default function AdminDashboard() {
               <h3 className="text-sm font-bold text-slate-900 group-hover:text-[#00153D]">Hồ sơ xin thuê</h3>
             </div>
             <p className="text-xs text-slate-500 leading-relaxed">Theo dõi và can thiệp duyệt/từ chối các đơn xin thuê phòng trọ từ khách.</p>
+          </Link>
+
+          <Link to="/admin/viewings" className="p-4 rounded-xl border border-slate-200 hover:border-[#00153D] hover:shadow-sm bg-slate-50/50 hover:bg-white transition-all group">
+            <div className="flex items-center gap-3 mb-2">
+              <div className="w-8 h-8 rounded-lg bg-teal-100 text-teal-700 flex items-center justify-center"><Calendar className="w-4 h-4" /></div>
+              <h3 className="text-sm font-bold text-slate-900 group-hover:text-[#00153D]">Lịch xem phòng</h3>
+            </div>
+            <p className="text-xs text-slate-500 leading-relaxed">Giám sát và điều phối toàn bộ các lịch hẹn trực tiếp giữa khách và chủ nhà.</p>
           </Link>
 
           <Link to="/admin/match" className="p-4 rounded-xl border border-slate-200 hover:border-[#00153D] hover:shadow-sm bg-slate-50/50 hover:bg-white transition-all group">

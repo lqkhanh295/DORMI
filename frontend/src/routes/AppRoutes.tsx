@@ -141,6 +141,7 @@ export default function AppRoutes() {
           <Route path="all-rooms" element={<RoomManagement />} />
           <Route path="leases" element={<LandlordLeases />} />
           <Route path="applications" element={<LandlordApplications />} />
+          <Route path="viewings" element={<LandlordViewings />} />
           <Route path="users" element={<AdminUsers />} />
           <Route path="reports" element={<AdminReports />} />
           <Route path="transactions" element={<AdminTransactions />} />

@@ -35,7 +35,7 @@ public class LeasesController : BaseApiController
         var userId = GetCurrentUserId();
         if (!userId.HasValue) return Unauthorized();
 
-        var result = await _leaseService.GetMyLeasesAsync(userId.Value);
+        var result = await _leaseService.GetMyLeasesAsync(userId.Value, IsAdmin());
         return HandleResult(result);
     }
 

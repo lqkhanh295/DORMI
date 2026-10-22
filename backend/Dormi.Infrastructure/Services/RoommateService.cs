@@ -174,12 +174,12 @@ public class RoommateService : IRoommateService
         return ServiceResult<object>.Ok(new { id = post.Id, message = "Đã tạo bài tìm người ở ghép thành công!" }, 201);
     }
 
-    public async Task<ServiceResult<object>> UpdateRoommatePostAsync(Guid id, Guid userId, CreateRoommatePostDto dto)
+    public async Task<ServiceResult<object>> UpdateRoommatePostAsync(Guid id, Guid userId, CreateRoommatePostDto dto, bool isAdmin = false)
     {
         var post = await _db.RoommatePosts.FindAsync(id);
         if (post == null) return ServiceResult<object>.NotFound("Không tìm thấy bài đăng ở ghép.");
 
-        if (post.CustomerId != userId) return ServiceResult<object>.Forbidden();
+        if (!isAdmin && post.CustomerId != userId) return ServiceResult<object>.Forbidden();
 
         post.Title = dto.Title;
         post.Description = dto.Description;
@@ -194,12 +194,12 @@ public class RoommateService : IRoommateService
         return ServiceResult<object>.Ok(new { message = "Cập nhật bài ở ghép thành công." });
     }
 
-    public async Task<ServiceResult<object>> DeleteRoommatePostAsync(Guid id, Guid userId)
+    public async Task<ServiceResult<object>> DeleteRoommatePostAsync(Guid id, Guid userId, bool isAdmin = false)
     {
         var post = await _db.RoommatePosts.FindAsync(id);
         if (post == null) return ServiceResult<object>.NotFound("Không tìm thấy bài đăng ở ghép.");
 
-        if (post.CustomerId != userId) return ServiceResult<object>.Forbidden();
+        if (!isAdmin && post.CustomerId != userId) return ServiceResult<object>.Forbidden();
 
         _db.RoommatePosts.Remove(post);
         await _db.SaveChangesAsync();
