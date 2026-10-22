@@ -70,10 +70,9 @@ export function GlobalNav() {
       : currentUser?.role === 'Admin'
         ? [
             { name: 'Bảng điều khiển', path: '/admin', icon: LayoutDashboard },
-            { name: 'Khu vực Chủ trọ', path: '/landlord/rooms', icon: Building2 },
-            { name: 'Khu vực Khách thuê', path: '/tenant', icon: User },
-            { name: 'Tìm phòng', path: '/search', icon: Search },
+            { name: 'Duyệt tin đăng', path: '/admin/rooms', icon: Home },
             { name: 'Lịch sử giao dịch', path: '/admin/transactions', icon: Receipt },
+            { name: 'Tìm phòng', path: '/search', icon: Search },
           ]
         : [
             { name: 'Tìm phòng', path: '/search', icon: Search },
@@ -155,15 +154,17 @@ export function GlobalNav() {
         {/* Right Desktop Actions */}
         <div className="hidden md:flex items-center gap-2.5 shrink-0">
           
-          {/* Quick Post Button */}
-          <Link 
-            to={currentUser?.role === 'Tenant' ? '/tenant/post' : '/landlord/listing/new'} 
-            className="bg-[#00153D] hover:bg-[#073372] text-white text-xs font-bold px-3 py-2 rounded-xl transition-colors flex items-center gap-1.5 whitespace-nowrap shadow-xs"
-            title={currentUser?.role === 'Tenant' ? 'Đăng tin ghép' : 'Đăng tin phòng'}
-          >
-            <Plus className="w-3.5 h-3.5" />
-            <span className="hidden lg:inline">{currentUser?.role === 'Tenant' ? 'Đăng tin ghép' : 'Đăng tin phòng'}</span>
-          </Link>
+          {/* Quick Post Button for Tenants / Landlords */}
+          {currentUser?.role !== 'Admin' && (
+            <Link 
+              to={currentUser?.role === 'Tenant' ? '/tenant/post' : '/landlord/listing/new'} 
+              className="bg-[#00153D] hover:bg-[#073372] text-white text-xs font-bold px-3 py-2 rounded-xl transition-colors flex items-center gap-1.5 whitespace-nowrap shadow-xs"
+              title={currentUser?.role === 'Tenant' ? 'Đăng tin ghép' : 'Đăng tin phòng'}
+            >
+              <Plus className="w-3.5 h-3.5" />
+              <span className="hidden lg:inline">{currentUser?.role === 'Tenant' ? 'Đăng tin ghép' : 'Đăng tin phòng'}</span>
+            </Link>
+          )}
 
           {!currentUser ? (
             <Link 
@@ -346,31 +347,39 @@ export function GlobalNav() {
                           
                           <div className="my-1.5 border-t border-slate-100" />
                           <p className="px-3 py-1 text-[10px] font-bold uppercase tracking-wider text-slate-400">
-                            Truy cập toàn bộ chức năng
+                            Quản lý toàn bộ chức năng
                           </p>
                           <Link
-                            to="/landlord/rooms"
+                            to="/admin/all-rooms"
                             onClick={() => setDropdownOpen(false)}
-                            className="flex items-center gap-2.5 px-3 py-1.5 rounded-lg hover:bg-amber-50 hover:text-amber-800 transition-colors"
+                            className="flex items-center gap-2.5 px-3 py-1.5 rounded-lg hover:bg-slate-100 hover:text-[#00153D] transition-colors text-xs"
                           >
-                            <Building2 className="w-3.5 h-3.5 text-amber-600" />
-                            <span>Quản lý phòng trọ (Chủ trọ)</span>
+                            <Building2 className="w-3.5 h-3.5 text-slate-500" />
+                            <span>Quản lý phòng trọ</span>
                           </Link>
                           <Link
-                            to="/landlord/leases"
+                            to="/admin/leases"
                             onClick={() => setDropdownOpen(false)}
-                            className="flex items-center gap-2.5 px-3 py-1.5 rounded-lg hover:bg-amber-50 hover:text-amber-800 transition-colors"
+                            className="flex items-center gap-2.5 px-3 py-1.5 rounded-lg hover:bg-slate-100 hover:text-[#00153D] transition-colors text-xs"
                           >
-                            <FileCheck className="w-3.5 h-3.5 text-amber-600" />
-                            <span>Hợp đồng thuê (Chủ trọ)</span>
+                            <FileCheck className="w-3.5 h-3.5 text-slate-500" />
+                            <span>Quản lý hợp đồng thuê</span>
                           </Link>
                           <Link
-                            to="/tenant"
+                            to="/admin/applications"
                             onClick={() => setDropdownOpen(false)}
-                            className="flex items-center gap-2.5 px-3 py-1.5 rounded-lg hover:bg-blue-50 hover:text-blue-800 transition-colors"
+                            className="flex items-center gap-2.5 px-3 py-1.5 rounded-lg hover:bg-slate-100 hover:text-[#00153D] transition-colors text-xs"
                           >
-                            <User className="w-3.5 h-3.5 text-blue-600" />
-                            <span>Không gian Khách thuê</span>
+                            <FileText className="w-3.5 h-3.5 text-slate-500" />
+                            <span>Hồ sơ xin thuê phòng</span>
+                          </Link>
+                          <Link
+                            to="/admin/match"
+                            onClick={() => setDropdownOpen(false)}
+                            className="flex items-center gap-2.5 px-3 py-1.5 rounded-lg hover:bg-slate-100 hover:text-[#00153D] transition-colors text-xs"
+                          >
+                            <Users className="w-3.5 h-3.5 text-slate-500" />
+                            <span>Cộng đồng ở ghép</span>
                           </Link>
                         </>
                       )}

@@ -35,11 +35,11 @@ export default function AdminLayout() {
   ];
 
   const fullPlatformItems = [
-    { name: 'Tất cả phòng trọ (Chủ trọ)', path: '/landlord/rooms', icon: Building2 },
-    { name: 'Quản lý hợp đồng thuê', path: '/landlord/leases', icon: FileCheck },
-    { name: 'Đơn đề nghị thuê phòng', path: '/landlord/applications', icon: FileText },
+    { name: 'Quản lý phòng trọ', path: '/admin/all-rooms', icon: Building2 },
+    { name: 'Quản lý hợp đồng thuê', path: '/admin/leases', icon: FileCheck },
+    { name: 'Hồ sơ xin thuê phòng', path: '/admin/applications', icon: FileText },
+    { name: 'Cộng đồng tìm ở ghép', path: '/admin/match', icon: Compass },
     { name: 'Bản đồ số tìm trọ (PostGIS)', path: '/search', icon: Search },
-    { name: 'Cộng đồng tìm bạn ở ghép', path: '/tenant/match', icon: Compass },
   ];
 
   return (

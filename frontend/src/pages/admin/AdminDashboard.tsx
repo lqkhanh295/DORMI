@@ -303,7 +303,7 @@ export default function AdminDashboard() {
         </div>
 
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3.5 pt-1">
-          <Link to="/landlord/rooms" className="p-4 rounded-xl border border-slate-200 hover:border-[#00153D] hover:shadow-sm bg-slate-50/50 hover:bg-white transition-all group">
+          <Link to="/admin/all-rooms" className="p-4 rounded-xl border border-slate-200 hover:border-[#00153D] hover:shadow-sm bg-slate-50/50 hover:bg-white transition-all group">
             <div className="flex items-center gap-3 mb-2">
               <div className="w-8 h-8 rounded-lg bg-blue-100 text-blue-700 flex items-center justify-center"><Building2 className="w-4 h-4" /></div>
               <h3 className="text-sm font-bold text-slate-900 group-hover:text-[#00153D]">Quản lý phòng trọ</h3>
@@ -311,7 +311,7 @@ export default function AdminDashboard() {
             <p className="text-xs text-slate-500 leading-relaxed">Xem và chỉnh sửa toàn bộ bài đăng phòng, ẩn/hiện, cập nhật tiện ích và định vị GPS.</p>
           </Link>
 
-          <Link to="/landlord/leases" className="p-4 rounded-xl border border-slate-200 hover:border-[#00153D] hover:shadow-sm bg-slate-50/50 hover:bg-white transition-all group">
+          <Link to="/admin/leases" className="p-4 rounded-xl border border-slate-200 hover:border-[#00153D] hover:shadow-sm bg-slate-50/50 hover:bg-white transition-all group">
             <div className="flex items-center gap-3 mb-2">
               <div className="w-8 h-8 rounded-lg bg-emerald-100 text-emerald-700 flex items-center justify-center"><FileCheck className="w-4 h-4" /></div>
               <h3 className="text-sm font-bold text-slate-900 group-hover:text-[#00153D]">Hợp đồng & Ký số</h3>
@@ -319,7 +319,7 @@ export default function AdminDashboard() {
             <p className="text-xs text-slate-500 leading-relaxed">Quản lý tất cả hợp đồng thuê giữa chủ trọ và khách, tiền cọc, lịch đóng tiền.</p>
           </Link>
 
-          <Link to="/landlord/applications" className="p-4 rounded-xl border border-slate-200 hover:border-[#00153D] hover:shadow-sm bg-slate-50/50 hover:bg-white transition-all group">
+          <Link to="/admin/applications" className="p-4 rounded-xl border border-slate-200 hover:border-[#00153D] hover:shadow-sm bg-slate-50/50 hover:bg-white transition-all group">
             <div className="flex items-center gap-3 mb-2">
               <div className="w-8 h-8 rounded-lg bg-indigo-100 text-indigo-700 flex items-center justify-center"><FileText className="w-4 h-4" /></div>
               <h3 className="text-sm font-bold text-slate-900 group-hover:text-[#00153D]">Hồ sơ xin thuê</h3>
@@ -327,7 +327,7 @@ export default function AdminDashboard() {
             <p className="text-xs text-slate-500 leading-relaxed">Theo dõi và can thiệp duyệt/từ chối các đơn xin thuê phòng trọ từ khách.</p>
           </Link>
 
-          <Link to="/tenant/match" className="p-4 rounded-xl border border-slate-200 hover:border-[#00153D] hover:shadow-sm bg-slate-50/50 hover:bg-white transition-all group">
+          <Link to="/admin/match" className="p-4 rounded-xl border border-slate-200 hover:border-[#00153D] hover:shadow-sm bg-slate-50/50 hover:bg-white transition-all group">
             <div className="flex items-center gap-3 mb-2">
               <div className="w-8 h-8 rounded-lg bg-purple-100 text-purple-700 flex items-center justify-center"><Compass className="w-4 h-4" /></div>
               <h3 className="text-sm font-bold text-slate-900 group-hover:text-[#00153D]">Ghép bạn ở ghép</h3>
@@ -343,12 +343,12 @@ export default function AdminDashboard() {
             <p className="text-xs text-slate-500 leading-relaxed">Tra cứu không gian PostGIS, bộ lọc giá, quận huyện và trải nghiệm của khách thuê.</p>
           </Link>
 
-          <Link to="/tenant" className="p-4 rounded-xl border border-slate-200 hover:border-[#00153D] hover:shadow-sm bg-slate-50/50 hover:bg-white transition-all group">
+          <Link to="/admin/verify" className="p-4 rounded-xl border border-slate-200 hover:border-[#00153D] hover:shadow-sm bg-slate-50/50 hover:bg-white transition-all group">
             <div className="flex items-center gap-3 mb-2">
               <div className="w-8 h-8 rounded-lg bg-rose-100 text-rose-700 flex items-center justify-center"><Users className="w-4 h-4" /></div>
-              <h3 className="text-sm font-bold text-slate-900 group-hover:text-[#00153D]">Không gian Khách thuê</h3>
+              <h3 className="text-sm font-bold text-slate-900 group-hover:text-[#00153D]">Xác minh chủ trọ & KYC</h3>
             </div>
-            <p className="text-xs text-slate-500 leading-relaxed">Kiểm tra bảng điều khiển khách thuê, danh sách phòng đã thích, lịch xem phòng.</p>
+            <p className="text-xs text-slate-500 leading-relaxed">Kiểm tra hồ sơ giấy tờ, CCCD và phê duyệt xác thực danh tính chủ nhà trọ.</p>
           </Link>
         </div>
       </div>
