@@ -20,7 +20,8 @@ import {
   Wrench,
   Users,
   CreditCard,
-  ShieldCheck
+  ShieldCheck,
+  Home
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { RoomCard } from '../../components/landing/RoomCard';
@@ -80,6 +81,7 @@ export default function TenantDashboard() {
   const approvedAppsCount = applications.filter(a => a.status === 1).length;
   const pendingAppsCount = applications.filter(a => a.status === 0 || a.status === 2).length;
   const pendingLeasesCount = leases.filter(l => l.status === 'PendingSignature' || l.status === 'Draft').length;
+  const activeLease = leases.find(l => l.status === 'Active' || l.status === 'Signed');
 
   return (
     <div className="space-y-6 pb-16 bg-[#F8FAFC]">
@@ -117,16 +119,30 @@ export default function TenantDashboard() {
       </div>
 
       {/* Active Lease Quick Actions Banner */}
-      {leases.some(l => l.status === 'Active' || l.status === 'Signed') && (
-        <div className="p-5 bg-gradient-to-r from-emerald-50 to-teal-50 border border-emerald-200 rounded-2xl flex flex-col sm:flex-row sm:items-center justify-between gap-4 shadow-xs">
-          <div className="space-y-1">
+      {activeLease ? (
+        <div className="p-5 bg-gradient-to-r from-emerald-50 to-teal-50 border border-emerald-200 rounded-2xl flex flex-col md:flex-row md:items-center justify-between gap-4 shadow-xs">
+          <div className="space-y-1.5">
             <div className="flex items-center gap-2">
               <span className="px-2.5 py-0.5 rounded-full text-xs font-bold bg-emerald-600 text-white flex items-center gap-1">
-                <ShieldCheck className="w-3.5 h-3.5" /> Hợp đồng đang hiệu lực (Active)
+                <ShieldCheck className="w-3.5 h-3.5" /> Hợp đồng đang hiệu lực
+              </span>
+              <span className="text-xs font-mono font-bold text-emerald-800">
+                {activeLease.leaseCode || `HD-${String(activeLease.id).slice(0, 8)}`}
               </span>
             </div>
-            <p className="text-xs text-emerald-900 font-medium">
-              Bạn đang thuê phòng với hợp đồng bảo vệ quyền lợi 100% từ Dormi. Cần hỗ trợ khẩn cấp hoặc thanh toán tiền phòng?
+            <h3 className="text-sm font-bold text-emerald-950">
+              {activeLease.roomTitle || 'Căn phòng đang thuê'}
+            </h3>
+            <p className="text-xs text-emerald-800 flex flex-wrap items-center gap-x-3 gap-y-1">
+              <span>{activeLease.roomAddress || 'Hồ Chí Minh'}</span>
+              <span>·</span>
+              <span className="font-bold text-emerald-900">{Number(activeLease.monthlyRent || 0).toLocaleString('vi-VN')}₫/tháng</span>
+              {activeLease.endDate && (
+                <>
+                  <span>·</span>
+                  <span>Thời hạn đến: <strong>{new Date(activeLease.endDate).toLocaleDateString('vi-VN')}</strong></span>
+                </>
+              )}
             </p>
           </div>
           <div className="flex flex-wrap items-center gap-2 shrink-0">
@@ -144,9 +160,35 @@ export default function TenantDashboard() {
               className="px-3.5 py-2 bg-white hover:bg-emerald-50 text-emerald-800 border border-emerald-300 text-xs font-bold rounded-xl flex items-center gap-1.5 shadow-xs transition-colors"
             >
               <Wrench className="w-3.5 h-3.5" />
-              <span>Báo cáo sự cố / sửa chữa</span>
+              <span>Báo cáo sự cố</span>
             </button>
+            <Link
+              to="/tenant/leases"
+              className="px-3.5 py-2 bg-emerald-100 hover:bg-emerald-200 text-emerald-900 text-xs font-bold rounded-xl flex items-center gap-1 transition-colors"
+            >
+              <span>Xem hợp đồng</span>
+              <ArrowRight className="w-3.5 h-3.5" />
+            </Link>
           </div>
+        </div>
+      ) : !loading && (
+        <div className="p-5 bg-white border border-slate-200 rounded-2xl flex flex-col sm:flex-row sm:items-center justify-between gap-4 shadow-xs">
+          <div className="flex items-center gap-3.5">
+            <div className="w-10 h-10 rounded-xl bg-blue-50 text-[#00153D] flex items-center justify-center shrink-0">
+              <Home className="w-5 h-5 text-blue-600" />
+            </div>
+            <div>
+              <h4 className="text-sm font-bold text-[#00153D]">Chưa có hợp đồng thuê nào đang hoạt động</h4>
+              <p className="text-xs text-[#64748B]">Tìm kiếm phòng trọ an toàn, nộp hồ sơ trực tuyến và ký hợp đồng bảo vệ 100% quyền lợi.</p>
+            </div>
+          </div>
+          <Link
+            to="/search"
+            className="px-4 py-2 bg-[#00153D] hover:bg-[#073372] text-white text-xs font-bold rounded-xl flex items-center gap-1.5 transition-colors shrink-0 shadow-xs"
+          >
+            <Search className="w-3.5 h-3.5" />
+            <span>Khám phá phòng trọ</span>
+          </Link>
         </div>
       )}
 

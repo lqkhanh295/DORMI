@@ -110,7 +110,10 @@ export default function BillingHistory() {
                     {t.transactionRef}
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap text-body text-[#0F172A] font-medium">
-                    {t.paymentMethod}
+                    {t.description || t.packageTitle || 'Gói tin đăng chủ trọ'}
+                  </td>
+                  <td className="px-6 py-4 whitespace-nowrap text-body text-[#64748B] font-medium">
+                    {t.paymentMethod || 'VNPAY'}
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap text-body font-bold text-[#0F172A]">
                     {Number(t.amount).toLocaleString('vi-VN')}₫

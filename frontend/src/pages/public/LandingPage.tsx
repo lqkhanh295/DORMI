@@ -5,6 +5,7 @@ import { ProblemSolutionSection } from '../../components/landing/ProblemSolution
 import { KeyFeaturesSection } from '../../components/landing/KeyFeaturesSection';
 import { VerificationSection } from '../../components/landing/VerificationSection';
 import { RoommateMatcherPreview } from '../../components/landing/RoommateMatcherPreview';
+import { TeamSection } from '../../components/landing/TeamSection';
 import { FinalCTA } from '../../components/landing/FinalCTA';
 
 export default function LandingPage() {
@@ -61,7 +62,10 @@ export default function LandingPage() {
       {/* 6. ROOMMATE MATCHER (GHÉP BẠN Ở GHÉP) */}
       <RoommateMatcherPreview />
 
-      {/* 7. CALL TO ACTION (ĐĂNG KÝ / LIÊN HỆ / DÙNG THỬ / APP STORE) */}
+      {/* 7. ĐỘI NGŨ PHÁT TRIỂN DỰ ÁN (TEAM MEMBERS - CÁCH 1) */}
+      <TeamSection />
+
+      {/* 8. CALL TO ACTION (ĐĂNG KÝ / LIÊN HỆ / DÙNG THỬ / APP STORE) */}
       <FinalCTA />
     </div>
   );

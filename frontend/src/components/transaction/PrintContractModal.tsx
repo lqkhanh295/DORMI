@@ -32,8 +32,57 @@ function formatVnDateTime(dateString?: string): string {
 
 // Convert numbers to Vietnamese words for contract currency
 function numberToVnWords(amount: number): string {
-  if (amount <= 0) return 'Không đồng';
-  return `${amount.toLocaleString('vi-VN')} Việt Nam Đồng`;
+  if (!amount || amount <= 0) return 'Không đồng';
+  const units = ['', 'một', 'hai', 'ba', 'bốn', 'năm', 'sáu', 'bảy', 'tám', 'chín'];
+  const scales = ['', 'nghìn', 'triệu', 'tỷ', 'nghìn tỷ', 'triệu tỷ'];
+
+  function readGroupOfThree(num: number, hasHigher: boolean): string {
+    const hundred = Math.floor(num / 100);
+    const remainder = num % 100;
+    const ten = Math.floor(remainder / 10);
+    const unit = remainder % 10;
+    let res = '';
+
+    if (hundred > 0 || hasHigher) {
+      res += `${units[hundred]} trăm `;
+    }
+    if (ten > 1) {
+      res += `${units[ten]} mươi `;
+      if (unit === 1) res += 'mốt ';
+      else if (unit === 5) res += 'lăm ';
+      else if (unit > 0) res += `${units[unit]} `;
+    } else if (ten === 1) {
+      res += 'mười ';
+      if (unit === 5) res += 'lăm ';
+      else if (unit > 0) res += `${units[unit]} `;
+    } else {
+      if (hundred > 0 && unit > 0) res += 'lẻ ';
+      if (unit > 0) res += `${units[unit]} `;
+    }
+    return res.trim();
+  }
+
+  let numStr = Math.round(amount).toString();
+  const groups: number[] = [];
+  while (numStr.length > 0) {
+    const chunk = numStr.slice(-3);
+    groups.unshift(parseInt(chunk, 10));
+    numStr = numStr.slice(0, -3);
+  }
+
+  let words = '';
+  for (let i = 0; i < groups.length; i++) {
+    const g = groups[i];
+    if (g > 0) {
+      const gText = readGroupOfThree(g, i > 0);
+      const scaleIndex = groups.length - 1 - i;
+      words += `${gText} ${scales[scaleIndex]} `;
+    }
+  }
+
+  words = words.trim().replace(/\s+/g, ' ');
+  if (!words) return 'Không đồng';
+  return `${words.charAt(0).toUpperCase() + words.slice(1)} đồng chẵn`;
 }
 
 // Parse room utilities into dynamic equipment handover items

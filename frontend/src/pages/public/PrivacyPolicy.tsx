@@ -113,12 +113,12 @@ export default function PrivacyPolicy() {
           </div>
 
           {/* Main Content */}
-          <div className="lg:col-span-3 space-y-8 bg-white p-8 md:p-10 rounded-2xl border border-slate-200 shadow-sm text-slate-700 text-sm leading-relaxed">
+          <div className="lg:col-span-3 space-y-8 bg-white p-8 md:p-10 rounded-2xl border border-slate-200 shadow-sm text-slate-700 text-sm leading-relaxed text-justify">
             
             {/* Section 1 */}
             <section id="section-1" className="space-y-3 scroll-mt-24">
               <h2 className="text-xl font-bold text-[#00153D] flex items-center gap-2 border-b border-slate-100 pb-2">
-                1. Cam kết & Nguyên tắc bảo mật
+                I. Cam kết & Nguyên tắc bảo mật
               </h2>
               <p>
                 DORMI cam kết bảo vệ thông tin cá nhân của người dùng bằng các giải pháp công nghệ tiên tiến nhất. Chúng tôi thu thập dữ liệu với mục đích duy nhất là cung cấp dịch vụ tìm kiếm phòng trọ an toàn, kết nối bạn cùng phòng tin cậy và hỗ trợ ký kết hợp đồng thuê phòng minh bạch.
@@ -131,7 +131,7 @@ export default function PrivacyPolicy() {
             {/* Section 2 */}
             <section id="section-2" className="space-y-3 scroll-mt-24">
               <h2 className="text-xl font-bold text-[#00153D] flex items-center gap-2 border-b border-slate-100 pb-2">
-                2. Thông tin cá nhân chúng tôi thu thập
+                II. Thông tin cá nhân chúng tôi thu thập
               </h2>
               <p>Các dữ liệu được thu thập trên nền tảng gồm có:</p>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-3 text-xs pt-1">
@@ -172,7 +172,7 @@ export default function PrivacyPolicy() {
             {/* Section 3 */}
             <section id="section-3" className="space-y-3 scroll-mt-24">
               <h2 className="text-xl font-bold text-[#00153D] flex items-center gap-2 border-b border-slate-100 pb-2">
-                3. Mục đích sử dụng dữ liệu
+                III. Mục đích sử dụng dữ liệu
               </h2>
               <ul className="list-disc pl-5 space-y-2 text-xs sm:text-sm">
                 <li>
@@ -193,7 +193,7 @@ export default function PrivacyPolicy() {
             {/* Section 4 */}
             <section id="section-4" className="space-y-3 scroll-mt-24">
               <h2 className="text-xl font-bold text-[#00153D] flex items-center gap-2 border-b border-slate-100 pb-2">
-                4. Bảo vệ dữ liệu định danh & CCCD
+                IV. Bảo vệ dữ liệu định danh & CCCD
               </h2>
               <div className="bg-amber-50/70 border border-amber-200 p-4 rounded-xl space-y-2 text-xs text-amber-950">
                 <p className="font-semibold flex items-center gap-1.5 text-amber-800">
@@ -212,7 +212,7 @@ export default function PrivacyPolicy() {
             {/* Section 5 */}
             <section id="section-5" className="space-y-3 scroll-mt-24">
               <h2 className="text-xl font-bold text-[#00153D] flex items-center gap-2 border-b border-slate-100 pb-2">
-                5. Bảo mật thanh toán & Tài chính
+                V. Bảo mật thanh toán & Tài chính
               </h2>
               <p>
                 DORMI áp dụng cơ chế thanh toán an toàn thông qua cổng thanh toán đối tác <strong>PayOS</strong> (tiêu chuẩn kết nối cổng thanh toán ngân hàng quốc gia Napas / VietQR).
@@ -226,7 +226,7 @@ export default function PrivacyPolicy() {
             {/* Section 6 */}
             <section id="section-6" className="space-y-3 scroll-mt-24">
               <h2 className="text-xl font-bold text-[#00153D] flex items-center gap-2 border-b border-slate-100 pb-2">
-                6. Quyền kiểm soát & Tùy chỉnh của bạn
+                VI. Quyền kiểm soát & Tùy chỉnh của bạn
               </h2>
               <p>Bạn nắm quyền kiểm soát toàn bộ thông tin cá nhân của mình trên DORMI:</p>
               <div className="space-y-2 text-xs sm:text-sm">
@@ -248,7 +248,7 @@ export default function PrivacyPolicy() {
             {/* Section 7 */}
             <section id="section-7" className="space-y-3 scroll-mt-24">
               <h2 className="text-xl font-bold text-[#00153D] flex items-center gap-2 border-b border-slate-100 pb-2">
-                7. Lưu trữ & Biện pháp an toàn kỹ thuật
+                VII. Lưu trữ & Biện pháp an toàn kỹ thuật
               </h2>
               <p>
                 Dữ liệu của DORMI được lưu trữ trên hạ tầng máy chủ cơ sở dữ liệu đám mây được bảo vệ bởi tường lửa đa lớp, mã hóa đường truyền bằng giao thức SSL/TLS 1.3 và cơ chế sao lưu dự phòng định kỳ.
@@ -261,7 +261,7 @@ export default function PrivacyPolicy() {
             {/* Section 8 */}
             <section id="section-8" className="space-y-3 scroll-mt-24">
               <h2 className="text-xl font-bold text-[#00153D] flex items-center gap-2 border-b border-slate-100 pb-2">
-                8. Tiếp nhận phản ánh & Hỗ trợ
+                VIII. Tiếp nhận phản ánh & Hỗ trợ
               </h2>
               <p>
                 Mọi thắc mắc, phản ánh liên quan đến an toàn dữ liệu hoặc yêu cầu thực hiện quyền đối với dữ liệu cá nhân, người dùng có thể gửi yêu cầu hỗ trợ trực tiếp qua mục <strong>Trợ giúp & Báo cáo</strong> trên nền tảng DORMI. Đội ngũ kiểm duyệt và quản trị viên sẽ tiếp nhận và xử lý nhanh chóng trong vòng 24 - 48 giờ làm việc.
