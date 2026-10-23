@@ -93,6 +93,11 @@ cookies.txt
 /*_dor_*.js
 /*qa*.js
 /jira_*.csv
+/scripts/
+scripts/
+*.xlsx
+*.xls
+issues_dump.json
 
 # User-specific files
 *.rsuser
