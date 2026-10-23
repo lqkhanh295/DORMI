@@ -1,4 +1,4 @@
-import { Users, Crown, Code2, Layout, Palette, Megaphone, GraduationCap, IdCard, Sparkles, Camera } from 'lucide-react';
+import { Users, Crown, Code2, Layout, Megaphone, GraduationCap, IdCard, Camera } from 'lucide-react';
 
 interface TeamMember {
   name: string;
