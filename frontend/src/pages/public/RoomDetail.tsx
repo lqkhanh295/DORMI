@@ -323,12 +323,6 @@ export default function RoomDetail() {
                   >
                     <ShieldCheck className="w-4 h-4 text-blue-600" /> Điểm tin cậy: {trustScore?.totalScore ?? (roomData?.isVerifiedLandlord ? 85 : 70)}/100
                   </button>
-                  <button
-                    onClick={() => document.getElementById('tour-3d-section')?.scrollIntoView({ behavior: 'smooth' })}
-                    className="bg-indigo-50 text-indigo-800 border border-indigo-200 text-xs font-semibold px-3 py-1.5 rounded-md flex items-center gap-1.5 self-start hover:bg-indigo-100/70 transition-colors"
-                  >
-                    <Camera className="w-4 h-4 text-indigo-600" /> Tham quan 3D Tour
-                  </button>
                 </div>
               </div>
               <p className="text-body text-[#64748B]">{roomData?.address || 'Địa chỉ phòng trọ'}</p>
@@ -375,32 +369,6 @@ export default function RoomDetail() {
                     </span>
                   );
                 })}
-              </div>
-            </div>
-
-            {/* 3D Virtual Tour Section (Kuula / Matterport) */}
-            <div id="tour-3d-section" className="space-y-4 pt-6 border-t border-slate-200">
-              <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
-                <h2 className="text-h2 font-bold text-[#0F172A] flex items-center gap-2">
-                  <Camera className="w-6 h-6 text-indigo-600" />
-                  <span>Tham quan thực tế ảo 3D (360° VR Tour)</span>
-                </h2>
-                <span className="text-xs font-bold px-3 py-1 rounded-full bg-indigo-50 text-indigo-700 border border-indigo-200 self-start">
-                  Tương thích Kuula / Matterport 3D
-                </span>
-              </div>
-              <p className="text-caption text-slate-500">
-                Trải nghiệm xoay 360 độ góc nhìn thực tế từng ngóc ngách của căn phòng trước khi đặt lịch xem trực tiếp.
-              </p>
-
-              <div className="relative w-full h-[360px] md:h-[450px] bg-slate-900 rounded-[18px] overflow-hidden shadow-inner border border-slate-200">
-                <iframe
-                  title="3D Room Virtual Tour"
-                  src="https://kuula.co/share/collection/7l1P6?logo=0&info=0&fs=1&vr=1&sd=1&initload=0&thumbs=1"
-                  className="w-full h-full border-0"
-                  allowFullScreen
-                  loading="lazy"
-                />
               </div>
             </div>
 
