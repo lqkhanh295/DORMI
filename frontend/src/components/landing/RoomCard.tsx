@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
-import { CheckCircle, Heart, Camera, ShieldCheck } from 'lucide-react';
+import { CheckCircle, Heart } from 'lucide-react';
 import { toast } from 'sonner';
 import { favoritesApi } from '../../services/api';
 import { useStore } from '../../store/useStore';
@@ -100,16 +100,6 @@ export function RoomCard({
               <span>Đã xác minh</span>
             </div>
           )}
-          {(room.hasVirtualTour ?? true) && (
-            <div className="bg-slate-900/85 backdrop-blur-xs text-white border border-white/20 text-[10px] font-bold px-2 py-0.5 rounded-md flex items-center gap-1 shadow-xs select-none">
-              <Camera className="w-3 h-3 text-cyan-400" />
-              <span>3D Tour</span>
-            </div>
-          )}
-          <div className="bg-blue-600/90 backdrop-blur-xs text-white text-[10px] font-bold px-2 py-0.5 rounded-md flex items-center gap-1 shadow-xs select-none">
-            <ShieldCheck className="w-3 h-3 text-amber-300" />
-            <span>Trust {room.trustScore || 95}</span>
-          </div>
         </div>
 
         {/* Tactile Favorite Button */}
