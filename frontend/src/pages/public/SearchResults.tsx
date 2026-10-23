@@ -188,7 +188,7 @@ export default function SearchResults() {
         const normAddress = normalizeVietnamese(room.address || '');
         const normDesc = normalizeVietnamese((room as any).description || '');
         const queryTokens = normQ.split(/\s+/).filter(Boolean);
-        matchQuery = queryTokens.length === 0 || queryTokens.every(token => 
+        matchQuery = isMatchDistrict(searchQuery, room.address, room.title) || queryTokens.length === 0 || queryTokens.every(token => 
           normTitle.includes(token) || normAddress.includes(token) || normDesc.includes(token)
         );
       }

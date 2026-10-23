@@ -249,10 +249,10 @@ public class RoomService : IRoomService
                 (isTanBinh && r.Address.ToLower().Contains("tân bình")) ||
                 (isThuDuc && (r.Address.ToLower().Contains("thủ đức") || r.Address.ToLower().Contains("quận 9"))) ||
                 (isBinhThanh && r.Address.ToLower().Contains("bình thạnh")) ||
-                (isQ10 && (r.Address.ToLower().Contains("quận 10") || r.Address.ToLower().Contains("q.10") || r.Address.ToLower().Contains("q10"))) ||
-                (isQ1 && (r.Address.ToLower().Contains("quận 1") || r.Address.ToLower().Contains("q.1"))) ||
-                (isQ3 && (r.Address.ToLower().Contains("quận 3") || r.Address.ToLower().Contains("q.3"))) ||
-                (isQ7 && (r.Address.ToLower().Contains("quận 7") || r.Address.ToLower().Contains("q.7"))) ||
+                (isQ10 && (r.Address.ToLower().Contains("quận 10") || r.Address.ToLower().Contains("q.10") || r.Address.ToLower().Contains("q10") || r.Title.ToLower().Contains("quận 10") || r.Title.ToLower().Contains("q.10"))) ||
+                (isQ1 && (r.Address.ToLower().Contains("quận 1") || r.Address.ToLower().Contains("q.1") || r.Address.ToLower().Contains("q1") || r.Title.ToLower().Contains("quận 1") || r.Title.ToLower().Contains("q.1"))) ||
+                (isQ3 && (r.Address.ToLower().Contains("quận 3") || r.Address.ToLower().Contains("q.3") || r.Address.ToLower().Contains("q3") || r.Title.ToLower().Contains("quận 3") || r.Title.ToLower().Contains("q.3"))) ||
+                (isQ7 && (r.Address.ToLower().Contains("quận 7") || r.Address.ToLower().Contains("q.7") || r.Address.ToLower().Contains("q7") || r.Title.ToLower().Contains("quận 7") || r.Title.ToLower().Contains("q.7"))) ||
                 (isFPT && (r.Address.ToLower().Contains("thủ đức") || r.Address.ToLower().Contains("quận 9") || r.Title.ToLower().Contains("fpt") || r.Description.ToLower().Contains("fpt"))) ||
                 (isUEH && (r.Address.ToLower().Contains("quận 10") || r.Address.ToLower().Contains("quận 3") || r.Address.ToLower().Contains("quận 1") || r.Description.ToLower().Contains("ueh") || r.Title.ToLower().Contains("ueh"))) ||
                 (isBK && (r.Address.ToLower().Contains("quận 10") || r.Address.ToLower().Contains("thủ đức") || r.Description.ToLower().Contains("bách khoa"))) ||
@@ -277,8 +277,48 @@ public class RoomService : IRoomService
 
         if (!string.IsNullOrWhiteSpace(filter.District))
         {
-            var districtTerm = filter.District.Trim().ToLower();
-            query = query.Where(r => r.Address.ToLower().Contains(districtTerm));
+            var rawDistrict = filter.District.Trim().ToLower();
+            var isQ1 = rawDistrict.Contains("quận 1") || rawDistrict.Contains("quan 1") || rawDistrict == "q1" || rawDistrict == "q.1";
+            var isQ2 = rawDistrict.Contains("quận 2") || rawDistrict.Contains("quan 2") || rawDistrict == "q2" || rawDistrict == "q.2";
+            var isQ3 = rawDistrict.Contains("quận 3") || rawDistrict.Contains("quan 3") || rawDistrict == "q3" || rawDistrict == "q.3";
+            var isQ4 = rawDistrict.Contains("quận 4") || rawDistrict.Contains("quan 4") || rawDistrict == "q4" || rawDistrict == "q.4";
+            var isQ5 = rawDistrict.Contains("quận 5") || rawDistrict.Contains("quan 5") || rawDistrict == "q5" || rawDistrict == "q.5";
+            var isQ6 = rawDistrict.Contains("quận 6") || rawDistrict.Contains("quan 6") || rawDistrict == "q6" || rawDistrict == "q.6";
+            var isQ7 = rawDistrict.Contains("quận 7") || rawDistrict.Contains("quan 7") || rawDistrict == "q7" || rawDistrict == "q.7";
+            var isQ8 = rawDistrict.Contains("quận 8") || rawDistrict.Contains("quan 8") || rawDistrict == "q8" || rawDistrict == "q.8";
+            var isQ9 = rawDistrict.Contains("quận 9") || rawDistrict.Contains("quan 9") || rawDistrict == "q9" || rawDistrict == "q.9";
+            var isQ10 = rawDistrict.Contains("quận 10") || rawDistrict.Contains("quan 10") || rawDistrict == "q10" || rawDistrict == "q.10";
+            var isQ11 = rawDistrict.Contains("quận 11") || rawDistrict.Contains("quan 11") || rawDistrict == "q11" || rawDistrict == "q.11";
+            var isQ12 = rawDistrict.Contains("quận 12") || rawDistrict.Contains("quan 12") || rawDistrict == "q12" || rawDistrict == "q.12";
+            var isBinhThanh = rawDistrict.Contains("bình thạnh") || rawDistrict.Contains("binh thanh");
+            var isTanBinh = rawDistrict.Contains("tân bình") || rawDistrict.Contains("tan binh");
+            var isTanPhu = rawDistrict.Contains("tân phú") || rawDistrict.Contains("tan phu");
+            var isGoVap = rawDistrict.Contains("gò vấp") || rawDistrict.Contains("go vap");
+            var isPhuNhuan = rawDistrict.Contains("phú nhuận") || rawDistrict.Contains("phu nhuan");
+            var isThuDuc = rawDistrict.Contains("thủ đức") || rawDistrict.Contains("thu duc");
+
+            query = query.Where(r =>
+                r.Address.ToLower().Contains(rawDistrict) ||
+                r.Title.ToLower().Contains(rawDistrict) ||
+                (isQ1 && (r.Address.ToLower().Contains("quận 1") || r.Address.ToLower().Contains("q.1") || r.Address.ToLower().Contains("q1") || r.Title.ToLower().Contains("quận 1") || r.Title.ToLower().Contains("q.1"))) ||
+                (isQ2 && (r.Address.ToLower().Contains("quận 2") || r.Address.ToLower().Contains("q.2") || r.Address.ToLower().Contains("q2") || r.Title.ToLower().Contains("quận 2"))) ||
+                (isQ3 && (r.Address.ToLower().Contains("quận 3") || r.Address.ToLower().Contains("q.3") || r.Address.ToLower().Contains("q3") || r.Title.ToLower().Contains("quận 3") || r.Title.ToLower().Contains("q.3"))) ||
+                (isQ4 && (r.Address.ToLower().Contains("quận 4") || r.Address.ToLower().Contains("q.4") || r.Address.ToLower().Contains("q4") || r.Title.ToLower().Contains("quận 4"))) ||
+                (isQ5 && (r.Address.ToLower().Contains("quận 5") || r.Address.ToLower().Contains("q.5") || r.Address.ToLower().Contains("q5") || r.Title.ToLower().Contains("quận 5"))) ||
+                (isQ6 && (r.Address.ToLower().Contains("quận 6") || r.Address.ToLower().Contains("q.6") || r.Address.ToLower().Contains("q6") || r.Title.ToLower().Contains("quận 6"))) ||
+                (isQ7 && (r.Address.ToLower().Contains("quận 7") || r.Address.ToLower().Contains("q.7") || r.Address.ToLower().Contains("q7") || r.Title.ToLower().Contains("quận 7") || r.Title.ToLower().Contains("q.7"))) ||
+                (isQ8 && (r.Address.ToLower().Contains("quận 8") || r.Address.ToLower().Contains("q.8") || r.Address.ToLower().Contains("q8") || r.Title.ToLower().Contains("quận 8"))) ||
+                (isQ9 && (r.Address.ToLower().Contains("quận 9") || r.Address.ToLower().Contains("q.9") || r.Address.ToLower().Contains("q9") || r.Title.ToLower().Contains("quận 9"))) ||
+                (isQ10 && (r.Address.ToLower().Contains("quận 10") || r.Address.ToLower().Contains("q.10") || r.Address.ToLower().Contains("q10") || r.Title.ToLower().Contains("quận 10") || r.Title.ToLower().Contains("q.10"))) ||
+                (isQ11 && (r.Address.ToLower().Contains("quận 11") || r.Address.ToLower().Contains("q.11") || r.Address.ToLower().Contains("q11") || r.Title.ToLower().Contains("quận 11"))) ||
+                (isQ12 && (r.Address.ToLower().Contains("quận 12") || r.Address.ToLower().Contains("q.12") || r.Address.ToLower().Contains("q12") || r.Title.ToLower().Contains("quận 12"))) ||
+                (isBinhThanh && (r.Address.ToLower().Contains("bình thạnh") || r.Title.ToLower().Contains("bình thạnh"))) ||
+                (isTanBinh && (r.Address.ToLower().Contains("tân bình") || r.Title.ToLower().Contains("tân bình"))) ||
+                (isTanPhu && (r.Address.ToLower().Contains("tân phú") || r.Title.ToLower().Contains("tân phú"))) ||
+                (isGoVap && (r.Address.ToLower().Contains("gò vấp") || r.Title.ToLower().Contains("gò vấp"))) ||
+                (isPhuNhuan && (r.Address.ToLower().Contains("phú nhuận") || r.Title.ToLower().Contains("phú nhuận"))) ||
+                (isThuDuc && (r.Address.ToLower().Contains("thủ đức") || r.Address.ToLower().Contains("quận 9") || r.Address.ToLower().Contains("quận 2") || r.Title.ToLower().Contains("thủ đức")))
+            );
         }
 
         Point? userPoint = null;
