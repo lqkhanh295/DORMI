@@ -1,15 +1,15 @@
 import { useState } from 'react';
 import { Link } from 'react-router-dom';
-import { 
-  Search, 
-  UserPlus, 
-  PhoneCall, 
-  CheckCircle, 
-  Mail, 
-  Phone, 
-  Copy, 
-  Check, 
-  X, 
+import {
+  Search,
+  UserPlus,
+  PhoneCall,
+  CheckCircle,
+  Mail,
+  Phone,
+  Copy,
+  Check,
+  X,
   Clock,
   ExternalLink,
   MessageCircle
@@ -40,21 +40,21 @@ export function FinalCTA() {
   };
 
   return (
-    <section className="py-20 bg-[#00153D] text-white relative overflow-hidden">
+    <section className="py-12 sm:py-16 bg-[#00153D] text-white relative overflow-hidden">
       {/* Subtle radial glow */}
       <div className="absolute inset-0 bg-[radial-gradient(circle_at_top_right,rgba(7,51,114,0.6),transparent_50%)] pointer-events-none" />
-      
-      <div className="container-dormi relative z-10 text-center max-w-4xl mx-auto space-y-8">
+
+      <div className="container-dormi relative z-10 text-center max-w-6xl mx-auto space-y-6">
         <div className="space-y-4">
           <div className="inline-flex items-center gap-2 px-3.5 py-1 rounded-full bg-white/10 text-[#F2A900] text-xs font-bold border border-white/20">
             <CheckCircle className="w-3.5 h-3.5 text-[#F2A900]" />
             <span>Nền tảng mở công khai - Không cần đăng nhập để trải nghiệm</span>
           </div>
 
-          <h2 className="text-3xl md:text-4xl lg:text-5xl font-black tracking-tight text-white leading-tight">
+          <h2 className="text-2xl sm:text-3xl lg:text-4xl xl:text-[42px] font-black tracking-tight text-white leading-tight whitespace-normal sm:whitespace-nowrap">
             Trải nghiệm tìm trọ & ở ghép thế hệ mới ngay hôm nay
           </h2>
-          
+
           <p className="text-slate-300 text-sm md:text-base max-w-2xl mx-auto font-normal leading-relaxed">
             Hàng trăm phòng trọ đã xác thực 3 lớp, tọa độ bản đồ số chính xác và thuật toán gợi ý bạn cùng phòng tương thích đang sẵn sàng phục vụ bạn.
           </p>
@@ -63,17 +63,17 @@ export function FinalCTA() {
         {/* 3 Action Buttons: Dùng thử / Đăng ký / Liên hệ */}
         <div className="flex flex-wrap items-center justify-center gap-3.5 pt-2">
           {/* 1. Dùng thử tìm phòng */}
-          <Link 
-            to="/search" 
+          <Link
+            to="/search"
             className="w-full sm:w-auto bg-[#F2A900] hover:bg-[#d99700] text-[#00153D] font-bold px-7 py-3.5 rounded-xl transition-all shadow-md text-sm flex items-center justify-center gap-2 active:scale-[0.98]"
           >
             <Search className="w-4 h-4 text-[#00153D]" />
-            <span>Dùng thử tìm phòng</span>
+            <span>Tìm phòng</span>
           </Link>
 
           {/* 2. Đăng ký tài khoản */}
-          <Link 
-            to="/auth?tab=register" 
+          <Link
+            to="/auth?tab=register"
             className="w-full sm:w-auto bg-blue-600 hover:bg-blue-700 text-white font-bold px-7 py-3.5 rounded-xl transition-all shadow-md text-sm flex items-center justify-center gap-2 active:scale-[0.98]"
           >
             <UserPlus className="w-4 h-4 text-white" />
@@ -81,7 +81,7 @@ export function FinalCTA() {
           </Link>
 
           {/* 3. Liên hệ hỗ trợ */}
-          <button 
+          <button
             type="button"
             onClick={() => setShowContactModal(true)}
             className="w-full sm:w-auto bg-white/10 hover:bg-white/20 text-white border border-white/25 font-bold px-6 py-3.5 rounded-xl transition-all text-sm flex items-center justify-center gap-2 active:scale-[0.98] cursor-pointer"
@@ -94,11 +94,11 @@ export function FinalCTA() {
 
       {/* Modal Liên hệ hỗ trợ */}
       {showContactModal && (
-        <div 
+        <div
           className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-xs animate-in fade-in duration-200"
           onClick={() => setShowContactModal(false)}
         >
-          <div 
+          <div
             className="bg-white text-slate-900 rounded-2xl w-full max-w-md p-6 shadow-2xl border border-slate-200 relative text-left"
             onClick={e => e.stopPropagation()}
           >

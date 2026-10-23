@@ -25,6 +25,9 @@ export default function LandingPage() {
 
   return (
     <div className="space-y-0">
+      {/* 1. CALL TO ACTION BANNER (TOP OF PAGE) */}
+      <FinalCTA />
+
       {/* 1. COMPACT HERO & INSTANT SEARCH BAR (AIRBNB STYLE) */}
       <HeroSearch 
         district={district}
@@ -49,9 +52,6 @@ export default function LandingPage() {
         verifiedOnly={verifiedOnly}
         onResetFilters={handleResetFilters}
       />
-
-      {/* 3. CALL TO ACTION & TRẢI NGHIỆM TRỰC TIẾP */}
-      <FinalCTA />
 
       {/* 3. VẤN ĐỀ VÀ GIẢI PHÁP (PROBLEM & SOLUTION) */}
       <ProblemSolutionSection />
