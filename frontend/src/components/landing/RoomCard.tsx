@@ -16,8 +16,6 @@ export interface RoomItem {
   verified?: boolean;
   isBoosted?: boolean;
   boostType?: string;
-  hasVirtualTour?: boolean;
-  trustScore?: number;
 }
 
 export function RoomCard({ 
