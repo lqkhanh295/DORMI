@@ -25,6 +25,7 @@ import { Link } from 'react-router-dom';
 export default function LeadAnalytics() {
   const [analytics, setAnalytics] = useState<any>(null);
   const [loading, setLoading] = useState(true);
+  const [hoveredPoint, setHoveredPoint] = useState<any | null>(null);
 
   // Boost modal state
   const [boostingRoom, setBoostingRoom] = useState<any | null>(null);
@@ -69,7 +70,6 @@ export default function LeadAnalytics() {
 
   const dailyViews = analytics?.dailyViews ?? analytics?.dailyMetrics ?? [];
   const roomStats = analytics?.roomStats ?? analytics?.topRooms ?? [];
-  const maxDayViews = Math.max(...dailyViews.map((d: any) => d.views || 0), 1);
 
   const handleOpenBoost = (room: any) => {
     setBoostingRoom(room);
@@ -233,20 +233,35 @@ export default function LeadAnalytics() {
           {/* Main Charts Area */}
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
             {/* 30-Day Trend */}
-            <Card className="p-6 lg:col-span-2 bg-white rounded-2xl shadow-clay-soft border-none space-y-4">
+            <Card className="p-6 lg:col-span-2 bg-white rounded-2xl shadow-clay-soft border-none space-y-4 relative">
               <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 pb-2 border-b border-[#F1F5F9]">
                 <div>
                   <h3 className="font-bold text-base text-[#0F172A]">Xu hướng Lượt xem & Khách lưu (30 Ngày)</h3>
                   <p className="text-xs text-[#64748B]">Theo dõi biến động nhu cầu thuê phòng theo chu kỳ thời gian.</p>
                 </div>
-                <div className="flex items-center gap-4 text-xs font-semibold">
-                  <span className="flex items-center gap-1.5 text-blue-600">
-                    <div className="w-2.5 h-2.5 bg-blue-600 rounded-full" /> Lượt xem
-                  </span>
-                  <span className="flex items-center gap-1.5 text-rose-500">
-                    <div className="w-2.5 h-2.5 bg-rose-500 rounded-full" /> Đã lưu
-                  </span>
-                </div>
+
+                {hoveredPoint ? (
+                  <div className="flex items-center gap-3 bg-slate-900 text-white text-xs px-3 py-1 rounded-xl shadow-md">
+                    <span className="font-semibold text-slate-300">Ngày {hoveredPoint.date}:</span>
+                    <span className="flex items-center gap-1 font-bold text-blue-300">
+                      <span className="w-2 h-2 rounded-full bg-blue-500 inline-block" />
+                      {hoveredPoint.views} lượt xem
+                    </span>
+                    <span className="flex items-center gap-1 font-bold text-rose-300">
+                      <span className="w-2 h-2 rounded-full bg-rose-500 inline-block" />
+                      {hoveredPoint.saves} quan tâm
+                    </span>
+                  </div>
+                ) : (
+                  <div className="flex items-center gap-4 text-xs font-semibold">
+                    <span className="flex items-center gap-1.5 text-blue-600">
+                      <div className="w-2.5 h-2.5 bg-blue-600 rounded-full" /> Lượt xem
+                    </span>
+                    <span className="flex items-center gap-1.5 text-rose-500">
+                      <div className="w-2.5 h-2.5 bg-rose-500 rounded-full" /> Đã lưu
+                    </span>
+                  </div>
+                )}
               </div>
 
               {dailyViews.length === 0 ? (
@@ -254,34 +269,118 @@ export default function LeadAnalytics() {
                   Chưa có đủ dữ liệu biến động trong 30 ngày qua.
                 </div>
               ) : (
-                <div className="space-y-3 pt-4">
-                  <div className="h-60 flex items-end justify-between gap-2 border-b border-l border-[#E2E8F0] pb-2 pl-2">
-                    {dailyViews.map((item: any, i: number) => {
-                      const viewHeight = Math.min(100, Math.max(8, (item.views / maxDayViews) * 100));
-                      const saveHeight = Math.min(100, Math.max(4, (item.saves / maxDayViews) * 100));
-                      return (
-                        <div key={i} className="flex flex-col items-center gap-1 flex-1 group relative">
-                          <div className="w-full flex justify-center items-end gap-1 h-full">
-                            <div 
-                              className="w-full max-w-[8px] bg-[#E11D48] rounded-t-sm" 
-                              style={{ height: `${saveHeight}%` }}
-                              title={`Lưu: ${item.saves}`}
-                            />
-                            <div 
-                              className="w-full max-w-[8px] bg-[#2563EB] rounded-t-sm" 
-                              style={{ height: `${viewHeight}%` }}
-                              title={`Xem: ${item.views}`}
-                            />
-                          </div>
-                        </div>
-                      );
-                    })}
-                  </div>
-                  <div className="flex justify-between text-[11px] text-[#64748B] px-1">
-                    <span>{dailyViews[0]?.date || 'Bắt đầu'}</span>
-                    <span>{dailyViews[Math.floor(dailyViews.length / 2)]?.date || 'Giữa kỳ'}</span>
-                    <span>{dailyViews[dailyViews.length - 1]?.date || 'Hôm nay'}</span>
-                  </div>
+                <div className="w-full pt-2">
+                  {(() => {
+                    const maxVal = Math.max(
+                      ...dailyViews.map((d: any) => Math.max(Number(d.views) || 0, Number(d.saves) || 0)),
+                      4
+                    );
+                    const plotW = 590;
+                    const plotH = 135;
+                    const padL = 35;
+                    const yBase = 155;
+                    const step = plotW / dailyViews.length;
+
+                    return (
+                      <div className="relative w-full">
+                        <svg viewBox="0 0 650 185" className="w-full h-56 select-none overflow-visible">
+                          {/* Y-axis gridlines */}
+                          {[0, 0.5, 1].map((ratio, idx) => {
+                            const y = yBase - ratio * plotH;
+                            const val = Math.round(ratio * maxVal);
+                            return (
+                              <g key={idx}>
+                                <line 
+                                  x1={padL} 
+                                  y1={y} 
+                                  x2={padL + plotW} 
+                                  y2={y} 
+                                  stroke="#F1F5F9" 
+                                  strokeWidth={ratio === 0 ? 1.5 : 1}
+                                  strokeDasharray={ratio === 0 ? undefined : "3 3"} 
+                                />
+                                <text 
+                                  x={padL - 8} 
+                                  y={y + 3} 
+                                  textAnchor="end" 
+                                  fill="#94A3B8" 
+                                  fontSize="10" 
+                                  fontWeight="600"
+                                >
+                                  {val}
+                                </text>
+                              </g>
+                            );
+                          })}
+
+                          {/* Grouped Bars per day */}
+                          {dailyViews.map((item: any, i: number) => {
+                            const cx = padL + i * step + step / 2;
+                            const views = Number(item.views) || 0;
+                            const saves = Number(item.saves) || 0;
+                            const vHeight = maxVal > 0 ? (views / maxVal) * (plotH - 8) : 0;
+                            const sHeight = maxVal > 0 ? (saves / maxVal) * (plotH - 8) : 0;
+                            const isHovered = hoveredPoint === item;
+
+                            return (
+                              <g key={i}>
+                                {/* Hover background pill */}
+                                <rect 
+                                  x={cx - step / 2 + 2} 
+                                  y={15} 
+                                  width={step - 4} 
+                                  height={plotH + 8} 
+                                  fill={isHovered ? "rgba(241, 245, 249, 0.85)" : "transparent"} 
+                                  rx="8" 
+                                  className="cursor-pointer transition-colors duration-150"
+                                  onMouseEnter={() => setHoveredPoint(item)}
+                                  onMouseLeave={() => setHoveredPoint(null)}
+                                />
+
+                                {/* Blue View Bar */}
+                                <rect 
+                                  x={cx - 10} 
+                                  y={yBase - Math.max(views > 0 ? 6 : 0, vHeight)} 
+                                  width="8" 
+                                  height={Math.max(views > 0 ? 6 : 0, vHeight)} 
+                                  fill="#2563EB" 
+                                  rx="3" 
+                                  className="pointer-events-none transition-all duration-200"
+                                />
+
+                                {/* Rose Save Bar */}
+                                <rect 
+                                  x={cx + 2} 
+                                  y={yBase - Math.max(saves > 0 ? 6 : 0, sHeight)} 
+                                  width="8" 
+                                  height={Math.max(saves > 0 ? 6 : 0, sHeight)} 
+                                  fill="#E11D48" 
+                                  rx="3" 
+                                  className="pointer-events-none transition-all duration-200"
+                                />
+
+                                {/* X-axis Date label */}
+                                <text 
+                                  x={cx} 
+                                  y={yBase + 18} 
+                                  textAnchor="middle" 
+                                  fill={isHovered ? "#0F172A" : "#64748B"} 
+                                  fontSize="10" 
+                                  fontWeight={isHovered ? "700" : "500"}
+                                  className="pointer-events-none"
+                                >
+                                  {item.date}
+                                </text>
+                              </g>
+                            );
+                          })}
+
+                          {/* Base axis border */}
+                          <line x1={padL} y1={yBase} x2={padL + plotW} y2={yBase} stroke="#CBD5E1" strokeWidth="1.5" />
+                        </svg>
+                      </div>
+                    );
+                  })()}
                 </div>
               )}
             </Card>
