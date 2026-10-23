@@ -92,6 +92,58 @@ export function normalizeVietnamese(str: string): string {
     .trim();
 }
 
+export const DISTRICT_ALIASES: Record<string, string[]> = {
+  'quận 1': ['quận 1', 'quan 1', 'q.1', 'q1', 'q 1', 'q. 1'],
+  'quận 2': ['quận 2', 'quan 2', 'q.2', 'q2', 'q 2', 'q. 2'],
+  'quận 3': ['quận 3', 'quan 3', 'q.3', 'q3', 'q 3', 'q. 3'],
+  'quận 4': ['quận 4', 'quan 4', 'q.4', 'q4', 'q 4', 'q. 4'],
+  'quận 5': ['quận 5', 'quan 5', 'q.5', 'q5', 'q 5', 'q. 5'],
+  'quận 6': ['quận 6', 'quan 6', 'q.6', 'q6', 'q 6', 'q. 6'],
+  'quận 7': ['quận 7', 'quan 7', 'q.7', 'q7', 'q 7', 'q. 7'],
+  'quận 8': ['quận 8', 'quan 8', 'q.8', 'q8', 'q 8', 'q. 8'],
+  'quận 9': ['quận 9', 'quan 9', 'q.9', 'q9', 'q 9', 'q. 9'],
+  'quận 10': ['quận 10', 'quan 10', 'q.10', 'q10', 'q 10', 'q. 10'],
+  'quận 11': ['quận 11', 'quan 11', 'q.11', 'q11', 'q 11', 'q. 11'],
+  'quận 12': ['quận 12', 'quan 12', 'q.12', 'q12', 'q 12', 'q. 12'],
+  'bình thạnh': ['bình thạnh', 'binh thanh', 'bthanh'],
+  'tân bình': ['tân bình', 'tan binh'],
+  'tân phú': ['tân phú', 'tan phu'],
+  'gò vấp': ['gò vấp', 'go vap', 'gv'],
+  'phú nhuận': ['phú nhuận', 'phu nhuan', 'pn'],
+  'thủ đức': ['thủ đức', 'thu duc', 'quận 9', 'quận 2', 'q.9', 'q.2', 'q9', 'q2', 'tp.thủ đức', 'tp thủ đức', 'tp. thu duc', 'tp thu duc'],
+  'bình tân': ['bình tân', 'binh tan'],
+  'nhà bè': ['nhà bè', 'nha be'],
+  'bình chánh': ['bình chánh', 'binh chanh'],
+  'hóc môn': ['hóc môn', 'hoc mon'],
+  'củ chi': ['củ chi', 'cu chi'],
+  'cần giờ': ['cần giờ', 'can gio'],
+};
+
+export function isMatchDistrict(targetDistrict: string | null | undefined, address: string = '', title: string = ''): boolean {
+  if (!targetDistrict || !targetDistrict.trim()) return true;
+
+  const normTarget = normalizeVietnamese(targetDistrict).trim();
+  const normAddress = normalizeVietnamese(address);
+  const normTitle = normalizeVietnamese(title);
+
+  // Direct substring check
+  if (normAddress.includes(normTarget) || normTitle.includes(normTarget)) {
+    return true;
+  }
+
+  // Find alias dictionary key
+  const matchedKey = Object.keys(DISTRICT_ALIASES).find(k => normalizeVietnamese(k) === normTarget);
+  const aliases = matchedKey ? DISTRICT_ALIASES[matchedKey] : [normTarget];
+
+  return aliases.some(alias => {
+    const normAlias = normalizeVietnamese(alias);
+    // Boundary check for short aliases (e.g. q1, q.1, q3) to avoid accidental matching in words
+    const escaped = normAlias.replace(/[-/\\^$*+?.()|[\]{}]/g, '\\$&');
+    const rx = new RegExp('(^|[^a-z0-9])' + escaped + '([^a-z0-9]|$)', 'i');
+    return rx.test(normAddress) || rx.test(normTitle) || normAddress.includes(normAlias) || normTitle.includes(normAlias);
+  });
+}
+
 // Known landmarks and street coordinates across Ho Chi Minh City
 const STREET_COORDINATES: Record<string, [number, number]> = {
   // District 1

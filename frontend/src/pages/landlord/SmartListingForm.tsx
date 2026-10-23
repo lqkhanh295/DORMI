@@ -249,7 +249,7 @@ export default function SmartListingForm() {
   };
 
   const handleFinalSubmit = async () => {
-    const success = await createListingWithApi({
+    const res = await createListingWithApi({
       title: title.trim() || 'Phòng trọ tiện nghi trung tâm',
       description: description.trim() || 'Phòng trọ sạch sẽ, thoáng mát, đầy đủ tiện nghi, an ninh 24/7.',
       price: parseFloat(price) || 3500000,
@@ -262,11 +262,11 @@ export default function SmartListingForm() {
         : ['https://images.unsplash.com/photo-1522708323590-d24dbb6b0267?auto=format&fit=crop&w=800&q=80']
     });
 
-    if (success) {
-      alert('Đã đăng phòng trọ! Tin đăng đang chờ duyệt.');
+    if (res.success) {
+      alert('Đã đăng phòng trọ thành công! Tin đăng đang ở trạng thái chờ duyệt.');
       navigate('/landlord');
     } else {
-      alert('Không thể tạo bài đăng. Vui lòng kiểm tra lại thông tin.');
+      alert(res.message || 'Không thể tạo bài đăng. Vui lòng kiểm tra lại thông tin.');
     }
   };
 

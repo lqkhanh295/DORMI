@@ -76,7 +76,7 @@ interface AppState {
   logout: () => void;
   fetchListings: (params?: Parameters<typeof roomsApi.getRooms>[0]) => Promise<void>;
   addListing: (listing: Omit<Listing, 'id' | 'landlordId'>) => void;
-  createListingWithApi: (data: any) => Promise<boolean>;
+  createListingWithApi: (data: any) => Promise<{ success: boolean; message?: string }>;
   updateListing: (id: string, updates: Partial<Listing>) => void;
   sendMessage: (receiverId: string, text: string) => void;
   sendMessageWithApi: (receiverId: string, text: string) => Promise<boolean>;
@@ -200,10 +200,10 @@ export const useStore = create<AppState>()(
         try {
           await roomsApi.createRoom(data);
           get().fetchListings();
-          return true;
-        } catch (err) {
+          return { success: true };
+        } catch (err: any) {
           console.error('API createRoom failed:', err);
-          return false;
+          return { success: false, message: err?.message || 'Không thể tạo bài đăng.' };
         }
       },
 

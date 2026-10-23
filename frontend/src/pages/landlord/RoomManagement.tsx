@@ -5,7 +5,7 @@ import { Card } from '../../components/ui/Card';
 import { Button } from '../../components/ui/Button';
 import { roomsApi, imagesApi, landlordApi, type RoomResponse } from '../../services/api';
 import { toast } from 'sonner';
-import { Pencil, Eye, EyeOff, Trash2, CheckCircle2, Clock, XCircle, Image as ImageIcon, Check, X, Plus, Camera, Flame, Heart } from 'lucide-react';
+import { Pencil, Eye, EyeOff, Trash2, CheckCircle2, Clock, XCircle, Image as ImageIcon, Check, X, Plus, Camera, Flame, Heart, AlertTriangle } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { modalBackdropVariants, modalContentVariants } from '../../utils/motion';
 import { PageMotion } from '../../components/common/Motion';
@@ -403,34 +403,85 @@ export default function RoomManagement() {
           <p className="text-body text-[#64748B]">Theo dõi danh sách phòng, trạng thái duyệt và quản lý gói đẩy tin.</p>
         </div>
         <div className="flex items-center gap-3">
-          <div className="text-xs px-3.5 py-1.5 rounded-xl bg-white border border-slate-200 text-slate-700 shadow-xs flex items-center gap-2">
+          <div className={`text-xs px-3.5 py-1.5 rounded-xl border shadow-xs flex items-center gap-2 ${
+            !isAdmin && planInfo.roomsUsed >= planInfo.maxRoomLimit && planInfo.maxRoomLimit < 999
+              ? 'bg-amber-50/90 border-amber-300 text-amber-900'
+              : 'bg-white border-slate-200 text-slate-700'
+          }`}>
             <span className={`w-2 h-2 rounded-full ${
               isAdmin
                 ? 'bg-amber-500'
-                : (planInfo.currentPlan.toLowerCase().includes('pro') 
-                  ? 'bg-blue-600' 
-                  : (planInfo.currentPlan.toLowerCase().includes('business') ? 'bg-purple-600' : 'bg-emerald-600'))
+                : (!isAdmin && planInfo.roomsUsed >= planInfo.maxRoomLimit && planInfo.maxRoomLimit < 999
+                  ? 'bg-amber-500 animate-pulse'
+                  : (planInfo.currentPlan.toLowerCase().includes('pro') 
+                    ? 'bg-blue-600' 
+                    : (planInfo.currentPlan.toLowerCase().includes('business') ? 'bg-purple-600' : 'bg-emerald-600')))
             }`} />
             <span className="font-bold">
               {isAdmin
                 ? `Toàn quyền Admin: Không giới hạn (${myRooms.length} phòng)`
                 : (planInfo.currentPlan.toLowerCase().includes('business') 
                   ? `Gói Doanh Nghiệp (${planInfo.roomsUsed} phòng)` 
-                  : `${planInfo.currentPlan.toLowerCase().includes('pro') ? 'Gói Pro' : 'Gói Miễn Phí'}: ${planInfo.roomsUsed}/${planInfo.maxRoomLimit} tin`)}
+                  : `${planInfo.currentPlan.toLowerCase().includes('pro') ? 'Gói Pro' : 'Gói Miễn Phí'}: ${planInfo.roomsUsed}/${planInfo.maxRoomLimit} tin${!isAdmin && planInfo.roomsUsed >= planInfo.maxRoomLimit && planInfo.maxRoomLimit < 999 ? ' (Hết hạn mức)' : ''}`)}
             </span>
             {!isAdmin && planInfo.roomsUsed >= planInfo.maxRoomLimit && planInfo.maxRoomLimit < 999 && (
               <button 
                 type="button" 
                 onClick={() => navigate('/landlord/pricing')}
-                className="text-blue-600 hover:text-blue-700 font-bold underline ml-1 cursor-pointer"
+                className="text-amber-800 hover:text-amber-900 font-bold underline ml-1 cursor-pointer"
               >
                 Nâng cấp
               </button>
             )}
           </div>
-          <Button onClick={() => setIsAdding(true)}>+ Thêm phòng mới</Button>
+          <Button 
+            onClick={() => {
+              if (!isAdmin && planInfo.roomsUsed >= planInfo.maxRoomLimit && planInfo.maxRoomLimit < 999) {
+                toast.error(
+                  `Bạn đang có ${planInfo.roomsUsed}/${planInfo.maxRoomLimit} tin đăng (đạt giới hạn của ${planInfo.currentPlan.toLowerCase().includes('pro') ? 'Gói Pro' : 'Gói Miễn Phí'}). Vui lòng nâng cấp gói để đăng thêm phòng!`,
+                  {
+                    action: {
+                      label: 'Nâng cấp ngay',
+                      onClick: () => navigate('/landlord/pricing')
+                    }
+                  }
+                );
+                return;
+              }
+              setIsAdding(true);
+            }}
+          >
+            + Thêm phòng mới
+          </Button>
         </div>
       </div>
+
+      {!isAdmin && planInfo.roomsUsed >= planInfo.maxRoomLimit && planInfo.maxRoomLimit < 999 && (
+        <div className="bg-amber-50/90 border border-amber-200 rounded-2xl p-4 flex flex-col sm:flex-row sm:items-center justify-between gap-3 text-amber-900 shadow-xs">
+          <div className="flex items-start sm:items-center gap-3">
+            <div className="w-8 h-8 rounded-xl bg-amber-500 text-white flex items-center justify-center shrink-0">
+              <AlertTriangle className="w-4 h-4" />
+            </div>
+            <div>
+              <p className="text-xs font-bold">
+                {planInfo.roomsUsed > planInfo.maxRoomLimit
+                  ? `Tài khoản đang có ${planInfo.roomsUsed} tin (vượt quá hạn mức ${planInfo.maxRoomLimit} tin của Gói ${planInfo.currentPlan.toLowerCase().includes('pro') ? 'Pro' : 'Miễn Phí'}).`
+                  : `Bạn đã sử dụng hết hạn mức ${planInfo.maxRoomLimit}/${planInfo.maxRoomLimit} tin của Gói ${planInfo.currentPlan.toLowerCase().includes('pro') ? 'Pro' : 'Miễn Phí'}.`}
+              </p>
+              <p className="text-[11px] text-amber-700 mt-0.5">
+                Các tin hiện tại vẫn hiển thị bình thường. Để đăng thêm phòng mới, vui lòng nâng cấp gói hội viên.
+              </p>
+            </div>
+          </div>
+          <Button 
+            variant="primary" 
+            onClick={() => navigate('/landlord/pricing')}
+            className="shrink-0 text-xs px-3.5 py-1.5 bg-blue-600 hover:bg-blue-700 text-white font-bold"
+          >
+            Nâng cấp Gói dịch vụ
+          </Button>
+        </div>
+      )}
 
       <div className="grid grid-cols-1 gap-6">
         {loading ? (

@@ -1,0 +1,257 @@
+erDiagram
+    %% ==========================================================
+    %% CỤM 1: USER / AUTH & VERIFICATION
+    %% ==========================================================
+    Users ||--o{ Rooms : "1 to 0..N (FK_LandlordId)"
+    Users ||--o{ RoommatePosts : "1 to 0..N (FK_CustomerId)"
+    Users ||--o{ LandlordSubscriptions : "1 to 0..N (FK_LandlordId)"
+    Users ||--o{ VerificationRequests : "1 to 0..N (FK_UserId)"
+    Users ||--o{ PaymentTransactions : "1 to 0..N (FK_UserId)"
+
+    %% ==========================================================
+    %% CỤM 2: ROOM & INTERACTION DETAILS
+    %% ==========================================================
+    Rooms ||--o{ RoomImages : "1 to 0..N (FK_RoomId)"
+    Rooms ||--o{ FavoriteRooms : "1 to 0..N (FK_RoomId)"
+    Users ||--o{ FavoriteRooms : "1 to 0..N (FK_CustomerId)"
+    Rooms ||--o{ RoomReviews : "1 to 0..N (FK_RoomId)"
+    Rooms ||--o{ RoomReports : "1 to 0..N (FK_RoomId)"
+    Rooms ||--o{ RoomViews : "1 to 0..N (FK_RoomId)"
+    Rooms ||--o{ RoommatePosts : "0..1 to 0..N (FK_RoomId)"
+    Rooms ||--o{ VerificationRequests : "0..1 to 0..N (FK_RoomId)"
+
+    %% ==========================================================
+    %% CỤM 3: APPLICATION & VIEWING (GIỮA USER & ROOM)
+    %% ==========================================================
+    Rooms ||--o{ ViewingAppointments : "1 to 0..N (FK_RoomId)"
+    Users ||--o{ ViewingAppointments : "1 to 0..N (FK_CustomerId)"
+
+    Rooms ||--o{ RentalApplications : "1 to 0..N (FK_RoomId)"
+    Users ||--o{ RentalApplications : "1 to 0..N (FK_TenantId)"
+    RentalApplications ||--o{ ApplicationDocuments : "1 to 0..N (FK_RentalApplicationId)"
+
+    %% ==========================================================
+    %% CỤM 4: LEASE CONTRACT (CHUYỂN ĐỔI TỪ APPLICATION)
+    %% ==========================================================
+    RentalApplications ||--o| LeaseContracts : "1 to 0..1 (FK_RentalApplicationId)"
+    Rooms ||--o{ LeaseContracts : "1 to 0..N (FK_RoomId)"
+    Users ||--o{ LeaseContracts : "1 to 0..N (FK_TenantId)"
+    LeaseContracts ||--o{ LeaseDocuments : "1 to 0..N (FK_LeaseContractId)"
+
+    %% ==========================================================
+    %% CỤM 5: PAYMENT GATEWAY & BILLING SCHEDULES
+    %% ==========================================================
+    LandlordSubscriptions ||--o{ PaymentTransactions : "1 to 0..N (FK_SubscriptionId)"
+    Rooms ||--o{ PaymentTransactions : "0..1 to 0..N (FK_RoomId)"
+    LeaseContracts ||--o{ RentalPaymentSchedules : "1 to 0..N (FK_LeaseContractId)"
+    LeaseContracts ||--o{ MaintenanceRequests : "1 to 0..N (FK_LeaseContractId)"
+
+    %% ==========================================================
+    %% ENTITY DEFINITIONS & ATTRIBUTES
+    %% ==========================================================
+
+    Users {
+        uuid Id PK
+        string Email "UNIQUE, NOT NULL"
+        string PasswordHash "NOT NULL"
+        string FullName "NOT NULL"
+        int Role "enum(int): 0=Tenant, 1=Landlord, 2=Admin"
+        boolean IsVerified "NOT NULL"
+        string PhoneNumber "NULL"
+        string AvatarUrl "NULL"
+        string Preferences "NULL"
+        string Lifestyle "NULL"
+        boolean IsLookingForRoommate "NOT NULL"
+        datetime CreatedAt "NOT NULL"
+    }
+
+    Rooms {
+        uuid Id PK
+        uuid LandlordId FK "Users.Id, NOT NULL"
+        string Title "NOT NULL"
+        string Description "NOT NULL"
+        decimal Price "decimal(18,2), NOT NULL"
+        float Area "NOT NULL"
+        string RoomType "NOT NULL"
+        string Address "NOT NULL"
+        geography Location "PostGIS Point 4326, NULL"
+        int Status "enum(int): 0=Available, 1=Rented, 2=PendingApproval, 3=Hidden"
+        boolean IsBoosted "NOT NULL"
+        boolean IsPropertyVerified "NOT NULL"
+        datetime CreatedAt "NOT NULL"
+    }
+
+    RoomImages {
+        uuid Id PK
+        uuid RoomId FK "Rooms.Id, NOT NULL"
+        string ImageUrl "NOT NULL"
+        boolean IsPrimary "NOT NULL"
+    }
+
+    FavoriteRooms {
+        uuid CustomerId PK,FK "Users.Id, NOT NULL"
+        uuid RoomId PK,FK "Rooms.Id, NOT NULL"
+        datetime SavedAt "NOT NULL"
+    }
+
+    RoommatePosts {
+        uuid Id PK
+        uuid CustomerId FK "Users.Id, NOT NULL"
+        uuid RoomId FK "Rooms.Id, NULL"
+        string Title "NOT NULL"
+        string Description "NOT NULL"
+        decimal Budget "decimal(18,2), NOT NULL"
+        string Location "NOT NULL"
+        datetime MoveInDate "NOT NULL"
+        string GenderPreference "enum(string): Any, Male, Female"
+        string LifestyleTraits "NULL"
+        boolean IsActive "NOT NULL"
+        datetime CreatedAt "NOT NULL"
+    }
+
+    ViewingAppointments {
+        uuid Id PK
+        uuid RoomId FK "Rooms.Id, NOT NULL"
+        uuid CustomerId FK "Users.Id, NOT NULL"
+        datetime AppointmentDate "NOT NULL"
+        int Status "enum(int): 0=Requested, 1=Confirmed, 2=Rescheduled, 3=Completed, 4=Cancelled, 5=Rejected, 6=NoShow"
+        string Notes "NULL"
+    }
+
+    RentalApplications {
+        uuid Id PK
+        uuid RoomId FK "Rooms.Id, NOT NULL"
+        uuid TenantId FK "Users.Id, NOT NULL"
+        int Status "enum(int): 0=Draft, 1=Submitted, 2=UnderReview, 3=MoreInfoRequested, 4=Approved, 5=Rejected, 6=Withdrawn, 7=Expired"
+        decimal MonthlyIncome "decimal(18,2), NOT NULL"
+        string Occupation "NOT NULL"
+        int OccupantsCount "NOT NULL"
+        datetime DesiredMoveInDate "NOT NULL"
+        string PersonalNote "NULL"
+        datetime CreatedAt "NOT NULL"
+    }
+
+    ApplicationDocuments {
+        uuid Id PK
+        uuid RentalApplicationId FK "RentalApplications.Id, NOT NULL"
+        string DocumentType "enum(string): ID_CARD, PAYSLIP, WORK_CONTRACT, STUDENT_CARD, OTHER"
+        string FileUrl "NOT NULL"
+        datetime UploadedAt "NOT NULL"
+    }
+
+    LeaseContracts {
+        uuid Id PK
+        uuid RoomId FK "Rooms.Id, NOT NULL"
+        uuid LandlordId FK "Users.Id, NOT NULL"
+        uuid TenantId FK "Users.Id, NOT NULL"
+        uuid RentalApplicationId FK "RentalApplications.Id, NULL"
+        string LeaseCode "UNIQUE, NOT NULL"
+        decimal MonthlyRent "decimal(18,2), NOT NULL"
+        decimal Deposit "decimal(18,2), NOT NULL"
+        int Status "enum(int): 0=Draft, 1=PendingSignature, 2=Active, 3=ExpiringSoon, 4=Renewed, 5=Terminated, 6=Expired"
+        boolean LandlordSigned "NOT NULL"
+        boolean TenantSigned "NOT NULL"
+        datetime StartDate "NOT NULL"
+        datetime EndDate "NOT NULL"
+        datetime CreatedAt "NOT NULL"
+    }
+
+    LeaseDocuments {
+        uuid Id PK
+        uuid LeaseContractId FK "LeaseContracts.Id, NOT NULL"
+        string DocumentType "enum(string): CONTRACT_PDF, HANDOVER_MEMO, ADDENDUM, OTHER"
+        string FileUrl "NOT NULL"
+        string Title "NULL"
+        datetime UploadedAt "NOT NULL"
+    }
+
+    RentalPaymentSchedules {
+        uuid Id PK
+        uuid LeaseContractId FK "LeaseContracts.Id, NOT NULL"
+        string Type "enum(string): Deposit, Rent, Utility"
+        string Title "NOT NULL"
+        decimal Amount "decimal(18,2), NOT NULL"
+        datetime DueDate "NOT NULL"
+        int Status "enum(int): 0=Pending, 1=Processing, 2=Succeeded, 3=Failed, 4=Refunded, 5=Disputed"
+        datetime PaidAt "NULL"
+        string PaymentMethod "enum(string): VietQR, Cash, Transfer"
+    }
+
+    MaintenanceRequests {
+        uuid Id PK
+        uuid LeaseContractId FK "LeaseContracts.Id, NOT NULL"
+        uuid TenantId FK "Users.Id, NOT NULL"
+        uuid LandlordId FK "Users.Id, NOT NULL"
+        uuid RoomId FK "Rooms.Id, NOT NULL"
+        string Title "NOT NULL"
+        string Priority "enum(string): Low, Medium, High, Emergency"
+        int Status "enum(int): 0=Open, 1=Assigned, 2=InProgress, 3=Resolved, 4=Closed, 5=Reopened"
+        decimal ActualCost "decimal(18,2), NULL"
+        datetime CreatedAt "NOT NULL"
+    }
+
+    LandlordSubscriptions {
+        uuid Id PK
+        uuid LandlordId FK "Users.Id, NOT NULL"
+        string PlanName "enum(string): Free, Pro, Enterprise"
+        decimal Price "decimal(18,2), NOT NULL"
+        datetime StartDate "NOT NULL"
+        datetime EndDate "NOT NULL"
+        boolean IsActive "NOT NULL"
+    }
+
+    PaymentTransactions {
+        uuid Id PK
+        uuid UserId FK "Users.Id, NOT NULL"
+        uuid SubscriptionId FK "LandlordSubscriptions.Id, NULL"
+        uuid RoomId FK "Rooms.Id, NULL"
+        decimal Amount "decimal(18,2), NOT NULL"
+        string PaymentMethod "enum(string): VietQR, PayOS, VNPay"
+        string TransactionRef "NOT NULL"
+        string Description "NOT NULL"
+        string Status "enum(string): Pending, Completed, Failed, Cancelled"
+        datetime CreatedAt "NOT NULL"
+        datetime CompletedAt "NULL"
+    }
+
+    VerificationRequests {
+        uuid Id PK
+        uuid UserId FK "Users.Id, NOT NULL"
+        uuid RoomId FK "Rooms.Id, NULL"
+        string DocumentType "enum(string): CCCD, PropertyCertificate, BusinessLicense"
+        string DocumentNumber "NOT NULL"
+        string PropertyAddress "NULL"
+        string FrontImageUrl "NOT NULL"
+        string BackImageUrl "NOT NULL"
+        string Status "enum(string): Pending, Approved, Rejected"
+        string RejectReason "NULL"
+        datetime SubmittedAt "NOT NULL"
+    }
+
+    RoomReviews {
+        uuid Id PK
+        uuid RoomId FK "Rooms.Id, NOT NULL"
+        uuid CustomerId FK "Users.Id, NOT NULL"
+        int Rating "int: 1..5 stars"
+        string Comment "NOT NULL"
+        datetime CreatedAt "NOT NULL"
+    }
+
+    RoomReports {
+        uuid Id PK
+        uuid RoomId FK "Rooms.Id, NOT NULL"
+        uuid ReporterId FK "Users.Id, NOT NULL"
+        string Reason "NOT NULL"
+        string Details "NOT NULL"
+        string Status "enum(string): Pending, Reviewing, Resolved, Dismissed"
+        string RiskLevel "enum(string): Low, Medium, High, Critical"
+        datetime CreatedAt "NOT NULL"
+    }
+
+    RoomViews {
+        uuid Id PK
+        uuid RoomId FK "Rooms.Id, NOT NULL"
+        uuid ViewerId FK "Users.Id, NULL"
+        string EventType "enum(string): View, Save, Contact"
+        datetime CreatedAt "NOT NULL"
+    }

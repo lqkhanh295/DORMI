@@ -1,0 +1,354 @@
+erDiagram
+    Users ||--o{ Rooms : "has (LandlordId)"
+    Users ||--o{ FavoriteRooms : "favorites (CustomerId)"
+    Users ||--o{ ViewingAppointments : "requests (CustomerId)"
+    Users ||--o{ RentalApplications : "submits (TenantId)"
+    Users ||--o{ LeaseContracts : "leases_as_landlord (LandlordId)"
+    Users ||--o{ LeaseContracts : "leases_as_tenant (TenantId)"
+    Users ||--o{ RoommatePosts : "authors (CustomerId)"
+    Users ||--o{ RoomReviews : "writes (CustomerId)"
+    Users ||--o{ RoomReports : "submits (ReporterId)"
+    Users ||--o{ TenantReviews : "reviews_as_landlord (LandlordId)"
+    Users ||--o{ TenantReviews : "reviewed_as_tenant (TenantId)"
+    Users ||--o{ VerificationRequests : "requests (UserId)"
+    Users ||--o{ LandlordSubscriptions : "subscribes (LandlordId)"
+    Users ||--o{ PaymentTransactions : "pays (UserId)"
+    Users ||--o{ Messages : "sends (SenderId)"
+    Users ||--o{ Messages : "receives (ReceiverId)"
+    Users ||--o{ Notifications : "receives (UserId)"
+    Users ||--o{ MaintenanceRequests : "maintains_as_tenant (TenantId)"
+    Users ||--o{ MaintenanceRequests : "maintains_as_landlord (LandlordId)"
+    Users o|--o{ RoomViews : "views (ViewerId)"
+
+    Rooms ||--o{ RoomImages : "contains (RoomId)"
+    Rooms ||--o{ FavoriteRooms : "favorited_in (RoomId)"
+    Rooms ||--o{ ViewingAppointments : "booked_for (RoomId)"
+    Rooms ||--o{ RentalApplications : "applied_for (RoomId)"
+    Rooms ||--o{ LeaseContracts : "contracted_for (RoomId)"
+    Rooms ||--o{ RoomReviews : "reviewed_in (RoomId)"
+    Rooms ||--o{ RoomReports : "reported_in (RoomId)"
+    Rooms ||--o{ RoomViews : "viewed_in (RoomId)"
+    Rooms ||--o{ MaintenanceRequests : "repaired_in (RoomId)"
+    Rooms o|--o{ RoommatePosts : "referenced_in (RoomId)"
+    Rooms o|--o{ VerificationRequests : "verified_in (RoomId)"
+    Rooms o|--o{ PaymentTransactions : "boosted_in (RoomId)"
+
+    RentalApplications ||--o{ ApplicationDocuments : "attaches (RentalApplicationId)"
+    RentalApplications o|--o| LeaseContracts : "generates (RentalApplicationId)"
+
+    LeaseContracts ||--o{ LeaseDocuments : "attaches (LeaseContractId)"
+    LeaseContracts ||--o{ RentalPaymentSchedules : "schedules (LeaseContractId)"
+    LeaseContracts ||--o{ MaintenanceRequests : "covers (LeaseContractId)"
+    LeaseContracts o|--o{ TenantReviews : "rates (LeaseId)"
+
+    LandlordSubscriptions o|--o{ PaymentTransactions : "settles (SubscriptionId)"
+
+    Users {
+        uuid Id PK
+        string Email UK "NOT NULL"
+        string PasswordHash "NOT NULL"
+        string FullName "NOT NULL"
+        string PhoneNumber "NULL"
+        string AvatarUrl "NULL"
+        int Role "NOT NULL"
+        boolean IsVerified "NOT NULL"
+        string Preferences "NULL"
+        string Lifestyle "NULL"
+        boolean IsLookingForRoommate "NOT NULL"
+        datetime CreatedAt "NOT NULL"
+    }
+
+    Rooms {
+        uuid Id PK
+        uuid LandlordId FK "Users.Id, NOT NULL"
+        string Title "NOT NULL"
+        string Description "NOT NULL"
+        decimal Price "NOT NULL"
+        double Area "NOT NULL"
+        string Utilities "NOT NULL"
+        string RoomType "NOT NULL"
+        string Address "NOT NULL"
+        double Latitude "NULL"
+        double Longitude "NULL"
+        geography Location "NULL"
+        string Virtual3DUrl "NULL"
+        int Status "NOT NULL"
+        datetime CreatedAt "NOT NULL"
+        boolean IsBoosted "NOT NULL"
+        datetime BoostExpiresAt "NULL"
+        string BoostType "NULL"
+        boolean IsPropertyVerified "NOT NULL"
+        datetime PropertyVerifiedAt "NULL"
+    }
+
+    RoomImages {
+        uuid Id PK
+        uuid RoomId FK "Rooms.Id, NOT NULL"
+        string ImageUrl "NOT NULL"
+        boolean IsPrimary "NOT NULL"
+    }
+
+    FavoriteRooms {
+        uuid CustomerId PK,FK "Users.Id, NOT NULL"
+        uuid RoomId PK,FK "Rooms.Id, NOT NULL"
+        datetime SavedAt "NOT NULL"
+    }
+
+    ViewingAppointments {
+        uuid Id PK
+        uuid CustomerId FK "Users.Id, NOT NULL"
+        uuid RoomId FK "Rooms.Id, NOT NULL"
+        datetime AppointmentDate "NOT NULL"
+        string Status "NOT NULL"
+        string Notes "NULL"
+        datetime RescheduledDate "NULL"
+        string RejectionReason "NULL"
+        datetime CreatedAt "NOT NULL"
+        datetime CompletedAt "NULL"
+    }
+
+    RentalApplications {
+        uuid Id PK
+        uuid RoomId FK "Rooms.Id, NOT NULL"
+        uuid TenantId FK "Users.Id, NOT NULL"
+        int Status "NOT NULL"
+        decimal MonthlyIncome "NOT NULL"
+        string Occupation "NOT NULL"
+        string EmployerName "NULL"
+        int OccupantsCount "NOT NULL"
+        datetime DesiredMoveInDate "NOT NULL"
+        int LeaseDurationMonths "NOT NULL"
+        string NoteToLandlord "NULL"
+        string RejectionReason "NULL"
+        string LandlordNotes "NULL"
+        datetime CreatedAt "NOT NULL"
+        datetime ReviewedAt "NULL"
+    }
+
+    ApplicationDocuments {
+        uuid Id PK
+        uuid RentalApplicationId FK "RentalApplications.Id, NOT NULL"
+        string DocumentType "NOT NULL"
+        string FileUrl "NOT NULL"
+        datetime UploadedAt "NOT NULL"
+    }
+
+    LeaseContracts {
+        uuid Id PK
+        uuid RentalApplicationId FK "RentalApplications.Id, NULL"
+        uuid RoomId FK "Rooms.Id, NOT NULL"
+        uuid LandlordId FK "Users.Id, NOT NULL"
+        uuid TenantId FK "Users.Id, NOT NULL"
+        datetime StartDate "NOT NULL"
+        datetime EndDate "NOT NULL"
+        decimal MonthlyRent "NOT NULL"
+        decimal Deposit "NOT NULL"
+        string UtilitiesDescription "NULL"
+        string TermsAndConditions "NULL"
+        int PaymentCycleMonths "NOT NULL"
+        string Status "NOT NULL"
+        boolean LandlordSigned "NOT NULL"
+        datetime LandlordSignedAt "NULL"
+        boolean TenantSigned "NOT NULL"
+        datetime TenantSignedAt "NULL"
+        string TenantSignatureData "NULL"
+        string ContractDocumentUrl "NULL"
+        datetime CreatedAt "NOT NULL"
+        datetime ActivatedAt "NULL"
+        datetime TerminatedAt "NULL"
+        string TerminationReason "NULL"
+        datetime MoveOutRequestedAt "NULL"
+        datetime MoveOutDate "NULL"
+        string MoveOutReason "NULL"
+        string MoveOutInspectionNotes "NULL"
+        decimal MoveOutDeductions "NULL"
+        string MoveOutDeductionReason "NULL"
+        decimal MoveOutSettledDeposit "NULL"
+        datetime MoveOutSettledAt "NULL"
+        datetime RenewalRequestedAt "NULL"
+        datetime RenewalProposedEndDate "NULL"
+        string RenewalStatus "NULL"
+    }
+
+    LeaseDocuments {
+        uuid Id PK
+        uuid LeaseContractId FK "LeaseContracts.Id, NOT NULL"
+        string DocumentType "NOT NULL"
+        string FileUrl "NOT NULL"
+        string Title "NULL"
+        datetime UploadedAt "NOT NULL"
+    }
+
+    RentalPaymentSchedules {
+        uuid Id PK
+        uuid LeaseContractId FK "LeaseContracts.Id, NOT NULL"
+        string Type "NOT NULL"
+        string Title "NOT NULL"
+        decimal Amount "NOT NULL"
+        datetime DueDate "NOT NULL"
+        string Status "NOT NULL"
+        datetime PaidAt "NULL"
+        string PaymentReference "NULL"
+        string PaymentMethod "NULL"
+        string LandlordNotes "NULL"
+        datetime CreatedAt "NOT NULL"
+    }
+
+    MaintenanceRequests {
+        uuid Id PK
+        uuid LeaseContractId FK "LeaseContracts.Id, NOT NULL"
+        uuid TenantId FK "Users.Id, NOT NULL"
+        uuid LandlordId FK "Users.Id, NOT NULL"
+        uuid RoomId FK "Rooms.Id, NOT NULL"
+        string Title "NOT NULL"
+        string Description "NOT NULL"
+        string Category "NOT NULL"
+        string Priority "NOT NULL"
+        string Status "NOT NULL"
+        string ImageUrls "NULL"
+        string AssignedTo "NULL"
+        string ResolutionNotes "NULL"
+        decimal EstimatedCost "NULL"
+        decimal ActualCost "NULL"
+        boolean TenantConfirmed "NOT NULL"
+        string TenantFeedback "NULL"
+        int TenantRating "NULL"
+        datetime CreatedAt "NOT NULL"
+        datetime ResolvedAt "NULL"
+        datetime ClosedAt "NULL"
+    }
+
+    RoommatePosts {
+        uuid Id PK
+        uuid CustomerId FK "Users.Id, NOT NULL"
+        string Title "NOT NULL"
+        string Description "NOT NULL"
+        decimal Budget "NOT NULL"
+        string Location "NOT NULL"
+        datetime MoveInDate "NOT NULL"
+        string GenderPreference "NOT NULL"
+        string LifestyleTraits "NOT NULL"
+        boolean IsActive "NOT NULL"
+        datetime CreatedAt "NOT NULL"
+        uuid RoomId FK "Rooms.Id, NULL"
+    }
+
+    RoomReviews {
+        uuid Id PK
+        uuid RoomId FK "Rooms.Id, NOT NULL"
+        uuid CustomerId FK "Users.Id, NOT NULL"
+        int Rating "NOT NULL"
+        string Comment "NOT NULL"
+        datetime CreatedAt "NOT NULL"
+    }
+
+    RoomReports {
+        uuid Id PK
+        uuid RoomId FK "Rooms.Id, NOT NULL"
+        uuid ReporterId FK "Users.Id, NOT NULL"
+        string Reason "NOT NULL"
+        string Details "NOT NULL"
+        string Status "NOT NULL"
+        string RiskLevel "NOT NULL"
+        string EvidenceUrls "NULL"
+        string ModeratorNotes "NULL"
+        string ActionTaken "NULL"
+        uuid ModeratorId "NULL"
+        datetime ResolvedAt "NULL"
+        datetime CreatedAt "NOT NULL"
+    }
+
+    RoomViews {
+        uuid Id PK
+        uuid RoomId FK "Rooms.Id, NOT NULL"
+        uuid ViewerId FK "Users.Id, NULL"
+        string EventType "NOT NULL"
+        string IpAddress "NULL"
+        datetime CreatedAt "NOT NULL"
+    }
+
+    TenantReviews {
+        uuid Id PK
+        uuid LeaseId FK "LeaseContracts.Id, NULL"
+        uuid LandlordId FK "Users.Id, NOT NULL"
+        uuid TenantId FK "Users.Id, NOT NULL"
+        int Rating "NOT NULL"
+        int PunctualityScore "NOT NULL"
+        int CleanlinessScore "NOT NULL"
+        int RespectScore "NOT NULL"
+        string Comment "NOT NULL"
+        boolean IsAnonymous "NOT NULL"
+        datetime CreatedAt "NOT NULL"
+    }
+
+    LandlordSubscriptions {
+        uuid Id PK
+        uuid LandlordId FK "Users.Id, NOT NULL"
+        string PlanName "NOT NULL"
+        decimal Price "NOT NULL"
+        datetime StartDate "NOT NULL"
+        datetime EndDate "NOT NULL"
+        boolean IsActive "NOT NULL"
+    }
+
+    PaymentTransactions {
+        uuid Id PK
+        uuid UserId FK "Users.Id, NOT NULL"
+        uuid SubscriptionId FK "LandlordSubscriptions.Id, NULL"
+        uuid RoomId FK "Rooms.Id, NULL"
+        decimal Amount "NOT NULL"
+        string PaymentMethod "NOT NULL"
+        string TransactionRef "NOT NULL"
+        string Description "NOT NULL"
+        string Status "NOT NULL"
+        datetime CreatedAt "NOT NULL"
+        datetime CompletedAt "NULL"
+    }
+
+    VerificationRequests {
+        uuid Id PK
+        uuid UserId FK "Users.Id, NOT NULL"
+        uuid RoomId FK "Rooms.Id, NULL"
+        string PropertyAddress "NULL"
+        string DocumentType "NOT NULL"
+        string DocumentNumber "NOT NULL"
+        string FrontImageUrl "NOT NULL"
+        string BackImageUrl "NOT NULL"
+        string Status "NOT NULL"
+        string RejectReason "NULL"
+        datetime SubmittedAt "NOT NULL"
+        datetime ReviewedAt "NULL"
+        uuid ReviewerId "NULL"
+    }
+
+    Messages {
+        uuid Id PK
+        uuid SenderId FK "Users.Id, NOT NULL"
+        uuid ReceiverId FK "Users.Id, NOT NULL"
+        string Content "NOT NULL"
+        boolean IsRead "NOT NULL"
+        datetime SentAt "NOT NULL"
+    }
+
+    Notifications {
+        uuid Id PK
+        uuid UserId FK "Users.Id, NOT NULL"
+        string Title "NOT NULL"
+        string Message "NOT NULL"
+        string Type "NOT NULL"
+        string LinkUrl "NULL"
+        boolean IsRead "NOT NULL"
+        datetime CreatedAt "NOT NULL"
+    }
+
+    AuditLogs {
+        uuid Id PK
+        uuid ActorId "NULL"
+        string ActorEmail "NOT NULL"
+        string Action "NOT NULL"
+        string EntityType "NOT NULL"
+        string EntityId "NOT NULL"
+        string Details "NOT NULL"
+        string IpAddress "NULL"
+        datetime CreatedAt "NOT NULL"
+    }

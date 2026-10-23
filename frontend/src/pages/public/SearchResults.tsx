@@ -6,7 +6,7 @@ import { Input } from '../../components/ui/Input';
 import { useStore } from '../../store/useStore';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { ArrowLeft, SlidersHorizontal, Map as MapTrifold, X, Sliders as FadersHorizontal, GraduationCap, AlertCircle } from 'lucide-react';
-import { UNIVERSITIES, normalizeVietnamese, calculateDistanceKm, getCoordinatesForAddress } from '../../utils/geoUtils';
+import { UNIVERSITIES, normalizeVietnamese, isMatchDistrict, calculateDistanceKm, getCoordinatesForAddress } from '../../utils/geoUtils';
 import { RoomCard } from '../../components/landing/RoomCard';
 import RoomMapView from '../../components/map/RoomMapView';
 import { modalBackdropVariants, bottomSheetVariants, staggerListContainer, staggerListItem } from '../../utils/motion';
@@ -192,7 +192,7 @@ export default function SearchResults() {
           normTitle.includes(token) || normAddress.includes(token) || normDesc.includes(token)
         );
       }
-      const matchDistrict = !selectedDistrict || room.address.toLowerCase().includes(selectedDistrict.toLowerCase());
+      const matchDistrict = !selectedDistrict || isMatchDistrict(selectedDistrict, room.address, room.title);
 
       // Price range
       let matchPrice = true;
