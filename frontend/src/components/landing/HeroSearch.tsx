@@ -1,5 +1,5 @@
 import { useNavigate } from 'react-router-dom';
-import { Search, MapPin, Coins, ShieldCheck, Map, X, Home, GraduationCap } from 'lucide-react';
+import { Search, MapPin, Coins, ShieldCheck, Map, X, Home, GraduationCap, Users, UserPlus, Award } from 'lucide-react';
 
 interface HeroSearchProps {
   district: string;
@@ -54,26 +54,68 @@ export function HeroSearch({
     <section className="pt-6 pb-4 bg-[#F8FAFC] border-b border-slate-200/80">
       <div className="container-dormi space-y-4">
         
-        {/* Compact Header Title */}
-        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
-          <div>
-            <div className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-blue-50 text-blue-700 text-xs font-semibold border border-blue-200/60 mb-1.5">
-              <ShieldCheck className="w-3.5 h-3.5 text-blue-600 shrink-0" />
-              <span>Hệ thống phòng trọ đã xác minh thực tế tại TP.HCM</span>
+        {/* Hero Introduction & Top Call-To-Action (Modern Top Banner) */}
+        <div className="bg-gradient-to-br from-white via-blue-50/40 to-slate-50 border border-slate-200/90 rounded-3xl p-6 sm:p-8 shadow-xs space-y-5">
+          <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-6">
+            <div className="max-w-3xl space-y-2.5">
+              <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-blue-100/80 text-blue-900 text-xs font-bold border border-blue-200">
+                <ShieldCheck className="w-4 h-4 text-blue-700 shrink-0" />
+                <span>Dự án Nền tảng Lưu trú Sinh viên TP.HCM</span>
+              </div>
+              <h1 className="text-2xl sm:text-3xl lg:text-4xl font-black text-[#00153D] tracking-tight leading-tight">
+                Tìm Phòng Trọ & Bạn Cùng Phòng Thông Minh
+              </h1>
+              <p className="text-sm sm:text-base text-slate-700 font-medium leading-relaxed">
+                <strong>DORMI là dự án website hỗ trợ tìm phòng trọ và tìm bạn cùng phòng tại khu vực TP.HCM</strong> — tích hợp xác thực 3 lớp chống phòng ảo, bảo vệ tiền đặt cọc minh bạch và thuật toán ghép bạn ở ghép theo thói quen sinh hoạt.
+              </p>
             </div>
-            <h1 className="text-xl sm:text-2xl lg:text-[26px] font-black text-[#00153D] tracking-tight">
-              Tìm phòng trọ đang cho thuê
-            </h1>
+
+            {/* Quick Actions & Group Jump */}
+            <div className="flex flex-wrap items-center gap-2.5 shrink-0">
+              <button
+                type="button"
+                onClick={handleOpenMap}
+                className="inline-flex items-center gap-2 px-4 py-2.5 text-xs sm:text-sm font-bold text-[#00153D] bg-white hover:bg-slate-50 border border-slate-300 rounded-xl transition-all shadow-2xs hover:shadow-xs active:scale-[0.98]"
+              >
+                <Map className="w-4 h-4 text-blue-700" />
+                <span>Xem trên bản đồ</span>
+              </button>
+              <button
+                type="button"
+                onClick={() => document.getElementById('team-section')?.scrollIntoView({ behavior: 'smooth' })}
+                className="inline-flex items-center gap-2 px-4 py-2.5 text-xs sm:text-sm font-bold text-blue-800 bg-blue-50 hover:bg-blue-100 border border-blue-200 rounded-xl transition-all shadow-2xs hover:shadow-xs active:scale-[0.98]"
+              >
+                <Award className="w-4 h-4 text-blue-700" />
+                <span>Thông tin nhóm dự án</span>
+              </button>
+            </div>
           </div>
 
-          <div className="flex items-center gap-2">
+          {/* Call-to-Action Buttons on Top */}
+          <div className="pt-3 border-t border-slate-200/70 flex flex-wrap items-center gap-2.5">
             <button
               type="button"
-              onClick={handleOpenMap}
-              className="inline-flex items-center gap-1.5 px-3.5 py-2 text-xs font-bold text-[#00153D] bg-white hover:bg-slate-50 border border-slate-300 rounded-xl transition-all shadow-2xs hover:shadow-xs active:scale-[0.98]"
+              onClick={() => navigate('/search')}
+              className="inline-flex items-center gap-2 px-5 py-2.5 bg-[#00153D] hover:bg-[#073372] text-white text-xs sm:text-sm font-bold rounded-xl transition-all shadow-sm active:scale-[0.98]"
             >
-              <Map className="w-4 h-4 text-blue-700" />
-              <span>Xem trên bản đồ</span>
+              <Search className="w-4 h-4 text-[#F2A900]" />
+              <span>Dùng thử tìm phòng</span>
+            </button>
+            <button
+              type="button"
+              onClick={() => navigate('/tenant/match')}
+              className="inline-flex items-center gap-2 px-5 py-2.5 bg-[#F2A900] hover:bg-[#d99700] text-[#00153D] text-xs sm:text-sm font-bold rounded-xl transition-all shadow-sm active:scale-[0.98]"
+            >
+              <Users className="w-4 h-4 text-[#00153D]" />
+              <span>Tìm bạn ở ghép</span>
+            </button>
+            <button
+              type="button"
+              onClick={() => navigate('/auth?tab=register')}
+              className="inline-flex items-center gap-2 px-4 py-2.5 bg-white hover:bg-slate-100 text-[#0F172A] border border-slate-300 text-xs sm:text-sm font-bold rounded-xl transition-all shadow-2xs active:scale-[0.98]"
+            >
+              <UserPlus className="w-4 h-4 text-blue-600" />
+              <span>Đăng ký tài khoản</span>
             </button>
           </div>
         </div>

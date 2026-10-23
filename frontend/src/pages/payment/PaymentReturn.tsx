@@ -146,7 +146,7 @@ export default function PaymentReturn() {
               className="flex-1 py-2.5 px-4 bg-[#00153D] hover:bg-[#002266] text-white font-bold text-xs rounded-xl flex items-center justify-center gap-2 shadow-xs transition-colors"
             >
               <FileText className="w-4 h-4" />
-              {type === 'package' || type === 'subscription' || type === 'service' ? 'Xem gói dịch vụ đã mua' : 'Xem hợp đồng thuê phòng'}
+              {type === 'package' || type === 'subscription' || type === 'service' ? 'Xem lịch sử giao dịch' : 'Xem hợp đồng thuê phòng'}
               <ArrowRight className="w-3.5 h-3.5" />
             </button>
           )}

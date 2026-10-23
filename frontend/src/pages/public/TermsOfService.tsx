@@ -112,12 +112,12 @@ export default function TermsOfService() {
           </div>
 
           {/* Main Terms Content */}
-          <div className="lg:col-span-3 space-y-8 bg-white p-8 md:p-10 rounded-2xl border border-slate-200 shadow-sm text-slate-700 text-sm leading-relaxed">
+          <div className="lg:col-span-3 space-y-8 bg-white p-8 md:p-10 rounded-2xl border border-slate-200 shadow-sm text-slate-700 text-sm leading-relaxed text-justify">
             
             {/* Section 1 */}
             <section id="section-1" className="space-y-3 scroll-mt-24">
               <h2 className="text-xl font-bold text-[#00153D] flex items-center gap-2 border-b border-slate-100 pb-2">
-                1. Quy định chung & Định nghĩa
+                I. Quy định chung & Định nghĩa
               </h2>
               <p>
                 Chào mừng bạn đến với <strong>DORMI</strong> (gọi tắt là "Nền tảng", "Chúng tôi"). DORMI là nền tảng công nghệ cung cấp dịch vụ kết nối giữa người có nhu cầu thuê phòng trọ, căn hộ, tìm người ở ghép (Khách thuê) và các cá nhân, tổ chức cung cấp dịch vụ cho thuê bất động sản lưu trú (Chủ trọ).
@@ -135,7 +135,7 @@ export default function TermsOfService() {
             {/* Section 2 */}
             <section id="section-2" className="space-y-3 scroll-mt-24">
               <h2 className="text-xl font-bold text-[#00153D] flex items-center gap-2 border-b border-slate-100 pb-2">
-                2. Quyền & Nghĩa vụ của Khách thuê
+                II. Quyền & Nghĩa vụ của Khách thuê
               </h2>
               <ul className="list-disc pl-5 space-y-2 text-xs sm:text-sm">
                 <li>
@@ -156,7 +156,7 @@ export default function TermsOfService() {
             {/* Section 3 */}
             <section id="section-3" className="space-y-3 scroll-mt-24">
               <h2 className="text-xl font-bold text-[#00153D] flex items-center gap-2 border-b border-slate-100 pb-2">
-                3. Quyền & Nghĩa vụ của Chủ trọ
+                III. Quyền & Nghĩa vụ của Chủ trọ
               </h2>
               <ul className="list-disc pl-5 space-y-2 text-xs sm:text-sm">
                 <li>
@@ -177,7 +177,7 @@ export default function TermsOfService() {
             {/* Section 4 */}
             <section id="section-4" className="space-y-3 scroll-mt-24">
               <h2 className="text-xl font-bold text-[#00153D] flex items-center gap-2 border-b border-slate-100 pb-2">
-                4. Hợp đồng điện tử & Tiền đặt cọc
+                IV. Hợp đồng điện tử & Tiền đặt cọc
               </h2>
               <p>
                 DORMI cung cấp công cụ soạn thảo, ký kết điện tử và in ấn hợp đồng thuê phòng chuẩn hóa theo quy định của Bộ luật Dân sự Việt Nam và Luật Giao dịch điện tử.
@@ -196,7 +196,7 @@ export default function TermsOfService() {
             {/* Section 5 */}
             <section id="section-5" className="space-y-3 scroll-mt-24">
               <h2 className="text-xl font-bold text-[#00153D] flex items-center gap-2 border-b border-slate-100 pb-2">
-                5. Phí dịch vụ & Thanh toán trực tuyến
+                V. Phí dịch vụ & Thanh toán trực tuyến
               </h2>
               <p>
                 DORMI áp dụng cơ chế phân tách luồng tài chính an toàn:
@@ -218,7 +218,7 @@ export default function TermsOfService() {
             <section id="section-6" className="space-y-3 scroll-mt-24">
               <h2 className="text-xl font-bold text-[#00153D] flex items-center gap-2 border-b border-slate-100 pb-2 text-rose-800">
                 <AlertCircle className="w-5 h-5 text-rose-600" />
-                6. Hành vi nghiêm cấm & Xử lý vi phạm
+                VI. Hành vi nghiêm cấm & Xử lý vi phạm
               </h2>
               <div className="space-y-2 text-xs sm:text-sm">
                 <p>Các hành vi sau đây bị nghiêm cấm tuyệt đối trên hệ thống DORMI:</p>
@@ -237,7 +237,7 @@ export default function TermsOfService() {
             {/* Section 7 */}
             <section id="section-7" className="space-y-3 scroll-mt-24">
               <h2 className="text-xl font-bold text-[#00153D] flex items-center gap-2 border-b border-slate-100 pb-2">
-                7. Giải quyết tranh chấp & Khiếu nại
+                VII. Giải quyết tranh chấp & Khiếu nại
               </h2>
               <p>
                 DORMI khuyến khích Khách thuê và Chủ trọ chủ động thương lượng trên tinh thần tôn trọng lẫn nhau khi có bất đồng về hợp đồng hoặc chi phí phát sinh.
@@ -250,7 +250,7 @@ export default function TermsOfService() {
             {/* Section 8 */}
             <section id="section-8" className="space-y-3 scroll-mt-24">
               <h2 className="text-xl font-bold text-[#00153D] flex items-center gap-2 border-b border-slate-100 pb-2">
-                8. Giới hạn trách nhiệm & Hiệu lực
+                VIII. Giới hạn trách nhiệm & Hiệu lực
               </h2>
               <p>
                 DORMI nỗ lực cao nhất nhằm xác minh tính chính xác của các bài đăng và bảo vệ an toàn cho người dùng, tuy nhiên chúng tôi không đóng vai trò là một bên đại diện pháp lý trong các cam kết dân sự giữa Khách thuê và Chủ trọ ngoài các cam kết được quy định rõ trong hợp đồng thuê.

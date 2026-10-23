@@ -181,9 +181,17 @@ export default function SearchResults() {
       // Chỉ hiển thị phòng đang trống (Available) trên trang tìm kiếm
       if (room.status && room.status !== 'Available') return false;
 
-      const matchQuery = !searchQuery || 
-        room.title.toLowerCase().includes(searchQuery.toLowerCase()) || 
-        room.address.toLowerCase().includes(searchQuery.toLowerCase());
+      let matchQuery = true;
+      if (searchQuery && searchQuery.trim()) {
+        const normQ = normalizeVietnamese(searchQuery);
+        const normTitle = normalizeVietnamese(room.title || '');
+        const normAddress = normalizeVietnamese(room.address || '');
+        const normDesc = normalizeVietnamese((room as any).description || '');
+        const queryTokens = normQ.split(/\s+/).filter(Boolean);
+        matchQuery = queryTokens.length === 0 || queryTokens.every(token => 
+          normTitle.includes(token) || normAddress.includes(token) || normDesc.includes(token)
+        );
+      }
       const matchDistrict = !selectedDistrict || room.address.toLowerCase().includes(selectedDistrict.toLowerCase());
 
       // Price range
@@ -321,6 +329,16 @@ export default function SearchResults() {
               className="flex-1"
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
+              rightIcon={searchQuery ? (
+                <button
+                  type="button"
+                  onClick={() => setSearchQuery('')}
+                  aria-label="Xóa từ khóa tìm kiếm"
+                  className="p-1 text-slate-400 hover:text-slate-600 rounded-full hover:bg-slate-100 transition-colors cursor-pointer"
+                >
+                  <X className="w-4 h-4" />
+                </button>
+              ) : undefined}
             />
             <button 
               type="button"

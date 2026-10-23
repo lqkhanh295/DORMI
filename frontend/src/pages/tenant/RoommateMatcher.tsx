@@ -211,9 +211,14 @@ export default function RoommateMatcher() {
             <p className="text-[#64748B] text-body max-w-xs mx-auto">
               Bạn đã lưu <span className="font-bold text-[#00153D]">{activeLikedRoommates.length}</span> hồ sơ phù hợp.
             </p>
-            <Button onClick={() => setCurrentIndex(0)} variant="secondary" className="px-6">
-              Xem lại từ đầu
-            </Button>
+            <div className="flex flex-col sm:flex-row items-center justify-center gap-3 w-full">
+              <Button onClick={() => setCurrentIndex(0)} variant="secondary" className="w-full sm:w-auto px-6">
+                Xem lại từ đầu
+              </Button>
+              <Button onClick={() => navigate('/tenant/post')} variant="primary" className="w-full sm:w-auto px-6">
+                Đăng tin tìm người ở ghép
+              </Button>
+            </div>
           </div>
         ) : (
           <div className="flex-1 flex flex-col items-center justify-center w-full mx-auto min-h-0">
@@ -231,6 +236,15 @@ export default function RoommateMatcher() {
                   <h3 className="text-h3 font-bold text-[#0F172A]">{profile.name}{profile.age ? `, ${profile.age} tuổi` : ''}</h3>
                   <p className="text-caption text-[#64748B] font-semibold">{profile.major} · Ngân sách {profile.budget}</p>
                   <p className="text-body text-[#64748B] mt-1 line-clamp-2">{profile.bio}</p>
+                  {profile.tags && profile.tags.length > 0 && (
+                    <div className="flex flex-wrap gap-1.5 mt-2">
+                      {profile.tags.map((tag, idx) => (
+                        <span key={idx} className="px-2 py-0.5 rounded-full text-[11px] font-medium bg-slate-100 text-slate-700 border border-slate-200">
+                          #{tag}
+                        </span>
+                      ))}
+                    </div>
+                  )}
                 </div>
 
                 {profile.roomId && (

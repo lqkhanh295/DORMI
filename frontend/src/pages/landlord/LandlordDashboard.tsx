@@ -56,6 +56,12 @@ export default function LandlordDashboard() {
     return () => { isMounted = false; };
   }, []);
 
+  const occupancyRate = analytics.totalListings > 0 
+    ? Math.round((analytics.activeListings / analytics.totalListings) * 100) 
+    : 85;
+  const vacantRooms = Math.max(0, (analytics.totalListings || 5) - (analytics.activeListings || 3));
+  const estimatedRevenue = (analytics.activeListings || 3) * 4500000;
+
   return (
     <div className="space-y-8 pb-12 bg-[#F8FAFC]">
       <div className="bg-white p-6 md:p-8 rounded-2xl border border-slate-200/90 shadow-sm flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
@@ -130,9 +136,11 @@ export default function LandlordDashboard() {
               <span className="text-xs font-medium text-slate-300">Doanh thu ước tính</span>
               <DollarSign className="w-4 h-4 text-[#F2A900]" />
             </div>
-            <p className="text-2xl font-black text-white mt-2">18.500.000₫</p>
+            <p className="text-2xl font-black text-white mt-2">
+              {estimatedRevenue.toLocaleString('vi-VN')}₫
+            </p>
             <p className="text-[11px] text-emerald-400 font-semibold mt-1 flex items-center gap-1">
-              <TrendingUp className="w-3.5 h-3.5" /> Tỷ lệ lấp đầy: 85% (Còn 2 phòng trống)
+              <TrendingUp className="w-3.5 h-3.5" /> Tỷ lệ lấp đầy: {occupancyRate}% {vacantRooms > 0 ? `(Còn ${vacantRooms} phòng trống)` : '(Đã kín phòng)'}
             </p>
           </div>
           <p className="text-[10px] text-slate-300 pt-3 border-t border-white/10 mt-3">
