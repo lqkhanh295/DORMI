@@ -321,8 +321,8 @@ public class RoomService : IRoomService
                 return ServiceResult<object>.Forbidden("Bạn không có quyền truy cập danh sách phòng ở trạng thái này.");
             }
 
-            // Chỉ hiển thị phòng đang còn trống (Available) cho khách tìm thuê
-            query = query.Where(r => r.Status == RoomStatus.Available);
+            // Chỉ hiển thị phòng đang còn trống (Available) và không có hợp đồng thuê nào đang hoạt động
+            query = query.Where(r => r.Status == RoomStatus.Available && !_db.LeaseContracts.Any(l => l.RoomId == r.Id && (l.Status == "Active" || l.Status == "Signed")));
         }
 
         var totalItems = await query.CountAsync();
@@ -454,7 +454,7 @@ public class RoomService : IRoomService
         var now = DateTime.UtcNow;
         var featured = await _db.Rooms
             .AsNoTracking()
-            .Where(r => r.Status == RoomStatus.Available)
+            .Where(r => r.Status == RoomStatus.Available && !_db.LeaseContracts.Any(l => l.RoomId == r.Id && (l.Status == "Active" || l.Status == "Signed")))
             .OrderByDescending(r => r.IsBoosted && r.BoostExpiresAt > now)
             .ThenByDescending(r => r.Landlord.IsVerified)
             .ThenByDescending(r => r.CreatedAt)
@@ -662,7 +662,8 @@ public class RoomService : IRoomService
             .OrderByDescending(s => s.EndDate)
             .FirstOrDefaultAsync();
 
-        var planName = activeSub?.PlanName ?? "Free";
+        var isDemoLandlord = activeSub == null && (user.Email == "landlord@dormi.vn");
+        var planName = isDemoLandlord ? "Pro" : (activeSub?.PlanName ?? "Free");
         int maxRooms = planName.Equals("Business", StringComparison.OrdinalIgnoreCase) || planName.Equals("Enterprise", StringComparison.OrdinalIgnoreCase)
             ? int.MaxValue
             : (planName.Equals("Pro", StringComparison.OrdinalIgnoreCase) ? 15 : 2);

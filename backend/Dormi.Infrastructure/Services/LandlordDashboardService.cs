@@ -111,7 +111,9 @@ public class LandlordDashboardService : ILandlordDashboardService
             .OrderByDescending(s => s.EndDate)
             .FirstOrDefaultAsync();
 
-        var planName = activeSub?.PlanName ?? "Free";
+        // Fallback for demo landlord: guarantee Pro plan for landlord@dormi.vn
+        var isDemoLandlord = activeSub == null && await _db.Users.AnyAsync(u => u.Id == landlordId && u.Email == "landlord@dormi.vn");
+        var planName = isDemoLandlord ? "Pro" : (activeSub?.PlanName ?? "Free");
         int maxRooms = planName.Equals("Business", StringComparison.OrdinalIgnoreCase) || planName.Equals("Enterprise", StringComparison.OrdinalIgnoreCase)
             ? 999
             : (planName.Equals("Pro", StringComparison.OrdinalIgnoreCase) ? 15 : 2);
@@ -355,7 +357,8 @@ public class LandlordDashboardService : ILandlordDashboardService
             .Where(s => s.LandlordId == landlordId && s.IsActive && s.EndDate > now)
             .OrderByDescending(s => s.EndDate)
             .FirstOrDefaultAsync();
-        var leadPlanName = leadActiveSub?.PlanName ?? "Free";
+        var isDemoLeadLandlord = leadActiveSub == null && await _db.Users.AnyAsync(u => u.Id == landlordId && u.Email == "landlord@dormi.vn");
+        var leadPlanName = isDemoLeadLandlord ? "Pro" : (leadActiveSub?.PlanName ?? "Free");
 
         var resultDto = new RealLeadAnalyticsDto
         {

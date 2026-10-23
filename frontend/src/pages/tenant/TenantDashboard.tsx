@@ -82,6 +82,7 @@ export default function TenantDashboard() {
   const pendingAppsCount = applications.filter(a => a.status === 0 || a.status === 2).length;
   const pendingLeasesCount = leases.filter(l => l.status === 'PendingSignature' || l.status === 'Draft').length;
   const activeLease = leases.find(l => l.status === 'Active' || l.status === 'Signed');
+  const activeLeasedRoomIds = new Set(leases.filter(l => l.status === 'Active' || l.status === 'Signed').map(l => l.roomId).filter(Boolean));
 
   return (
     <div className="space-y-6 pb-16 bg-[#F8FAFC]">
@@ -418,7 +419,7 @@ export default function TenantDashboard() {
               </div>
             ) : (
               <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-                {listings.filter(r => !r.status || r.status === 'Available').slice(0, 6).map(room => (
+                {listings.filter(r => (!r.status || r.status === 'Available') && !activeLeasedRoomIds.has(r.id)).slice(0, 6).map(room => (
                   <div key={room.id} className="cursor-pointer">
                     <RoomCard
                       room={{

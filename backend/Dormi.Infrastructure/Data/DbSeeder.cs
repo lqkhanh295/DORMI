@@ -270,6 +270,28 @@ public static class DbSeeder
                 CREATE INDEX IF NOT EXISTS ""IX_RentalPaymentSchedules_LeaseContractId_Status"" ON ""RentalPaymentSchedules"" (""LeaseContractId"", ""Status"");
                 CREATE INDEX IF NOT EXISTS ""IX_MaintenanceRequests_LeaseContractId_Status"" ON ""MaintenanceRequests"" (""LeaseContractId"", ""Status"");
                 CREATE INDEX IF NOT EXISTS ""IX_Messages_Sender_Receiver_SentAt"" ON ""Messages"" (""SenderId"", ""ReceiverId"", ""SentAt"" DESC);");
+
+            // ponytail: ensure demo landlord has active Pro subscription in production DB
+            var ll1 = Guid.Parse("b0000000-0000-0000-0000-000000000001");
+            var hasSub = await db.LandlordSubscriptions.AnyAsync(s => s.LandlordId == ll1 && s.IsActive && s.EndDate > DateTime.UtcNow);
+            if (!hasSub)
+            {
+                var landlordUser = await db.Users.FirstOrDefaultAsync(u => u.Id == ll1 || u.Email == "landlord@dormi.vn");
+                if (landlordUser != null)
+                {
+                    db.LandlordSubscriptions.Add(new LandlordSubscription
+                    {
+                        Id = Guid.NewGuid(),
+                        LandlordId = landlordUser.Id,
+                        PlanName = "Pro",
+                        Price = 199000,
+                        StartDate = DateTime.UtcNow.AddDays(-30),
+                        EndDate = DateTime.UtcNow.AddDays(335),
+                        IsActive = true
+                    });
+                    await db.SaveChangesAsync();
+                }
+            }
         }
         catch (Exception ex)
         {

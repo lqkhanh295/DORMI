@@ -9,6 +9,7 @@ using Dormi.Domain.Entities;
 using Dormi.Domain.Enums;
 using Dormi.Infrastructure.Data;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Caching.Distributed;
 using Microsoft.Extensions.Caching.Memory;
 
 namespace Dormi.Infrastructure.Services;
@@ -20,13 +21,49 @@ public class LeaseService : ILeaseService
     private readonly IKafkaProducer? _kafkaProducer;
     private readonly IDistributedLockService? _lockService;
     private readonly IMemoryCache? _memCache;
+    private readonly IDistributedCache? _distCache;
 
-    public LeaseService(DormiDbContext db, IKafkaProducer? kafkaProducer = null, IDistributedLockService? lockService = null, IMemoryCache? memCache = null)
+    public LeaseService(
+        DormiDbContext db, 
+        IKafkaProducer? kafkaProducer = null, 
+        IDistributedLockService? lockService = null, 
+        IMemoryCache? memCache = null,
+        IDistributedCache? distCache = null)
     {
         _db = db;
         _kafkaProducer = kafkaProducer;
         _lockService = lockService;
         _memCache = memCache;
+        _distCache = distCache;
+    }
+
+    private async Task InvalidateRoomsCacheAsync(Guid? roomId = null)
+    {
+        try
+        {
+            if (_distCache != null)
+            {
+                await _distCache.SetStringAsync("rooms_cache_version", Guid.NewGuid().ToString("N"), new DistributedCacheEntryOptions
+                {
+                    AbsoluteExpirationRelativeToNow = TimeSpan.FromHours(24)
+                });
+                await _distCache.RemoveAsync("featured_rooms_6");
+                await _distCache.RemoveAsync("featured_rooms_8");
+                await _distCache.RemoveAsync("featured_rooms_10");
+                await _distCache.RemoveAsync("featured_rooms_12");
+                if (roomId.HasValue)
+                {
+                    await _distCache.RemoveAsync($"room:detail:{roomId.Value}");
+                    await _distCache.RemoveAsync($"room_detail:{roomId.Value}");
+                }
+            }
+            if (_memCache != null && roomId.HasValue)
+            {
+                _memCache.Remove($"room:detail:{roomId.Value}");
+                _memCache.Remove($"room_detail:{roomId.Value}");
+            }
+        }
+        catch { }
     }
 
     public async Task<ServiceResult<LeaseContractResponseDto>> CreateLeaseAsync(Guid landlordId, CreateLeaseDto dto)
@@ -119,6 +156,7 @@ public class LeaseService : ILeaseService
 
         _db.LeaseContracts.Add(lease);
         await _db.SaveChangesAsync();
+        await InvalidateRoomsCacheAsync(lease.RoomId);
 
         if (_kafkaProducer != null)
         {
@@ -325,6 +363,7 @@ public class LeaseService : ILeaseService
             _db.RentalPaymentSchedules.AddRange(depositSchedule, firstRentSchedule);
 
             await _db.SaveChangesAsync();
+            await InvalidateRoomsCacheAsync(lease.RoomId);
 
             if (_kafkaProducer != null)
             {
@@ -397,6 +436,7 @@ public class LeaseService : ILeaseService
         }
 
         await _db.SaveChangesAsync();
+        await InvalidateRoomsCacheAsync(lease.RoomId);
 
         if (_kafkaProducer != null)
         {
