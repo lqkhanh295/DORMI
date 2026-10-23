@@ -271,6 +271,37 @@ public static class DbSeeder
                 CREATE INDEX IF NOT EXISTS ""IX_MaintenanceRequests_LeaseContractId_Status"" ON ""MaintenanceRequests"" (""LeaseContractId"", ""Status"");
                 CREATE INDEX IF NOT EXISTS ""IX_Messages_Sender_Receiver_SentAt"" ON ""Messages"" (""SenderId"", ""ReceiverId"", ""SentAt"" DESC);");
 
+            // ponytail: ensure demo landlord has sample lease contracts for rating modal
+            var demoLlGuid = Guid.Parse("b0000000-0000-0000-0000-000000000001");
+            var landlord = await db.Users.FirstOrDefaultAsync(u => u.Id == demoLlGuid || u.Email == "landlord@dormi.vn");
+            if (landlord != null)
+            {
+                var hasLease = await db.LeaseContracts.AnyAsync(l => l.LandlordId == landlord.Id);
+                if (!hasLease)
+                {
+                    var demoTenant = await db.Users.FirstOrDefaultAsync(u => u.Email == "tenant@dormi.vn" || u.Role == UserRole.Customer);
+                    var demoRoom = await db.Rooms.FirstOrDefaultAsync(r => r.LandlordId == landlord.Id);
+                    if (demoTenant != null && demoRoom != null)
+                    {
+                        var sampleLease = new LeaseContract
+                        {
+                            Id = Guid.NewGuid(),
+                            LandlordId = landlord.Id,
+                            TenantId = demoTenant.Id,
+                            RoomId = demoRoom.Id,
+                            StartDate = DateTime.UtcNow.AddMonths(-3),
+                            EndDate = DateTime.UtcNow.AddMonths(9),
+                            MonthlyRent = demoRoom.Price > 0 ? demoRoom.Price : 4500000,
+                            Deposit = demoRoom.Price > 0 ? demoRoom.Price : 4500000,
+                            Status = "Active",
+                            CreatedAt = DateTime.UtcNow.AddMonths(-3)
+                        };
+                        db.LeaseContracts.Add(sampleLease);
+                        await db.SaveChangesAsync();
+                    }
+                }
+            }
+
             // ponytail: ensure demo landlord has active Pro subscription in production DB
             var ll1 = Guid.Parse("b0000000-0000-0000-0000-000000000001");
             var hasSub = await db.LandlordSubscriptions.AnyAsync(s => s.LandlordId == ll1 && s.IsActive && s.EndDate > DateTime.UtcNow);
