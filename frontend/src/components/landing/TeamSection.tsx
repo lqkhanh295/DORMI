@@ -1,4 +1,4 @@
-import { Users, Crown, Code2, Layout, Palette, Megaphone, GraduationCap, IdCard, Sparkles } from 'lucide-react';
+import { Users, Crown, Code2, Layout, Palette, Megaphone, GraduationCap, IdCard, Sparkles, Camera } from 'lucide-react';
 
 interface TeamMember {
   name: string;
@@ -60,14 +60,14 @@ const TEAM_MEMBERS: TeamMember[] = [
     name: 'Vũ Nguyễn Đoan Nguyên',
     studentId: 'SS193976',
     major: 'MULTIMEDIA COMMUNICATION (MC)',
-    role: 'UI/UX Designer',
+    role: 'Media',
     subRole: 'Thiết kế giao diện & Media',
     initials: 'DN',
     accentColor: 'border-slate-200 bg-white hover:border-purple-300',
     badgeBg: 'bg-purple-50 text-purple-700 border-purple-200',
     badgeText: 'text-purple-700',
     avatarBg: 'bg-gradient-to-br from-purple-500 to-purple-700 text-white shadow-purple-200',
-    icon: Palette
+    icon: Camera
   },
   {
     name: 'Nguyễn Ngọc Quỳnh Anh',
@@ -88,15 +88,15 @@ export function TeamSection() {
   return (
     <section id="team-section" className="py-16 md:py-20 bg-gradient-to-b from-white via-slate-50 to-[#F8FAFC] border-t border-slate-200/80">
       <div className="container-dormi max-w-7xl mx-auto px-4 sm:px-6">
-        
+
         {/* Section Header */}
         <div className="text-center max-w-2xl mx-auto space-y-2.5 mb-10 md:mb-12">
           <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-blue-50 text-[#00153D] border border-blue-200/80 text-xs font-bold shadow-2xs">
             <Users className="w-3.5 h-3.5 text-blue-600" />
-            <span>DORMI Team · Term 8 EXE</span>
+            <span>DORMI Team</span>
           </div>
           <h2 className="text-2xl sm:text-3xl font-black text-[#00153D] tracking-tight">
-            Đội ngũ sáng lập & Phát triển (DORMI Team)
+            Đội ngũ sáng lập & Phát triển
           </h2>
           <p className="text-xs sm:text-sm text-slate-600 leading-relaxed max-w-xl mx-auto">
             Sinh viên Đại học FPT TP.HCM nghiên cứu và phát triển giải pháp lưu trú thông minh, bảo vệ sinh viên trước vấn nạn phòng trọ ảo và lừa đảo tiền cọc.
@@ -116,8 +116,8 @@ export function TeamSection() {
                 {member.isLeader && (
                   <div className="absolute -top-3 left-1/2 -translate-x-1/2">
                     <span className="inline-flex items-center gap-1 px-3 py-0.5 rounded-full text-[10px] font-black uppercase tracking-wider bg-gradient-to-r from-amber-500 to-amber-600 text-white shadow-xs border border-amber-300">
-                      <Sparkles className="w-3 h-3 text-amber-200" />
-                      <span>Team Leader</span>
+                      <Crown className="w-3 h-3 text-amber-200" />
+                      <span>Leader</span>
                     </span>
                   </div>
                 )}

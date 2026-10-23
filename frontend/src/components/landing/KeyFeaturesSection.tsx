@@ -4,7 +4,7 @@ export function KeyFeaturesSection() {
   const features = [
     {
       icon: Compass,
-      title: 'Tìm kiếm không gian địa lý PostGIS',
+      title: 'Tìm kiếm không gian địa lý',
       desc: 'Tra cứu phòng trọ theo bán kính trường đại học, khu công nghệ cao hoặc quận huyện với thuật toán không gian PostGIS chuẩn xác đến từng mét.'
     },
     {
@@ -24,7 +24,7 @@ export function KeyFeaturesSection() {
     },
     {
       icon: CreditCard,
-      title: 'Thanh toán cọc trực tuyến VietQR PayOS',
+      title: 'Thanh toán cọc trực tuyến',
       desc: 'Tự động tạo mã QR thanh toán đặt cọc ngân hàng với chữ ký số HMAC-SHA256, tự động gạch nợ và cập nhật trạng thái phòng cho thuê.'
     },
     {
@@ -50,7 +50,7 @@ export function KeyFeaturesSection() {
           {features.map((f, idx) => {
             const Icon = f.icon;
             return (
-              <div 
+              <div
                 key={idx}
                 className="bg-slate-50/60 rounded-2xl p-6 border border-slate-200 hover:border-slate-300 hover:shadow-xs transition-all duration-200 flex flex-col justify-between"
               >
