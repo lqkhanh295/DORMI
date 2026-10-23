@@ -402,7 +402,9 @@ public class RoomService : IRoomService
                 Longitude = r.Longitude,
                 DistanceKm = (userPoint != null && r.Location != null) ? Math.Round(r.Location.Distance(userPoint) / 1000.0, 2) : null,
                 Virtual3DUrl = r.Virtual3DUrl,
-                Status = r.Status,
+                Status = (_db.LeaseContracts.Any(l => l.RoomId == r.Id && (l.Status == "Active" || l.Status == "Signed")) && r.Status != RoomStatus.Hidden && r.Status != RoomStatus.PendingApproval)
+                    ? RoomStatus.Rented
+                    : r.Status,
                 IsVerifiedLandlord = r.Landlord.IsVerified,
                 CreatedAt = r.CreatedAt,
                 IsBoosted = r.IsBoosted && r.BoostExpiresAt > now,

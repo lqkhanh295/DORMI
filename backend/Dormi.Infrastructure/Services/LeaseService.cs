@@ -66,6 +66,19 @@ public class LeaseService : ILeaseService
         catch { }
     }
 
+    private void InvalidateLeasesCache(Guid landlordId, Guid tenantId)
+    {
+        if (_memCache != null)
+        {
+            _memCache.Remove($"my_leases:{landlordId}:user");
+            _memCache.Remove($"my_leases:{landlordId}:admin");
+            _memCache.Remove($"my_leases:{tenantId}:user");
+            _memCache.Remove($"my_leases:{tenantId}:admin");
+            _memCache.Remove($"landlord_analytics:{landlordId}");
+            _memCache.Remove($"landlord_analytics_v2:{landlordId}");
+        }
+    }
+
     public async Task<ServiceResult<LeaseContractResponseDto>> CreateLeaseAsync(Guid landlordId, CreateLeaseDto dto)
     {
         var landlord = await _db.Users.FindAsync(landlordId);
@@ -179,6 +192,7 @@ public class LeaseService : ILeaseService
             });
         }
 
+        InvalidateLeasesCache(lease.LandlordId, lease.TenantId);
         return ServiceResult<LeaseContractResponseDto>.Ok(MapToDto(lease, room, landlord, tenant));
     }
 
@@ -276,6 +290,7 @@ public class LeaseService : ILeaseService
             return ServiceResult<LeaseContractResponseDto>.Forbidden();
         }
 
+        InvalidateLeasesCache(lease.LandlordId, lease.TenantId);
         return ServiceResult<LeaseContractResponseDto>.Ok(MapToDto(lease, lease.Room, lease.Landlord, lease.Tenant));
     }
 
@@ -385,6 +400,7 @@ public class LeaseService : ILeaseService
                 });
             }
 
+            InvalidateLeasesCache(lease.LandlordId, lease.TenantId);
             return ServiceResult<LeaseContractResponseDto>.Ok(MapToDto(lease, lease.Room ?? room!, lease.Landlord, lease.Tenant));
         }
         finally
@@ -454,6 +470,7 @@ public class LeaseService : ILeaseService
             });
         }
 
+        InvalidateLeasesCache(lease.LandlordId, lease.TenantId);
         return ServiceResult<LeaseContractResponseDto>.Ok(MapToDto(lease, lease.Room, lease.Landlord, lease.Tenant));
     }
 

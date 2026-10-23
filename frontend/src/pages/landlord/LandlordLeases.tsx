@@ -189,6 +189,13 @@ export default function LandlordLeases() {
         reason: terminateReason.trim()
       });
       toast.success('Đã chấm dứt hợp đồng thuê thành công. Phòng đã sẵn sàng đón khách mới.');
+      // Immediate optimistic update of UI state
+      setLeases(prev => prev.map(l => l.id === terminatingLease.id ? {
+        ...l,
+        status: 'Terminated',
+        terminatedAt: new Date().toISOString(),
+        terminationReason: terminateReason.trim()
+      } : l));
       setTerminatingLease(null);
       setTerminateReason('');
       fetchLeases();
