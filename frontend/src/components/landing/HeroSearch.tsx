@@ -1,5 +1,5 @@
 import { useNavigate } from 'react-router-dom';
-import { Search, MapPin, Coins, ShieldCheck, Map, X, Home, GraduationCap, Users, UserPlus, Award } from 'lucide-react';
+import { Search, MapPin, Coins, ShieldCheck, X, Home, GraduationCap, Users, UserPlus } from 'lucide-react';
 
 interface HeroSearchProps {
   district: string;
@@ -53,7 +53,7 @@ export function HeroSearch({
   return (
     <section className="pt-6 pb-4 bg-[#F8FAFC] border-b border-slate-200/80">
       <div className="container-dormi space-y-4">
-        
+
         {/* Hero Introduction & Top Call-To-Action (Modern Top Banner) */}
         <div className="bg-gradient-to-br from-white via-blue-50/40 to-slate-50 border border-slate-200/90 rounded-3xl p-6 sm:p-8 shadow-xs space-y-5">
           <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-6">
@@ -77,7 +77,6 @@ export function HeroSearch({
                 onClick={handleOpenMap}
                 className="inline-flex items-center gap-2 px-4 py-2.5 text-xs sm:text-sm font-bold text-[#00153D] bg-white hover:bg-slate-50 border border-slate-300 rounded-xl transition-all shadow-2xs hover:shadow-xs active:scale-[0.98]"
               >
-                <Map className="w-4 h-4 text-blue-700" />
                 <span>Xem trên bản đồ</span>
               </button>
               <button
@@ -85,7 +84,6 @@ export function HeroSearch({
                 onClick={() => document.getElementById('team-section')?.scrollIntoView({ behavior: 'smooth' })}
                 className="inline-flex items-center gap-2 px-4 py-2.5 text-xs sm:text-sm font-bold text-blue-800 bg-blue-50 hover:bg-blue-100 border border-blue-200 rounded-xl transition-all shadow-2xs hover:shadow-xs active:scale-[0.98]"
               >
-                <Award className="w-4 h-4 text-blue-700" />
                 <span>Thông tin nhóm dự án</span>
               </button>
             </div>
@@ -123,7 +121,7 @@ export function HeroSearch({
         {/* Compact Search & Filter Bar */}
         <div className="bg-white rounded-2xl border border-slate-200/90 shadow-sm p-2 sm:p-2.5">
           <div className="grid grid-cols-1 sm:grid-cols-12 gap-2 items-center">
-            
+
             {/* Search Keyword Input (4 cols) */}
             <div className="sm:col-span-4 relative">
               <Search className="w-4 h-4 text-slate-400 absolute left-3.5 top-1/2 -translate-y-1/2 pointer-events-none" />
@@ -226,15 +224,14 @@ export function HeroSearch({
             <span className="text-slate-500 font-semibold shrink-0 mr-1 flex items-center gap-1">
               <MapPin className="w-3.5 h-3.5 text-slate-400" /> Khu vực:
             </span>
-            
+
             <button
               type="button"
               onClick={() => onDistrictChange('')}
-              className={`px-3 py-1 rounded-full font-semibold transition-all shrink-0 cursor-pointer ${
-                !district 
-                  ? 'bg-[#00153D] text-white shadow-2xs' 
+              className={`px-3 py-1 rounded-full font-semibold transition-all shrink-0 cursor-pointer ${!district
+                  ? 'bg-[#00153D] text-white shadow-2xs'
                   : 'bg-white text-slate-600 hover:bg-slate-100 border border-slate-200'
-              }`}
+                }`}
             >
               Tất cả khu vực
             </button>
@@ -244,11 +241,10 @@ export function HeroSearch({
                 key={d}
                 type="button"
                 onClick={() => onDistrictChange(district === d ? '' : d)}
-                className={`px-3 py-1 rounded-full font-semibold transition-all shrink-0 cursor-pointer ${
-                  district === d 
-                    ? 'bg-[#00153D] text-white shadow-2xs' 
+                className={`px-3 py-1 rounded-full font-semibold transition-all shrink-0 cursor-pointer ${district === d
+                    ? 'bg-[#00153D] text-white shadow-2xs'
                     : 'bg-white text-slate-600 hover:bg-slate-100 border border-slate-200'
-                }`}
+                  }`}
               >
                 {d}
               </button>
@@ -257,11 +253,10 @@ export function HeroSearch({
             <button
               type="button"
               onClick={() => onPriceChange(price === 'under3m' ? '' : 'under3m')}
-              className={`px-3 py-1 rounded-full font-semibold transition-all shrink-0 cursor-pointer ${
-                price === 'under3m' 
-                  ? 'bg-[#00153D] text-white shadow-2xs' 
+              className={`px-3 py-1 rounded-full font-semibold transition-all shrink-0 cursor-pointer ${price === 'under3m'
+                  ? 'bg-[#00153D] text-white shadow-2xs'
                   : 'bg-white text-slate-600 hover:bg-slate-100 border border-slate-200'
-              }`}
+                }`}
             >
               Dưới 3 triệu
             </button>
@@ -269,11 +264,10 @@ export function HeroSearch({
             <button
               type="button"
               onClick={() => onPriceChange(price === '3mTo5m' ? '' : '3mTo5m')}
-              className={`px-3 py-1 rounded-full font-semibold transition-all shrink-0 cursor-pointer ${
-                price === '3mTo5m' 
-                  ? 'bg-[#00153D] text-white shadow-2xs' 
+              className={`px-3 py-1 rounded-full font-semibold transition-all shrink-0 cursor-pointer ${price === '3mTo5m'
+                  ? 'bg-[#00153D] text-white shadow-2xs'
                   : 'bg-white text-slate-600 hover:bg-slate-100 border border-slate-200'
-              }`}
+                }`}
             >
               3 - 5 triệu
             </button>
@@ -282,11 +276,10 @@ export function HeroSearch({
               <button
                 type="button"
                 onClick={() => onVerifiedOnlyChange(!verifiedOnly)}
-                className={`inline-flex items-center gap-1 px-3 py-1 rounded-full font-semibold transition-all shrink-0 cursor-pointer ${
-                  verifiedOnly 
-                    ? 'bg-emerald-700 text-white shadow-2xs' 
+                className={`inline-flex items-center gap-1 px-3 py-1 rounded-full font-semibold transition-all shrink-0 cursor-pointer ${verifiedOnly
+                    ? 'bg-emerald-700 text-white shadow-2xs'
                     : 'bg-white text-emerald-800 hover:bg-emerald-50 border border-emerald-300'
-                }`}
+                  }`}
               >
                 <ShieldCheck className="w-3.5 h-3.5" />
                 <span>Chủ trọ đã xác minh</span>
@@ -317,11 +310,10 @@ export function HeroSearch({
                   key={u.label}
                   type="button"
                   onClick={() => onQueryChange(isSelected ? '' : u.query)}
-                  className={`inline-flex items-center gap-1 px-2.5 py-1 rounded-full font-medium transition-all shrink-0 cursor-pointer ${
-                    isSelected
+                  className={`inline-flex items-center gap-1 px-2.5 py-1 rounded-full font-medium transition-all shrink-0 cursor-pointer ${isSelected
                       ? 'bg-blue-700 text-white shadow-2xs font-bold'
                       : 'bg-blue-50/70 hover:bg-blue-100/80 text-blue-800 border border-blue-200/60'
-                  }`}
+                    }`}
                 >
                   <GraduationCap className="w-3 h-3 text-blue-600" />
                   <span>{u.label}</span>

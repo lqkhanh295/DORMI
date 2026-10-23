@@ -4,7 +4,6 @@ import {
   Search,
   UserPlus,
   PhoneCall,
-  CheckCircle,
   Mail,
   Phone,
   Copy,
@@ -46,10 +45,6 @@ export function FinalCTA() {
 
       <div className="container-dormi relative z-10 text-center max-w-6xl mx-auto space-y-6">
         <div className="space-y-4">
-          <div className="inline-flex items-center gap-2 px-3.5 py-1 rounded-full bg-white/10 text-[#F2A900] text-xs font-bold border border-white/20">
-            <CheckCircle className="w-3.5 h-3.5 text-[#F2A900]" />
-            <span>Nền tảng mở công khai - Không cần đăng nhập để trải nghiệm</span>
-          </div>
 
           <h2 className="text-2xl sm:text-3xl lg:text-4xl xl:text-[42px] font-black tracking-tight text-white leading-tight whitespace-normal sm:whitespace-nowrap">
             Trải nghiệm tìm trọ & ở ghép thế hệ mới ngay hôm nay
