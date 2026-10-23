@@ -50,6 +50,9 @@ export default function LandingPage() {
         onResetFilters={handleResetFilters}
       />
 
+      {/* 3. CALL TO ACTION & TRẢI NGHIỆM TRỰC TIẾP */}
+      <FinalCTA />
+
       {/* 3. VẤN ĐỀ VÀ GIẢI PHÁP (PROBLEM & SOLUTION) */}
       <ProblemSolutionSection />
 
@@ -65,8 +68,6 @@ export default function LandingPage() {
       {/* 7. ĐỘI NGŨ PHÁT TRIỂN DỰ ÁN (TEAM MEMBERS - CÁCH 1) */}
       <TeamSection />
 
-      {/* 8. CALL TO ACTION (ĐĂNG KÝ / LIÊN HỆ / DÙNG THỬ / APP STORE) */}
-      <FinalCTA />
     </div>
   );
 }
