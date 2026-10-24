@@ -99,22 +99,14 @@ export default function LeadAnalytics() {
     if (!boostCheckout?.transactionRef) return;
     try {
       setIsVerifyingBoost(true);
-      if (import.meta.env.DEV) {
-        const res = await landlordApi.simulateGatewayPayment(boostCheckout.transactionRef);
-        toast.success(res.message || 'Thanh toán thử nghiệm thành công!');
+      const statusRes = await landlordApi.checkPaymentStatus(boostCheckout.transactionRef);
+      if (statusRes.status === 'Completed') {
+        toast.success('Thanh toán thành công! Tin đăng đã được ưu tiên hiển thị.');
         setBoostingRoom(null);
         setBoostCheckout(null);
         fetchAnalytics();
       } else {
-        const statusRes = await landlordApi.checkPaymentStatus(boostCheckout.transactionRef);
-        if (statusRes.status === 'Completed') {
-          toast.success('Thanh toán thành công! Tin đăng đã được ưu tiên hiển thị.');
-          setBoostingRoom(null);
-          setBoostCheckout(null);
-          fetchAnalytics();
-        } else {
-          toast.info('Hệ thống đang chờ ngân hàng xác nhận giao dịch. Vui lòng thử lại sau giây lát.');
-        }
+        toast.info('Hệ thống đang chờ ngân hàng xác nhận giao dịch. Vui lòng thử lại sau giây lát.');
       }
     } catch (err: any) {
       toast.error(err?.message || 'Chưa thể xác nhận thanh toán vào lúc này.');
@@ -273,17 +265,67 @@ export default function LeadAnalytics() {
                   {(() => {
                     const maxVal = Math.max(
                       ...dailyViews.map((d: any) => Math.max(Number(d.views) || 0, Number(d.saves) || 0)),
-                      4
+                      5
                     );
                     const plotW = 590;
-                    const plotH = 135;
+                    const plotH = 130;
                     const padL = 35;
-                    const yBase = 155;
-                    const step = plotW / dailyViews.length;
+                    const yBase = 150;
+                    const count = dailyViews.length || 1;
+                    const step = plotW / Math.max(count - 1, 1);
+
+                    const ptsViews = dailyViews.map((d: any, i: number) => ({
+                      x: padL + i * step,
+                      y: yBase - Math.min(plotH, ((Number(d.views) || 0) / maxVal) * (plotH - 10))
+                    }));
+
+                    const ptsSaves = dailyViews.map((d: any, i: number) => ({
+                      x: padL + i * step,
+                      y: yBase - Math.min(plotH, ((Number(d.saves) || 0) / maxVal) * (plotH - 10))
+                    }));
+
+                    const buildSmoothCurve = (pts: { x: number; y: number }[]) => {
+                      if (pts.length === 0) return '';
+                      if (pts.length === 1) return `M ${pts[0].x} ${pts[0].y}`;
+                      let d = `M ${pts[0].x} ${pts[0].y}`;
+                      for (let i = 0; i < pts.length - 1; i++) {
+                        const p0 = pts[i === 0 ? 0 : i - 1];
+                        const p1 = pts[i];
+                        const p2 = pts[i + 1];
+                        const p3 = pts[i + 2] || p2;
+                        const cp1x = p1.x + (p2.x - p0.x) / 6;
+                        const cp1y = p1.y + (p2.y - p0.y) / 6;
+                        const cp2x = p2.x - (p3.x - p1.x) / 6;
+                        const cp2y = p2.y - (p3.y - p1.y) / 6;
+                        d += ` C ${cp1x.toFixed(1)} ${cp1y.toFixed(1)}, ${cp2x.toFixed(1)} ${cp2y.toFixed(1)}, ${p2.x.toFixed(1)} ${p2.y.toFixed(1)}`;
+                      }
+                      return d;
+                    };
+
+                    const viewsLinePath = buildSmoothCurve(ptsViews);
+                    const savesLinePath = buildSmoothCurve(ptsSaves);
+
+                    const firstX = ptsViews[0]?.x ?? padL;
+                    const lastX = ptsViews[ptsViews.length - 1]?.x ?? (padL + plotW);
+                    const viewsAreaPath = viewsLinePath ? `${viewsLinePath} L ${lastX} ${yBase} L ${firstX} ${yBase} Z` : '';
+                    const savesAreaPath = savesLinePath ? `${savesLinePath} L ${lastX} ${yBase} L ${firstX} ${yBase} Z` : '';
 
                     return (
                       <div className="relative w-full">
                         <svg viewBox="0 0 650 185" className="w-full h-56 select-none overflow-visible">
+                          <defs>
+                            <linearGradient id="leadViewsGrad" x1="0" y1="0" x2="0" y2="1">
+                              <stop offset="0%" stopColor="#2563EB" stopOpacity="0.32" />
+                              <stop offset="85%" stopColor="#2563EB" stopOpacity="0.04" />
+                              <stop offset="100%" stopColor="#2563EB" stopOpacity="0.0" />
+                            </linearGradient>
+                            <linearGradient id="leadSavesGrad" x1="0" y1="0" x2="0" y2="1">
+                              <stop offset="0%" stopColor="#E11D48" stopOpacity="0.28" />
+                              <stop offset="85%" stopColor="#E11D48" stopOpacity="0.03" />
+                              <stop offset="100%" stopColor="#E11D48" stopOpacity="0.0" />
+                            </linearGradient>
+                          </defs>
+
                           {/* Y-axis gridlines */}
                           {[0, 0.5, 1].map((ratio, idx) => {
                             const y = yBase - ratio * plotH;
@@ -313,64 +355,110 @@ export default function LeadAnalytics() {
                             );
                           })}
 
-                          {/* Grouped Bars per day */}
+                          {/* Area Fills */}
+                          {viewsAreaPath && <path d={viewsAreaPath} fill="url(#leadViewsGrad)" />}
+                          {savesAreaPath && <path d={savesAreaPath} fill="url(#leadSavesGrad)" />}
+
+                          {/* Trend Lines */}
+                          {viewsLinePath && (
+                            <path 
+                              d={viewsLinePath} 
+                              fill="none" 
+                              stroke="#2563EB" 
+                              strokeWidth="2.5" 
+                              strokeLinecap="round" 
+                              strokeLinejoin="round" 
+                            />
+                          )}
+                          {savesLinePath && (
+                            <path 
+                              d={savesLinePath} 
+                              fill="none" 
+                              stroke="#E11D48" 
+                              strokeWidth="2" 
+                              strokeLinecap="round" 
+                              strokeLinejoin="round" 
+                            />
+                          )}
+
+                          {/* Interactive Day Columns & Hover Markers */}
                           {dailyViews.map((item: any, i: number) => {
-                            const cx = padL + i * step + step / 2;
+                            const cx = padL + i * step;
                             const views = Number(item.views) || 0;
                             const saves = Number(item.saves) || 0;
-                            const vHeight = maxVal > 0 ? (views / maxVal) * (plotH - 8) : 0;
-                            const sHeight = maxVal > 0 ? (saves / maxVal) * (plotH - 8) : 0;
+                            const yV = yBase - Math.min(plotH, (views / maxVal) * (plotH - 10));
+                            const yS = yBase - Math.min(plotH, (saves / maxVal) * (plotH - 10));
                             const isHovered = hoveredPoint === item;
+                            const showLabel = i === 0 || i === dailyViews.length - 1 || i % Math.max(1, Math.floor(dailyViews.length / 5)) === 0;
 
                             return (
                               <g key={i}>
-                                {/* Hover background pill */}
+                                {/* Transparent full-height hover target */}
                                 <rect 
-                                  x={cx - step / 2 + 2} 
+                                  x={cx - step / 2} 
                                   y={15} 
-                                  width={step - 4} 
-                                  height={plotH + 8} 
-                                  fill={isHovered ? "rgba(241, 245, 249, 0.85)" : "transparent"} 
-                                  rx="8" 
-                                  className="cursor-pointer transition-colors duration-150"
+                                  width={Math.max(step, 10)} 
+                                  height={plotH + 10} 
+                                  fill="transparent" 
+                                  className="cursor-pointer"
                                   onMouseEnter={() => setHoveredPoint(item)}
                                   onMouseLeave={() => setHoveredPoint(null)}
                                 />
 
-                                {/* Blue View Bar */}
-                                <rect 
-                                  x={cx - 10} 
-                                  y={yBase - Math.max(views > 0 ? 6 : 0, vHeight)} 
-                                  width="8" 
-                                  height={Math.max(views > 0 ? 6 : 0, vHeight)} 
-                                  fill="#2563EB" 
-                                  rx="3" 
-                                  className="pointer-events-none transition-all duration-200"
-                                />
+                                {/* Hover hairline guide */}
+                                {isHovered && (
+                                  <line 
+                                    x1={cx} 
+                                    y1={15} 
+                                    x2={cx} 
+                                    y2={yBase} 
+                                    stroke="#94A3B8" 
+                                    strokeWidth="1.2" 
+                                    strokeDasharray="3 3" 
+                                    className="pointer-events-none"
+                                  />
+                                )}
 
-                                {/* Rose Save Bar */}
-                                <rect 
-                                  x={cx + 2} 
-                                  y={yBase - Math.max(saves > 0 ? 6 : 0, sHeight)} 
-                                  width="8" 
-                                  height={Math.max(saves > 0 ? 6 : 0, sHeight)} 
-                                  fill="#E11D48" 
-                                  rx="3" 
-                                  className="pointer-events-none transition-all duration-200"
-                                />
+                                {/* Views Point Dot */}
+                                {(views > 0 || isHovered) && (
+                                  <circle 
+                                    cx={cx} 
+                                    cy={yV} 
+                                    r={isHovered ? 5 : 3} 
+                                    fill="#2563EB" 
+                                    stroke="#FFFFFF" 
+                                    strokeWidth={isHovered ? 2.5 : 1.5}
+                                    className="pointer-events-none transition-all duration-150"
+                                  />
+                                )}
+
+                                {/* Saves Point Dot */}
+                                {(saves > 0 || isHovered) && (
+                                  <circle 
+                                    cx={cx} 
+                                    cy={yS} 
+                                    r={isHovered ? 4.5 : 2.5} 
+                                    fill="#E11D48" 
+                                    stroke="#FFFFFF" 
+                                    strokeWidth={isHovered ? 2 : 1}
+                                    className="pointer-events-none transition-all duration-150"
+                                  />
+                                )}
 
                                 {/* X-axis Date label */}
-                                <text 
-                                  x={cx} 
-                                  y={yBase + 18} 
-                                  textAnchor="middle" 
-                                  fill={isHovered ? "#0F172A" : "#64748B"} 
-                                  fontSize="10" 
-                                  fontWeight={isHovered ? "700" : "500"}
-                                  className="pointer-events-none"
-                                >
-                                  {item.date}
-                                </text>
+                                {showLabel && (
+                                  <text 
+                                    x={cx} 
+                                    y={yBase + 18} 
+                                    textAnchor="middle" 
+                                    fill={isHovered ? "#0F172A" : "#64748B"} 
+                                    fontSize="10" 
+                                    fontWeight={isHovered ? "700" : "500"}
+                                    className="pointer-events-none"
+                                  >
+                                    {item.date}
+                                  </text>
+                                )}
                               </g>
                             );
                           })}

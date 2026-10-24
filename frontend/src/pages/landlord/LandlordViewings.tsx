@@ -51,6 +51,17 @@ export default function LandlordViewings() {
 
   useEffect(() => {
     fetchAppointments();
+
+    const handleRealtimeUpdate = () => {
+      fetchAppointments();
+    };
+
+    window.addEventListener('appointment-status-updated', handleRealtimeUpdate);
+    window.addEventListener('appointment-created', handleRealtimeUpdate);
+    return () => {
+      window.removeEventListener('appointment-status-updated', handleRealtimeUpdate);
+      window.removeEventListener('appointment-created', handleRealtimeUpdate);
+    };
   }, []);
 
   useEffect(() => {
@@ -66,6 +77,18 @@ export default function LandlordViewings() {
 
   const handleUpdateStatus = async (id: string, status: string, reason?: string) => {
     try {
+      // Optimistic update so the list and tab counters react instantaneously
+      setAppointments(prev => prev.map(a => 
+        (a.id && id && a.id.toLowerCase() === id.toLowerCase()) ? { ...a, status } : a
+      ));
+
+      // Automatically switch tab according to target status
+      if (status === 'Completed') {
+        setActiveTab('completed');
+      } else if (status === 'Confirmed' || status === 'Approved') {
+        setActiveTab('confirmed');
+      }
+
       await appointmentsApi.updateStatus(id, status, reason);
       toast.success(
         status === 'Confirmed' ? 'Đã xác nhận lịch hẹn xem phòng!' :
@@ -76,6 +99,7 @@ export default function LandlordViewings() {
       fetchAppointments();
     } catch (err: any) {
       toast.error(err?.message || 'Không thể cập nhật trạng thái lịch hẹn.');
+      fetchAppointments();
     }
   };
 
@@ -86,10 +110,17 @@ export default function LandlordViewings() {
     try {
       setSubmittingAction(true);
       if (actionType === 'reschedule') {
+        setAppointments(prev => prev.map(a => 
+          (a.id && selectedApp.id && a.id.toLowerCase() === selectedApp.id.toLowerCase()) ? { ...a, status: 'Rescheduled' } : a
+        ));
+        setActiveTab('confirmed');
         const targetIso = `${newDate}T${newTime}:00Z`;
         await appointmentsApi.rescheduleAppointment(selectedApp.id, targetIso, actionReason.trim() || undefined);
         toast.success('Đã gửi đề xuất đổi lịch xem phòng!');
       } else if (actionType === 'reject') {
+        setAppointments(prev => prev.map(a => 
+          (a.id && selectedApp.id && a.id.toLowerCase() === selectedApp.id.toLowerCase()) ? { ...a, status: 'Rejected' } : a
+        ));
         await appointmentsApi.updateStatus(selectedApp.id, 'Rejected', actionReason.trim() || undefined);
         toast.success('Đã từ chối lịch xem phòng.');
       }
@@ -99,6 +130,7 @@ export default function LandlordViewings() {
       fetchAppointments();
     } catch (err: any) {
       toast.error(err?.message || 'Không thể cập nhật lịch xem phòng.');
+      fetchAppointments();
     } finally {
       setSubmittingAction(false);
     }

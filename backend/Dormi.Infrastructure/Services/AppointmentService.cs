@@ -8,6 +8,8 @@ using Dormi.Application.Interfaces;
 using Dormi.Domain.Entities;
 using Dormi.Domain.Enums;
 using Dormi.Infrastructure.Data;
+using Dormi.Infrastructure.Hubs;
+using Microsoft.AspNetCore.SignalR;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Caching.Distributed;
 using Microsoft.Extensions.Caching.Memory;
@@ -20,13 +22,20 @@ public class AppointmentService : IAppointmentService
     private readonly IDistributedCache? _cache;
     private readonly IKafkaProducer? _kafkaProducer;
     private readonly IMemoryCache? _memCache;
+    private readonly IHubContext<ChatHub>? _hubContext;
 
-    public AppointmentService(DormiDbContext db, IDistributedCache? cache = null, IKafkaProducer? kafkaProducer = null, IMemoryCache? memCache = null)
+    public AppointmentService(
+        DormiDbContext db, 
+        IDistributedCache? cache = null, 
+        IKafkaProducer? kafkaProducer = null, 
+        IMemoryCache? memCache = null,
+        IHubContext<ChatHub>? hubContext = null)
     {
         _db = db;
         _cache = cache;
         _kafkaProducer = kafkaProducer;
         _memCache = memCache;
+        _hubContext = hubContext;
     }
 
     public async Task<ServiceResult<object>> CreateAppointmentAsync(Guid userId, CreateAppointmentDto dto)
@@ -119,8 +128,27 @@ public class AppointmentService : IAppointmentService
             });
         }
 
-        _memCache?.Remove($"appointments:{userId}");
-        _memCache?.Remove($"appointments:{room.LandlordId}");
+        if (_hubContext != null)
+        {
+            var landlordGroup = room.LandlordId.ToString().ToLower();
+            var customerGroup = userId.ToString().ToLower();
+            var payload = new
+            {
+                id = appointment.Id,
+                roomId = room.Id,
+                roomTitle = room.Title,
+                customerId = userId,
+                customerName = user.FullName,
+                landlordId = room.LandlordId,
+                status = appointment.Status,
+                appointmentDate = appointment.AppointmentDate,
+                createdAt = appointment.CreatedAt
+            };
+            await _hubContext.Clients.Group(landlordGroup).SendAsync("AppointmentCreated", payload);
+            await _hubContext.Clients.Group(customerGroup).SendAsync("AppointmentCreated", payload);
+        }
+
+        InvalidateAppointmentCache(userId, room.LandlordId);
 
         return ServiceResult<object>.Ok(new { id = appointment.Id, message = "Đặt lịch xem phòng thành công!" });
     }
@@ -188,6 +216,12 @@ public class AppointmentService : IAppointmentService
             return ServiceResult<object>.Forbidden();
         }
 
+        if (appointment.Status == dto.Status)
+        {
+            InvalidateAppointmentCache(appointment.CustomerId, appointment.Room?.LandlordId);
+            return ServiceResult<object>.Ok(new { message = "Lịch hẹn đã ở trạng thái này." });
+        }
+
         if (appointment.Status == "Cancelled" || appointment.Status == "Completed" || appointment.Status == "Rejected" || appointment.Status == "NoShow")
         {
             return ServiceResult<object>.Fail($"Lịch hẹn đã ở trạng thái kết thúc ({appointment.Status}), không thể thay đổi thêm.", 400);
@@ -240,11 +274,32 @@ public class AppointmentService : IAppointmentService
             });
         }
 
-        _memCache?.Remove($"appointments:{appointment.CustomerId}");
-        if (appointment.Room != null)
+        if (_hubContext != null)
         {
-            _memCache?.Remove($"appointments:{appointment.Room.LandlordId}");
+            var customerGroup = appointment.CustomerId.ToString().ToLower();
+            var landlordGroup = (appointment.Room?.LandlordId ?? Guid.Empty).ToString().ToLower();
+            var roomTitle = appointment.Room?.Title ?? "phòng trọ";
+
+            var updatePayload = new
+            {
+                id = appointment.Id,
+                roomId = appointment.RoomId,
+                roomTitle = roomTitle,
+                customerId = appointment.CustomerId,
+                landlordId = appointment.Room?.LandlordId,
+                status = dto.Status,
+                reason = dto.Reason,
+                updatedAt = DateTime.UtcNow
+            };
+
+            await _hubContext.Clients.Group(customerGroup).SendAsync("AppointmentStatusUpdated", updatePayload);
+            if (!string.IsNullOrEmpty(landlordGroup) && landlordGroup != Guid.Empty.ToString())
+            {
+                await _hubContext.Clients.Group(landlordGroup).SendAsync("AppointmentStatusUpdated", updatePayload);
+            }
         }
+
+        InvalidateAppointmentCache(appointment.CustomerId, appointment.Room?.LandlordId);
 
         return ServiceResult<object>.Ok(new { message = "Cập nhật trạng thái lịch hẹn thành công." });
     }
@@ -298,12 +353,46 @@ public class AppointmentService : IAppointmentService
             });
         }
 
-        _memCache?.Remove($"appointments:{appointment.CustomerId}");
-        if (appointment.Room != null)
+        if (_hubContext != null)
         {
-            _memCache?.Remove($"appointments:{appointment.Room.LandlordId}");
+            var customerGroup = appointment.CustomerId.ToString().ToLower();
+            var landlordGroup = (appointment.Room?.LandlordId ?? Guid.Empty).ToString().ToLower();
+            var roomTitle = appointment.Room?.Title ?? "phòng trọ";
+
+            var updatePayload = new
+            {
+                id = appointment.Id,
+                roomId = appointment.RoomId,
+                roomTitle = roomTitle,
+                customerId = appointment.CustomerId,
+                landlordId = appointment.Room?.LandlordId,
+                status = "Rescheduled",
+                newAppointmentDate = dto.NewAppointmentDate,
+                reason = dto.Reason,
+                updatedAt = DateTime.UtcNow
+            };
+
+            await _hubContext.Clients.Group(customerGroup).SendAsync("AppointmentStatusUpdated", updatePayload);
+            if (!string.IsNullOrEmpty(landlordGroup) && landlordGroup != Guid.Empty.ToString())
+            {
+                await _hubContext.Clients.Group(landlordGroup).SendAsync("AppointmentStatusUpdated", updatePayload);
+            }
         }
 
+        InvalidateAppointmentCache(appointment.CustomerId, appointment.Room?.LandlordId);
+
         return ServiceResult<object>.Ok(new { message = "Đổi lịch xem phòng thành công!" });
+    }
+
+    private void InvalidateAppointmentCache(Guid customerId, Guid? landlordId)
+    {
+        if (_memCache == null) return;
+        _memCache.Remove($"appointments:{customerId}:user");
+        _memCache.Remove($"appointments:{customerId}:admin");
+        if (landlordId.HasValue)
+        {
+            _memCache.Remove($"appointments:{landlordId.Value}:user");
+            _memCache.Remove($"appointments:{landlordId.Value}:admin");
+        }
     }
 }

@@ -271,58 +271,176 @@ public static class DbSeeder
                 CREATE INDEX IF NOT EXISTS ""IX_MaintenanceRequests_LeaseContractId_Status"" ON ""MaintenanceRequests"" (""LeaseContractId"", ""Status"");
                 CREATE INDEX IF NOT EXISTS ""IX_Messages_Sender_Receiver_SentAt"" ON ""Messages"" (""SenderId"", ""ReceiverId"", ""SentAt"" DESC);");
 
-            // ponytail: ensure demo landlord has sample lease contracts for rating modal
+            // ponytail: align demo landlord1 (ll1) to strictly own 2 rented rooms (Studio SG & Q1 Mini)
             var demoLlGuid = Guid.Parse("b0000000-0000-0000-0000-000000000001");
-            var landlord = await db.Users.FirstOrDefaultAsync(u => u.Id == demoLlGuid || u.Email == "landlord@dormi.vn");
-            if (landlord != null)
+            var ll4Guid = Guid.Parse("b0000000-0000-0000-0000-000000000004");
+            var q3RoomsToMove = await db.Rooms.Where(r => r.LandlordId == demoLlGuid && (r.Address.Contains("Q.3") || r.Title.Contains("Quận 3"))).ToListAsync();
+            if (q3RoomsToMove.Count > 0)
             {
-                var hasLease = await db.LeaseContracts.AnyAsync(l => l.LandlordId == landlord.Id);
-                if (!hasLease)
+                foreach (var r in q3RoomsToMove)
                 {
-                    var demoTenant = await db.Users.FirstOrDefaultAsync(u => u.Email == "tenant@dormi.vn" || u.Role == UserRole.Customer);
-                    var demoRoom = await db.Rooms.FirstOrDefaultAsync(r => r.LandlordId == landlord.Id);
-                    if (demoTenant != null && demoRoom != null)
+                    r.LandlordId = ll4Guid;
+                    r.Status = RoomStatus.Available;
+                }
+                await db.SaveChangesAsync();
+            }
+
+            // Ensure any leases on rooms now owned by ll4 are also updated
+            var leasesOnOtherRooms = await db.LeaseContracts.Include(l => l.Room).Where(l => l.LandlordId == demoLlGuid && l.Room.LandlordId != demoLlGuid).ToListAsync();
+            foreach (var ol in leasesOnOtherRooms)
+            {
+                ol.LandlordId = ol.Room.LandlordId;
+            }
+            if (leasesOnOtherRooms.Count > 0)
+            {
+                await db.SaveChangesAsync();
+            }
+
+            var ll1RemainingRooms = await db.Rooms.Where(r => r.LandlordId == demoLlGuid).ToListAsync();
+            bool ll1StatusChanged = false;
+            foreach (var r in ll1RemainingRooms)
+            {
+                if (r.Status != RoomStatus.Rented)
+                {
+                    r.Status = RoomStatus.Rented;
+                    ll1StatusChanged = true;
+                }
+            }
+            if (ll1StatusChanged)
+            {
+                await db.SaveChangesAsync();
+            }
+
+            // ponytail: ensure EVERY rented room of demo landlord (ll1) has an active LeaseContract (so /landlord/leases matches /landlord/rooms with 2/2)
+            var demoTenant1 = await db.Users.FirstOrDefaultAsync(u => u.Email == "tenant@dormi.vn" || u.Id == Guid.Parse("c0000000-0000-0000-0000-000000000001"));
+            var demoTenant3 = await db.Users.FirstOrDefaultAsync(u => u.Email == "customer3@dormi.vn" || u.Id == Guid.Parse("c0000000-0000-0000-0000-000000000003"));
+
+            foreach (var r in ll1RemainingRooms)
+            {
+                var existingLease = await db.LeaseContracts.FirstOrDefaultAsync(l => l.RoomId == r.Id && (l.Status == "Active" || l.Status == "PendingSignature"));
+                if (existingLease == null)
+                {
+                    var chosenTenant = (r.Title.Contains("Studio") || r.Address.Contains("Nguyễn Huệ"))
+                        ? (demoTenant1 ?? demoTenant3)
+                        : (demoTenant3 ?? demoTenant1);
+
+                    if (chosenTenant != null)
                     {
-                        var sampleLease = new LeaseContract
+                        var newLease = new LeaseContract
                         {
                             Id = Guid.NewGuid(),
-                            LandlordId = landlord.Id,
-                            TenantId = demoTenant.Id,
-                            RoomId = demoRoom.Id,
+                            LandlordId = demoLlGuid,
+                            TenantId = chosenTenant.Id,
+                            RoomId = r.Id,
                             StartDate = DateTime.UtcNow.AddMonths(-3),
                             EndDate = DateTime.UtcNow.AddMonths(9),
-                            MonthlyRent = demoRoom.Price > 0 ? demoRoom.Price : 4500000,
-                            Deposit = demoRoom.Price > 0 ? demoRoom.Price : 4500000,
+                            MonthlyRent = r.Price > 0 ? r.Price : 8500000,
+                            Deposit = r.Price > 0 ? r.Price : 8500000,
                             Status = "Active",
+                            LandlordSigned = true,
+                            LandlordSignedAt = DateTime.UtcNow.AddMonths(-3),
+                            TenantSigned = true,
+                            TenantSignedAt = DateTime.UtcNow.AddMonths(-3),
+                            ActivatedAt = DateTime.UtcNow.AddMonths(-3),
+                            TenantSignatureData = chosenTenant.FullName,
+                            UtilitiesDescription = "Điện: 3.500đ/kWh, Nước: 100.000đ/người/tháng, Internet: Miễn phí",
+                            TermsAndConditions = "1. Thanh toán tiền phòng đúng hạn vào ngày 05 hàng tháng.\n2. Giữ gìn an ninh trật tự chung, không tụ tập quá 23h.\n3. Giữ gìn vệ sinh và thiết bị trong phòng bàn giao.",
+                            PaymentCycleMonths = 1,
                             CreatedAt = DateTime.UtcNow.AddMonths(-3)
                         };
-                        db.LeaseContracts.Add(sampleLease);
+                        db.LeaseContracts.Add(newLease);
+                        await db.SaveChangesAsync();
+
+                        db.RentalPaymentSchedules.AddRange(
+                            new RentalPaymentSchedule
+                            {
+                                Id = Guid.NewGuid(),
+                                LeaseContractId = newLease.Id,
+                                Type = "Deposit",
+                                Title = "Tiền đặt cọc hợp đồng",
+                                Amount = newLease.Deposit,
+                                DueDate = newLease.StartDate,
+                                PaidAt = newLease.StartDate,
+                                Status = "Paid",
+                                PaymentMethod = "BankTransfer",
+                                PaymentReference = "DEP_" + newLease.Id.ToString("N")[..8].ToUpper()
+                            },
+                            new RentalPaymentSchedule
+                            {
+                                Id = Guid.NewGuid(),
+                                LeaseContractId = newLease.Id,
+                                Type = "Rent",
+                                Title = $"Tiền thuê tháng {DateTime.UtcNow.Month}/{DateTime.UtcNow.Year}",
+                                Amount = newLease.MonthlyRent,
+                                DueDate = DateTime.UtcNow.AddDays(5),
+                                Status = "Pending"
+                            }
+                        );
                         await db.SaveChangesAsync();
                     }
                 }
             }
 
-            // ponytail: ensure demo landlord has active Pro subscription in production DB
-            var ll1 = Guid.Parse("b0000000-0000-0000-0000-000000000001");
-            var hasSub = await db.LandlordSubscriptions.AnyAsync(s => s.LandlordId == ll1 && s.IsActive && s.EndDate > DateTime.UtcNow);
-            if (!hasSub)
+            // Fix any active leases that were seeded without TenantSigned = true
+            var unsignedActiveLeases = await db.LeaseContracts.Where(l => l.Status == "Active" && !l.TenantSigned).ToListAsync();
+            foreach (var l in unsignedActiveLeases)
             {
-                var landlordUser = await db.Users.FirstOrDefaultAsync(u => u.Id == ll1 || u.Email == "landlord@dormi.vn");
-                if (landlordUser != null)
+                l.TenantSigned = true;
+                l.LandlordSigned = true;
+                l.TenantSignedAt ??= l.CreatedAt;
+                l.ActivatedAt ??= l.CreatedAt;
+            }
+            if (unsignedActiveLeases.Count > 0)
+            {
+                await db.SaveChangesAsync();
+            }
+
+            // Ensure sample rental applications exist for demo tenant & landlord
+            if (!await db.RentalApplications.AnyAsync())
+            {
+                var demoTenant = await db.Users.FirstOrDefaultAsync(u => u.Email == "tenant@dormi.vn" || u.Role == UserRole.Customer);
+                var demoRooms = await db.Rooms.Where(r => r.LandlordId == demoLlGuid || r.Status == RoomStatus.Available).Take(2).ToListAsync();
+                if (demoTenant != null && demoRooms.Count > 0)
                 {
-                    db.LandlordSubscriptions.Add(new LandlordSubscription
-                    {
-                        Id = Guid.NewGuid(),
-                        LandlordId = landlordUser.Id,
-                        PlanName = "Pro",
-                        Price = 199000,
-                        StartDate = DateTime.UtcNow.AddDays(-30),
-                        EndDate = DateTime.UtcNow.AddDays(335),
-                        IsActive = true
-                    });
+                    db.RentalApplications.AddRange(
+                        new RentalApplication
+                        {
+                            Id = Guid.NewGuid(),
+                            RoomId = demoRooms[0].Id,
+                            TenantId = demoTenant.Id,
+                            MonthlyIncome = 12000000,
+                            Occupation = "Lập trình viên Web",
+                            EmployerName = "Công ty TNHH Phần mềm",
+                            OccupantsCount = 1,
+                            DesiredMoveInDate = DateTime.UtcNow.AddDays(7),
+                            LeaseDurationMonths = 12,
+                            NoteToLandlord = "Em muốn thuê lâu dài 1 năm, giữ gìn phòng sạch sẽ.",
+                            Status = ApplicationStatus.Submitted,
+                            CreatedAt = DateTime.UtcNow.AddDays(-1)
+                        },
+                        new RentalApplication
+                        {
+                            Id = Guid.NewGuid(),
+                            RoomId = demoRooms.Count > 1 ? demoRooms[1].Id : demoRooms[0].Id,
+                            TenantId = demoTenant.Id,
+                            MonthlyIncome = 15000000,
+                            Occupation = "Lập trình viên Web",
+                            EmployerName = "Công ty Công nghệ",
+                            OccupantsCount = 1,
+                            DesiredMoveInDate = DateTime.UtcNow.AddDays(3),
+                            LeaseDurationMonths = 6,
+                            NoteToLandlord = "Hồ sơ đã được chủ trọ duyệt, sẵn sàng tạo hợp đồng.",
+                            Status = ApplicationStatus.Approved,
+                            ReviewedAt = DateTime.UtcNow.AddHours(-4),
+                            LandlordNotes = "Thu nhập tốt, hồ sơ việc làm rõ ràng.",
+                            CreatedAt = DateTime.UtcNow.AddDays(-2)
+                        }
+                    );
                     await db.SaveChangesAsync();
                 }
             }
+
+            // Demo landlord starts with Free subscription by default, allowing authentic test of PayOS upgrade flow.
         }
         catch (Exception ex)
         {
@@ -453,17 +571,17 @@ public static class DbSeeder
         // ============================================================
         var roomData = new[]
         {
-            // Landlord 1 - Trần Minh Tuấn (Q.1, Q.3)
-            (ll1, "Studio Cao Cấp View Sông Sài Gòn", "Căn hộ studio hiện đại tầng 18, view trực diện sông Sài Gòn. Full nội thất nhập khẩu, bếp từ, máy giặt riêng.", 8500000m, 40.0, "Wifi, Máy lạnh, Tủ lạnh, Máy giặt, Ban công, Thang máy, Bảo vệ 24/7", "Studio", "88 Nguyễn Huệ, Q.1, TP.HCM", RoomStatus.Available,
+            // Landlord 1 - Trần Minh Tuấn (Q.1) - Exactly 2 rented rooms for demo quota
+            (ll1, "Studio Cao Cấp View Sông Sài Gòn", "Căn hộ studio hiện đại tầng 18, view trực diện sông Sài Gòn. Full nội thất nhập khẩu, bếp từ, máy giặt riêng.", 8500000m, 40.0, "Wifi, Máy lạnh, Tủ lạnh, Máy giặt, Ban công, Thang máy, Bảo vệ 24/7", "Studio", "88 Nguyễn Huệ, Q.1, TP.HCM", RoomStatus.Rented,
              new[] { "https://images.unsplash.com/photo-1522708323590-d24dbb6b0267?auto=format&fit=crop&w=800&q=80",
                      "https://images.unsplash.com/photo-1502672260266-1c1de2d96674?auto=format&fit=crop&w=800&q=80" }),
-            (ll1, "Phòng Trọ Sạch Sẽ Quận 3", "Phòng mới xây, sơn trắng thoáng mát, gần chợ Tân Định. Giờ giấc tự do, không chung chủ.", 4200000m, 22.0, "Wifi, Máy lạnh, Giờ giấc tự do, Không chung chủ", "Phòng trọ", "56 Hai Bà Trưng, Q.3, TP.HCM", RoomStatus.Available,
+            (ll4, "Phòng Trọ Sạch Sẽ Quận 3", "Phòng mới xây, sơn trắng thoáng mát, gần chợ Tân Định. Giờ giấc tự do, không chung chủ.", 4200000m, 22.0, "Wifi, Máy lạnh, Giờ giấc tự do, Không chung chủ", "Phòng trọ", "56 Hai Bà Trưng, Q.3, TP.HCM", RoomStatus.Available,
              new[] { "https://images.unsplash.com/photo-1560448204-e02f11c3d0e2?auto=format&fit=crop&w=800&q=80",
                      "https://images.unsplash.com/photo-1631049307264-da0ec9d70304?auto=format&fit=crop&w=800&q=80" }),
-            (ll1, "Căn Hộ Mini Trung Tâm Q.1", "Căn hộ mini đầy đủ tiện nghi ngay trung tâm Quận 1. Gần Bến Thành, Phố đi bộ.", 6800000m, 30.0, "Wifi, Máy lạnh, Tủ lạnh, Bếp riêng, Thang máy, Bảo vệ 24/7", "Căn hộ mini", "15 Lê Lợi, Q.1, TP.HCM", RoomStatus.Available,
+            (ll1, "Căn Hộ Mini Trung Tâm Q.1", "Căn hộ mini đầy đủ tiện nghi ngay trung tâm Quận 1. Gần Bến Thành, Phố đi bộ.", 6800000m, 30.0, "Wifi, Máy lạnh, Tủ lạnh, Bếp riêng, Thang máy, Bảo vệ 24/7", "Căn hộ mini", "15 Lê Lợi, Q.1, TP.HCM", RoomStatus.Rented,
              new[] { "https://images.unsplash.com/photo-1540518614846-7eded433c457?auto=format&fit=crop&w=800&q=80",
                      "https://images.unsplash.com/photo-1586105251261-72a756497a11?auto=format&fit=crop&w=800&q=80" }),
-            (ll1, "Phòng Cho Thuê Giá Sinh Viên Q.3", "Phòng trọ giá rẻ dành cho sinh viên, gần ĐH Kinh tế. Có gác lửng, toilet riêng.", 2800000m, 18.0, "Wifi, Quạt trần, Giờ giấc tự do", "Phòng trọ", "290 Nam Kỳ Khởi Nghĩa, Q.3, TP.HCM", RoomStatus.PendingApproval,
+            (ll4, "Phòng Cho Thuê Giá Sinh Viên Q.3", "Phòng trọ giá rẻ dành cho sinh viên, gần ĐH Kinh tế. Có gác lửng, toilet riêng.", 2800000m, 18.0, "Wifi, Quạt trần, Giờ giấc tự do", "Phòng trọ", "290 Nam Kỳ Khởi Nghĩa, Q.3, TP.HCM", RoomStatus.Available,
              new[] { "https://images.unsplash.com/photo-1595526114035-0d45ed16cfbf?auto=format&fit=crop&w=800&q=80" }),
 
             // Landlord 2 - Nguyễn Thị Hồng (Q.7, Q.4)
@@ -648,12 +766,13 @@ public static class DbSeeder
         // 7. VIEWING APPOINTMENTS
         // ============================================================
         db.ViewingAppointments.AddRange(
-            new ViewingAppointment { Id = Guid.NewGuid(), CustomerId = c1, RoomId = rooms[0].Id, AppointmentDate = now.AddDays(1).Date.AddHours(15), Status = "Approved", Notes = "Em đến lúc 3h chiều nhé", CreatedAt = now.AddDays(-1) },
+            new ViewingAppointment { Id = Guid.NewGuid(), CustomerId = c1, RoomId = rooms[1].Id, AppointmentDate = now.AddDays(2).Date.AddHours(16), Status = "Pending", Notes = "Xem phòng trực tiếp", CreatedAt = now.AddHours(-2) },
+            new ViewingAppointment { Id = Guid.NewGuid(), CustomerId = c1, RoomId = rooms[0].Id, AppointmentDate = now.AddDays(1).Date.AddHours(15), Status = "Confirmed", Notes = "Em đến lúc 3h chiều nhé", CreatedAt = now.AddDays(-1) },
             new ViewingAppointment { Id = Guid.NewGuid(), CustomerId = c2, RoomId = rooms[5].Id, AppointmentDate = now.AddDays(2).Date.AddHours(10), Status = "Pending", Notes = "Em muốn xem phòng sáng thứ 7", CreatedAt = now.AddHours(-12) },
             new ViewingAppointment { Id = Guid.NewGuid(), CustomerId = c3, RoomId = rooms[2].Id, AppointmentDate = now.AddDays(-3).Date.AddHours(14), Status = "Completed", Notes = "Đã xem, đang cân nhắc", CreatedAt = now.AddDays(-5) },
             new ViewingAppointment { Id = Guid.NewGuid(), CustomerId = c4, RoomId = rooms[8].Id, AppointmentDate = now.AddDays(3).Date.AddHours(9), Status = "Pending", CreatedAt = now.AddHours(-6) },
             new ViewingAppointment { Id = Guid.NewGuid(), CustomerId = c5, RoomId = rooms[8].Id, AppointmentDate = now.AddDays(-1).Date.AddHours(16), Status = "Completed", Notes = "Phòng đẹp, sẽ ký hợp đồng", CreatedAt = now.AddDays(-3) },
-            new ViewingAppointment { Id = Guid.NewGuid(), CustomerId = c7, RoomId = rooms[16].Id, AppointmentDate = now.AddDays(4).Date.AddHours(11), Status = "Approved", CreatedAt = now.AddDays(-1) },
+            new ViewingAppointment { Id = Guid.NewGuid(), CustomerId = c7, RoomId = rooms[16].Id, AppointmentDate = now.AddDays(4).Date.AddHours(11), Status = "Confirmed", CreatedAt = now.AddDays(-1) },
             new ViewingAppointment { Id = Guid.NewGuid(), CustomerId = c10, RoomId = rooms[4].Id, AppointmentDate = now.AddDays(-7).Date.AddHours(14), Status = "Rejected", Notes = "Chủ nhà bận, hẹn lại", CreatedAt = now.AddDays(-10) },
             new ViewingAppointment { Id = Guid.NewGuid(), CustomerId = c13, RoomId = rooms[19].Id, AppointmentDate = now.AddDays(5).Date.AddHours(10), Status = "Pending", Notes = "Muốn xem officetel K300", CreatedAt = now.AddHours(-3) }
         );
@@ -661,10 +780,10 @@ public static class DbSeeder
         // ============================================================
         // 8. LANDLORD SUBSCRIPTIONS
         // ============================================================
-        var sub1 = new LandlordSubscription { Id = Guid.NewGuid(), LandlordId = ll1, PlanName = "Pro", Price = 199000, StartDate = now.AddDays(-30), EndDate = now.AddDays(335), IsActive = true };
-        var sub2 = new LandlordSubscription { Id = Guid.NewGuid(), LandlordId = ll2, PlanName = "Pro", Price = 199000, StartDate = now.AddDays(-60), EndDate = now.AddDays(305), IsActive = true };
-        var sub3 = new LandlordSubscription { Id = Guid.NewGuid(), LandlordId = ll3, PlanName = "Enterprise", Price = 499000, StartDate = now.AddDays(-15), EndDate = now.AddDays(350), IsActive = true };
-        var sub5 = new LandlordSubscription { Id = Guid.NewGuid(), LandlordId = ll5, PlanName = "Pro", Price = 199000, StartDate = now.AddDays(-45), EndDate = now.AddDays(320), IsActive = true };
+        var sub1 = new LandlordSubscription { Id = Guid.NewGuid(), LandlordId = ll1, PlanName = "Free", Price = 0, StartDate = now.AddDays(-30), EndDate = now.AddDays(335), IsActive = true };
+        var sub2 = new LandlordSubscription { Id = Guid.NewGuid(), LandlordId = ll2, PlanName = "Pro", Price = 299000, StartDate = now.AddDays(-60), EndDate = now.AddDays(305), IsActive = true };
+        var sub3 = new LandlordSubscription { Id = Guid.NewGuid(), LandlordId = ll3, PlanName = "Enterprise", Price = 799000, StartDate = now.AddDays(-15), EndDate = now.AddDays(350), IsActive = true };
+        var sub5 = new LandlordSubscription { Id = Guid.NewGuid(), LandlordId = ll5, PlanName = "Pro", Price = 299000, StartDate = now.AddDays(-45), EndDate = now.AddDays(320), IsActive = true };
         var sub4 = new LandlordSubscription { Id = Guid.NewGuid(), LandlordId = ll4, PlanName = "Free", Price = 0, StartDate = now.AddDays(-10), EndDate = now.AddDays(355), IsActive = true };
 
         db.LandlordSubscriptions.AddRange(sub1, sub2, sub3, sub5, sub4);
@@ -732,23 +851,12 @@ public static class DbSeeder
             new PaymentTransaction
             {
                 Id = Guid.NewGuid(),
-                UserId = ll1,
-                SubscriptionId = sub1.Id,
-                Amount = 199000,
-                PaymentMethod = "MoMo",
-                TransactionRef = "MOMO_LL1_" + Guid.NewGuid().ToString("N")[..8].ToUpper(),
-                Status = "Completed",
-                CreatedAt = now.AddDays(-30),
-                CompletedAt = now.AddDays(-30)
-            },
-            new PaymentTransaction
-            {
-                Id = Guid.NewGuid(),
                 UserId = ll2,
                 SubscriptionId = sub2.Id,
-                Amount = 199000,
+                Amount = 299000,
                 PaymentMethod = "VNPay",
                 TransactionRef = "VNP_LL2_" + Guid.NewGuid().ToString("N")[..8].ToUpper(),
+                Description = "Gói Pro 30 ngày (Chuyên nghiệp)",
                 Status = "Completed",
                 CreatedAt = now.AddDays(-60),
                 CompletedAt = now.AddDays(-60)
@@ -758,9 +866,10 @@ public static class DbSeeder
                 Id = Guid.NewGuid(),
                 UserId = ll3,
                 SubscriptionId = sub3.Id,
-                Amount = 499000,
+                Amount = 799000,
                 PaymentMethod = "BankTransfer",
                 TransactionRef = "BANK_LL3_" + Guid.NewGuid().ToString("N")[..8].ToUpper(),
+                Description = "Gói Doanh Nghiệp 30 ngày (Business)",
                 Status = "Completed",
                 CreatedAt = now.AddDays(-15),
                 CompletedAt = now.AddDays(-15)
@@ -770,9 +879,10 @@ public static class DbSeeder
                 Id = Guid.NewGuid(),
                 UserId = ll5,
                 SubscriptionId = sub5.Id,
-                Amount = 199000,
+                Amount = 299000,
                 PaymentMethod = "VNPay",
                 TransactionRef = "VNP_LL5_" + Guid.NewGuid().ToString("N")[..8].ToUpper(),
+                Description = "Gói Pro 30 ngày (Chuyên nghiệp)",
                 Status = "Completed",
                 CreatedAt = now.AddDays(-45),
                 CompletedAt = now.AddDays(-45)
@@ -781,36 +891,71 @@ public static class DbSeeder
             {
                 Id = Guid.NewGuid(),
                 UserId = ll1,
+                RoomId = rooms[0].Id,
+                Amount = 120000,
+                PaymentMethod = "MoMo",
+                TransactionRef = "MOMO_LL1_" + Guid.NewGuid().ToString("N")[..8].ToUpper(),
+                Description = "Đẩy tin nổi bật 3 ngày 'Studio Cao Cấp View Sông Sài Gòn'",
+                Status = "Completed",
+                CreatedAt = now.AddDays(-30),
+                CompletedAt = now.AddDays(-30)
+            },
+            new PaymentTransaction
+            {
+                Id = Guid.NewGuid(),
+                UserId = ll1,
                 SubscriptionId = sub1.Id,
-                Amount = 199000,
+                Amount = 299000,
                 PaymentMethod = "VNPay",
                 TransactionRef = "VNP_LL1_PENDING",
+                Description = "Nâng cấp Gói Pro 30 ngày",
                 Status = "Pending",
                 CreatedAt = now.AddHours(-3)
             }
         );
 
         // ============================================================
-        // 11. ROOM VIEWS (Real Lead Analytics Funnel)
+        // 11. ROOM VIEWS & FAVORITES (Real Lead Analytics Funnel)
         // ============================================================
         var viewList = new System.Collections.Generic.List<RoomView>();
+        var favoriteList = new System.Collections.Generic.List<FavoriteRoom>();
         var customerIds = new[] { c1, c2, c3, c4, c5, c6, c7, c8, c9, c10, c11, c12, c13, c14 };
+
+        var seenFavorites = new System.Collections.Generic.HashSet<(Guid CustomerId, Guid RoomId)>(
+            db.FavoriteRooms.Local.Select(f => (f.CustomerId, f.RoomId)));
         for (int r = 0; r < rooms.Length; r++)
         {
-            var viewCount = 15 + (r % 7) * 12;
+            var viewCount = 20 + (r % 7) * 8;
             for (int v = 0; v < viewCount; v++)
             {
+                var dayOffset = v % 30;
                 viewList.Add(new RoomView
                 {
                     Id = Guid.NewGuid(),
                     RoomId = rooms[r].Id,
                     ViewerId = (v % 3 == 0) ? customerIds[v % customerIds.Length] : null,
-                    EventType = "DetailView",
-                    CreatedAt = now.AddDays(-Random.Shared.Next(0, 30))
+                    EventType = "View",
+                    CreatedAt = now.AddDays(-dayOffset).AddHours(Random.Shared.Next(1, 23))
                 });
+            }
+
+            var saveCount = 4 + (r % 5) * 2;
+            for (int s = 0; s < saveCount; s++)
+            {
+                var cId = customerIds[(r * 3 + s) % customerIds.Length];
+                if (seenFavorites.Add((cId, rooms[r].Id)))
+                {
+                    favoriteList.Add(new FavoriteRoom
+                    {
+                        CustomerId = cId,
+                        RoomId = rooms[r].Id,
+                        SavedAt = now.AddDays(-(s * 4 % 30)).AddHours(Random.Shared.Next(1, 23))
+                    });
+                }
             }
         }
         db.RoomViews.AddRange(viewList);
+        db.FavoriteRooms.AddRange(favoriteList);
 
         // ============================================================
         // 12. NOTIFICATIONS
@@ -874,20 +1019,90 @@ public static class DbSeeder
         );
 
         // ============================================================
+        // 12. RENTAL APPLICATIONS (Customer applies for rooms)
+        // ============================================================
+        db.RentalApplications.AddRange(
+            new RentalApplication
+            {
+                Id = Guid.NewGuid(),
+                RoomId = rooms[0].Id,
+                TenantId = c1,
+                MonthlyIncome = 12000000,
+                Occupation = "Lập trình viên Web",
+                EmployerName = "Công ty TNHH Phần mềm",
+                OccupantsCount = 1,
+                DesiredMoveInDate = now.AddDays(7),
+                LeaseDurationMonths = 12,
+                NoteToLandlord = "Em muốn thuê lâu dài 1 năm, giữ gìn phòng sạch sẽ.",
+                Status = ApplicationStatus.Submitted,
+                CreatedAt = now.AddDays(-1)
+            },
+            new RentalApplication
+            {
+                Id = Guid.NewGuid(),
+                RoomId = rooms[1].Id,
+                TenantId = c1,
+                MonthlyIncome = 15000000,
+                Occupation = "Lập trình viên Web",
+                EmployerName = "Công ty Công nghệ",
+                OccupantsCount = 1,
+                DesiredMoveInDate = now.AddDays(3),
+                LeaseDurationMonths = 6,
+                NoteToLandlord = "Hồ sơ đã được chủ trọ duyệt, sẵn sàng tạo hợp đồng.",
+                Status = ApplicationStatus.Approved,
+                ReviewedAt = now.AddHours(-4),
+                LandlordNotes = "Thu nhập tốt, hồ sơ việc làm rõ ràng.",
+                CreatedAt = now.AddDays(-2)
+            }
+        );
+
+        // ============================================================
         // 13. LEASE CONTRACTS & TENANT REVIEWS (Reputation system)
         // ============================================================
+        var lease0 = new LeaseContract
+        {
+            Id = Guid.NewGuid(),
+            LandlordId = ll1,
+            TenantId = c1,
+            RoomId = rooms[0].Id,
+            StartDate = now.AddMonths(-3),
+            EndDate = now.AddMonths(9),
+            MonthlyRent = 8500000,
+            Deposit = 8500000,
+            Status = "Active",
+            LandlordSigned = true,
+            LandlordSignedAt = now.AddMonths(-3),
+            TenantSigned = true,
+            TenantSignedAt = now.AddMonths(-3),
+            ActivatedAt = now.AddMonths(-3),
+            TenantSignatureData = "Nguyễn Văn An",
+            UtilitiesDescription = "Điện: 3.500đ/kWh, Nước: 100.000đ/người/tháng, Internet: Miễn phí",
+            TermsAndConditions = "1. Thanh toán tiền phòng đúng hạn vào ngày 05 hàng tháng.\n2. Giữ gìn an ninh trật tự chung, không tụ tập quá 23h.\n3. Giữ gìn vệ sinh và thiết bị trong phòng bàn giao.",
+            PaymentCycleMonths = 1,
+            CreatedAt = now.AddMonths(-3)
+        };
+
         var lease1 = new LeaseContract
         {
             Id = Guid.NewGuid(),
             LandlordId = ll1,
             TenantId = c3,
             RoomId = rooms[2].Id,
-            StartDate = now.AddMonths(-6),
-            EndDate = now.AddDays(-5),
+            StartDate = now.AddMonths(-2),
+            EndDate = now.AddMonths(10),
             MonthlyRent = 6800000,
             Deposit = 6800000,
-            Status = "Completed",
-            CreatedAt = now.AddMonths(-6)
+            Status = "Active",
+            LandlordSigned = true,
+            LandlordSignedAt = now.AddMonths(-2),
+            TenantSigned = true,
+            TenantSignedAt = now.AddMonths(-2),
+            ActivatedAt = now.AddMonths(-2),
+            TenantSignatureData = "Lê Hoàng Minh",
+            UtilitiesDescription = "Điện: 3.500đ/kWh, Nước: 100.000đ/người/tháng, Internet: Miễn phí",
+            TermsAndConditions = "1. Thanh toán tiền phòng đúng hạn vào ngày 05 hàng tháng.\n2. Giữ gìn an ninh trật tự chung, không tụ tập quá 23h.\n3. Giữ gìn vệ sinh và thiết bị trong phòng bàn giao.",
+            PaymentCycleMonths = 1,
+            CreatedAt = now.AddMonths(-2)
         };
 
         var lease2 = new LeaseContract
@@ -901,6 +1116,12 @@ public static class DbSeeder
             MonthlyRent = 3800000,
             Deposit = 3800000,
             Status = "Completed",
+            LandlordSigned = true,
+            LandlordSignedAt = now.AddMonths(-3),
+            TenantSigned = true,
+            TenantSignedAt = now.AddMonths(-3),
+            ActivatedAt = now.AddMonths(-3),
+            TenantSignatureData = "Nguyễn Văn An",
             CreatedAt = now.AddMonths(-3)
         };
 
@@ -915,10 +1136,19 @@ public static class DbSeeder
             MonthlyRent = 3200000,
             Deposit = 3200000,
             Status = "Active",
+            LandlordSigned = true,
+            LandlordSignedAt = now.AddMonths(-1),
+            TenantSigned = true,
+            TenantSignedAt = now.AddMonths(-1),
+            ActivatedAt = now.AddMonths(-1),
+            TenantSignatureData = "Trần Hoàng Long",
             CreatedAt = now.AddMonths(-1)
         };
 
-        db.LeaseContracts.AddRange(lease1, lease2, lease3);
+        rooms[0].Status = RoomStatus.Rented;
+        rooms[2].Status = RoomStatus.Rented;
+        rooms[8].Status = RoomStatus.Rented;
+        db.LeaseContracts.AddRange(lease0, lease1, lease2, lease3);
 
         db.TenantReviews.AddRange(
             new TenantReview

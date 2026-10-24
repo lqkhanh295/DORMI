@@ -56,6 +56,17 @@ export default function TenantViewings() {
 
   useEffect(() => {
     fetchAppointments();
+
+    const handleRealtimeUpdate = () => {
+      fetchAppointments();
+    };
+
+    window.addEventListener('appointment-status-updated', handleRealtimeUpdate);
+    window.addEventListener('appointment-created', handleRealtimeUpdate);
+    return () => {
+      window.removeEventListener('appointment-status-updated', handleRealtimeUpdate);
+      window.removeEventListener('appointment-created', handleRealtimeUpdate);
+    };
   }, []);
 
   useEffect(() => {
@@ -70,11 +81,15 @@ export default function TenantViewings() {
     const reason = window.prompt('Vui lòng nhập lý do hủy lịch hẹn:', 'Bận việc đột xuất');
     if (reason === null) return;
     try {
+      setAppointments(prev => prev.map(a => 
+        (a.id && id && a.id.toLowerCase() === id.toLowerCase()) ? { ...a, status: 'Cancelled' } : a
+      ));
       await appointmentsApi.updateStatus(id, 'Cancelled', reason.trim() || 'Khách hủy lịch hẹn');
       toast.success('Đã hủy lịch hẹn xem phòng.');
       fetchAppointments();
     } catch (err: any) {
       toast.error(err?.message || 'Không thể hủy lịch hẹn.');
+      fetchAppointments();
     }
   };
 
@@ -101,7 +116,7 @@ export default function TenantViewings() {
     const s = app.status;
     if (activeTab === 'all') return true;
     if (activeTab === 'upcoming') {
-      return s === 'Confirmed' || s === 'Pending' || s === 'Requested' || s === 'Rescheduled';
+      return s === 'Confirmed' || s === 'Approved' || s === 'Pending' || s === 'Requested' || s === 'Rescheduled';
     }
     if (activeTab === 'completed') return s === 'Completed';
     if (activeTab === 'cancelled') return s === 'Cancelled' || s === 'Rejected' || s === 'NoShow';
@@ -111,6 +126,7 @@ export default function TenantViewings() {
   const getStatusBadge = (status: string) => {
     switch (status) {
       case 'Confirmed':
+      case 'Approved':
         return (
           <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md text-xs font-semibold bg-emerald-50 text-emerald-700 border border-emerald-200">
             <CheckCircle className="w-3.5 h-3.5 text-emerald-600" />
@@ -200,7 +216,7 @@ export default function TenantViewings() {
               : 'bg-white border border-[#E2E8F0] text-[#64748B] hover:text-[#0F172A]'
           }`}
         >
-          Sắp tới ({appointments.filter(a => ['Confirmed', 'Pending', 'Requested', 'Rescheduled'].includes(a.status)).length})
+          Sắp tới ({appointments.filter(a => ['Confirmed', 'Approved', 'Pending', 'Requested', 'Rescheduled'].includes(a.status)).length})
         </button>
         <button
           type="button"

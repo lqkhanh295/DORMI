@@ -46,6 +46,9 @@ public class AdminService : IAdminService
         var pendingVerifications = await _db.VerificationRequests.CountAsync(r => r.Status == "Pending");
         var totalAppointments = await _db.ViewingAppointments.CountAsync();
 
+        var pendingRooms = await _db.Rooms.CountAsync(r => r.Status == RoomStatus.PendingApproval);
+        var openReports = await _db.RoomReports.CountAsync(r => r.Status == "Pending");
+
         var realRevenue = await _db.PaymentTransactions
             .Where(t => t.Status == "Completed")
             .SumAsync(t => (decimal?)t.Amount) ?? 0m;
@@ -57,6 +60,8 @@ public class AdminService : IAdminService
             TotalLandlords = totalLandlords,
             TotalRooms = totalRooms,
             PendingVerifications = pendingVerifications,
+            PendingRooms = pendingRooms,
+            OpenReports = openReports,
             TotalAppointments = totalAppointments,
             TotalRevenue = realRevenue
         };

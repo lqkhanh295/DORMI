@@ -74,6 +74,14 @@ public class PostRentalController : BaseApiController
         return HandleResult(result);
     }
 
+    [HttpPost("deposit/settle/{orderCode:long}")]
+    [AllowAnonymous]
+    public async Task<IActionResult> SettleDeposit(long orderCode)
+    {
+        var result = await _service.SettleDepositPaymentByOrderCodeAsync(orderCode);
+        return HandleResult(result);
+    }
+
     // --- 3. Maintenance ticketing ---
     [HttpGet("maintenance")]
     public async Task<IActionResult> GetMaintenanceRequests([FromQuery] Guid? leaseId, [FromQuery] bool? isLandlord)

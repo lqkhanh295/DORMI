@@ -60,15 +60,23 @@ export default function SearchResults() {
     const district = searchParams.get('district');
     const price = searchParams.get('price');
     const area = searchParams.get('area');
+    const landlordId = searchParams.get('landlordId');
+    const landlordName = searchParams.get('landlordName');
 
     if (q) setSearchQuery(q);
     if (district) setSelectedDistrict(district);
     if (price) setSelectedPrice(price);
     if (area) setSelectedArea(area);
+    if (landlordId) {
+      setSelectedLandlordId(landlordId);
+      setSelectedLandlordName(landlordName);
+    }
   }, [searchParams]);
   
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedDistrict, setSelectedDistrict] = useState<string | null>(null);
+  const [selectedLandlordId, setSelectedLandlordId] = useState<string | null>(null);
+  const [selectedLandlordName, setSelectedLandlordName] = useState<string | null>(null);
   const [selectedPrice, setSelectedPrice] = useState<string | null>(null);
   const [selectedArea, setSelectedArea] = useState<string | null>(null);
   const [selectedUtilities, setSelectedUtilities] = useState<string[]>([]);
@@ -172,14 +180,27 @@ export default function SearchResults() {
         clear: () => setSearchQuery('')
       });
     }
+    if (selectedLandlordId) {
+      filters.push({
+        id: 'landlord',
+        label: `Chủ trọ: ${selectedLandlordName || 'Chính chủ'}`,
+        clear: () => {
+          setSelectedLandlordId(null);
+          setSelectedLandlordName(null);
+        }
+      });
+    }
     return filters;
-  }, [selectedDistrict, selectedPrice, selectedArea, selectedUtilities, searchQuery]);
+  }, [selectedDistrict, selectedPrice, selectedArea, selectedUtilities, searchQuery, selectedLandlordId, selectedLandlordName]);
 
   // Filtered and Sorted Listings
   const filteredListings = useMemo(() => {
     let result = listings.filter(room => {
-      // Chỉ hiển thị phòng đang trống (Available) trên trang tìm kiếm
-      if (room.status && room.status !== 'Available') return false;
+      // Chỉ hiển thị phòng đang trống (Available hoặc 0) trên trang tìm kiếm
+      if (room.status !== undefined && room.status !== 'Available' && (room.status as any) !== 0) return false;
+
+      // Filter by Landlord if specified
+      if (selectedLandlordId && (room as any).landlordId !== selectedLandlordId) return false;
 
       let matchQuery = true;
       if (searchQuery && searchQuery.trim()) {

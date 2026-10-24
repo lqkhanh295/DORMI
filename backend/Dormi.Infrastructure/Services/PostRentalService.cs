@@ -318,10 +318,18 @@ public class PostRentalService : IPostRentalService
         }
         else
         {
+            var bankBin = _configuration?["Payment:BankBin"] ?? "970422";
+            var accNumber = _configuration?["Payment:AccountNumber"] ?? "0901111001";
+            var accName = _configuration?["Payment:AccountName"] ?? "CONG TY CO PHAN DORMI";
+            string transferMemo = $"DORMI COC {orderCode % 1000000}";
+
             checkoutUrl = $"https://pay.payos.vn/web/demo/{orderCode}";
             paymentLinkId = $"demo_{orderCode}";
-            qrCode = $"00020101021238540010A000000727012400069704220110{orderCode}5303704540{amount}5802VN6304";
-            qrUrl = $"https://api.qrserver.com/v1/create-qr-code/?size=300x300&data={Uri.EscapeDataString(checkoutUrl)}";
+            accountNumber = accNumber;
+            accountName = accName;
+            bin = bankBin;
+            qrUrl = $"https://img.vietqr.io/image/{bin}-{accountNumber}-compact2.png?amount={(long)amount}&addInfo={Uri.EscapeDataString(transferMemo)}&accountName={Uri.EscapeDataString(accName)}";
+            qrCode = qrUrl;
         }
 
         return ServiceResult<DepositCheckoutResponseDto>.Ok(new DepositCheckoutResponseDto

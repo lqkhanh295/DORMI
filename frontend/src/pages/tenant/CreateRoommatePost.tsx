@@ -1,10 +1,10 @@
-import { useState } from 'react';
-import { useNavigate, useLocation } from 'react-router-dom';
+import { useState, useEffect } from 'react';
+import { useNavigate, useLocation, Link } from 'react-router-dom';
 import { Card } from '../../components/ui/Card';
 import { Button } from '../../components/ui/Button';
 import { roommatesApi } from '../../services/api';
 import { toast } from 'sonner';
-import { Calendar, DollarSign, MapPin, Users, Check, Home, X } from 'lucide-react';
+import { Calendar, DollarSign, MapPin, Users, Check, Home, X, ArrowLeft, Eye, EyeOff, Loader2 } from 'lucide-react';
 
 const COMMON_TRAITS = [
   'Không hút thuốc',
@@ -22,14 +22,18 @@ const COMMON_TRAITS = [
 export default function CreateRoommatePost() {
   const navigate = useNavigate();
   const location = useLocation();
+  const searchParams = new URLSearchParams(location.search);
+  const editId = searchParams.get('id') || searchParams.get('edit');
+
   const roomState = location.state as { roomId?: string; roomTitle?: string; roomAddress?: string; roomPrice?: number } | null;
+
+  const [loadingInitial, setLoadingInitial] = useState(!!editId);
+  const [submitting, setSubmitting] = useState(false);
 
   const [attachedRoomId, setAttachedRoomId] = useState<string | undefined>(roomState?.roomId);
   const [attachedRoomTitle, setAttachedRoomTitle] = useState<string | undefined>(roomState?.roomTitle);
   const [attachedRoomAddress, setAttachedRoomAddress] = useState<string | undefined>(roomState?.roomAddress);
   const [attachedRoomPrice, setAttachedRoomPrice] = useState<number | undefined>(roomState?.roomPrice);
-
-  const [submitting, setSubmitting] = useState(false);
 
   // Form states
   const [title, setTitle] = useState(roomState?.roomTitle ? `Tìm bạn ở ghép: ${roomState.roomTitle}` : '');
@@ -46,6 +50,49 @@ export default function CreateRoommatePost() {
     'Sạch sẽ ngăn nắp'
   ]);
   const [bio, setBio] = useState('');
+  const [isActive, setIsActive] = useState(true);
+
+  useEffect(() => {
+    if (!editId) return;
+
+    let isMounted = true;
+    setLoadingInitial(true);
+
+    roommatesApi.getPostById(editId)
+      .then(post => {
+        if (!isMounted || !post) return;
+        setTitle(post.title || '');
+        setDistrict(post.location || 'Quận 10');
+        setBudget(post.budget || 3500000);
+        if (post.moveInDate) {
+          setMoveInDate(post.moveInDate.split('T')[0]);
+        }
+        setGenderPreference(post.genderPreference || 'Any');
+        if (post.lifestyleTraits) {
+          const traits = post.lifestyleTraits.split(',').map(s => s.trim()).filter(Boolean);
+          setSelectedTraits(traits);
+        }
+        setBio(post.description || '');
+        setIsActive(post.isActive ?? true);
+
+        if (post.roomId) {
+          setAttachedRoomId(post.roomId);
+          setAttachedRoomTitle(post.roomTitle);
+          setAttachedRoomAddress(post.roomAddress);
+          setAttachedRoomPrice(post.roomPrice);
+        }
+      })
+      .catch((err: any) => {
+        if (!isMounted) return;
+        toast.error(err?.message || 'Không tìm thấy bài đăng hoặc bạn không có quyền chỉnh sửa.');
+        navigate('/tenant/match?tab=my-posts');
+      })
+      .finally(() => {
+        if (isMounted) setLoadingInitial(false);
+      });
+
+    return () => { isMounted = false; };
+  }, [editId, navigate]);
 
   const toggleTrait = (trait: string) => {
     setSelectedTraits(prev => 
@@ -68,7 +115,7 @@ export default function CreateRoommatePost() {
 
     try {
       setSubmitting(true);
-      await roommatesApi.createPost({
+      const payload = {
         title: title.trim(),
         description: bio.trim() || 'Tìm bạn cùng phòng hòa đồng, giữ gìn vệ sinh chung.',
         budget: numBudget,
@@ -76,27 +123,65 @@ export default function CreateRoommatePost() {
         moveInDate: new Date(moveInDate).toISOString(),
         genderPreference: genderPreference,
         lifestyleTraits: selectedTraits.join(', '),
-        roomId: attachedRoomId
-      });
+        roomId: attachedRoomId,
+        isActive: isActive
+      };
 
-      toast.success('Đã đăng tin tìm bạn ở ghép!');
-      navigate('/tenant/match');
+      if (editId) {
+        await roommatesApi.updatePost(editId, payload);
+        toast.success('Đã cập nhật bài đăng tìm bạn ở ghép!');
+      } else {
+        await roommatesApi.createPost(payload);
+        toast.success('Đã đăng tin tìm bạn ở ghép!');
+      }
+
+      navigate('/tenant/match?tab=my-posts');
     } catch (err: any) {
-      toast.error(err?.message || 'Không thể đăng tin. Vui lòng kiểm tra lại thông tin.');
+      toast.error(err?.message || 'Không thể lưu bài đăng. Vui lòng kiểm tra lại thông tin.');
     } finally {
       setSubmitting(false);
     }
   };
 
+  if (loadingInitial) {
+    return (
+      <div className="max-w-3xl mx-auto py-16 flex flex-col items-center justify-center space-y-3">
+        <Loader2 className="w-8 h-8 animate-spin text-[#00153D]" />
+        <p className="text-body text-[#64748B]">Đang tải dữ liệu bài đăng...</p>
+      </div>
+    );
+  }
+
   return (
-    <div className="max-w-3xl mx-auto py-8 space-y-6 bg-[#F8FAFC]">
-      <div className="space-y-2">
-        <h1 className="text-h2 font-bold text-[#0F172A]">
-          Tạo tin tìm bạn ở ghép
-        </h1>
-        <p className="text-body text-[#64748B]">
-          Chia sẻ thói quen sống và mong muốn của bạn để thuật toán kết nối bạn ở ghép phù hợp nhất.
-        </p>
+    <div className="max-w-3xl mx-auto py-6 md:py-8 space-y-6 bg-[#F8FAFC]">
+      {/* Header with Navigation */}
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+        <div className="space-y-1">
+          <div className="flex items-center gap-2">
+            <Link 
+              to="/tenant/match?tab=my-posts"
+              className="inline-flex items-center gap-1 text-caption font-semibold text-[#64748B] hover:text-[#00153D] transition-colors"
+            >
+              <ArrowLeft className="w-4 h-4" />
+              <span>Quay lại bài đăng của tôi</span>
+            </Link>
+          </div>
+          <h1 className="text-h2 font-bold text-[#0F172A]">
+            {editId ? 'Chỉnh sửa tin tìm bạn ở ghép' : 'Tạo tin tìm bạn ở ghép'}
+          </h1>
+          <p className="text-body text-[#64748B]">
+            {editId 
+              ? 'Cập nhật thói quen sống và mong muốn của bạn để thuật toán kết nối bạn ở ghép tốt nhất.'
+              : 'Chia sẻ thói quen sống và mong muốn của bạn để thuật toán kết nối bạn ở ghép phù hợp nhất.'}
+          </p>
+        </div>
+
+        <Link
+          to="/tenant/match?tab=my-posts"
+          className="inline-flex items-center gap-1.5 px-3.5 py-2 bg-white border border-slate-200 rounded-xl text-caption font-bold text-[#00153D] hover:bg-slate-50 transition-colors shadow-xs shrink-0 self-start sm:self-center"
+        >
+          <span>Quản lý bài của tôi</span>
+        </Link>
       </div>
 
       {attachedRoomId && (
@@ -131,6 +216,39 @@ export default function CreateRoommatePost() {
 
       <Card className="bg-white rounded-2xl border border-slate-200/90 shadow-sm p-6 md:p-8">
         <form onSubmit={handleSubmit} noValidate className="space-y-6">
+          
+          {/* Post Visibility Status (When editing) */}
+          {editId && (
+            <div className="p-4 bg-slate-50 border border-slate-200 rounded-xl flex items-center justify-between gap-4">
+              <div className="flex items-center gap-2.5">
+                <div className={`w-8 h-8 rounded-lg flex items-center justify-center shrink-0 ${isActive ? 'bg-emerald-100 text-emerald-700' : 'bg-slate-200 text-slate-600'}`}>
+                  {isActive ? <Eye className="w-4 h-4" /> : <EyeOff className="w-4 h-4" />}
+                </div>
+                <div>
+                  <h4 className="text-caption font-bold text-slate-900">
+                    Trạng thái hiển thị tin: {isActive ? 'Đang hiển thị' : 'Đã tạm dừng'}
+                  </h4>
+                  <p className="text-[12px] text-slate-500">
+                    {isActive 
+                      ? 'Bài viết của bạn đang công khai và được hiển thị trong mục gợi ý ở ghép.' 
+                      : 'Bài viết đã tạm ẩn, người khác sẽ không nhìn thấy cho đến khi bạn bật lại.'}
+                  </p>
+                </div>
+              </div>
+              <button
+                type="button"
+                onClick={() => setIsActive(prev => !prev)}
+                className={`px-3.5 py-1.5 rounded-lg text-caption font-bold transition-colors shrink-0 ${
+                  isActive 
+                    ? 'bg-amber-50 text-amber-700 hover:bg-amber-100 border border-amber-200' 
+                    : 'bg-emerald-600 text-white hover:bg-emerald-700'
+                }`}
+              >
+                {isActive ? 'Tạm dừng hiển thị' : 'Mở hiển thị lại'}
+              </button>
+            </div>
+          )}
+
           {/* Title */}
           <div className="space-y-1.5">
             <label className="text-caption font-semibold text-[#0F172A] block">
@@ -266,12 +384,24 @@ export default function CreateRoommatePost() {
             />
           </div>
 
-          <div className="flex justify-end gap-3 pt-4 border-t border-slate-200">
-            <Button type="button" variant="secondary" onClick={() => navigate(-1)}>
+          <div className="flex items-center justify-end gap-3 pt-4 border-t border-slate-200">
+            <Button 
+              type="button" 
+              variant="secondary" 
+              onClick={() => navigate('/tenant/match?tab=my-posts')}
+            >
               Hủy
             </Button>
-            <Button type="submit" variant="primary" className="px-8" disabled={submitting}>
-              {submitting ? 'Đang đăng tin...' : 'Đăng bài ngay'}
+            <Button 
+              type="submit" 
+              variant="primary" 
+              className="px-8 flex items-center gap-2" 
+              disabled={submitting}
+            >
+              {submitting && <Loader2 className="w-4 h-4 animate-spin" />}
+              {submitting 
+                ? (editId ? 'Đang cập nhật...' : 'Đang đăng tin...') 
+                : (editId ? 'Lưu thay đổi' : 'Đăng bài ngay')}
             </Button>
           </div>
         </form>

@@ -1,0 +1,155 @@
+erDiagram
+    USERS ||--o{ ROOMS : "owns"
+    USERS ||--o{ FAVORITE_ROOMS : "favorites"
+    USERS ||--o{ VIEWING_APPOINTMENTS : "books"
+    USERS ||--o{ RENTAL_APPLICATIONS : "submits"
+    USERS ||--o{ LEASE_CONTRACTS : "signs"
+    USERS ||--o{ ROOMMATE_POSTS : "posts"
+    USERS ||--o{ MESSAGES : "sends"
+    USERS ||--o{ VERIFICATION_REQUESTS : "verifies"
+    USERS ||--o{ NOTIFICATIONS : "receives"
+    USERS ||--o{ LANDLORD_SUBSCRIPTIONS : "subscribes"
+    USERS ||--o{ PAYMENT_TRANSACTIONS : "pays"
+
+    ROOMS ||--o{ ROOM_IMAGES : "has"
+    ROOMS ||--o{ FAVORITE_ROOMS : "saved_by"
+    ROOMS ||--o{ VIEWING_APPOINTMENTS : "scheduled"
+    ROOMS ||--o{ RENTAL_APPLICATIONS : "receives"
+    ROOMS ||--o{ LEASE_CONTRACTS : "leased"
+    ROOMS ||--o{ ROOM_REVIEWS : "reviewed"
+    ROOMS ||--o{ ROOM_REPORTS : "reported"
+    ROOMS ||--o{ ROOM_VIEWS : "viewed"
+    ROOMS ||--o{ PAYMENT_TRANSACTIONS : "boosted_by"
+
+    LANDLORD_SUBSCRIPTIONS ||--o{ PAYMENT_TRANSACTIONS : "billed_under"
+
+    RENTAL_APPLICATIONS ||--o{ APPLICATION_DOCUMENTS : "attaches"
+    RENTAL_APPLICATIONS ||--o| LEASE_CONTRACTS : "converts_to"
+
+    LEASE_CONTRACTS ||--o{ LEASE_DOCUMENTS : "includes"
+    LEASE_CONTRACTS ||--o{ RENTAL_PAYMENT_SCHEDULES : "schedules"
+    LEASE_CONTRACTS ||--o{ MAINTENANCE_REQUESTS : "requests"
+    LEASE_CONTRACTS ||--o{ TENANT_REVIEWS : "rated"
+
+    USERS {
+        uuid Id PK
+        string Email UK
+        string PasswordHash
+        string FullName
+        int Role
+        boolean IsVerified
+        string PhoneNumber
+        string Preferences
+        string Lifestyle
+        datetime CreatedAt
+    }
+
+    ROOMS {
+        uuid Id PK
+        uuid LandlordId FK
+        string Title
+        decimal Price
+        float Area
+        string Address
+        string District
+        int Status
+        int TrustScore
+        boolean IsBoosted
+        boolean IsPropertyVerified
+        datetime CreatedAt
+    }
+
+    RENTAL_APPLICATIONS {
+        uuid Id PK
+        uuid RoomId FK
+        uuid TenantId FK
+        int Status
+        decimal MonthlyIncome
+        string Occupation
+        int OccupantsCount
+        datetime DesiredMoveInDate
+        datetime CreatedAt
+    }
+
+    LEASE_CONTRACTS {
+        uuid Id PK
+        string LeaseCode UK
+        uuid RoomId FK
+        uuid LandlordId FK
+        uuid TenantId FK
+        decimal MonthlyRent
+        decimal Deposit
+        string Status
+        boolean LandlordSigned
+        boolean TenantSigned
+        datetime StartDate
+        datetime EndDate
+    }
+
+    RENTAL_PAYMENT_SCHEDULES {
+        uuid Id PK
+        uuid LeaseContractId FK
+        string Type
+        string Title
+        decimal Amount
+        datetime DueDate
+        string Status
+        datetime PaidAt
+        string PaymentMethod
+    }
+
+    MAINTENANCE_REQUESTS {
+        uuid Id PK
+        uuid LeaseContractId FK
+        uuid TenantId FK
+        uuid LandlordId FK
+        uuid RoomId FK
+        string Title
+        string Priority
+        string Status
+        decimal ActualCost
+    }
+
+    VIEWING_APPOINTMENTS {
+        uuid Id PK
+        uuid RoomId FK
+        uuid CustomerId FK
+        datetime AppointmentDate
+        string Status
+        string Notes
+    }
+
+    ROOMMATE_POSTS {
+        uuid Id PK
+        uuid CustomerId FK
+        string Title
+        decimal Budget
+        string TargetDistrict
+        string LifestyleTraits
+        boolean HasRoom
+        boolean IsActive
+    }
+
+    PAYMENT_TRANSACTIONS {
+        uuid Id PK
+        uuid UserId FK
+        uuid SubscriptionId FK
+        uuid RoomId FK
+        string TransactionRef UK
+        decimal Amount
+        string PaymentMethod
+        string Status
+        string Description
+        datetime CreatedAt
+    }
+
+    VERIFICATION_REQUESTS {
+        uuid Id PK
+        uuid UserId FK
+        string IdCardNumber
+        string IdCardFrontUrl
+        string IdCardBackUrl
+        string OwnershipDocUrl
+        int Status
+        datetime ReviewedAt
+    }

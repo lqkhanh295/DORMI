@@ -12,13 +12,19 @@ export default function LandlordDashboard() {
   const [analytics, setAnalytics] = useState({
     totalListings: 0,
     activeListings: 0,
+    rentedListings: 0,
+    occupancyRate: 0,
+    estimatedRevenue: 0,
     totalAppointments: 0,
     pendingAppointments: 0,
+    pendingApplications: 0,
+    totalApplications: 0,
     totalViews: 0,
-    conversionRate: 0
+    conversionRate: 0,
+    currentPlan: 'Free',
+    maxRoomLimit: 2,
+    roomsUsed: 0
   });
-
-  const [pendingApplications, setPendingApplications] = useState(0);
 
   useEffect(() => {
     let isMounted = true;
@@ -26,14 +32,23 @@ export default function LandlordDashboard() {
       .then(res => {
         if (!isMounted) return;
         if (res) {
-          setAnalytics({
+          setAnalytics(prev => ({
+            ...prev,
             totalListings: res.totalListings ?? 0,
             activeListings: res.activeListings ?? 0,
+            rentedListings: res.rentedListings ?? 0,
+            occupancyRate: res.occupancyRate ?? 0,
+            estimatedRevenue: res.estimatedRevenue ?? 0,
             totalAppointments: res.totalAppointments ?? 0,
             pendingAppointments: res.pendingAppointments ?? 0,
+            pendingApplications: res.pendingApplications ?? 0,
+            totalApplications: res.totalApplications ?? 0,
             totalViews: res.totalViews ?? 0,
-            conversionRate: res.conversionRate ?? 0
-          });
+            conversionRate: res.conversionRate ?? 0,
+            currentPlan: res.currentPlan ?? 'Free',
+            maxRoomLimit: res.maxRoomLimit ?? 2,
+            roomsUsed: res.roomsUsed ?? 0
+          }));
         }
       })
       .catch((err) => {
@@ -47,8 +62,16 @@ export default function LandlordDashboard() {
       .then(res => {
         if (!isMounted) return;
         if (Array.isArray(res)) {
-          const pending = res.filter(a => a.status === ApplicationStatus.Submitted || a.status === ApplicationStatus.UnderReview || a.status === ApplicationStatus.MoreInfoRequested).length;
-          setPendingApplications(pending);
+          const pending = res.filter(a => {
+            const num = Number(a.status);
+            return num === ApplicationStatus.Submitted || 
+                   num === ApplicationStatus.UnderReview || 
+                   num === ApplicationStatus.MoreInfoRequested ||
+                   (a.status as any) === 'Submitted' || 
+                   (a.status as any) === 'UnderReview' || 
+                   (a.status as any) === 'MoreInfoRequested';
+          }).length;
+          setAnalytics(prev => ({ ...prev, pendingApplications: pending }));
         }
       })
       .catch(() => {});
@@ -56,11 +79,16 @@ export default function LandlordDashboard() {
     return () => { isMounted = false; };
   }, []);
 
-  const occupancyRate = analytics.totalListings > 0 
-    ? Math.round((analytics.activeListings / analytics.totalListings) * 100) 
-    : 85;
-  const vacantRooms = Math.max(0, (analytics.totalListings || 5) - (analytics.activeListings || 3));
-  const estimatedRevenue = (analytics.activeListings || 3) * 4500000;
+  const planDisplayName = 
+    analytics.currentPlan === 'Business' || analytics.currentPlan === 'Enterprise'
+      ? 'Gói Doanh Nghiệp (Không giới hạn tin)'
+      : analytics.currentPlan === 'Pro'
+      ? 'Gói Pro (Dành cho chủ trọ chuyên nghiệp)'
+      : 'Gói Miễn Phí (Dành cho chủ trọ cá nhân)';
+
+  const quotaPercent = Math.min(100, Math.round((analytics.roomsUsed / Math.max(1, analytics.maxRoomLimit)) * 100));
+  const remainingQuota = Math.max(0, analytics.maxRoomLimit - analytics.roomsUsed);
+  const isQuotaFull = analytics.roomsUsed >= analytics.maxRoomLimit;
 
   return (
     <div className="space-y-8 pb-12 bg-[#F8FAFC]">
@@ -105,24 +133,29 @@ export default function LandlordDashboard() {
                 <Package className="w-4 h-4 text-blue-600" />
                 <span>Hạn mức tin đăng gói hiện tại</span>
               </h3>
-              <p className="text-xs text-slate-500">Gói Tiêu Chuẩn (Dành cho chủ trọ cá nhân)</p>
+              <p className="text-xs text-slate-500">{planDisplayName}</p>
             </div>
-            <div className="text-xs font-bold text-[#00153D]">
+            <div className="text-xs font-bold text-[#00153D] flex items-center gap-1.5">
               <span>Đã dùng: </span>
-              <span className="text-blue-600 font-black">{analytics.activeListings || 3}</span>
-              <span className="text-slate-400"> / 10 tin đăng</span>
+              <span className="text-blue-600 font-black">{analytics.roomsUsed}</span>
+              <span className="text-slate-400"> / {analytics.maxRoomLimit} tin đăng</span>
+              {isQuotaFull && (
+                <span className="text-[10px] font-bold px-1.5 py-0.5 rounded bg-amber-50 text-amber-700 border border-amber-200">
+                  Hết hạn mức
+                </span>
+              )}
             </div>
           </div>
 
           <div className="w-full bg-slate-100 h-2.5 rounded-full overflow-hidden">
             <div 
-              className="h-full bg-blue-600 rounded-full transition-all duration-300"
-              style={{ width: `${Math.min(100, ((analytics.activeListings || 3) / 10) * 100)}%` }}
+              className={`h-full rounded-full transition-all duration-300 ${isQuotaFull ? 'bg-amber-500' : 'bg-blue-600'}`}
+              style={{ width: `${quotaPercent}%` }}
             />
           </div>
 
           <div className="flex justify-between items-center text-[11px] text-slate-500 pt-1">
-            <span>Còn lại: {Math.max(0, 10 - (analytics.activeListings || 3))} lượt đăng phòng</span>
+            <span>Còn lại: {remainingQuota} lượt đăng phòng</span>
             <Link to="/landlord/pricing" className="text-blue-600 font-bold hover:underline">
               Nâng cấp gói thêm lượt đăng & tin VIP →
             </Link>
@@ -137,14 +170,14 @@ export default function LandlordDashboard() {
               <DollarSign className="w-4 h-4 text-[#F2A900]" />
             </div>
             <p className="text-2xl font-black text-white mt-2">
-              {estimatedRevenue.toLocaleString('vi-VN')}₫
+              {analytics.estimatedRevenue.toLocaleString('vi-VN')}₫
             </p>
             <p className="text-[11px] text-emerald-400 font-semibold mt-1 flex items-center gap-1">
-              <TrendingUp className="w-3.5 h-3.5" /> Tỷ lệ lấp đầy: {occupancyRate}% {vacantRooms > 0 ? `(Còn ${vacantRooms} phòng trống)` : '(Đã kín phòng)'}
+              <TrendingUp className="w-3.5 h-3.5" /> Tỷ lệ lấp đầy: {analytics.occupancyRate}% {analytics.activeListings > 0 ? `(Còn ${analytics.activeListings} phòng trống)` : '(Đã kín phòng)'}
             </p>
           </div>
           <p className="text-[10px] text-slate-300 pt-3 border-t border-white/10 mt-3">
-            Dựa trên các hợp đồng thuê phòng đang có hiệu lực
+            Dựa trên các hợp đồng thuê phòng đang có hiệu lực trong CSDL
           </p>
         </Card>
       </div>
@@ -152,14 +185,19 @@ export default function LandlordDashboard() {
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5">
         <Link to="/landlord/rooms">
           <Card className="p-6 bg-white rounded-2xl border border-slate-200/90 shadow-xs hover:shadow-md hover:border-slate-300 transition-all cursor-pointer h-full">
-            <h3 className="text-xs font-medium text-slate-500 mb-2">Phòng hoạt động</h3>
+            <h3 className="text-xs font-medium text-slate-500 mb-2">Phòng đang cho thuê</h3>
             <div className="flex items-baseline gap-2">
               {loading ? (
                 <div className="h-10 w-16 skeleton-shimmer rounded-lg" />
               ) : (
-                <p className="text-3xl font-black text-[#00153D] leading-none">{analytics.activeListings}</p>
+                <p className="text-3xl font-black text-[#00153D] leading-none">{analytics.rentedListings}</p>
               )}
               <span className="text-sm font-medium text-slate-500">/ {analytics.totalListings} tổng</span>
+              {analytics.activeListings > 0 ? (
+                <span className="text-caption font-semibold text-emerald-600">({analytics.activeListings} trống)</span>
+              ) : (
+                <span className="text-caption font-semibold text-blue-600">(Kín 100%)</span>
+              )}
             </div>
           </Card>
         </Link>
@@ -171,9 +209,11 @@ export default function LandlordDashboard() {
               {loading ? (
                 <div className="h-10 w-16 skeleton-shimmer rounded-lg" />
               ) : (
-                <p className="text-3xl font-black text-[#00153D] leading-none">{pendingApplications}</p>
+                <p className="text-3xl font-black text-[#00153D] leading-none">{analytics.pendingApplications}</p>
               )}
-              <span className="text-caption font-bold text-blue-600">cần xét duyệt</span>
+              <span className={`text-caption font-bold ${analytics.pendingApplications > 0 ? 'text-blue-600' : 'text-slate-400'}`}>
+                {analytics.pendingApplications > 0 ? 'cần xét duyệt' : '0 chờ duyệt'}
+              </span>
             </div>
           </Card>
         </Link>
@@ -187,7 +227,9 @@ export default function LandlordDashboard() {
               ) : (
                 <p className="text-3xl font-black text-[#00153D] leading-none">{analytics.totalAppointments}</p>
               )}
-              <span className="text-caption font-medium text-amber-700">{analytics.pendingAppointments} chờ duyệt</span>
+              <span className={`text-caption font-medium ${analytics.pendingAppointments > 0 ? 'text-amber-700' : 'text-slate-500'}`}>
+                {analytics.pendingAppointments > 0 ? `${analytics.pendingAppointments} chờ duyệt` : '0 chờ duyệt'}
+              </span>
             </div>
           </Card>
         </Link>

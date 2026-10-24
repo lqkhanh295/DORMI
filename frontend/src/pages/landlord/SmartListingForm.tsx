@@ -1,9 +1,11 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Card } from '../../components/ui/Card';
 import { Button } from '../../components/ui/Button';
 import { Input } from '../../components/ui/Input';
 import { useStore } from '../../store/useStore';
+import { landlordApi } from '../../services/api';
+import { toast } from 'sonner';
 import { 
   Check, 
   X, 
@@ -13,7 +15,8 @@ import {
   XCircle, 
   Sparkles, 
   ImageIcon, 
-  Clock
+  Clock,
+  AlertCircle
 } from 'lucide-react';
 
 const COMMON_UTILITIES = [
@@ -60,10 +63,27 @@ export default function SmartListingForm() {
   ]);
   const [customUtility, setCustomUtility] = useState('');
   const [imageUrls, setImageUrls] = useState<string[]>([]);
+  const [quotaReached, setQuotaReached] = useState(false);
+  const [quotaMessage, setQuotaMessage] = useState('');
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   const navigate = useNavigate();
   const createListingWithApi = useStore(state => state.createListingWithApi);
   const uploadImageToCloudinary = useStore(state => state.uploadImageToCloudinary);
+
+  useEffect(() => {
+    landlordApi.getAnalytics().then(res => {
+      if (res) {
+        const used = res.roomsUsed || 0;
+        const limit = res.maxRoomLimit ?? 2;
+        if (used >= limit && limit < 999) {
+          setQuotaReached(true);
+          const plan = res.currentPlan?.toLowerCase().includes('pro') ? 'Gói Pro' : 'Gói Miễn Phí';
+          setQuotaMessage(`Bạn đã sử dụng ${used}/${limit} phòng (đạt giới hạn của ${plan}). Vui lòng nâng cấp gói để đăng thêm phòng!`);
+        }
+      }
+    }).catch(() => {});
+  }, []);
 
 
   const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -249,29 +269,62 @@ export default function SmartListingForm() {
   };
 
   const handleFinalSubmit = async () => {
-    const res = await createListingWithApi({
-      title: title.trim() || 'Phòng trọ tiện nghi trung tâm',
-      description: description.trim() || 'Phòng trọ sạch sẽ, thoáng mát, đầy đủ tiện nghi, an ninh 24/7.',
-      price: parseFloat(price) || 3500000,
-      area: parseFloat(area) || 25,
-      utilities: selectedUtilities.join(', '),
-      roomType,
-      address: address.trim() || '123 Nguyễn Đình Chiểu, Quận 3, TP.HCM',
-      imageUrls: imageUrls.filter(u => !u.startsWith('data:')).length > 0 
-        ? imageUrls.filter(u => !u.startsWith('data:')) 
-        : ['https://images.unsplash.com/photo-1522708323590-d24dbb6b0267?auto=format&fit=crop&w=800&q=80']
-    });
+    if (quotaReached) {
+      toast.error(quotaMessage || 'Bạn đã hết lượt đăng tin miễn phí. Vui lòng nâng cấp gói dịch vụ.');
+      navigate('/landlord/pricing');
+      return;
+    }
 
-    if (res.success) {
-      alert('Đã đăng phòng trọ thành công! Tin đăng đang ở trạng thái chờ duyệt.');
-      navigate('/landlord');
-    } else {
-      alert(res.message || 'Không thể tạo bài đăng. Vui lòng kiểm tra lại thông tin.');
+    setIsSubmitting(true);
+    try {
+      const res = await createListingWithApi({
+        title: title.trim() || 'Phòng trọ tiện nghi trung tâm',
+        description: description.trim() || 'Phòng trọ sạch sẽ, thoáng mát, đầy đủ tiện nghi, an ninh 24/7.',
+        price: parseFloat(price) || 3500000,
+        area: parseFloat(area) || 25,
+        utilities: selectedUtilities.join(', '),
+        roomType,
+        address: address.trim() || '123 Nguyễn Đình Chiểu, Quận 3, TP.HCM',
+        imageUrls: imageUrls.filter(u => !u.startsWith('data:')).length > 0 
+          ? imageUrls.filter(u => !u.startsWith('data:')) 
+          : ['https://images.unsplash.com/photo-1522708323590-d24dbb6b0267?auto=format&fit=crop&w=800&q=80']
+      });
+
+      if (res.success) {
+        toast.success('Đã gửi tin đăng thành công! Tin đăng đang ở trạng thái chờ duyệt.');
+        navigate('/landlord');
+      } else {
+        toast.error(res.message || 'Không thể tạo bài đăng. Vui lòng kiểm tra lại thông tin.');
+        if (res.message && (res.message.toLowerCase().includes('gói') || res.message.toLowerCase().includes('giới hạn'))) {
+          setQuotaReached(true);
+          setQuotaMessage(res.message);
+        }
+      }
+    } catch (err: any) {
+      toast.error(err.message || 'Lỗi kết nối khi tạo bài đăng.');
+    } finally {
+      setIsSubmitting(false);
     }
   };
 
   return (
     <div className="max-w-3xl mx-auto space-y-6 bg-[#F8FAFC]">
+      {quotaReached && (
+        <div className="bg-amber-50 border border-amber-200 rounded-2xl p-4 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 text-amber-900 shadow-sm">
+          <div className="flex items-center gap-3">
+            <AlertCircle className="w-5 h-5 text-amber-600 shrink-0" />
+            <p className="text-sm font-medium">{quotaMessage}</p>
+          </div>
+          <Button 
+            onClick={() => navigate('/landlord/pricing')} 
+            size="sm"
+            className="shrink-0 bg-[#00153D] text-white hover:bg-[#002266]"
+          >
+            Nâng cấp gói ngay
+          </Button>
+        </div>
+      )}
+
       <div className="flex items-center justify-between mb-8">
         <div>
           <h1 className="text-h2 font-bold text-[#0F172A]">Tạo tin đăng phòng trọ</h1>
@@ -644,9 +697,15 @@ export default function SmartListingForm() {
               </div>
             )}
 
-            <div className="pt-4 flex justify-between">
-              <Button variant="ghost" onClick={() => setStep(1)}>Sửa lại thông tin</Button>
-              <Button onClick={handleFinalSubmit}>Gửi tin đăng (Kiểm duyệt hệ thống)</Button>
+            <div className="pt-4 flex justify-between items-center">
+              <Button variant="ghost" onClick={() => setStep(1)} disabled={isSubmitting}>Sửa lại thông tin</Button>
+              <Button 
+                onClick={handleFinalSubmit}
+                disabled={isSubmitting || quotaReached}
+                className={quotaReached ? "opacity-60 cursor-not-allowed bg-gray-400" : ""}
+              >
+                {isSubmitting ? 'Đang gửi...' : quotaReached ? 'Đã đạt giới hạn gói' : 'Gửi tin đăng (Kiểm duyệt hệ thống)'}
+              </Button>
             </div>
           </div>
         )}

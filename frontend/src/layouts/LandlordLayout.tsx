@@ -1,3 +1,4 @@
+import { useEffect, useRef } from 'react';
 import { Outlet, Link, useLocation } from 'react-router-dom';
 import { GlobalNav } from '../components/ui/GlobalNav';
 import { GlobalFooter } from '../components/ui/GlobalFooter';
@@ -8,14 +9,14 @@ import {
   FileCheck, 
   Calendar, 
   BarChart3, 
-  MessageCircle,
   Zap,
-  Receipt,
-  Settings
+  Receipt
 } from 'lucide-react';
 
 export default function LandlordLayout() {
   const location = useLocation();
+  const navContainerRef = useRef<HTMLDivElement>(null);
+  const activeTabRef = useRef<HTMLAnchorElement>(null);
 
   const subNavItems = [
     { name: 'Tổng quan', path: '/landlord', icon: LayoutDashboard },
@@ -26,9 +27,17 @@ export default function LandlordLayout() {
     { name: 'Thống kê tin đăng', path: '/landlord/analytics', icon: BarChart3 },
     { name: 'Gói dịch vụ', path: '/landlord/pricing', icon: Zap },
     { name: 'Lịch sử giao dịch', path: '/landlord/billing', icon: Receipt },
-    { name: 'Tin nhắn', path: '/landlord/chat', icon: MessageCircle },
-    { name: 'Cài đặt', path: '/landlord/settings', icon: Settings },
   ];
+
+  useEffect(() => {
+    if (activeTabRef.current) {
+      activeTabRef.current.scrollIntoView({
+        behavior: 'smooth',
+        block: 'nearest',
+        inline: 'center'
+      });
+    }
+  }, [location.pathname]);
 
   const isFixedViewportPage = location.pathname === '/landlord/chat';
 
@@ -38,28 +47,37 @@ export default function LandlordLayout() {
 
       {/* Landlord Workspace Sub-Navigation Strip */}
       <div className="bg-white border-b border-[#E2E8F0] z-30 shadow-2xs shrink-0">
-        <div className="container-dormi flex items-center gap-1 sm:gap-2 overflow-x-auto py-2 scrollbar-none">
-          {subNavItems.map((item) => {
-            const Icon = item.icon;
-            const isActive = item.path === '/landlord'
-              ? location.pathname === '/landlord'
-              : location.pathname.startsWith(item.path);
+        <div className="w-full max-w-7xl 2xl:max-w-[1536px] mx-auto px-4 sm:px-6 lg:px-8">
+          <div 
+            ref={navContainerRef}
+            className="flex items-center justify-start md:justify-center gap-1 sm:gap-1.5 lg:gap-2 overflow-x-auto py-2 px-1 scrollbar-none scroll-smooth"
+            style={{ WebkitOverflowScrolling: 'touch' }}
+          >
+            {subNavItems.map((item) => {
+              const Icon = item.icon;
+              const isActive = item.path === '/landlord'
+                ? location.pathname === '/landlord'
+                : location.pathname.startsWith(item.path);
 
-            return (
-              <Link
-                key={item.path}
-                to={item.path}
-                className={`px-3 py-1.5 rounded-lg text-xs font-semibold whitespace-nowrap transition-colors flex items-center gap-1.5 shrink-0 ${
-                  isActive
-                    ? 'bg-blue-50 text-blue-700 font-bold border border-blue-200/80'
-                    : 'text-[#64748B] hover:text-[#0F172A] hover:bg-slate-50'
-                }`}
-              >
-                <Icon className={`w-3.5 h-3.5 shrink-0 ${isActive ? 'text-blue-600' : 'text-[#64748B]'}`} />
-                <span>{item.name}</span>
-              </Link>
-            );
-          })}
+              return (
+                <Link
+                  key={item.path}
+                  ref={isActive ? activeTabRef : null}
+                  to={item.path}
+                  className={`px-3 py-1.5 rounded-lg text-xs font-semibold whitespace-nowrap transition-colors flex items-center gap-1.5 shrink-0 ${
+                    isActive
+                      ? 'bg-blue-50 text-blue-700 font-bold border border-blue-200/80 shadow-2xs'
+                      : 'text-[#64748B] hover:text-[#0F172A] hover:bg-slate-50'
+                  }`}
+                >
+                  <Icon className={`w-3.5 h-3.5 shrink-0 ${isActive ? 'text-blue-600' : 'text-[#64748B]'}`} />
+                  <span>{item.name}</span>
+                </Link>
+              );
+            })}
+            {/* Trailing spacing buffer so the last tab never touches the right edge when scrolled on mobile */}
+            <div className="w-3 sm:w-6 shrink-0 md:hidden" aria-hidden="true" />
+          </div>
         </div>
       </div>
 

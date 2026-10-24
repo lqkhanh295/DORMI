@@ -6,7 +6,7 @@ import { Card } from '../../components/ui/Card';
 import { Button } from '../../components/ui/Button';
 import { useStore } from '../../store/useStore';
 import { Toaster, toast } from 'sonner';
-import { ArrowLeft, CheckCircle, Heart, Share2 as ShareNetwork, AlertTriangle as Warning, CalendarCheck, X, MessageSquare, ShieldCheck, Camera, Check, FileText, Flame, Users } from 'lucide-react';
+import { ArrowLeft, CheckCircle, Heart, Share2 as ShareNetwork, AlertTriangle as Warning, CalendarCheck, X, MessageSquare, ShieldCheck, Camera, Check, FileText, Flame, Users, Building2 } from 'lucide-react';
 import { appointmentsApi, favoritesApi, roomsApi, trustSafetyApi, type RoomResponse, type TrustScoreBreakdown } from '../../services/api';
 import RentalApplicationModal from '../../components/transaction/RentalApplicationModal';
 import TrustScoreModal from '../../components/trust/TrustScoreModal';
@@ -32,6 +32,7 @@ export default function RoomDetail() {
   const [selectedTime, setSelectedTime] = useState('');
   const [isSaved, setIsSaved] = useState(false);
   const [isPulsing, setIsPulsing] = useState(false);
+  const [otherLandlordRooms, setOtherLandlordRooms] = useState<any[]>([]);
 
   useEffect(() => {
     if (id) {
@@ -41,6 +42,14 @@ export default function RoomDetail() {
         .then(res => {
           if (res && res.id) {
             setRoomData(res);
+            if (res.landlordId) {
+              roomsApi.getRooms({ landlordId: res.landlordId, pageSize: 6 })
+                .then((rRes: any) => {
+                  const list = Array.isArray(rRes) ? rRes : (rRes?.data || []);
+                  setOtherLandlordRooms(list.filter((r: any) => r.id !== id));
+                })
+                .catch(() => {});
+            }
           } else {
             setNotFound(true);
           }
@@ -595,11 +604,125 @@ export default function RoomDetail() {
                 <MessageSquare className="w-4 h-4 text-[#00153D]" />
                 Nhắn tin với chủ trọ
               </Button>
+
+              {roomData?.landlordId && (
+                <Button
+                  variant="secondary"
+                  fullWidth
+                  size="md"
+                  onClick={() => {
+                    navigate(`/search?landlordId=${roomData.landlordId}&landlordName=${encodeURIComponent(roomData.landlordName || 'Chủ trọ')}`);
+                  }}
+                  className="flex items-center justify-center gap-2 border border-slate-200 text-[#00153D] hover:bg-slate-50"
+                >
+                  <Building2 className="w-4 h-4 text-blue-600" />
+                  <span>Xem tất cả phòng của chủ trọ này</span>
+                </Button>
+              )}
             </div>
           </Card>
         </div>
 
       </div>
+
+      {/* Mobile Sticky Bottom Action Bar */}
+      {roomData && (
+        <div className="md:hidden fixed bottom-0 left-0 right-0 z-40 bg-white/95 backdrop-blur-md border-t border-slate-200 p-3 shadow-lg flex items-center justify-between gap-3">
+          <div className="flex flex-col shrink-0">
+            <span className="text-[11px] text-slate-500 font-medium">Giá thuê phòng</span>
+            <span className="text-base font-bold text-[#00153D]">
+              {Number(roomData.price).toLocaleString('vi-VN')}₫<span className="text-[11px] font-normal text-slate-500">/th</span>
+            </span>
+          </div>
+
+          <div className="flex items-center gap-2 flex-1 justify-end">
+            {roomData.status === 1 ? (
+              <span className="px-3 py-2 bg-rose-50 text-rose-700 border border-rose-200 text-xs font-bold rounded-xl">
+                Đã có người thuê
+              </span>
+            ) : (
+              <>
+                <button
+                  type="button"
+                  onClick={() => {
+                    if (!currentUser) navigate('/auth');
+                    else {
+                      setSchedulerStep(1);
+                      setShowScheduler(true);
+                    }
+                  }}
+                  className="px-3 py-2.5 bg-slate-100 hover:bg-slate-200 text-[#00153D] text-xs font-bold rounded-xl transition-colors flex items-center gap-1.5 touch-target shrink-0"
+                >
+                  <CalendarCheck className="w-4 h-4 text-[#00153D]" />
+                  <span>Hẹn xem</span>
+                </button>
+
+                <button
+                  type="button"
+                  onClick={() => {
+                    if (!currentUser) navigate('/auth');
+                    else setShowApplicationModal(true);
+                  }}
+                  className="px-3.5 py-2.5 bg-[#00153D] hover:bg-[#073372] text-white text-xs font-bold rounded-xl transition-colors flex items-center gap-1.5 shadow-xs touch-target"
+                >
+                  <FileText className="w-4 h-4 text-white" />
+                  <span>Nộp hồ sơ ngay</span>
+                </button>
+              </>
+            )}
+          </div>
+        </div>
+      )}
+
+      {/* Other Rooms by Same Landlord Section */}
+      {otherLandlordRooms.length > 0 && (
+        <div className="mt-12 pt-8 border-t border-[#E2E8F0] space-y-4">
+          <div className="flex items-center justify-between">
+            <div>
+              <h2 className="text-xl font-bold text-[#0F172A] flex items-center gap-2">
+                <Building2 className="w-5 h-5 text-blue-600" />
+                <span>Các phòng khác của chủ trọ này</span>
+              </h2>
+              <p className="text-xs text-[#64748B] mt-0.5">Khám phá thêm các lựa chọn phòng trọ uy tín từ cùng chủ nhà.</p>
+            </div>
+            <button
+              onClick={() => navigate(`/search?landlordId=${roomData?.landlordId}&landlordName=${encodeURIComponent(roomData?.landlordName || 'Chủ trọ')}`)}
+              className="text-xs font-bold text-blue-600 hover:text-blue-800 transition-colors"
+            >
+              Xem tất cả ({otherLandlordRooms.length + 1}) →
+            </button>
+          </div>
+
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
+            {otherLandlordRooms.slice(0, 3).map((r: any) => (
+              <Card 
+                key={r.id} 
+                className="overflow-hidden bg-white rounded-2xl border border-slate-200/90 shadow-xs hover:shadow-md transition-shadow cursor-pointer flex flex-col"
+                onClick={() => navigate(`/room/${r.id}`)}
+              >
+                <div className="h-44 bg-slate-100 overflow-hidden relative">
+                  <img
+                    src={r.images?.[0]?.imageUrl || 'https://images.unsplash.com/photo-1522708323590-d24dbb6b0267?auto=format&fit=crop&w=400&q=80'}
+                    alt={r.title}
+                    className="w-full h-full object-cover hover:scale-105 transition-transform duration-300"
+                  />
+                  <div className="absolute top-2.5 right-2.5 bg-slate-900/80 backdrop-blur-xs text-white text-[11px] font-bold px-2.5 py-1 rounded-lg">
+                    {Number(r.price).toLocaleString('vi-VN')}₫/tháng
+                  </div>
+                </div>
+                <div className="p-4 flex-1 flex flex-col justify-between space-y-2">
+                  <h3 className="font-bold text-sm text-slate-900 line-clamp-1">{r.title}</h3>
+                  <p className="text-xs text-slate-500 line-clamp-1">{r.address}</p>
+                  <div className="pt-2 border-t border-slate-100 flex items-center justify-between text-xs text-slate-600">
+                    <span>{r.area}m²</span>
+                    <span className="text-blue-600 font-semibold">Xem chi tiết →</span>
+                  </div>
+                </div>
+              </Card>
+            ))}
+          </div>
+        </div>
+      )}
 
       {/* Gallery Modal */}
       {createPortal(

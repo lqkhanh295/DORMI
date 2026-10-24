@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { createPortal } from 'react-dom';
-import { Link, useNavigate, useLocation } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { applicationsApi, type RentalApplicationResponse, ApplicationStatus } from '../../services/api';
 import { toast } from 'sonner';
 import { 
@@ -22,8 +22,7 @@ import { PageMotion } from '../../components/common/Motion';
 
 export default function LandlordApplications() {
   const navigate = useNavigate();
-  const location = useLocation();
-  const leasesPath = location.pathname.startsWith('/admin') ? '/admin/leases' : '/landlord/leases';
+  const leasesPath = '/landlord/leases';
   const [applications, setApplications] = useState<RentalApplicationResponse[]>([]);
   const [loading, setLoading] = useState(true);
   const [activeTab, setActiveTab] = useState<'all' | 'pending' | 'approved' | 'rejected'>('pending');
@@ -68,6 +67,22 @@ export default function LandlordApplications() {
     setLandlordNotes('');
   };
 
+  const isPendingStatus = (status: number | string) => {
+    const num = Number(status);
+    return num === ApplicationStatus.Submitted || 
+           num === ApplicationStatus.UnderReview || 
+           num === ApplicationStatus.MoreInfoRequested;
+  };
+
+  const isApprovedStatus = (status: number | string) => {
+    return Number(status) === ApplicationStatus.Approved;
+  };
+
+  const isRejectedStatus = (status: number | string) => {
+    const num = Number(status);
+    return num === ApplicationStatus.Rejected || num === ApplicationStatus.Withdrawn;
+  };
+
   const handleConfirmReview = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!reviewingApp) return;
@@ -84,6 +99,19 @@ export default function LandlordApplications() {
         reviewReason.trim() || undefined,
         landlordNotes.trim() || undefined
       );
+
+      // ponytail: optimistic update immediately so counters and lists reflect the review action without lag
+      setApplications(prev => prev.map(a => 
+        a.id === reviewingApp.id 
+          ? { 
+              ...a, 
+              status: targetStatus, 
+              rejectionReason: reviewReason.trim() || undefined, 
+              landlordNotes: landlordNotes.trim() || undefined, 
+              reviewedAt: new Date().toISOString() 
+            } 
+          : a
+      ));
 
       const approvedApp = reviewingApp;
       setReviewingApp(null);
@@ -110,21 +138,15 @@ export default function LandlordApplications() {
 
   const filteredApps = applications.filter(app => {
     if (activeTab === 'all') return true;
-    if (activeTab === 'pending') {
-      return app.status === ApplicationStatus.Submitted || 
-             app.status === ApplicationStatus.UnderReview || 
-             app.status === ApplicationStatus.MoreInfoRequested;
-    }
-    if (activeTab === 'approved') return app.status === ApplicationStatus.Approved;
-    if (activeTab === 'rejected') {
-      return app.status === ApplicationStatus.Rejected || 
-             app.status === ApplicationStatus.Withdrawn;
-    }
+    if (activeTab === 'pending') return isPendingStatus(app.status);
+    if (activeTab === 'approved') return isApprovedStatus(app.status);
+    if (activeTab === 'rejected') return isRejectedStatus(app.status);
     return true;
   });
 
-  const getStatusBadge = (status: number) => {
-    switch (status) {
+  const getStatusBadge = (status: number | string) => {
+    const num = Number(status);
+    switch (num) {
       case ApplicationStatus.Approved:
         return (
           <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md text-xs font-semibold bg-emerald-50 text-emerald-700 border border-emerald-200">
@@ -207,7 +229,7 @@ export default function LandlordApplications() {
               : 'bg-white border border-[#E2E8F0] text-[#64748B] hover:text-[#0F172A]'
           }`}
         >
-          Cần duyệt ({applications.filter(a => a.status === ApplicationStatus.Submitted || a.status === ApplicationStatus.UnderReview || a.status === ApplicationStatus.MoreInfoRequested).length})
+          Cần duyệt ({applications.filter(a => isPendingStatus(a.status)).length})
         </button>
         <button
           type="button"
@@ -218,7 +240,7 @@ export default function LandlordApplications() {
               : 'bg-white border border-[#E2E8F0] text-[#64748B] hover:text-[#0F172A]'
           }`}
         >
-          Đã duyệt ({applications.filter(a => a.status === ApplicationStatus.Approved).length})
+          Đã duyệt ({applications.filter(a => isApprovedStatus(a.status)).length})
         </button>
         <button
           type="button"
@@ -240,7 +262,7 @@ export default function LandlordApplications() {
               : 'bg-white border border-[#E2E8F0] text-[#64748B] hover:text-[#0F172A]'
           }`}
         >
-          Đã từ chối ({applications.filter(a => a.status === ApplicationStatus.Rejected || a.status === ApplicationStatus.Withdrawn).length})
+          Đã từ chối ({applications.filter(a => isRejectedStatus(a.status)).length})
         </button>
       </div>
 
@@ -274,9 +296,7 @@ export default function LandlordApplications() {
       ) : (
         <div className="space-y-5">
           {filteredApps.map(app => {
-            const isPending = app.status === ApplicationStatus.Submitted || 
-                              app.status === ApplicationStatus.UnderReview || 
-                              app.status === ApplicationStatus.MoreInfoRequested;
+            const isPending = isPendingStatus(app.status);
 
             return (
               <div

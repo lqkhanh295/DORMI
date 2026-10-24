@@ -141,12 +141,26 @@ public class MessageService : IMessageService
             })
             .ToListAsync();
 
-        // ponytail: mark unread messages directly using single ExecuteUpdateAsync without second roundtrip SELECT
+        // ponytail: mark unread messages directly using single ExecuteUpdateAsync with in-memory fallback
         if (messages.Any(m => m.SenderId == otherUserId && !m.IsRead))
         {
-            await _db.Messages
-                .Where(m => m.SenderId == otherUserId && m.ReceiverId == userId && !m.IsRead)
-                .ExecuteUpdateAsync(s => s.SetProperty(m => m.IsRead, true));
+            try
+            {
+                await _db.Messages
+                    .Where(m => m.SenderId == otherUserId && m.ReceiverId == userId && !m.IsRead)
+                    .ExecuteUpdateAsync(s => s.SetProperty(m => m.IsRead, true));
+            }
+            catch (Exception)
+            {
+                var unreadList = await _db.Messages
+                    .Where(m => m.SenderId == otherUserId && m.ReceiverId == userId && !m.IsRead)
+                    .ToListAsync();
+                foreach (var unread in unreadList)
+                {
+                    unread.IsRead = true;
+                }
+                await _db.SaveChangesAsync();
+            }
 
             _memCache?.Remove($"conversations:{userId}");
         }

@@ -80,4 +80,15 @@ public class RoommatesController : BaseApiController
         var result = await _roommateService.GetRecommendationsAsync(currentUserId.Value);
         return HandleResult(result);
     }
+
+    [Authorize]
+    [HttpGet("my")]
+    public async Task<IActionResult> GetMyRoommatePosts()
+    {
+        var currentUserId = GetCurrentUserId();
+        if (!currentUserId.HasValue) return Unauthorized();
+
+        var result = await _roommateService.GetMyRoommatePostsAsync(currentUserId.Value);
+        return HandleResult(result);
+    }
 }

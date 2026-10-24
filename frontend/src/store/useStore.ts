@@ -184,17 +184,10 @@ export const useStore = create<AppState>()(
         }
       },
 
-      addListing: (listing) => set((state) => ({
-        listings: [
-          ...state.listings, 
-          { 
-            ...listing, 
-            id: Math.random().toString(36).substr(2, 9),
-            landlordId: state.currentUser?.id || 'u2',
-            createdAt: new Date().toISOString()
-          }
-        ]
-      })),
+      addListing: (listing) => {
+        // ponytail: forward to real API instead of fake in-memory state
+        get().createListingWithApi(listing);
+      },
 
       createListingWithApi: async (data) => {
         try {
@@ -211,17 +204,10 @@ export const useStore = create<AppState>()(
         listings: state.listings.map(l => l.id === id ? { ...l, ...updates } : l)
       })),
 
-      sendMessage: (receiverId, text) => set((state) => {
-        if (!state.currentUser) return state;
-        const newMessage: Message = {
-          id: Math.random().toString(36).substr(2, 9),
-          senderId: state.currentUser.id,
-          receiverId,
-          text,
-          timestamp: new Date().toISOString()
-        };
-        return { messages: [...state.messages, newMessage] };
-      }),
+      sendMessage: (receiverId, text) => {
+        // ponytail: forward to real API with optimistic UI instead of fake in-memory state
+        get().sendMessageWithApi(receiverId, text);
+      },
 
       sendMessageWithApi: async (receiverId, text) => {
         const currentUserId = get().currentUser?.id || '';

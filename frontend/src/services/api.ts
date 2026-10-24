@@ -121,7 +121,11 @@ async function request<T>(endpoint: string, options: RequestInit = {}): Promise<
       throw error;
     }
 
-    const error: any = new Error(errorData.message || (response.status === 401 ? 'Email hoặc mật khẩu không chính xác.' : `HTTP error! Status: ${response.status}`));
+    const validationErrors = errorData.errors 
+      ? Object.values(errorData.errors).flat().join(', ') 
+      : null;
+    const extractedMessage = errorData.message || validationErrors || errorData.title;
+    const error: any = new Error(extractedMessage || (response.status === 401 ? 'Email hoặc mật khẩu không chính xác.' : `HTTP error! Status: ${response.status}`));
     error.data = errorData;
     error.status = response.status;
     throw error;
@@ -227,6 +231,8 @@ export const roomsApi = {
     minPrice?: number; 
     maxPrice?: number; 
     sortBy?: string;
+    landlordOnly?: boolean;
+    landlordId?: string;
     page?: number; 
     pageSize?: number;
   }) => {
@@ -240,6 +246,8 @@ export const roomsApi = {
     if (params?.minPrice !== undefined) searchParams.append('minPrice', params.minPrice.toString());
     if (params?.maxPrice !== undefined) searchParams.append('maxPrice', params.maxPrice.toString());
     if (params?.sortBy) searchParams.append('sortBy', params.sortBy);
+    if (params?.landlordOnly !== undefined) searchParams.append('landlordOnly', params.landlordOnly.toString());
+    if (params?.landlordId) searchParams.append('landlordId', params.landlordId);
     if (params?.page) searchParams.append('page', params.page.toString());
     if (params?.pageSize) searchParams.append('pageSize', params.pageSize.toString());
 
@@ -586,6 +594,33 @@ export const roommatesApi = {
 
   getRecommendations: async () => {
     return request<RoommatePostResponse[]>('/roommates/recommendations');
+  },
+
+  getMyPosts: async () => {
+    return request<RoommatePostResponse[]>('/roommates/my');
+  },
+
+  updatePost: async (id: string, data: {
+    title: string;
+    description: string;
+    budget: number;
+    location: string;
+    moveInDate: string;
+    genderPreference?: string;
+    lifestyleTraits?: string;
+    roomId?: string;
+    isActive?: boolean;
+  }) => {
+    return request<any>(`/roommates/${id}`, {
+      method: 'PUT',
+      body: JSON.stringify(data)
+    });
+  },
+
+  deletePost: async (id: string) => {
+    return request<any>(`/roommates/${id}`, {
+      method: 'DELETE'
+    });
   }
 };
 
@@ -1023,6 +1058,12 @@ export const postRentalApi = {
 
   createDepositCheckout: async (leaseId: string) => {
     return request<DepositCheckoutResponse>(`/postrental/leases/${leaseId}/deposit/checkout`, {
+      method: 'POST'
+    });
+  },
+
+  settleDeposit: async (orderCode: string | number) => {
+    return request<RentalPaymentScheduleResponse>(`/postrental/deposit/settle/${orderCode}`, {
       method: 'POST'
     });
   },

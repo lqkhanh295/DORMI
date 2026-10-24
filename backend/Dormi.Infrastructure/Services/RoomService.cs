@@ -176,11 +176,13 @@ public class RoomService : IRoomService
     public async Task<ServiceResult<object>> GetRoomsAsync(RoomQueryFilterDto filter, Guid? currentUserId, bool isAdmin, bool isLandlord)
     {
         string? cacheKey = null;
-        var isPublicQuery = !isAdmin && (!isLandlord || !currentUserId.HasValue);
+        var isPublicQuery = !isAdmin && (!isLandlord || filter.LandlordOnly != true || !currentUserId.HasValue);
         string? l1Key = null;
         if (isPublicQuery)
         {
-            l1Key = $"rooms_search_l1:{filter.Query}:{filter.RoomType}:{filter.MinPrice}:{filter.MaxPrice}:{filter.District}:{filter.SortBy}:{filter.Page}:{filter.PageSize}";
+            var version = "1";
+            try { version = await _cache.GetStringAsync("rooms_cache_version") ?? "1"; } catch { }
+            l1Key = $"rooms_search_l1:{version}:{filter.LandlordId}:{filter.Query}:{filter.RoomType}:{filter.MinPrice}:{filter.MaxPrice}:{filter.District}:{filter.SortBy}:{filter.Page}:{filter.PageSize}";
             if (_memoryCache.TryGetValue(l1Key, out object? l1Cached) && l1Cached != null)
             {
                 return ServiceResult<object>.Ok(l1Cached);
@@ -188,8 +190,7 @@ public class RoomService : IRoomService
 
             try
             {
-                var version = await _cache.GetStringAsync("rooms_cache_version") ?? "1";
-                cacheKey = $"rooms_search:{version}:{filter.Query}:{filter.RoomType}:{filter.MinPrice}:{filter.MaxPrice}:{filter.District}:{filter.SortBy}:{filter.Page}:{filter.PageSize}";
+                cacheKey = $"rooms_search:{version}:{filter.LandlordId}:{filter.Query}:{filter.RoomType}:{filter.MinPrice}:{filter.MaxPrice}:{filter.District}:{filter.SortBy}:{filter.Page}:{filter.PageSize}";
                 var cached = await _cache.GetStringAsync(cacheKey);
                 if (!string.IsNullOrEmpty(cached))
                 {
@@ -332,6 +333,11 @@ public class RoomService : IRoomService
             }
         }
 
+        if (filter.LandlordId.HasValue)
+        {
+            query = query.Where(r => r.LandlordId == filter.LandlordId.Value);
+        }
+
         if (isAdmin)
         {
             if (filter.Status.HasValue)
@@ -339,7 +345,7 @@ public class RoomService : IRoomService
                 query = query.Where(r => r.Status == filter.Status.Value);
             }
         }
-        else if (isLandlord && currentUserId.HasValue && currentUserId.Value != Guid.Empty)
+        else if (isLandlord && currentUserId.HasValue && currentUserId.Value != Guid.Empty && (filter.LandlordOnly == true || (filter.Status.HasValue && (filter.Status.Value == RoomStatus.PendingApproval || filter.Status.Value == RoomStatus.Hidden))))
         {
             if (filter.Status.HasValue && (filter.Status.Value == RoomStatus.PendingApproval || filter.Status.Value == RoomStatus.Hidden))
             {
@@ -347,7 +353,7 @@ public class RoomService : IRoomService
             }
             else if (filter.Status.HasValue)
             {
-                query = query.Where(r => r.Status == filter.Status.Value);
+                query = query.Where(r => r.LandlordId == currentUserId.Value && r.Status == filter.Status.Value);
             }
             else
             {
@@ -361,8 +367,11 @@ public class RoomService : IRoomService
                 return ServiceResult<object>.Forbidden("Bạn không có quyền truy cập danh sách phòng ở trạng thái này.");
             }
 
-            // Chỉ hiển thị phòng đang còn trống (Available) và không có hợp đồng thuê nào đang hoạt động
-            query = query.Where(r => r.Status == RoomStatus.Available && !_db.LeaseContracts.Any(l => l.RoomId == r.Id && (l.Status == "Active" || l.Status == "Signed")));
+            var currentTime = DateTime.UtcNow;
+            // Chỉ hiển thị phòng đang còn trống (Available) và không có hợp đồng thuê nào đang hoạt động hoặc chờ ký
+            query = query.Where(r => r.Status == RoomStatus.Available && !_db.LeaseContracts.Any(l => l.RoomId == r.Id && 
+                (l.Status == "Active" || l.Status == "Signed" || l.Status == "PendingSignature" || 
+                 (l.StartDate <= currentTime && l.EndDate >= currentTime && l.Status != "Terminated" && l.Status != "Expired" && l.Status != "Cancelled"))));
         }
 
         var totalItems = await query.CountAsync();
@@ -402,7 +411,10 @@ public class RoomService : IRoomService
                 Longitude = r.Longitude,
                 DistanceKm = (userPoint != null && r.Location != null) ? Math.Round(r.Location.Distance(userPoint) / 1000.0, 2) : null,
                 Virtual3DUrl = r.Virtual3DUrl,
-                Status = (_db.LeaseContracts.Any(l => l.RoomId == r.Id && (l.Status == "Active" || l.Status == "Signed")) && r.Status != RoomStatus.Hidden && r.Status != RoomStatus.PendingApproval)
+                Status = (_db.LeaseContracts.Any(l => l.RoomId == r.Id && 
+                            (l.Status == "Active" || l.Status == "Signed" || l.Status == "PendingSignature" || 
+                             (l.StartDate <= now && l.EndDate >= now && l.Status != "Terminated" && l.Status != "Expired" && l.Status != "Cancelled"))) 
+                          && r.Status != RoomStatus.Hidden && r.Status != RoomStatus.PendingApproval)
                     ? RoomStatus.Rented
                     : r.Status,
                 IsVerifiedLandlord = r.Landlord.IsVerified,
@@ -496,7 +508,9 @@ public class RoomService : IRoomService
         var now = DateTime.UtcNow;
         var featured = await _db.Rooms
             .AsNoTracking()
-            .Where(r => r.Status == RoomStatus.Available && !_db.LeaseContracts.Any(l => l.RoomId == r.Id && (l.Status == "Active" || l.Status == "Signed")))
+            .Where(r => r.Status == RoomStatus.Available && !_db.LeaseContracts.Any(l => l.RoomId == r.Id && 
+                (l.Status == "Active" || l.Status == "Signed" || l.Status == "PendingSignature" || 
+                 (l.StartDate <= now && l.EndDate >= now && l.Status != "Terminated" && l.Status != "Expired" && l.Status != "Cancelled"))))
             .OrderByDescending(r => r.IsBoosted && r.BoostExpiresAt > now)
             .ThenByDescending(r => r.Landlord.IsVerified)
             .ThenByDescending(r => r.CreatedAt)
@@ -589,7 +603,9 @@ public class RoomService : IRoomService
                 .Include(r => r.Images)
                 .FirstOrDefaultAsync(r => r.Id == id);
 
-            if (room == null) return ServiceResult<RoomResponseDto>.NotFound("Không tìm thấy phòng trọ.");
+            var hasActiveLease = await _db.LeaseContracts.AnyAsync(l => l.RoomId == room.Id && 
+                (l.Status == "Active" || l.Status == "Signed" || l.Status == "PendingSignature" || 
+                 (l.StartDate <= DateTime.UtcNow && l.EndDate >= DateTime.UtcNow && l.Status != "Terminated" && l.Status != "Expired" && l.Status != "Cancelled")));
 
             dto = new RoomResponseDto
             {
@@ -608,7 +624,9 @@ public class RoomService : IRoomService
                 Longitude = room.Longitude,
                 DistanceKm = null,
                 Virtual3DUrl = room.Virtual3DUrl,
-                Status = room.Status,
+                Status = (hasActiveLease && room.Status != RoomStatus.Hidden && room.Status != RoomStatus.PendingApproval)
+                    ? RoomStatus.Rented
+                    : room.Status,
                 IsVerifiedLandlord = room.Landlord?.IsVerified ?? false,
                 CreatedAt = room.CreatedAt,
                 IsBoosted = room.IsBoosted && room.BoostExpiresAt > DateTime.UtcNow,
@@ -701,18 +719,16 @@ public class RoomService : IRoomService
         // ponytail: enforce subscription plan room limit (Free: 2, Pro: 15, Business: Unlimited)
         var activeSub = await _db.LandlordSubscriptions
             .Where(s => s.LandlordId == landlordId && s.IsActive && s.EndDate > DateTime.UtcNow)
-            .OrderByDescending(s => s.EndDate)
+            .OrderByDescending(s => s.StartDate)
             .FirstOrDefaultAsync();
 
-        var isDemoLandlord = activeSub == null && (user.Email == "landlord@dormi.vn");
-        var planName = isDemoLandlord ? "Pro" : (activeSub?.PlanName ?? "Free");
+        var planName = activeSub?.PlanName ?? "Free";
         int maxRooms = planName.Equals("Business", StringComparison.OrdinalIgnoreCase) || planName.Equals("Enterprise", StringComparison.OrdinalIgnoreCase)
             ? int.MaxValue
             : (planName.Equals("Pro", StringComparison.OrdinalIgnoreCase) ? 15 : 2);
 
         var currentActiveRooms = await _db.Rooms.CountAsync(r => 
             r.LandlordId == landlordId && 
-            r.Status != RoomStatus.Rented && 
             r.Status != RoomStatus.Hidden);
 
         if (currentActiveRooms >= maxRooms)

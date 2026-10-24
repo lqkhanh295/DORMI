@@ -30,8 +30,9 @@ export default function TenantLayout() {
 
       {/* Tenant Workspace Sub-Navigation Strip */}
       <div className="bg-white border-b border-[#E2E8F0] z-30 shadow-2xs shrink-0">
-        <div className="container-dormi flex items-center gap-1 sm:gap-2 overflow-x-auto py-2 scrollbar-none">
-          {subNavItems.map((item) => {
+        <div className="w-full max-w-7xl 2xl:max-w-[1536px] mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="flex items-center justify-start md:justify-center gap-1 sm:gap-2 overflow-x-auto py-2 scrollbar-none">
+            {subNavItems.map((item) => {
             const Icon = item.icon;
             const isActive = item.path === '/tenant'
               ? location.pathname === '/tenant'
@@ -52,6 +53,7 @@ export default function TenantLayout() {
               </Link>
             );
           })}
+          </div>
         </div>
       </div>
 

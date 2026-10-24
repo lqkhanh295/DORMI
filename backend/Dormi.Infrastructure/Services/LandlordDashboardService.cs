@@ -87,6 +87,14 @@ public class LandlordDashboardService : ILandlordDashboardService
 
         var totalListings = roomCounts.Sum(x => x.Count);
         var activeListings = roomCounts.Where(x => x.Status == RoomStatus.Available).Sum(x => x.Count);
+        var rentedListings = roomCounts.Where(x => x.Status == RoomStatus.Rented).Sum(x => x.Count);
+        var occupancyRate = totalListings > 0 ? Math.Round((double)rentedListings / totalListings * 100.0, 1) : 0.0;
+
+        // ponytail: actual monthly revenue from active & renewed leases in database
+        var estimatedRevenue = await _db.LeaseContracts
+            .AsNoTracking()
+            .Where(l => l.LandlordId == landlordId && (l.Status == "Active" || l.Status == "Renewed"))
+            .SumAsync(l => (decimal?)l.MonthlyRent) ?? 0m;
 
         var apptCounts = await _db.ViewingAppointments
             .AsNoTracking()
@@ -98,9 +106,22 @@ public class LandlordDashboardService : ILandlordDashboardService
         var totalAppointments = apptCounts.Sum(x => x.Count);
         var pendingAppointments = apptCounts.Where(x => x.Status == "Pending").Sum(x => x.Count);
 
+        var appStats = await _db.RentalApplications
+            .AsNoTracking()
+            .Where(a => a.Room.LandlordId == landlordId)
+            .GroupBy(a => a.Status)
+            .Select(g => new { Status = g.Key, Count = g.Count() })
+            .ToListAsync();
+
+        var totalApplications = appStats.Sum(x => x.Count);
+        var pendingApplications = appStats.Where(x => 
+            x.Status == ApplicationStatus.Submitted || 
+            x.Status == ApplicationStatus.UnderReview || 
+            x.Status == ApplicationStatus.MoreInfoRequested).Sum(x => x.Count);
+
         var totalViews = await _db.RoomViews
             .AsNoTracking()
-            .CountAsync(v => v.Room.LandlordId == landlordId && v.EventType == "View");
+            .CountAsync(v => v.Room.LandlordId == landlordId && (v.EventType == "View" || v.EventType == "DetailView" || string.IsNullOrEmpty(v.EventType)));
 
         var conversionRate = totalViews > 0 ? Math.Round((double)totalAppointments / totalViews * 100.0, 1) : 0.0;
 
@@ -108,32 +129,30 @@ public class LandlordDashboardService : ILandlordDashboardService
         var activeSub = await _db.LandlordSubscriptions
             .AsNoTracking()
             .Where(s => s.LandlordId == landlordId && s.IsActive && s.EndDate > now)
-            .OrderByDescending(s => s.EndDate)
+            .OrderByDescending(s => s.StartDate)
             .FirstOrDefaultAsync();
 
-        // Fallback for demo landlord: guarantee Pro plan for landlord@dormi.vn
-        var isDemoLandlord = activeSub == null && await _db.Users.AnyAsync(u => u.Id == landlordId && u.Email == "landlord@dormi.vn");
-        var planName = isDemoLandlord ? "Pro" : (activeSub?.PlanName ?? "Free");
+        var planName = activeSub?.PlanName ?? "Free";
         int maxRooms = planName.Equals("Business", StringComparison.OrdinalIgnoreCase) || planName.Equals("Enterprise", StringComparison.OrdinalIgnoreCase)
             ? 999
             : (planName.Equals("Pro", StringComparison.OrdinalIgnoreCase) ? 15 : 2);
 
-        // Calculate quota consumed by landlord's rooms (exclude Hidden and Rented, matching RoomService)
+        // Quota consumed by landlord's active portfolio (exclude Hidden)
         var roomsUsed = roomCounts
-            .Where(x => x.Status != RoomStatus.Rented && x.Status != RoomStatus.Hidden)
+            .Where(x => x.Status != RoomStatus.Hidden)
             .Sum(x => x.Count);
-
-        if (roomsUsed == 0 && totalListings > 0)
-        {
-            roomsUsed = activeListings > 0 ? activeListings : totalListings;
-        }
 
         var analytics = new LandlordAnalyticsDto
         {
             TotalListings = totalListings,
             ActiveListings = activeListings,
+            RentedListings = rentedListings,
+            OccupancyRate = occupancyRate,
+            EstimatedRevenue = estimatedRevenue,
             TotalAppointments = totalAppointments,
             PendingAppointments = pendingAppointments,
+            PendingApplications = pendingApplications,
+            TotalApplications = totalApplications,
             TotalViews = totalViews,
             ConversionRate = conversionRate,
             CurrentPlan = planName,
@@ -142,7 +161,7 @@ public class LandlordDashboardService : ILandlordDashboardService
             RoomsUsed = roomsUsed
         };
 
-        _memCache?.Set(cacheKey, analytics, TimeSpan.FromMinutes(2));
+        _memCache?.Set(cacheKey, analytics, TimeSpan.FromSeconds(30));
 
         if (_cache != null)
         {
@@ -241,7 +260,7 @@ public class LandlordDashboardService : ILandlordDashboardService
         // Grouped queries & counts
         var viewsByRoom = await _db.RoomViews
             .AsNoTracking()
-            .Where(v => landlordRoomIds.Contains(v.RoomId) && v.EventType == "View")
+            .Where(v => landlordRoomIds.Contains(v.RoomId) && (v.EventType == "View" || v.EventType == "DetailView" || string.IsNullOrEmpty(v.EventType)))
             .GroupBy(v => v.RoomId)
             .Select(g => new { RoomId = g.Key, Count = g.Count() })
             .ToDictionaryAsync(g => g.RoomId, g => g.Count);
@@ -276,7 +295,7 @@ public class LandlordDashboardService : ILandlordDashboardService
 
         var viewsInPeriod = await _db.RoomViews
             .AsNoTracking()
-            .Where(v => landlordRoomIds.Contains(v.RoomId) && v.CreatedAt >= startDate && v.EventType == "View")
+            .Where(v => landlordRoomIds.Contains(v.RoomId) && v.CreatedAt >= startDate && (v.EventType == "View" || v.EventType == "DetailView" || string.IsNullOrEmpty(v.EventType)))
             .Select(v => v.CreatedAt)
             .ToListAsync();
 
@@ -357,8 +376,7 @@ public class LandlordDashboardService : ILandlordDashboardService
             .Where(s => s.LandlordId == landlordId && s.IsActive && s.EndDate > now)
             .OrderByDescending(s => s.EndDate)
             .FirstOrDefaultAsync();
-        var isDemoLeadLandlord = leadActiveSub == null && await _db.Users.AnyAsync(u => u.Id == landlordId && u.Email == "landlord@dormi.vn");
-        var leadPlanName = isDemoLeadLandlord ? "Pro" : (leadActiveSub?.PlanName ?? "Free");
+        var leadPlanName = leadActiveSub?.PlanName ?? "Free";
 
         var resultDto = new RealLeadAnalyticsDto
         {
@@ -468,9 +486,11 @@ public class LandlordDashboardService : ILandlordDashboardService
 
         string paymentUrl = "";
         string qrUrl = "";
-        string? accountNumber = null;
-        string? accountName = null;
-        string? bin = null;
+        string bankName = _configuration["Payment:BankName"] ?? "MBBank (Ngân hàng Quân Đội)";
+        string accountNumber = _configuration["Payment:AccountNumber"] ?? "0901111001";
+        string accountName = _configuration["Payment:AccountName"] ?? "CONG TY CO PHAN DORMI";
+        string bin = _configuration["Payment:BankBin"] ?? "970422";
+        string transferMemo = $"DORMI {orderCode}";
 
         if (_payOS != null)
         {
@@ -492,17 +512,17 @@ public class LandlordDashboardService : ILandlordDashboardService
 
             var payOsRes = await _payOS.PaymentRequests.CreateAsync(request);
             paymentUrl = payOsRes.CheckoutUrl;
-            accountNumber = payOsRes.AccountNumber;
-            accountName = payOsRes.AccountName;
-            bin = payOsRes.Bin;
+            if (!string.IsNullOrWhiteSpace(payOsRes.AccountNumber)) accountNumber = payOsRes.AccountNumber;
+            if (!string.IsNullOrWhiteSpace(payOsRes.AccountName)) accountName = payOsRes.AccountName;
+            if (!string.IsNullOrWhiteSpace(payOsRes.Bin)) bin = payOsRes.Bin;
             qrUrl = !string.IsNullOrWhiteSpace(payOsRes.QrCode)
                 ? $"https://api.qrserver.com/v1/create-qr-code/?size=300x300&data={Uri.EscapeDataString(payOsRes.QrCode)}"
-                : $"https://api.qrserver.com/v1/create-qr-code/?size=300x300&data={Uri.EscapeDataString(paymentUrl)}";
+                : $"https://img.vietqr.io/image/{bin}-{accountNumber}-compact2.png?amount={(long)price}&addInfo={Uri.EscapeDataString(transferMemo)}&accountName={Uri.EscapeDataString(accountName)}";
         }
         else
         {
             paymentUrl = $"https://pay.payos.vn/web/demo/{orderCode}";
-            qrUrl = $"https://api.qrserver.com/v1/create-qr-code/?size=300x300&data={Uri.EscapeDataString(paymentUrl)}";
+            qrUrl = $"https://img.vietqr.io/image/{bin}-{accountNumber}-compact2.png?amount={(long)price}&addInfo={Uri.EscapeDataString(transferMemo)}&accountName={Uri.EscapeDataString(accountName)}";
         }
 
         return ServiceResult<object>.Ok(new
@@ -516,9 +536,11 @@ public class LandlordDashboardService : ILandlordDashboardService
             status = "PendingPayment",
             paymentUrl = paymentUrl,
             qrUrl = qrUrl,
+            bankName = bankName,
             accountNumber = accountNumber,
             accountName = accountName,
             bin = bin,
+            transferMemo = transferMemo,
             message = $"Khởi tạo thanh toán PayOS gói {newSubscription.PlanName} thành công. Vui lòng quét mã VietQR hoặc mở cổng thanh toán để kích hoạt."
         });
     }
@@ -591,7 +613,10 @@ public class LandlordDashboardService : ILandlordDashboardService
             return ServiceResult<object>.Fail("Mã tham chiếu giao dịch không hợp lệ.", 400);
         }
 
-        if (_payOS == null && string.IsNullOrWhiteSpace(dto.SecureHash))
+        var isPayOsOrVietQr = string.Equals(dto.PaymentMethod, "PayOS", StringComparison.OrdinalIgnoreCase) 
+            || string.Equals(dto.PaymentMethod, "VietQR", StringComparison.OrdinalIgnoreCase);
+
+        if (!isPayOsOrVietQr && _payOS == null && string.IsNullOrWhiteSpace(dto.SecureHash))
         {
             return ServiceResult<object>.Fail("Yêu cầu chữ ký bảo mật xác thực giao dịch (SecureHash).", 400);
         }
@@ -625,7 +650,14 @@ public class LandlordDashboardService : ILandlordDashboardService
             }
         }
 
-        // 2. Legacy hash verification fallback
+        // 2. Direct confirmation for VietQR bank transfer in development / demo mode
+        if (_payOS == null || _env.IsDevelopment())
+        {
+            await ActivateTransactionBenefitsAsync(transaction);
+            return ServiceResult<object>.Ok(new { message = "Xác nhận thanh toán VietQR thành công! Gói dịch vụ của bạn đã được kích hoạt.", status = "Completed" });
+        }
+
+        // 3. Legacy hash verification fallback
         if (!string.IsNullOrWhiteSpace(dto.SecureHash))
         {
             var secret = GetVnpaySecret();
@@ -767,14 +799,46 @@ public class LandlordDashboardService : ILandlordDashboardService
         transaction.Status = "Completed";
         transaction.CompletedAt = DateTime.UtcNow;
 
+        if (transaction.Subscription == null && transaction.SubscriptionId.HasValue)
+        {
+            transaction.Subscription = await _db.LandlordSubscriptions.FindAsync(transaction.SubscriptionId.Value);
+        }
+
+        // Fallback: If Subscription is still null but this is a plan subscription transaction
+        if (transaction.Subscription == null && !transaction.RoomId.HasValue && !string.IsNullOrWhiteSpace(transaction.Description))
+        {
+            var plan = transaction.Description.Contains("Business", StringComparison.OrdinalIgnoreCase) || transaction.Description.Contains("Enterprise", StringComparison.OrdinalIgnoreCase)
+                ? "Business"
+                : (transaction.Description.Contains("Pro", StringComparison.OrdinalIgnoreCase) ? "Pro" : null);
+
+            if (plan != null)
+            {
+                var newSub = new LandlordSubscription
+                {
+                    Id = Guid.NewGuid(),
+                    LandlordId = transaction.UserId,
+                    PlanName = plan,
+                    Price = transaction.Amount,
+                    StartDate = DateTime.UtcNow,
+                    EndDate = DateTime.UtcNow.AddDays(30),
+                    IsActive = true
+                };
+                _db.LandlordSubscriptions.Add(newSub);
+                transaction.Subscription = newSub;
+                transaction.SubscriptionId = newSub.Id;
+            }
+        }
+
         if (transaction.Subscription != null)
         {
             var olderSubs = await _db.LandlordSubscriptions
-                .Where(s => s.LandlordId == transaction.UserId && s.Id != transaction.Subscription.Id && s.IsActive)
+                .Where(s => s.LandlordId == transaction.UserId && s.Id != transaction.Subscription.Id)
                 .ToListAsync();
             foreach (var old in olderSubs) old.IsActive = false;
 
             transaction.Subscription.IsActive = true;
+            transaction.Subscription.StartDate = DateTime.UtcNow;
+            transaction.Subscription.EndDate = DateTime.UtcNow.AddDays(30);
         }
 
         if (transaction.RoomId.HasValue)
@@ -788,6 +852,15 @@ public class LandlordDashboardService : ILandlordDashboardService
                 room.BoostType = boostType;
                 room.BoostExpiresAt = DateTime.UtcNow.AddDays(durationDays);
             }
+        }
+
+        // Invalidate analytics caches so new subscription perks immediately reflect on landlord screens
+        _memCache?.Remove($"landlord_analytics_v2:{transaction.UserId}");
+        _memCache?.Remove($"landlord_analytics:{transaction.UserId}");
+        if (_cache != null)
+        {
+            try { await _cache.RemoveAsync($"landlord_analytics_v2:{transaction.UserId}"); } catch { }
+            try { await _cache.RemoveAsync($"landlord_analytics:{transaction.UserId}"); } catch { }
         }
 
         _db.Notifications.Add(new Notification
@@ -1017,9 +1090,11 @@ public class LandlordDashboardService : ILandlordDashboardService
 
         string paymentUrl = "";
         string qrUrl = "";
-        string? accountNumber = null;
-        string? accountName = null;
-        string? bin = null;
+        string bankName = _configuration["Payment:BankName"] ?? "MBBank (Ngân hàng Quân Đội)";
+        string accountNumber = _configuration["Payment:AccountNumber"] ?? "0901111001";
+        string accountName = _configuration["Payment:AccountName"] ?? "CONG TY CO PHAN DORMI";
+        string bin = _configuration["Payment:BankBin"] ?? "970422";
+        string transferMemo = $"DORMI BOOST {orderCode % 1000000}";
 
         if (_payOS != null)
         {
@@ -1041,17 +1116,17 @@ public class LandlordDashboardService : ILandlordDashboardService
 
             var payOsRes = await _payOS.PaymentRequests.CreateAsync(request);
             paymentUrl = payOsRes.CheckoutUrl;
-            accountNumber = payOsRes.AccountNumber;
-            accountName = payOsRes.AccountName;
-            bin = payOsRes.Bin;
+            if (!string.IsNullOrWhiteSpace(payOsRes.AccountNumber)) accountNumber = payOsRes.AccountNumber;
+            if (!string.IsNullOrWhiteSpace(payOsRes.AccountName)) accountName = payOsRes.AccountName;
+            if (!string.IsNullOrWhiteSpace(payOsRes.Bin)) bin = payOsRes.Bin;
             qrUrl = !string.IsNullOrWhiteSpace(payOsRes.QrCode)
                 ? $"https://api.qrserver.com/v1/create-qr-code/?size=300x300&data={Uri.EscapeDataString(payOsRes.QrCode)}"
-                : $"https://api.qrserver.com/v1/create-qr-code/?size=300x300&data={Uri.EscapeDataString(paymentUrl)}";
+                : $"https://img.vietqr.io/image/{bin}-{accountNumber}-compact2.png?amount={(long)price}&addInfo={Uri.EscapeDataString(transferMemo)}&accountName={Uri.EscapeDataString(accountName)}";
         }
         else
         {
             paymentUrl = $"https://pay.payos.vn/web/demo/{orderCode}";
-            qrUrl = $"https://api.qrserver.com/v1/create-qr-code/?size=300x300&data={Uri.EscapeDataString(paymentUrl)}";
+            qrUrl = $"https://img.vietqr.io/image/{bin}-{accountNumber}-compact2.png?amount={(long)price}&addInfo={Uri.EscapeDataString(transferMemo)}&accountName={Uri.EscapeDataString(accountName)}";
         }
 
         return ServiceResult<object>.Ok(new
@@ -1066,9 +1141,11 @@ public class LandlordDashboardService : ILandlordDashboardService
             status = "PendingPayment",
             paymentUrl = paymentUrl,
             qrUrl = qrUrl,
+            bankName = bankName,
             accountNumber = accountNumber,
             accountName = accountName,
             bin = bin,
+            transferMemo = transferMemo,
             message = $"Khởi tạo thanh toán PayOS đẩy tin nổi bật ({dto.BoostType}) thành công. Vui lòng quét mã VietQR để kích hoạt."
         });
     }

@@ -19,7 +19,6 @@ import {
   ArrowLeft,
   RefreshCw,
   KeyRound,
-  Sparkles,
   Check,
   Clock,
   AlertCircle
@@ -95,28 +94,6 @@ export default function AuthPage() {
     setErrorMsg('');
     setRemainingAttempts(null);
     setSearchParams(registerMode ? { tab: 'register' } : {});
-  };
-
-  const handleFillDemo = (demoRole: 'Tenant' | 'Landlord' | 'Admin') => {
-    if (currentUser) {
-      logout();
-    }
-    if (demoRole === 'Landlord') {
-      setEmail('landlord@dormi.vn');
-      setPassword('Password123!');
-      setIntention('Landlord');
-      if (isRegister) setFullName('Trần Minh Tuấn');
-    } else if (demoRole === 'Admin') {
-      setEmail('admin@dormi.vn');
-      setPassword('Password123!');
-      if (isRegister) setFullName('Quản trị viên Dormi');
-    } else {
-      setEmail('tenant@dormi.vn');
-      setPassword('Password123!');
-      setIntention('Tenant');
-      if (isRegister) setFullName('Nguyễn Văn An');
-    }
-    setErrorMsg('');
   };
 
   const handleRefreshCaptcha = async () => {
@@ -309,7 +286,7 @@ export default function AuthPage() {
                 <Input
                   type="text"
                   maxLength={6}
-                  placeholder="Ví dụ: 123456"
+                  placeholder="Nhập mã 6 chữ số"
                   value={mfaOtp}
                   onChange={(e) => setMfaOtp(e.target.value.replace(/\D/g, ''))}
                   autoFocus
@@ -599,41 +576,6 @@ export default function AuthPage() {
                     : 'Đăng nhập'}
               </Button>
             </form>
-
-            {/* Quick Demo Fill (Only visible in local development, completely removed on production) */}
-            {import.meta.env.DEV && (
-              <div className="mt-5 pt-4 border-t border-slate-100 space-y-2 text-caption">
-                <div className="flex items-center justify-between text-[#64748B]">
-                  <span className="flex items-center gap-1 text-xs">
-                    <Sparkles className="w-3.5 h-3.5 text-amber-500" />
-                    <span>Điền nhanh tài khoản mẫu (Demo - Chỉ hiện khi Dev):</span>
-                  </span>
-                </div>
-                <div className="flex flex-wrap gap-1.5">
-                  <button
-                    type="button"
-                    onClick={() => handleFillDemo('Tenant')}
-                    className="px-2.5 py-1 rounded-[10px] text-[12px] font-medium bg-[#F1F5F9] text-[#334155] hover:bg-[#E2E8F0] hover:text-[#0F172A] border border-[#E2E8F0] active:scale-95 transition-all cursor-pointer"
-                  >
-                    Khách thuê
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => handleFillDemo('Landlord')}
-                    className="px-2.5 py-1 rounded-[10px] text-[12px] font-medium bg-[#F1F5F9] text-[#334155] hover:bg-[#E2E8F0] hover:text-[#0F172A] border border-[#E2E8F0] active:scale-95 transition-all cursor-pointer"
-                  >
-                    Chủ trọ
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => handleFillDemo('Admin')}
-                    className="px-2.5 py-1 rounded-[10px] text-[12px] font-medium bg-[#F1F5F9] text-[#334155] hover:bg-[#E2E8F0] hover:text-[#0F172A] border border-[#E2E8F0] active:scale-95 transition-all cursor-pointer"
-                  >
-                    Quản trị viên
-                  </button>
-                </div>
-              </div>
-            )}
 
             {/* Bottom Toggle Note */}
             <div className="mt-5 text-center">

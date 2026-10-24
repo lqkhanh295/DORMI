@@ -208,9 +208,9 @@ export default function LandlordLeases() {
 
   const filteredLeases = leases.filter(l => {
     if (activeTab === 'all') return true;
-    if (activeTab === 'active') return l.status === 'Active';
+    if (activeTab === 'active') return l.status === 'Active' || l.status === 'Renewed';
     if (activeTab === 'pending') return l.status === 'PendingSignature' || l.status === 'Draft';
-    if (activeTab === 'ended') return l.status === 'Terminated' || l.status === 'Expired';
+    if (activeTab === 'ended') return l.status === 'Terminated' || l.status === 'Expired' || l.status === 'Completed';
     return true;
   });
 
@@ -249,6 +249,13 @@ export default function LandlordLeases() {
           <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md text-xs font-semibold bg-slate-100 text-slate-700 border border-slate-200">
             <Clock className="w-3.5 h-3.5 text-slate-500" />
             Đã hết hạn
+          </span>
+        );
+      case 'Completed':
+        return (
+          <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md text-xs font-semibold bg-slate-100 text-slate-700 border border-slate-200">
+            <CheckCircle2 className="w-3.5 h-3.5 text-slate-500" />
+            Đã hoàn thành
           </span>
         );
       default:
@@ -341,7 +348,7 @@ export default function LandlordLeases() {
               : 'bg-white border border-[#E2E8F0] text-[#64748B] hover:text-[#0F172A]'
           }`}
         >
-          Đang thuê ({leases.filter(l => l.status === 'Active').length})
+          Đang thuê ({leases.filter(l => l.status === 'Active' || l.status === 'Renewed').length})
         </button>
         <button
           type="button"
@@ -363,7 +370,7 @@ export default function LandlordLeases() {
               : 'bg-white border border-[#E2E8F0] text-[#64748B] hover:text-[#0F172A]'
           }`}
         >
-          Đã kết thúc ({leases.filter(l => l.status === 'Terminated' || l.status === 'Expired').length})
+          Đã kết thúc ({leases.filter(l => l.status === 'Terminated' || l.status === 'Expired' || l.status === 'Completed').length})
         </button>
       </div>
 
@@ -452,8 +459,21 @@ export default function LandlordLeases() {
                   </div>
                   <div>
                     <span className="text-[#64748B] block">Tình trạng ký kết:</span>
-                    <span className={`font-semibold ${lease.tenantSigned ? 'text-emerald-700' : 'text-amber-700'}`}>
-                      {lease.tenantSigned ? 'Khách đã ký điện tử' : 'Đang chờ khách ký'}
+                    <span className={`font-semibold ${
+                      lease.status === 'Completed' ? 'text-slate-700' :
+                      lease.status === 'Terminated' ? 'text-rose-700' :
+                      lease.status === 'Expired' ? 'text-slate-700' :
+                      (lease.status === 'Active' || lease.status === 'Renewed' || lease.tenantSigned) ? 'text-emerald-700' : 'text-amber-700'
+                    }`}>
+                      {lease.status === 'Completed'
+                        ? 'Đã hoàn tất hợp đồng'
+                        : lease.status === 'Terminated'
+                        ? 'Đã chấm dứt hợp đồng'
+                        : lease.status === 'Expired'
+                        ? 'Đã hết hạn hợp đồng'
+                        : (lease.status === 'Active' || lease.status === 'Renewed' || lease.tenantSigned)
+                        ? 'Khách đã ký điện tử'
+                        : 'Đang chờ khách ký'}
                     </span>
                   </div>
                 </div>

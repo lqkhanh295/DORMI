@@ -14,4 +14,5 @@ public interface IRoommateService
     Task<ServiceResult<object>> UpdateRoommatePostAsync(Guid id, Guid userId, CreateRoommatePostDto dto, bool isAdmin = false);
     Task<ServiceResult<object>> DeleteRoommatePostAsync(Guid id, Guid userId, bool isAdmin = false);
     Task<ServiceResult<List<RoommatePostResponseDto>>> GetRecommendationsAsync(Guid userId);
+    Task<ServiceResult<List<RoommatePostResponseDto>>> GetMyRoommatePostsAsync(Guid userId);
 }

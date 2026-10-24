@@ -3,7 +3,7 @@ import { Card } from '../../components/ui/Card';
 import { Button } from '../../components/ui/Button';
 import { useStore } from '../../store/useStore';
 import { useNavigate, Link } from 'react-router-dom';
-import { appointmentsApi, favoritesApi, applicationsApi, leasesApi } from '../../services/api';
+import { appointmentsApi, favoritesApi, applicationsApi, leasesApi, roommatesApi, type RoommatePostResponse } from '../../services/api';
 import { toast } from 'sonner';
 import { 
   Calendar, 
@@ -36,26 +36,37 @@ export default function TenantDashboard() {
   const [favorites, setFavorites] = useState<any[]>([]);
   const [applications, setApplications] = useState<any[]>([]);
   const [leases, setLeases] = useState<any[]>([]);
+  const [myRoommatePosts, setMyRoommatePosts] = useState<RoommatePostResponse[]>([]);
   const [loading, setLoading] = useState(true);
+  const [showAllRooms, setShowAllRooms] = useState(true);
 
   const loadData = async () => {
     try {
       setLoading(true);
-      const [aptsRes, favsRes, appsRes, leasesRes] = await Promise.all([
+      const [aptsRes, favsRes, appsRes, leasesRes, roommatePostsRes] = await Promise.all([
         appointmentsApi.getMyAppointments().catch(() => []),
         favoritesApi.getFavorites().catch(() => []),
         applicationsApi.getMyApplications().catch(() => []),
-        leasesApi.getMyLeases().catch(() => [])
+        leasesApi.getMyLeases().catch(() => []),
+        roommatesApi.getMyPosts().catch(() => [])
       ]);
 
       if (Array.isArray(aptsRes)) setAppointments(aptsRes);
       if (Array.isArray(favsRes)) setFavorites(favsRes);
       if (Array.isArray(appsRes)) setApplications(appsRes);
       if (Array.isArray(leasesRes)) setLeases(leasesRes);
+      if (Array.isArray(roommatePostsRes)) setMyRoommatePosts(roommatePostsRes);
     } catch (err) {
       console.warn('Failed to load tenant dashboard data:', err);
     } finally {
       setLoading(false);
+    }
+  };
+
+  const handleTabChange = (tab: 'recommended' | 'appointments' | 'favorites') => {
+    setActiveTab(tab);
+    if (tab === 'appointments') {
+      loadData();
     }
   };
 
@@ -64,16 +75,31 @@ export default function TenantDashboard() {
       fetchListings();
     }
     loadData();
+
+    const handleRealtimeAppointment = () => {
+      loadData();
+    };
+
+    window.addEventListener('appointment-status-updated', handleRealtimeAppointment);
+    window.addEventListener('appointment-created', handleRealtimeAppointment);
+    return () => {
+      window.removeEventListener('appointment-status-updated', handleRealtimeAppointment);
+      window.removeEventListener('appointment-created', handleRealtimeAppointment);
+    };
   }, [fetchListings, listings.length]);
 
   const handleCancelAppointment = async (id: string) => {
     if (!window.confirm('Bạn có chắc chắn muốn hủy lịch hẹn xem phòng này?')) return;
     try {
+      setAppointments(prev => prev.map(a => 
+        (a.id && id && a.id.toLowerCase() === id.toLowerCase()) ? { ...a, status: 'Cancelled' } : a
+      ));
       await appointmentsApi.updateStatus(id, 'Cancelled');
       toast.success('Đã hủy lịch hẹn xem phòng.');
       loadData();
     } catch (err: any) {
       toast.error(err?.message || 'Không thể hủy lịch hẹn.');
+      loadData();
     }
   };
 
@@ -83,6 +109,7 @@ export default function TenantDashboard() {
   const pendingLeasesCount = leases.filter(l => l.status === 'PendingSignature' || l.status === 'Draft').length;
   const activeLease = leases.find(l => l.status === 'Active' || l.status === 'Signed');
   const activeLeasedRoomIds = new Set(leases.filter(l => l.status === 'Active' || l.status === 'Signed').map(l => l.roomId).filter(Boolean));
+  const availableListings = listings.filter(r => (r.status === 'Available' || (r.status as any) === 0) && !activeLeasedRoomIds.has(r.id));
 
   return (
     <div className="space-y-6 pb-16 bg-[#F8FAFC]">
@@ -109,13 +136,28 @@ export default function TenantDashboard() {
             <ArrowRight className="w-4 h-4" />
           </button>
           
-          <Link 
-            to="/tenant/post"
-            className="inline-flex items-center gap-2 px-4 py-2.5 bg-white border border-[#CBD5E1] hover:bg-[#F8FAFC] text-[#0F172A] text-sm font-bold rounded-xl transition-colors shadow-xs"
-          >
-            <PlusCircle className="w-4 h-4 text-[#6366F1]" />
-            <span>Đăng tin ở ghép</span>
-          </Link>
+          {myRoommatePosts.length > 0 ? (
+            <Link 
+              to="/tenant/match?tab=my-posts"
+              className="inline-flex items-center gap-2 px-4 py-2.5 bg-indigo-50 border border-indigo-200 hover:bg-indigo-100 text-[#00153D] text-sm font-bold rounded-xl transition-colors shadow-xs"
+            >
+              <Users className="w-4 h-4 text-indigo-600" />
+              <span>Tin ở ghép của tôi ({myRoommatePosts.length})</span>
+              {myRoommatePosts.some(p => p.isActive) ? (
+                <span className="w-2.5 h-2.5 rounded-full bg-emerald-500" title="Đang hiển thị" />
+              ) : (
+                <span className="w-2.5 h-2.5 rounded-full bg-amber-500" title="Đã tạm dừng" />
+              )}
+            </Link>
+          ) : (
+            <Link 
+              to="/tenant/post"
+              className="inline-flex items-center gap-2 px-4 py-2.5 bg-white border border-[#CBD5E1] hover:bg-[#F8FAFC] text-[#0F172A] text-sm font-bold rounded-xl transition-colors shadow-xs"
+            >
+              <PlusCircle className="w-4 h-4 text-[#6366F1]" />
+              <span>Đăng tin ở ghép</span>
+            </Link>
+          )}
         </div>
       </div>
 
@@ -272,7 +314,7 @@ export default function TenantDashboard() {
 
         {/* Card 3: Viewings */}
         <div 
-          onClick={() => setActiveTab('appointments')}
+          onClick={() => handleTabChange('appointments')}
           className={`bg-white p-5 rounded-2xl border shadow-xs hover:shadow-md transition-[box-shadow,border-color,transform] duration-150 cursor-pointer flex flex-col justify-between space-y-4 group ${
             activeTab === 'appointments' ? 'border-[#00153D] ring-2 ring-[#00153D]/10' : 'border-[#E2E8F0] hover:border-slate-300'
           }`}
@@ -351,12 +393,12 @@ export default function TenantDashboard() {
           }`}
         >
           <Sparkles className="w-3.5 h-3.5" />
-          <span>Gợi ý phòng mới ({listings.length})</span>
+          <span>Gợi ý phòng mới ({availableListings.length})</span>
         </button>
 
         <button
           type="button"
-          onClick={() => setActiveTab('appointments')}
+          onClick={() => handleTabChange('appointments')}
           className={`px-4 py-2 rounded-xl text-xs font-bold transition-colors whitespace-nowrap flex items-center gap-2 ${
             activeTab === 'appointments'
               ? 'bg-[#00153D] text-white shadow-sm'
@@ -398,7 +440,9 @@ export default function TenantDashboard() {
             <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-2">
               <div>
                 <h2 className="text-lg font-bold text-[#0F172A]">Gợi ý phòng trọ mới nhất</h2>
-                <p className="text-xs text-[#64748B]">Các căn phòng vừa được kiểm duyệt và đưa lên sàn Dormi</p>
+                <p className="text-xs text-[#64748B]">
+                  Hiển thị {showAllRooms ? availableListings.length : Math.min(6, availableListings.length)} / {availableListings.length} căn phòng vừa được kiểm duyệt và đưa lên sàn Dormi
+                </p>
               </div>
 
               <button
@@ -407,35 +451,56 @@ export default function TenantDashboard() {
                 className="inline-flex items-center gap-1.5 px-4 py-2 bg-blue-50 hover:bg-blue-100 text-blue-900 border border-blue-200 text-xs font-bold rounded-xl transition-colors shrink-0"
               >
                 <Search className="w-3.5 h-3.5 text-blue-600" />
-                <span>Xem tất cả {listings.length} phòng trên Bản đồ tìm kiếm</span>
+                <span>Xem tất cả {availableListings.length} phòng trên Bản đồ tìm kiếm</span>
                 <ArrowRight className="w-3.5 h-3.5 text-blue-600" />
               </button>
             </div>
 
-            {/* Grid 6 Featured Cards */}
-            {listings.length === 0 ? (
+            {/* Grid Featured Cards */}
+            {availableListings.length === 0 ? (
               <div className="bg-white rounded-2xl p-12 text-center border border-[#E2E8F0] shadow-sm space-y-3">
                 <p className="text-sm text-[#64748B]">Đang tải danh sách phòng trọ gợi ý...</p>
               </div>
             ) : (
-              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-                {listings.filter(r => (!r.status || r.status === 'Available') && !activeLeasedRoomIds.has(r.id)).slice(0, 6).map(room => (
-                  <div key={room.id} className="cursor-pointer">
-                    <RoomCard
-                      room={{
-                        id: room.id,
-                        title: room.title,
-                        price: `${room.price.toLocaleString('vi-VN')}đ / tháng`,
-                        location: room.address.split(',')[0],
-                        area: room.area ? `${room.area}m²` : '25m²',
-                        image: room.image,
-                        verified: !!room.isVerifiedLandlord,
-                        isBoosted: !!room.isBoosted,
-                        boostType: room.boostType
-                      }}
-                    />
+              <div className="space-y-6">
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+                  {(showAllRooms ? availableListings : availableListings.slice(0, 6)).map(room => (
+                    <div key={room.id} className="cursor-pointer">
+                      <RoomCard
+                        room={{
+                          id: room.id,
+                          title: room.title,
+                          price: `${room.price.toLocaleString('vi-VN')}đ / tháng`,
+                          location: room.address.split(',')[0],
+                          area: room.area ? `${room.area}m²` : '25m²',
+                          image: room.image,
+                          verified: !!room.isVerifiedLandlord,
+                          isBoosted: !!room.isBoosted,
+                          boostType: room.boostType
+                        }}
+                      />
+                    </div>
+                  ))}
+                </div>
+
+                {availableListings.length > 6 && (
+                  <div className="flex justify-center pt-2">
+                    <button
+                      type="button"
+                      onClick={() => setShowAllRooms(prev => !prev)}
+                      className="px-5 py-2.5 bg-white border border-[#CBD5E1] hover:bg-[#F8FAFC] text-[#00153D] text-xs font-bold rounded-xl transition-colors shadow-xs inline-flex items-center gap-2 cursor-pointer"
+                    >
+                      {showAllRooms ? (
+                        <span>Thu gọn (Chỉ xem 6 phòng đầu)</span>
+                      ) : (
+                        <>
+                          <span>Xem thêm {availableListings.length - 6} phòng gợi ý khác (Tất cả {availableListings.length} phòng)</span>
+                          <ArrowRight className="w-3.5 h-3.5" />
+                        </>
+                      )}
+                    </button>
                   </div>
-                ))}
+                )}
               </div>
             )}
 
@@ -518,9 +583,11 @@ export default function TenantDashboard() {
                     hour: '2-digit', minute: '2-digit', day: '2-digit', month: '2-digit', year: 'numeric'
                   }) : 'Chưa định ngày';
 
-                  const isPending = apt.status === 'Pending';
-                  const isConfirmed = apt.status === 'Confirmed';
-                  const isCancelled = apt.status === 'Cancelled';
+                  const isPending = apt.status === 'Pending' || apt.status === 'Requested';
+                  const isConfirmed = apt.status === 'Confirmed' || apt.status === 'Approved';
+                  const isRescheduled = apt.status === 'Rescheduled';
+                  const isCancelled = apt.status === 'Cancelled' || apt.status === 'Rejected' || apt.status === 'NoShow';
+                  const isCompleted = apt.status === 'Completed';
 
                   return (
                     <Card key={apt.id} className="p-5 bg-white rounded-2xl shadow-xs border border-[#E2E8F0] flex flex-col justify-between space-y-4">
@@ -531,11 +598,13 @@ export default function TenantDashboard() {
                           </Link>
                           <span className={`text-[11px] font-bold px-2.5 py-1 rounded-full shrink-0 border ${
                             isConfirmed ? 'bg-emerald-50 text-emerald-700 border-emerald-200' :
+                            isRescheduled ? 'bg-sky-50 text-sky-700 border-sky-200' :
                             isPending ? 'bg-amber-50 text-amber-700 border-amber-200' :
                             isCancelled ? 'bg-rose-50 text-rose-700 border-rose-200' :
-                            'bg-blue-50 text-blue-700 border-blue-200'
+                            isCompleted ? 'bg-blue-50 text-blue-700 border-blue-200' :
+                            'bg-slate-50 text-slate-700 border-slate-200'
                           }`}>
-                            {isConfirmed ? 'Đã xác nhận' : isPending ? 'Chờ xác nhận' : isCancelled ? 'Đã hủy' : 'Hoàn tất'}
+                            {isConfirmed ? 'Đã xác nhận' : isRescheduled ? 'Đã đổi lịch' : isPending ? 'Chờ xác nhận' : isCancelled ? 'Đã hủy' : isCompleted ? 'Đã xem phòng' : 'Khác'}
                           </span>
                         </div>
 

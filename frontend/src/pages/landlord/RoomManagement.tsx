@@ -3,9 +3,9 @@ import { createPortal } from 'react-dom';
 import { useNavigate } from 'react-router-dom';
 import { Card } from '../../components/ui/Card';
 import { Button } from '../../components/ui/Button';
-import { roomsApi, imagesApi, landlordApi, type RoomResponse } from '../../services/api';
+import { roomsApi, imagesApi, landlordApi, leasesApi, type RoomResponse } from '../../services/api';
 import { toast } from 'sonner';
-import { Pencil, Eye, EyeOff, Trash2, CheckCircle2, Clock, XCircle, Image as ImageIcon, Check, X, Plus, Camera, Flame, Heart, AlertTriangle } from 'lucide-react';
+import { Pencil, Eye, EyeOff, Trash2, CheckCircle2, Clock, XCircle, Image as ImageIcon, Check, X, Plus, Camera, Flame, Heart, AlertTriangle, FileText } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { modalBackdropVariants, modalContentVariants } from '../../utils/motion';
 import { PageMotion } from '../../components/common/Motion';
@@ -50,13 +50,15 @@ export default function RoomManagement() {
     roomsUsed: 0,
     maxRoomLimit: 2
   });
+  const [roomLeaseMap, setRoomLeaseMap] = useState<Record<string, { status: string; id: string }>>({});
 
   const loadRooms = async () => {
     try {
       setLoading(true);
-      const [roomsRes, analyticsRes] = await Promise.allSettled([
-        roomsApi.getRooms({ page: 1, pageSize: 50 }),
-        landlordApi.getAnalytics()
+      const [roomsRes, analyticsRes, leasesRes] = await Promise.allSettled([
+        roomsApi.getRooms({ page: 1, pageSize: 50, landlordOnly: true }),
+        landlordApi.getAnalytics(),
+        leasesApi.getMyLeases()
       ]);
 
       let loadedRooms: RoomResponse[] = [];
@@ -65,17 +67,27 @@ export default function RoomManagement() {
         setMyRooms(loadedRooms);
       }
 
+      if (leasesRes.status === 'fulfilled' && Array.isArray(leasesRes.value)) {
+        const map: Record<string, { status: string; id: string }> = {};
+        leasesRes.value.forEach((l: any) => {
+          if (l.roomId && (l.status === 'PendingSignature' || l.status === 'Active')) {
+            map[l.roomId] = { status: l.status, id: l.id };
+          }
+        });
+        setRoomLeaseMap(map);
+      }
+
+      const activeRoomsCount = loadedRooms.filter(r => Number(r.status) !== 3).length;
       if (analyticsRes.status === 'fulfilled' && analyticsRes.value) {
-        const activeRoomsCount = loadedRooms.filter(r => Number(r.status) !== 1 && Number(r.status) !== 3).length;
         setPlanInfo({
           currentPlan: analyticsRes.value.currentPlan || 'Free',
-          roomsUsed: analyticsRes.value.roomsUsed || activeRoomsCount || loadedRooms.length,
+          roomsUsed: analyticsRes.value.roomsUsed ?? activeRoomsCount,
           maxRoomLimit: analyticsRes.value.maxRoomLimit ?? 2
         });
       } else {
         setPlanInfo(prev => ({
           ...prev,
-          roomsUsed: loadedRooms.length
+          roomsUsed: activeRoomsCount
         }));
       }
     } catch (err) {
@@ -422,7 +434,7 @@ export default function RoomManagement() {
                 ? `Toàn quyền Admin: Không giới hạn (${myRooms.length} phòng)`
                 : (planInfo.currentPlan.toLowerCase().includes('business') 
                   ? `Gói Doanh Nghiệp (${planInfo.roomsUsed} phòng)` 
-                  : `${planInfo.currentPlan.toLowerCase().includes('pro') ? 'Gói Pro' : 'Gói Miễn Phí'}: ${planInfo.roomsUsed}/${planInfo.maxRoomLimit} tin${!isAdmin && planInfo.roomsUsed >= planInfo.maxRoomLimit && planInfo.maxRoomLimit < 999 ? ' (Hết hạn mức)' : ''}`)}
+                  : `${planInfo.currentPlan.toLowerCase().includes('pro') ? 'Gói Pro' : 'Gói Miễn Phí'}: ${planInfo.roomsUsed}/${planInfo.maxRoomLimit} phòng${!isAdmin && planInfo.roomsUsed >= planInfo.maxRoomLimit && planInfo.maxRoomLimit < 999 ? ' (Hết hạn mức)' : ''}`)}
             </span>
             {!isAdmin && planInfo.roomsUsed >= planInfo.maxRoomLimit && planInfo.maxRoomLimit < 999 && (
               <button 
@@ -438,7 +450,7 @@ export default function RoomManagement() {
             onClick={() => {
               if (!isAdmin && planInfo.roomsUsed >= planInfo.maxRoomLimit && planInfo.maxRoomLimit < 999) {
                 toast.error(
-                  `Bạn đang có ${planInfo.roomsUsed}/${planInfo.maxRoomLimit} tin đăng (đạt giới hạn của ${planInfo.currentPlan.toLowerCase().includes('pro') ? 'Gói Pro' : 'Gói Miễn Phí'}). Vui lòng nâng cấp gói để đăng thêm phòng!`,
+                  `Bạn đang có ${planInfo.roomsUsed}/${planInfo.maxRoomLimit} phòng (đạt giới hạn của ${planInfo.currentPlan.toLowerCase().includes('pro') ? 'Gói Pro' : 'Gói Miễn Phí'}). Vui lòng nâng cấp gói để đăng thêm phòng!`,
                   {
                     action: {
                       label: 'Nâng cấp ngay',
@@ -465,11 +477,11 @@ export default function RoomManagement() {
             <div>
               <p className="text-xs font-bold">
                 {planInfo.roomsUsed > planInfo.maxRoomLimit
-                  ? `Tài khoản đang có ${planInfo.roomsUsed} tin (vượt quá hạn mức ${planInfo.maxRoomLimit} tin của Gói ${planInfo.currentPlan.toLowerCase().includes('pro') ? 'Pro' : 'Miễn Phí'}).`
-                  : `Bạn đã sử dụng hết hạn mức ${planInfo.maxRoomLimit}/${planInfo.maxRoomLimit} tin của Gói ${planInfo.currentPlan.toLowerCase().includes('pro') ? 'Pro' : 'Miễn Phí'}.`}
+                  ? `Tài khoản đang có ${planInfo.roomsUsed} phòng (vượt quá hạn mức ${planInfo.maxRoomLimit} phòng của Gói ${planInfo.currentPlan.toLowerCase().includes('pro') ? 'Pro' : 'Miễn Phí'}).`
+                  : `Bạn đã sử dụng hết hạn mức ${planInfo.maxRoomLimit}/${planInfo.maxRoomLimit} phòng của Gói ${planInfo.currentPlan.toLowerCase().includes('pro') ? 'Pro' : 'Miễn Phí'}.`}
               </p>
               <p className="text-[11px] text-amber-700 mt-0.5">
-                Các tin hiện tại vẫn hiển thị bình thường. Để đăng thêm phòng mới, vui lòng nâng cấp gói hội viên.
+                Các phòng hiện tại vẫn được quản lý bình thường. Để đăng thêm phòng mới, vui lòng nâng cấp gói hội viên.
               </p>
             </div>
           </div>
@@ -497,6 +509,10 @@ export default function RoomManagement() {
               </div>
             ))}
           </div>
+        ) : myRooms.length === 0 ? (
+          <div className="py-12 text-center text-[#64748B] bg-white rounded-[18px] shadow-clay-soft border border-dashed border-[#E2E8F0]">
+            Bạn chưa có phòng trọ nào. Hãy bấm "+ Thêm phòng mới" để tạo bài đăng!
+          </div>
         ) : (
           myRooms.map(room => {
             const primaryImg = room.images?.[0]?.imageUrl || 'https://images.unsplash.com/photo-1522708323590-d24dbb6b0267?auto=format&fit=crop&w=400&q=80';
@@ -521,10 +537,27 @@ export default function RoomManagement() {
                           <Flame className="w-3.5 h-3.5 fill-amber-500 text-amber-500" /> Đang đẩy tin ({room.boostType || 'VIP'})
                         </span>
                       )}
-                      {Number(room.status) === 0 && <span className="px-3 py-1 text-caption font-bold rounded-full border bg-[#F0FDF4] text-[#16803C] border-[#DCFCE7] inline-flex items-center gap-1"><CheckCircle2 className="w-3.5 h-3.5" /> Đã duyệt (Còn trống)</span>}
-                      {Number(room.status) === 2 && <span className="px-3 py-1 text-caption font-bold rounded-full border bg-[#FEF3C7] text-[#D97706] border-[#FDE68A] inline-flex items-center gap-1"><Clock className="w-3.5 h-3.5" /> Chờ phê duyệt</span>}
-                      {Number(room.status) === 3 && <span className="px-3 py-1 text-caption font-bold rounded-full border bg-[#FEF2F2] text-[#C62828] border-[#FECACA] inline-flex items-center gap-1"><XCircle className="w-3.5 h-3.5" /> Bị từ chối / Ẩn</span>}
-                      {Number(room.status) === 1 && <span className="px-3 py-1 text-caption font-bold rounded-full border bg-[#F1F5F9] text-[#475569] border-[#E2E8F0]">Đã thuê</span>}
+                      {roomLeaseMap[room.id]?.status === 'PendingSignature' ? (
+                        <span className="px-3 py-1 text-caption font-bold rounded-full border bg-amber-50 text-amber-800 border-amber-200 inline-flex items-center gap-1 shadow-xs">
+                          <Clock className="w-3.5 h-3.5 text-amber-600" /> Đang ký kết (Chờ khách ký)
+                        </span>
+                      ) : (Number(room.status) === 1 || roomLeaseMap[room.id]?.status === 'Active') ? (
+                        <span className="px-3 py-1 text-caption font-bold rounded-full border bg-blue-50 text-blue-700 border-blue-200 inline-flex items-center gap-1">
+                          <CheckCircle2 className="w-3.5 h-3.5 text-blue-600" /> Đã thuê
+                        </span>
+                      ) : Number(room.status) === 0 ? (
+                        <span className="px-3 py-1 text-caption font-bold rounded-full border bg-[#F0FDF4] text-[#16803C] border-[#DCFCE7] inline-flex items-center gap-1">
+                          <CheckCircle2 className="w-3.5 h-3.5" /> Đã duyệt (Còn trống)
+                        </span>
+                      ) : Number(room.status) === 2 ? (
+                        <span className="px-3 py-1 text-caption font-bold rounded-full border bg-[#FEF3C7] text-[#D97706] border-[#FDE68A] inline-flex items-center gap-1">
+                          <Clock className="w-3.5 h-3.5" /> Chờ phê duyệt
+                        </span>
+                      ) : Number(room.status) === 3 ? (
+                        <span className="px-3 py-1 text-caption font-bold rounded-full border bg-[#FEF2F2] text-[#C62828] border-[#FECACA] inline-flex items-center gap-1">
+                          <XCircle className="w-3.5 h-3.5" /> Bị từ chối / Ẩn
+                        </span>
+                      ) : null}
                     </div>
                   </div>
                   <p className="text-[#64748B] text-caption">{room.address}</p>
@@ -546,6 +579,17 @@ export default function RoomManagement() {
                   </div>
                 </div>
                 <div className="flex md:flex-col gap-2 shrink-0 w-full md:w-auto mt-4 md:mt-0">
+                  {roomLeaseMap[room.id]?.status === 'PendingSignature' && (
+                    <Button
+                      variant="secondary"
+                      size="sm"
+                      className="w-full inline-flex items-center justify-center gap-1 bg-amber-50 text-amber-900 border-amber-200 hover:bg-amber-100 font-semibold"
+                      onClick={() => navigate('/landlord/leases')}
+                    >
+                      <FileText className="w-3.5 h-3.5 text-amber-700" />
+                      <span>Xem HĐ chờ ký</span>
+                    </Button>
+                  )}
                   <Button 
                     variant="secondary" 
                     size="sm" 
@@ -582,11 +626,6 @@ export default function RoomManagement() {
               </Card>
             );
           })
-        )}
-        {!loading && myRooms.length === 0 && (
-          <div className="py-12 text-center text-[#64748B] bg-white rounded-[18px] shadow-clay-soft border border-dashed border-[#E2E8F0]">
-            Bạn chưa có phòng trọ nào. Hãy bấm "+ Thêm phòng mới" để tạo bài đăng!
-          </div>
         )}
       </div>
 

@@ -96,6 +96,18 @@ class SignalRService {
         window.dispatchEvent(new CustomEvent('room-status-changed', { detail: payload }));
       });
 
+      // 6. Real-time Appointment status updated (Landlord & Tenant synchronization)
+      this.connection.on('AppointmentStatusUpdated', (payload: any) => {
+        if (!payload) return;
+        window.dispatchEvent(new CustomEvent('appointment-status-updated', { detail: payload }));
+      });
+
+      // 7. Real-time Appointment created (Sent to landlord)
+      this.connection.on('AppointmentCreated', (payload: any) => {
+        if (!payload) return;
+        window.dispatchEvent(new CustomEvent('appointment-created', { detail: payload }));
+      });
+
       await this.connection.start();
 
       if (userId) {

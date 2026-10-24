@@ -95,6 +95,7 @@ public class RentalApplicationService : IRentalApplicationService
 
         _db.RentalApplications.Add(application);
         await _db.SaveChangesAsync();
+        InvalidateApplicationCache(room.LandlordId, tenantId);
 
         if (_kafkaProducer != null)
         {
@@ -310,6 +311,7 @@ public class RentalApplicationService : IRentalApplicationService
         if (!string.IsNullOrWhiteSpace(dto.LandlordNotes)) application.LandlordNotes = dto.LandlordNotes;
 
         await _db.SaveChangesAsync();
+        InvalidateApplicationCache(application.Room.LandlordId, application.TenantId);
 
         if (_kafkaProducer != null)
         {
@@ -360,7 +362,32 @@ public class RentalApplicationService : IRentalApplicationService
         application.Status = ApplicationStatus.Withdrawn;
         await _db.SaveChangesAsync();
 
+        var room = await _db.Rooms.FindAsync(application.RoomId);
+        if (room != null)
+        {
+            InvalidateApplicationCache(room.LandlordId, tenantId);
+        }
+        else
+        {
+            _memCache?.Remove($"tenant_apps:{tenantId}");
+        }
+
         return ServiceResult<object>.Ok(new { message = "Đã rút hồ sơ thuê phòng." });
+    }
+
+    private void InvalidateApplicationCache(Guid landlordId, Guid tenantId)
+    {
+        if (_memCache == null) return;
+
+        _memCache.Remove($"tenant_apps:{tenantId}");
+        _memCache.Remove($"landlord_apps:{landlordId}:all:user");
+        _memCache.Remove($"landlord_apps:{landlordId}:all:admin");
+
+        foreach (ApplicationStatus st in Enum.GetValues<ApplicationStatus>())
+        {
+            _memCache.Remove($"landlord_apps:{landlordId}:{st}:user");
+            _memCache.Remove($"landlord_apps:{landlordId}:{st}:admin");
+        }
     }
 
     private static RentalApplicationResponseDto MapToResponseDto(RentalApplication app, Room room, User tenant)

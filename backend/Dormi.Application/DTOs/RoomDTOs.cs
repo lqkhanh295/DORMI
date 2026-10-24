@@ -129,6 +129,8 @@ public class RoomQueryFilterDto
     public double? RadiusKm { get; set; }
     public RoomStatus? Status { get; set; }
     public string? SortBy { get; set; }
+    public bool? LandlordOnly { get; set; }
+    public Guid? LandlordId { get; set; }
     public int Page { get; set; } = 1;
     public int PageSize { get; set; } = 10;
 }

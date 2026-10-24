@@ -13,6 +13,7 @@ import {
   ExternalLink, 
   Loader2, 
   Zap, 
+  Flame,
   X,
   ArrowRight
 } from 'lucide-react';
@@ -97,21 +98,6 @@ export default function BillingHistory() {
     }
   };
 
-  const handleSimulatePayment = async () => {
-    if (!selectedPendingTxn?.transactionRef) return;
-    try {
-      setVerifying(true);
-      await landlordApi.simulateGatewayPayment(selectedPendingTxn.transactionRef);
-      toast.success('Mô phỏng thanh toán thành công! Gói dịch vụ đã được kích hoạt.');
-      setSelectedPendingTxn(null);
-      loadBilling();
-    } catch (err: any) {
-      toast.error(err?.message || 'Không thể mô phỏng thanh toán.');
-    } finally {
-      setVerifying(false);
-    }
-  };
-
   const totalPages = Math.max(1, Math.ceil(transactions.length / pageSize));
   const paginatedTransactions = transactions.slice((currentPage - 1) * pageSize, currentPage * pageSize);
 
@@ -119,19 +105,59 @@ export default function BillingHistory() {
     .filter(t => t.status === 'Completed')
     .reduce((sum, t) => sum + Number(t.amount || 0), 0);
 
-  // Compute dynamic QR and payment link for selected pending transaction
+  // Compute dynamic VietQR standard link for selected pending transaction
+  const bankBin = '970422'; // MBBank
+  const defaultAccNumber = '0901111001';
+  const defaultAccName = 'CONG TY CO PHAN DORMI';
+  const transferMemo = selectedPendingTxn ? `DORMI ${selectedPendingTxn.transactionRef}` : '';
   const paymentUrl = selectedPendingTxn ? `https://pay.payos.vn/web/${selectedPendingTxn.transactionRef}` : '';
-  const qrUrl = selectedPendingTxn ? `https://api.qrserver.com/v1/create-qr-code/?size=300x300&data=${encodeURIComponent(paymentUrl)}` : '';
+  const qrUrl = selectedPendingTxn 
+    ? `https://img.vietqr.io/image/${bankBin}-${defaultAccNumber}-compact2.png?amount=${Math.round(Number(selectedPendingTxn.amount || 0))}&addInfo=${encodeURIComponent(transferMemo)}&accountName=${encodeURIComponent(defaultAccName)}`
+    : '';
+
+  const renderServiceBadge = (desc?: string) => {
+    const text = desc || '';
+    if (text.includes('Gói Pro') || text.includes('Pro')) {
+      return (
+        <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-[11px] font-bold bg-blue-50 text-blue-700 border border-blue-200">
+          <Zap className="w-3 h-3 text-blue-600" />
+          <span>Gói Pro</span>
+        </span>
+      );
+    }
+    if (text.includes('Doanh Nghiệp') || text.includes('Business') || text.includes('Enterprise')) {
+      return (
+        <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-[11px] font-bold bg-purple-50 text-purple-700 border border-purple-200">
+          <Zap className="w-3 h-3 text-purple-600" />
+          <span>Gói Doanh Nghiệp</span>
+        </span>
+      );
+    }
+    if (text.includes('Đẩy tin') || text.includes('Boost')) {
+      return (
+        <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-[11px] font-bold bg-amber-50 text-amber-700 border border-amber-200">
+          <Flame className="w-3 h-3 text-amber-600" />
+          <span>Đẩy Tin Nổi Bật</span>
+        </span>
+      );
+    }
+    return (
+      <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-[11px] font-bold bg-slate-100 text-slate-700 border border-slate-200">
+        <Receipt className="w-3 h-3 text-slate-500" />
+        <span>Dịch Vụ Trọ</span>
+      </span>
+    );
+  };
 
   return (
-    <div className="space-y-6 max-w-5xl mx-auto bg-[#F8FAFC]">
-      <div className="flex items-center justify-between">
+    <div className="space-y-6 w-full max-w-6xl 2xl:max-w-7xl mx-auto bg-[#F8FAFC]">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
-          <h1 className="text-h2 font-bold text-[#0F172A] flex items-center gap-2">
-            <Receipt className="w-8 h-8 text-[#2563EB]" />
-            Lịch sử giao dịch & Hóa đơn
+          <h1 className="text-2xl font-bold text-[#0F172A] flex items-center gap-2">
+            <Receipt className="w-7 h-7 text-[#2563EB]" />
+            <span>Lịch sử giao dịch & Hóa đơn</span>
           </h1>
-          <p className="text-body text-[#64748B]">Theo dõi toàn bộ các giao dịch gói dịch vụ và thanh toán trên hệ thống.</p>
+          <p className="text-sm text-[#64748B]">Theo dõi toàn bộ các giao dịch gói dịch vụ và thanh toán trên hệ thống.</p>
         </div>
         <Link to="/landlord/pricing">
           <Button variant="primary">Nâng cấp gói dịch vụ</Button>
@@ -140,26 +166,26 @@ export default function BillingHistory() {
 
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
         {/* Total Spent Card */}
-        <Card className="p-6 bg-[#0F172A] rounded-[18px] border-none text-white flex flex-col justify-between shadow-clay-soft">
+        <div className="p-6 bg-slate-900 rounded-[18px] text-white flex flex-col justify-between shadow-sm">
           <div>
-            <h3 className="text-xs font-medium text-white/80 mb-1">Tổng chi tiêu dịch vụ</h3>
-            <p className="text-[36px] font-bold text-white mt-2 leading-none">
+            <h3 className="text-xs font-semibold text-slate-300 uppercase tracking-wider mb-1">Tổng chi tiêu dịch vụ</h3>
+            <p className="text-3xl font-black text-white mt-2 leading-none">
               {totalSpent.toLocaleString('vi-VN')}₫
             </p>
           </div>
           <div className="mt-6 flex items-center gap-2">
-            <span className="w-2.5 h-2.5 rounded-full bg-[#10B981]"></span>
-            <span className="text-caption text-white/90 font-medium">
+            <span className="w-2.5 h-2.5 rounded-full bg-emerald-400"></span>
+            <span className="text-xs text-slate-200 font-medium">
               {transactions.filter(t => t.status === 'Completed').length} giao dịch thành công
             </span>
           </div>
-        </Card>
+        </div>
 
         {/* Pro Status Banner */}
-        <Card className="p-6 md:col-span-2 rounded-[18px] bg-white shadow-clay-soft border-none flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+        <Card className="p-6 md:col-span-2 rounded-[18px] bg-white shadow-xs border border-slate-200 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
           <div>
-            <h3 className="font-bold text-h3 text-[#0F172A]">Chủ trọ Xác thực & Gói Pro</h3>
-            <p className="text-caption text-[#64748B] mt-1 max-w-sm">
+            <h3 className="font-bold text-base text-[#0F172A]">Chủ trọ Xác thực & Gói Pro</h3>
+            <p className="text-xs text-[#64748B] mt-1 max-w-sm">
               Tận hưởng ưu tiên hiển thị tin đăng, huy hiệu xác thực danh tính và xem chi tiết khách tiềm năng.
             </p>
           </div>
@@ -184,77 +210,148 @@ export default function BillingHistory() {
           </div>
         ) : (
           <>
-          <table className="min-w-full divide-y divide-[#E2E8F0]">
-            <thead className="bg-white">
-              <tr>
-                <th className="px-6 py-3.5 text-left text-caption font-semibold text-[#64748B] uppercase tracking-wider">Ngày giao dịch</th>
-                <th className="px-6 py-3.5 text-left text-caption font-semibold text-[#64748B] uppercase tracking-wider">Mã tham chiếu</th>
-                <th className="px-6 py-3.5 text-left text-caption font-semibold text-[#64748B] uppercase tracking-wider">Dịch vụ đã mua</th>
-                <th className="px-6 py-3.5 text-left text-caption font-semibold text-[#64748B] uppercase tracking-wider">Phương thức</th>
-                <th className="px-6 py-3.5 text-left text-caption font-semibold text-[#64748B] uppercase tracking-wider">Số tiền</th>
-                <th className="px-6 py-3.5 text-left text-caption font-semibold text-[#64748B] uppercase tracking-wider">Trạng thái</th>
-                <th className="px-6 py-3.5 text-right text-caption font-semibold text-[#64748B] uppercase tracking-wider">Thao tác</th>
-              </tr>
-            </thead>
-            <tbody className="bg-white divide-y divide-[#E2E8F0]">
+            {/* Mobile View: Cards (< 768px) */}
+            <div className="block md:hidden divide-y divide-slate-100">
               {paginatedTransactions.map((t: any) => (
-                <tr key={t.id} className="hover:bg-slate-50 transition-colors">
-                  <td className="px-6 py-4 whitespace-nowrap text-body text-[#64748B]">
-                    {new Date(t.createdAt).toLocaleDateString('vi-VN')} {new Date(t.createdAt).toLocaleTimeString('vi-VN', { hour: '2-digit', minute: '2-digit' })}
-                  </td>
-                  <td className="px-6 py-4 whitespace-nowrap font-mono text-caption font-semibold text-[#0F172A]">
-                    {t.transactionRef}
-                  </td>
-                  <td className="px-6 py-4 whitespace-nowrap text-body text-[#0F172A] font-medium">
-                    {t.description || t.packageTitle || 'Gói tin đăng chủ trọ'}
-                  </td>
-                  <td className="px-6 py-4 whitespace-nowrap text-body text-[#64748B] font-medium">
-                    {t.paymentMethod || 'PayOS'}
-                  </td>
-                  <td className="px-6 py-4 whitespace-nowrap text-body font-bold text-[#0F172A]">
-                    {Number(t.amount).toLocaleString('vi-VN')}₫
-                  </td>
-                  <td className="px-6 py-4 whitespace-nowrap">
+                <div key={t.id} className="p-4 space-y-3 hover:bg-slate-50/50 transition-colors">
+                  <div className="flex items-center justify-between gap-2">
+                    <span className="font-mono font-bold text-xs text-[#0F172A] bg-slate-100 px-2 py-0.5 rounded">
+                      {t.transactionRef}
+                    </span>
                     {t.status === 'Completed' ? (
-                      <span className="px-3 py-1 text-caption rounded-full bg-[#F0FDF4] text-[#16803C] border border-[#DCFCE7] font-semibold inline-flex items-center gap-1">
-                        <CheckCircle2 className="w-3.5 h-3.5" /> Thành công
+                      <span className="px-2.5 py-0.5 text-xs rounded-full bg-[#F0FDF4] text-[#16803C] border border-[#DCFCE7] font-semibold inline-flex items-center gap-1">
+                        <CheckCircle2 className="w-3 h-3" /> Thành công
                       </span>
                     ) : t.status === 'Pending' ? (
                       <button
                         type="button"
                         onClick={() => setSelectedPendingTxn(t)}
-                        title="Bấm để quét mã thanh toán ngay"
-                        className="px-3 py-1 text-caption rounded-full bg-[#FEFCE8] text-[#CA8A04] border border-[#FEF08A] hover:bg-[#FEF08A] font-semibold inline-flex items-center gap-1 transition-all cursor-pointer shadow-xs hover:scale-105"
+                        className="px-2.5 py-0.5 text-xs rounded-full bg-[#FEFCE8] text-[#CA8A04] border border-[#FEF08A] font-semibold inline-flex items-center gap-1"
                       >
-                        <Clock className="w-3.5 h-3.5" /> Chờ thanh toán
+                        <Clock className="w-3 h-3" /> Chờ thanh toán
                       </button>
                     ) : (
-                      <span className="px-3 py-1 text-caption rounded-full bg-[#FEF2F2] text-[#DC2626] border border-[#FECACA] font-semibold inline-flex items-center gap-1">
-                        <AlertCircle className="w-3.5 h-3.5" /> Thất bại
+                      <span className="px-2.5 py-0.5 text-xs rounded-full bg-[#FEF2F2] text-[#DC2626] border border-[#FECACA] font-semibold inline-flex items-center gap-1">
+                        <AlertCircle className="w-3 h-3" /> Thất bại
                       </span>
                     )}
-                  </td>
-                  <td className="px-6 py-4 whitespace-nowrap text-right">
-                    {t.status === 'Pending' ? (
-                      <Button
-                        size="sm"
-                        variant="primary"
-                        onClick={() => setSelectedPendingTxn(t)}
-                        className="text-xs py-1 px-3 inline-flex items-center gap-1.5"
-                      >
-                        <CreditCard className="w-3.5 h-3.5" />
-                        <span>Thanh toán</span>
-                        <ArrowRight className="w-3 h-3" />
-                      </Button>
-                    ) : (
-                      <span className="text-xs text-slate-400 font-medium">—</span>
-                    )}
-                  </td>
-                </tr>
+                  </div>
+
+                  <div className="flex items-center gap-2 flex-wrap">
+                    {renderServiceBadge(t.description)}
+                    <span className="text-[11px] font-semibold text-slate-500 bg-slate-50 px-2 py-0.5 rounded border border-slate-200">
+                      {t.paymentMethod || 'PayOS'}
+                    </span>
+                  </div>
+
+                  <div className="text-xs text-[#0F172A] font-medium">
+                    {t.description || t.packageTitle || 'Gói tin đăng chủ trọ'}
+                  </div>
+
+                  <div className="flex items-center justify-between pt-2 border-t border-slate-100">
+                    <div className="text-[11px] text-[#64748B]">
+                      {new Date(t.createdAt).toLocaleDateString('vi-VN')} {new Date(t.createdAt).toLocaleTimeString('vi-VN', { hour: '2-digit', minute: '2-digit' })}
+                    </div>
+                    <div className="text-base font-black text-[#0F172A]">
+                      {Number(t.amount).toLocaleString('vi-VN')}₫
+                    </div>
+                  </div>
+
+                  {t.status === 'Pending' && (
+                    <Button
+                      size="sm"
+                      variant="primary"
+                      fullWidth
+                      onClick={() => setSelectedPendingTxn(t)}
+                      className="text-xs py-1.5 inline-flex items-center justify-center gap-1.5"
+                    >
+                      <CreditCard className="w-3.5 h-3.5" />
+                      <span>Quét mã thanh toán ngay</span>
+                      <ArrowRight className="w-3 h-3" />
+                    </Button>
+                  )}
+                </div>
               ))}
-            </tbody>
-          </table>
-          {totalPages > 1 && (
+            </div>
+
+            {/* Desktop View: Full Table (>= 768px) */}
+            <div className="hidden md:block overflow-x-auto">
+              <table className="w-full text-left text-xs divide-y divide-slate-100">
+                <thead className="bg-slate-50 text-[11px] font-bold text-slate-600 uppercase tracking-wider border-b border-slate-100">
+                  <tr>
+                    <th className="py-3.5 px-4">Ngày giao dịch</th>
+                    <th className="py-3.5 px-3">Mã tham chiếu</th>
+                    <th className="py-3.5 px-4">Dịch vụ đã mua</th>
+                    <th className="py-3.5 px-3">Cổng TT</th>
+                    <th className="py-3.5 px-3">Số tiền</th>
+                    <th className="py-3.5 px-3">Trạng thái</th>
+                    <th className="py-3.5 px-4 text-right">Thao tác</th>
+                  </tr>
+                </thead>
+                <tbody className="bg-white divide-y divide-slate-100">
+                  {paginatedTransactions.map((t: any) => (
+                    <tr key={t.id} className="hover:bg-slate-50/70 transition-colors">
+                      <td className="py-3.5 px-4 text-slate-600 whitespace-nowrap">
+                        {new Date(t.createdAt).toLocaleDateString('vi-VN')} {new Date(t.createdAt).toLocaleTimeString('vi-VN', { hour: '2-digit', minute: '2-digit' })}
+                      </td>
+                      <td className="py-3.5 px-3 font-mono font-bold text-slate-800 whitespace-nowrap">
+                        {t.transactionRef}
+                      </td>
+                      <td className="py-3.5 px-4">
+                        <div className="flex items-center gap-1.5 flex-wrap">
+                          {renderServiceBadge(t.description)}
+                          <span className="text-slate-700 font-medium">{t.description || t.packageTitle || 'Gói tin đăng chủ trọ'}</span>
+                        </div>
+                      </td>
+                      <td className="py-3.5 px-3 text-slate-600 whitespace-nowrap font-medium">
+                        {t.paymentMethod || 'PayOS'}
+                      </td>
+                      <td className="py-3.5 px-3 font-black text-slate-900 whitespace-nowrap text-sm">
+                        {Number(t.amount).toLocaleString('vi-VN')}₫
+                      </td>
+                      <td className="py-3.5 px-3 whitespace-nowrap">
+                        {t.status === 'Completed' ? (
+                          <span className="px-2.5 py-0.5 text-xs rounded-full bg-emerald-50 text-emerald-700 border border-emerald-200 font-semibold inline-flex items-center gap-1">
+                            <CheckCircle2 className="w-3.5 h-3.5" /> Thành công
+                          </span>
+                        ) : t.status === 'Pending' ? (
+                          <button
+                            type="button"
+                            onClick={() => setSelectedPendingTxn(t)}
+                            title="Bấm để quét mã thanh toán ngay"
+                            className="px-2.5 py-0.5 text-xs rounded-full bg-amber-50 text-amber-700 border border-amber-200 hover:bg-amber-100 font-semibold inline-flex items-center gap-1 transition-all cursor-pointer shadow-xs hover:scale-105"
+                          >
+                            <Clock className="w-3.5 h-3.5" /> Chờ thanh toán
+                          </button>
+                        ) : (
+                          <span className="px-2.5 py-0.5 text-xs rounded-full bg-rose-50 text-rose-700 border border-rose-200 font-semibold inline-flex items-center gap-1">
+                            <AlertCircle className="w-3.5 h-3.5" /> Thất bại
+                          </span>
+                        )}
+                      </td>
+                      <td className="py-3.5 px-4 text-right whitespace-nowrap">
+                        {t.status === 'Pending' ? (
+                          <Button
+                            size="sm"
+                            variant="primary"
+                            onClick={() => setSelectedPendingTxn(t)}
+                            className="text-xs py-1 px-3 inline-flex items-center gap-1.5"
+                          >
+                            <CreditCard className="w-3.5 h-3.5" />
+                            <span>Thanh toán</span>
+                            <ArrowRight className="w-3 h-3" />
+                          </Button>
+                        ) : (
+                          <span className="text-xs text-slate-400 font-medium">—</span>
+                        )}
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+
+            {totalPages > 1 && (
             <div className="p-4 bg-[#F8FAFC] border-t border-[#E2E8F0] flex items-center justify-between">
               <span className="text-xs text-slate-500">
                 Hiển thị {(currentPage - 1) * pageSize + 1} - {Math.min(currentPage * pageSize, transactions.length)} trong tổng số {transactions.length} giao dịch
@@ -356,18 +453,6 @@ export default function BillingHistory() {
               >
                 {verifying ? 'Đang kiểm tra...' : 'Xác nhận đã chuyển khoản thành công'}
               </Button>
-
-              {import.meta.env.DEV && (
-                <button
-                  type="button"
-                  onClick={handleSimulatePayment}
-                  disabled={verifying}
-                  className="w-full py-1 text-[11px] text-slate-500 hover:text-slate-800 underline transition-colors cursor-pointer"
-                >
-                  <Zap className="w-3 h-3 inline mr-1 text-amber-500" />
-                  <span>Mô phỏng thanh toán thành công (Dành cho Dev test)</span>
-                </button>
-              )}
 
               <p className="text-[11px] text-[#94A3B8]">
                 Hệ thống tự động kích hoạt ngay sau khi tiền vào tài khoản ngân hàng.

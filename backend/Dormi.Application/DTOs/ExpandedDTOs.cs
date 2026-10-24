@@ -13,6 +13,8 @@ public class AdminStatsDto
     public int TotalLandlords { get; set; }
     public int TotalRooms { get; set; }
     public int PendingVerifications { get; set; }
+    public int PendingRooms { get; set; }
+    public int OpenReports { get; set; }
     public int TotalAppointments { get; set; }
     public decimal TotalRevenue { get; set; }
 }
@@ -60,6 +62,8 @@ public class CreateRoommatePostDto
     public string LifestyleTraits { get; set; } = string.Empty;
 
     public Guid? RoomId { get; set; }
+
+    public bool? IsActive { get; set; }
 }
 
 public class RoommatePostResponseDto
@@ -120,8 +124,13 @@ public class LandlordAnalyticsDto
 {
     public int TotalListings { get; set; }
     public int ActiveListings { get; set; }
+    public int RentedListings { get; set; }
+    public double OccupancyRate { get; set; }
+    public decimal EstimatedRevenue { get; set; }
     public int TotalAppointments { get; set; }
     public int PendingAppointments { get; set; }
+    public int PendingApplications { get; set; }
+    public int TotalApplications { get; set; }
     public int TotalViews { get; set; }
     public double ConversionRate { get; set; }
 

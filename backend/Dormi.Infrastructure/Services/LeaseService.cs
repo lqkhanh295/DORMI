@@ -77,6 +77,19 @@ public class LeaseService : ILeaseService
             _memCache.Remove($"landlord_analytics:{landlordId}");
             _memCache.Remove($"landlord_analytics_v2:{landlordId}");
         }
+        if (_distCache != null)
+        {
+            try
+            {
+                _distCache.Remove($"my_leases:{landlordId}:user");
+                _distCache.Remove($"my_leases:{landlordId}:admin");
+                _distCache.Remove($"my_leases:{tenantId}:user");
+                _distCache.Remove($"my_leases:{tenantId}:admin");
+                _distCache.Remove($"landlord_analytics:{landlordId}");
+                _distCache.Remove($"landlord_analytics_v2:{landlordId}");
+            }
+            catch { }
+        }
     }
 
     public async Task<ServiceResult<LeaseContractResponseDto>> CreateLeaseAsync(Guid landlordId, CreateLeaseDto dto)
@@ -401,6 +414,7 @@ public class LeaseService : ILeaseService
             }
 
             InvalidateLeasesCache(lease.LandlordId, lease.TenantId);
+            await InvalidateRoomsCacheAsync(lease.RoomId);
             return ServiceResult<LeaseContractResponseDto>.Ok(MapToDto(lease, lease.Room ?? room!, lease.Landlord, lease.Tenant));
         }
         finally
@@ -436,11 +450,11 @@ public class LeaseService : ILeaseService
         lease.TerminatedAt = DateTime.UtcNow;
         lease.TerminationReason = dto.Reason;
 
-        // ponytail: If no other active lease on this room, revert room status to Available
+        // ponytail: If no other active or pending lease on this room, revert room status to Available
         var hasOtherActiveLease = await _db.LeaseContracts.AnyAsync(l =>
             l.RoomId == lease.RoomId &&
             l.Id != lease.Id &&
-            l.Status == "Active");
+            (l.Status == "Active" || l.Status == "Signed" || l.Status == "PendingSignature"));
 
         if (!hasOtherActiveLease)
         {

@@ -247,7 +247,13 @@ export default function TenantApplications() {
       ) : (
         <div className="space-y-4">
           {filteredApps.map(app => {
-            const relatedLease = leases.find(l => l.rentalApplicationId === app.id || l.roomId === app.roomId);
+            const matchingLeases = leases.filter(l => l.rentalApplicationId === app.id || l.roomId === app.roomId);
+            const relatedLease = matchingLeases.sort((a, b) => {
+              const priority = (s: string) => (s === 'Active' ? 3 : s === 'PendingSignature' ? 2 : s === 'Draft' ? 1 : 0);
+              const pDiff = priority(b.status) - priority(a.status);
+              if (pDiff !== 0) return pDiff;
+              return new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime();
+            })[0];
             const isNeedSign = relatedLease && (relatedLease.status === 'PendingSignature' || relatedLease.status === 'Draft');
             const isActiveLease = relatedLease && relatedLease.status === 'Active';
 

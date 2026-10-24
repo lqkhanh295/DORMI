@@ -10,7 +10,6 @@ import {
   AlertCircle, 
   Building2, 
   MessageSquare, 
-  ShieldCheck, 
   X, 
   PenTool, 
   Wrench, 
@@ -20,7 +19,8 @@ import {
   ExternalLink,
   RefreshCw,
   FileDown,
-  RotateCcw
+  RotateCcw,
+  CreditCard
 } from 'lucide-react';
 import PostRentalModal from '../../components/transaction/PostRentalModal';
 import PrintContractModal from '../../components/transaction/PrintContractModal';
@@ -162,6 +162,7 @@ export default function TenantLeases() {
 
     try {
       setIsSubmittingSign(true);
+      const targetLease = signingLease;
       await leasesApi.signLease(signingLease.id, {
         signatureData: finalSignature,
         agreedToTerms: true
@@ -169,6 +170,9 @@ export default function TenantLeases() {
       toast.success('Đã ký hợp đồng thành công! Hợp đồng đã có hiệu lực.');
       setSigningLease(null);
       fetchLeases();
+      setTimeout(() => {
+        setManagingRental(targetLease);
+      }, 600);
     } catch (err: any) {
       toast.error(err?.message || 'Không thể hoàn tất ký hợp đồng vào lúc này.');
     } finally {
@@ -178,15 +182,16 @@ export default function TenantLeases() {
 
   const filteredLeases = leases.filter(l => {
     if (activeTab === 'all') return true;
-    if (activeTab === 'active') return l.status === 'Active';
+    if (activeTab === 'active') return l.status === 'Active' || l.status === 'Renewed';
     if (activeTab === 'pending') return l.status === 'PendingSignature' || l.status === 'Draft';
-    if (activeTab === 'ended') return l.status === 'Terminated' || l.status === 'Expired';
+    if (activeTab === 'ended') return l.status === 'Terminated' || l.status === 'Expired' || l.status === 'Completed';
     return true;
   });
 
   const getStatusBadge = (status: string) => {
     switch (status) {
       case 'Active':
+      case 'Renewed':
         return (
           <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md text-xs font-semibold bg-emerald-50 text-emerald-700 border border-emerald-200">
             <CheckCircle2 className="w-3.5 h-3.5 text-emerald-600" />
@@ -219,6 +224,13 @@ export default function TenantLeases() {
           <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md text-xs font-semibold bg-slate-100 text-slate-700 border border-slate-200">
             <Clock className="w-3.5 h-3.5 text-slate-500" />
             Đã hết hạn
+          </span>
+        );
+      case 'Completed':
+        return (
+          <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md text-xs font-semibold bg-slate-100 text-slate-700 border border-slate-200">
+            <CheckCircle2 className="w-3.5 h-3.5 text-slate-500" />
+            Đã hoàn thành
           </span>
         );
       default:
@@ -296,7 +308,7 @@ export default function TenantLeases() {
               : 'bg-white border border-[#E2E8F0] text-[#64748B] hover:text-[#0F172A]'
           }`}
         >
-          Đang hiệu lực ({leases.filter(l => l.status === 'Active').length})
+          Đang hiệu lực ({leases.filter(l => l.status === 'Active' || l.status === 'Renewed').length})
         </button>
         <button
           type="button"
@@ -307,7 +319,7 @@ export default function TenantLeases() {
               : 'bg-white border border-[#E2E8F0] text-[#64748B] hover:text-[#0F172A]'
           }`}
         >
-          Đã kết thúc ({leases.filter(l => l.status === 'Terminated' || l.status === 'Expired').length})
+          Đã kết thúc ({leases.filter(l => l.status === 'Terminated' || l.status === 'Expired' || l.status === 'Completed').length})
         </button>
       </div>
 
@@ -460,19 +472,23 @@ export default function TenantLeases() {
                       Ký hợp đồng điện tử ngay
                     </button>
                   ) : lease.status === 'Active' ? (
-                    <div className="flex items-center gap-2">
+                    <div className="flex flex-wrap items-center gap-2">
                       <button
                         type="button"
                         onClick={() => setManagingRental(lease)}
-                        className="inline-flex items-center gap-1.5 px-3.5 py-1.5 bg-blue-50 text-blue-800 hover:bg-blue-100 border border-blue-200 text-xs font-bold rounded-lg transition-colors shadow-xs"
+                        className="inline-flex items-center gap-2 px-4 py-2 bg-[#00153D] hover:bg-[#073372] text-white text-xs font-bold rounded-xl transition-colors shadow-xs"
                       >
-                        <Wrench className="w-3.5 h-3.5 text-blue-600" />
-                        Quản lý thuê phòng (Hóa đơn, Báo sự cố, Trả phòng)
+                        <CreditCard className="w-4 h-4 text-[#F2A900]" />
+                        <span>Thanh toán cọc & Tiền thuê</span>
                       </button>
-                      <div className="inline-flex items-center gap-1 px-3 py-1.5 bg-emerald-50 text-emerald-800 text-xs font-bold rounded-lg border border-emerald-200">
-                        <ShieldCheck className="w-4 h-4 text-emerald-600" />
-                        Hợp đồng bảo vệ quyền lợi
-                      </div>
+                      <button
+                        type="button"
+                        onClick={() => setManagingRental(lease)}
+                        className="inline-flex items-center gap-1.5 px-3.5 py-2 bg-slate-100 hover:bg-slate-200 text-slate-800 text-xs font-semibold rounded-xl transition-colors"
+                      >
+                        <Wrench className="w-3.5 h-3.5 text-slate-600" />
+                        <span>Báo sự cố & Trả phòng</span>
+                      </button>
                     </div>
                   ) : null}
                 </div>

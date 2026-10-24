@@ -298,17 +298,17 @@ BEGIN
     -- INSERT SUBSCRIPTIONS
     INSERT INTO "LandlordSubscriptions" ("Id", "LandlordId", "PlanName", "Price", "StartDate", "EndDate", "IsActive")
     VALUES
-    (sub1_id, ll1_id, 'Pro', 199000, CURRENT_TIMESTAMP - interval '30 days', CURRENT_TIMESTAMP + interval '335 days', true),
-    (sub2_id, ll2_id, 'Pro', 199000, CURRENT_TIMESTAMP - interval '60 days', CURRENT_TIMESTAMP + interval '305 days', true),
-    (sub3_id, ll3_id, 'Enterprise', 499000, CURRENT_TIMESTAMP - interval '15 days', CURRENT_TIMESTAMP + interval '350 days', true)
+    (sub1_id, ll1_id, 'Free', 0, CURRENT_TIMESTAMP - interval '30 days', CURRENT_TIMESTAMP + interval '335 days', true),
+    (sub2_id, ll2_id, 'Pro', 299000, CURRENT_TIMESTAMP - interval '60 days', CURRENT_TIMESTAMP + interval '305 days', true),
+    (sub3_id, ll3_id, 'Enterprise', 799000, CURRENT_TIMESTAMP - interval '15 days', CURRENT_TIMESTAMP + interval '350 days', true)
     ON CONFLICT ("Id") DO NOTHING;
 
     -- INSERT PAYMENT TRANSACTIONS
-    INSERT INTO "PaymentTransactions" ("Id", "UserId", "SubscriptionId", "Amount", "PaymentMethod", "TransactionRef", "Status", "CreatedAt", "CompletedAt")
+    INSERT INTO "PaymentTransactions" ("Id", "UserId", "SubscriptionId", "Amount", "PaymentMethod", "TransactionRef", "Description", "Status", "CreatedAt", "CompletedAt")
     VALUES
-    (uuid_generate_v4(), ll1_id, sub1_id, 199000, 'MoMo', 'MOMO_LL1_SQL', 'Completed', CURRENT_TIMESTAMP - interval '30 days', CURRENT_TIMESTAMP - interval '30 days'),
-    (uuid_generate_v4(), ll2_id, sub2_id, 199000, 'VNPay', 'VNP_LL2_SQL', 'Completed', CURRENT_TIMESTAMP - interval '60 days', CURRENT_TIMESTAMP - interval '60 days'),
-    (uuid_generate_v4(), ll3_id, sub3_id, 499000, 'BankTransfer', 'BANK_LL3_SQL', 'Completed', CURRENT_TIMESTAMP - interval '15 days', CURRENT_TIMESTAMP - interval '15 days')
+    (uuid_generate_v4(), ll1_id, NULL, 120000, 'MoMo', 'MOMO_LL1_SQL', 'Đẩy tin nổi bật 3 ngày', 'Completed', CURRENT_TIMESTAMP - interval '30 days', CURRENT_TIMESTAMP - interval '30 days'),
+    (uuid_generate_v4(), ll2_id, sub2_id, 299000, 'VNPay', 'VNP_LL2_SQL', 'Gói Pro 30 ngày (Chuyên nghiệp)', 'Completed', CURRENT_TIMESTAMP - interval '60 days', CURRENT_TIMESTAMP - interval '60 days'),
+    (uuid_generate_v4(), ll3_id, sub3_id, 799000, 'BankTransfer', 'BANK_LL3_SQL', 'Gói Doanh Nghiệp 30 ngày (Business)', 'Completed', CURRENT_TIMESTAMP - interval '15 days', CURRENT_TIMESTAMP - interval '15 days')
     ON CONFLICT ("Id") DO NOTHING;
 
     -- INSERT VERIFICATION REQUESTS (CCCD)
@@ -326,10 +326,9 @@ BEGIN
     (uuid_generate_v4(), admin_id, 'Hồ sơ chủ trọ mới cần duyệt', 'Chủ trọ Lê Thị Mai đã nộp hồ sơ CCCD cần xét duyệt.', 'AdminAlert', '/admin/verify', false, CURRENT_TIMESTAMP - interval '2 days')
     ON CONFLICT ("Id") DO NOTHING;
 
-    -- INSERT LEASES & TENANT REVIEWS
-    INSERT INTO "LeaseContracts" ("Id", "LandlordId", "TenantId", "RoomId", "StartDate", "EndDate", "MonthlyRent", "Deposit", "Status")
+    INSERT INTO "LeaseContracts" ("Id", "LandlordId", "TenantId", "RoomId", "StartDate", "EndDate", "MonthlyRent", "Deposit", "Status", "LandlordSigned", "TenantSigned")
     VALUES
-    (lease1_id, ll1_id, c3_id, r3_id, CURRENT_TIMESTAMP - interval '6 months', CURRENT_TIMESTAMP - interval '5 days', 6800000, 6800000, 'Completed')
+    (lease1_id, ll1_id, c3_id, r3_id, CURRENT_TIMESTAMP - interval '2 months', CURRENT_TIMESTAMP + interval '10 months', 6800000, 6800000, 'Active', true, true)
     ON CONFLICT ("Id") DO NOTHING;
 
     INSERT INTO "TenantReviews" ("Id", "LandlordId", "TenantId", "LeaseContractId", "Rating", "Punctuality", "Cleanliness", "Respectfulness", "Comment")

@@ -14,7 +14,8 @@ import {
   Zap,
   ExternalLink,
   Loader2,
-  Receipt
+  Receipt,
+  Copy
 } from 'lucide-react';
 
 export default function PricingCheckout() {
@@ -23,6 +24,7 @@ export default function PricingCheckout() {
   const [checkoutData, setCheckoutData] = useState<any>(null);
   const [verifying, setVerifying] = useState(false);
   const [initiating, setInitiating] = useState(false);
+  const [copiedField, setCopiedField] = useState<string | null>(null);
 
   // Plan state
   const [currentPlan, setCurrentPlan] = useState<'Free' | 'Pro' | 'Business'>('Free');
@@ -34,23 +36,35 @@ export default function PricingCheckout() {
   const [selectedBoostType, setSelectedBoostType] = useState<'24h' | '3days' | '7days'>('3days');
   const [loadingRooms, setLoadingRooms] = useState(false);
 
-  useEffect(() => {
-    landlordApi.getAnalytics()
-      .then(res => {
-        if (res?.currentPlan) {
-          const plan = res.currentPlan.toLowerCase();
-          if (plan.includes('business') || plan.includes('enterprise')) {
-            setCurrentPlan('Business');
-          } else if (plan.includes('pro')) {
-            setCurrentPlan('Pro');
-          } else {
-            setCurrentPlan('Free');
-          }
+  const fetchPlanAnalytics = async () => {
+    try {
+      const res = await landlordApi.getAnalytics();
+      if (res?.currentPlan) {
+        const plan = res.currentPlan.toLowerCase();
+        if (plan.includes('business') || plan.includes('enterprise')) {
+          setCurrentPlan('Business');
+        } else if (plan.includes('pro')) {
+          setCurrentPlan('Pro');
+        } else {
+          setCurrentPlan('Free');
         }
-        if (typeof res?.roomsUsed === 'number') setRoomsUsed(res.roomsUsed);
-      })
-      .catch(err => console.warn('Failed to load plan analytics:', err));
+      }
+      if (typeof res?.roomsUsed === 'number') setRoomsUsed(res.roomsUsed);
+    } catch (err) {
+      console.warn('Failed to load plan analytics:', err);
+    }
+  };
+
+  useEffect(() => {
+    fetchPlanAnalytics();
   }, []);
+
+  const handleCopy = (field: string, text: string) => {
+    navigator.clipboard.writeText(text);
+    setCopiedField(field);
+    toast.success(`Đã sao chép: ${text}`);
+    setTimeout(() => setCopiedField(null), 2000);
+  };
 
   useEffect(() => {
     const tabParam = searchParams.get('tab');
@@ -130,8 +144,9 @@ export default function PricingCheckout() {
       try {
         const statusRes = await landlordApi.checkPaymentStatus(checkoutData.transactionRef);
         if (statusRes.status === 'Completed') {
-          toast.success('Thanh toán thành công! Dịch vụ đã được kích hoạt.');
+          toast.success('Thanh toán thành công! Gói dịch vụ đã được kích hoạt.');
           setCheckoutData(null);
+          await fetchPlanAnalytics();
         }
       } catch {
         // Silent polling error
@@ -147,35 +162,23 @@ export default function PricingCheckout() {
       setVerifying(true);
       const statusRes = await landlordApi.checkPaymentStatus(checkoutData.transactionRef);
       if (statusRes.status === 'Completed') {
-        toast.success('Thanh toán thành công! Dịch vụ đã được kích hoạt.');
+        toast.success('Thanh toán thành công! Gói dịch vụ đã được kích hoạt.');
         setCheckoutData(null);
+        await fetchPlanAnalytics();
         return;
       }
 
       const verifyRes = await landlordApi.verifyPayment(checkoutData.transactionRef, 'PayOS');
       if (verifyRes.status === 'Completed') {
-        toast.success('Thanh toán thành công! Dịch vụ đã được kích hoạt.');
+        toast.success('Thanh toán thành công! Gói dịch vụ đã được kích hoạt.');
         setCheckoutData(null);
+        await fetchPlanAnalytics();
         return;
       }
 
       toast.info('Hệ thống chưa nhận được tín hiệu thanh toán từ cổng ngân hàng. Nếu bạn vừa chuyển tiền, vui lòng đợi vài giây để ngân hàng xử lý.');
     } catch (err: any) {
       toast.error(err?.message || 'Chưa nhận được giao dịch thanh toán từ PayOS.');
-    } finally {
-      setVerifying(false);
-    }
-  };
-
-  const handleSimulatePayment = async () => {
-    if (!checkoutData?.transactionRef) return;
-    try {
-      setVerifying(true);
-      const res = await landlordApi.simulateGatewayPayment(checkoutData.transactionRef);
-      toast.success(res.message || 'Thanh toán mô phỏng (DEV) thành công! Dịch vụ đã được kích hoạt.');
-      setCheckoutData(null);
-    } catch (err: any) {
-      toast.error(err?.message || 'Không thể thử nghiệm thanh toán.');
     } finally {
       setVerifying(false);
     }
@@ -487,63 +490,139 @@ export default function PricingCheckout() {
       {/* Payment QR Modal */}
       {checkoutData && createPortal(
         <div 
-          className="fixed inset-0 z-[100] bg-[#0F172A]/60 flex items-center justify-center p-3 sm:p-4 backdrop-blur-xs overflow-y-auto"
+          className="fixed inset-0 z-[100] bg-[#0F172A]/70 flex items-center justify-center p-3 sm:p-4 backdrop-blur-xs overflow-y-auto"
           onClick={() => setCheckoutData(null)}
         >
           <div 
             role="dialog"
             aria-modal="true"
             onClick={(e) => e.stopPropagation()}
-            className="relative my-auto bg-white rounded-2xl max-w-md w-full p-5 sm:p-6 space-y-3.5 sm:space-y-4 shadow-xl border border-slate-100 max-h-[min(90vh,680px)] overflow-y-auto"
+            className="relative my-auto bg-white rounded-2xl max-w-md w-full p-5 sm:p-6 space-y-4 shadow-2xl border border-slate-100 max-h-[min(92vh,720px)] overflow-y-auto"
           >
             <button 
               onClick={() => setCheckoutData(null)}
-              className="absolute top-3.5 right-3.5 text-slate-400 hover:text-slate-700 p-1.5 rounded-lg hover:bg-slate-100 transition-colors"
+              className="absolute top-3.5 right-3.5 text-slate-400 hover:text-slate-700 p-1.5 rounded-lg hover:bg-slate-100 transition-colors cursor-pointer"
               aria-label="Đóng modal"
             >
               <X className="w-5 h-5" />
             </button>
 
+            {/* Header */}
             <div className="text-center space-y-1 pt-1">
-              <h3 className="text-base font-bold text-slate-900 flex items-center justify-center gap-2">
+              <div className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-emerald-50 border border-emerald-200 text-emerald-800 text-[11px] font-bold mx-auto mb-1">
+                <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
+                <span>VietQR Napas 247 Chuyển khoản tức thì</span>
+              </div>
+              <h3 className="text-base sm:text-lg font-black text-slate-900 flex items-center justify-center gap-2">
                 <CreditCard className="w-5 h-5 text-blue-600" />
                 <span>Thanh toán dịch vụ Dormi</span>
               </h3>
               <p className="text-xs text-slate-500">
                 Mã tham chiếu: <span className="font-mono font-bold text-slate-800">{checkoutData.transactionRef}</span>
               </p>
-              <p className="text-sm font-black text-emerald-700">
+              <p className="text-base font-black text-emerald-700">
                 Số tiền: {Number(checkoutData.amount).toLocaleString('vi-VN')}₫
               </p>
             </div>
 
-            <div className="flex justify-center bg-slate-50 p-3 rounded-xl border border-slate-200">
+            {/* QR Image Box */}
+            <div className="flex flex-col items-center justify-center bg-slate-50 p-3.5 rounded-2xl border border-slate-200">
               <img 
                 src={checkoutData.qrUrl} 
-                alt="QR Code" 
-                className="w-40 h-40 sm:w-44 sm:h-44 object-contain rounded-lg shadow-xs" 
+                alt="VietQR Napas 247" 
+                className="w-48 h-48 sm:w-52 sm:h-52 object-contain rounded-xl shadow-xs bg-white p-2 border border-slate-100" 
               />
+              <p className="text-[11px] text-slate-500 font-medium mt-2 text-center">
+                Mở app ngân hàng (Vietcombank, MB, Techcombank...) quét mã QR để thanh toán
+              </p>
             </div>
 
-            {checkoutData.accountNumber && (
-              <div className="bg-slate-50 p-2.5 sm:p-3 rounded-xl border border-slate-200 text-left text-[11px] text-slate-600 space-y-1">
-                <div className="flex justify-between">
-                  <span>Chủ tài khoản:</span>
-                  <span className="font-bold text-slate-800">{checkoutData.accountName}</span>
-                </div>
-                <div className="flex justify-between">
-                  <span>Số tài khoản:</span>
-                  <span className="font-mono font-bold text-slate-800">{checkoutData.accountNumber}</span>
+            {/* Structured Bank Transfer Details */}
+            <div className="bg-slate-50 p-3 sm:p-3.5 rounded-xl border border-slate-200 text-left text-xs text-slate-600 space-y-2">
+              <div className="flex items-center justify-between pb-1.5 border-b border-slate-200">
+                <span className="text-slate-500 font-medium">Ngân hàng thụ hưởng:</span>
+                <span className="font-bold text-slate-800 text-right">
+                  {checkoutData.bankName || 'MBBank (Ngân hàng Quân Đội)'}
+                </span>
+              </div>
+
+              <div className="flex items-center justify-between pb-1.5 border-b border-slate-200">
+                <span className="text-slate-500 font-medium">Chủ tài khoản:</span>
+                <span className="font-bold text-slate-800 text-right">
+                  {checkoutData.accountName || 'CONG TY CO PHAN DORMI'}
+                </span>
+              </div>
+
+              <div className="flex items-center justify-between pb-1.5 border-b border-slate-200">
+                <span className="text-slate-500 font-medium">Số tài khoản:</span>
+                <div className="inline-flex items-center gap-1.5">
+                  <span className="font-mono font-bold text-slate-900 text-sm">
+                    {checkoutData.accountNumber || '0901111001'}
+                  </span>
+                  <button
+                    type="button"
+                    onClick={() => handleCopy('accountNumber', checkoutData.accountNumber || '0901111001')}
+                    className="p-1 rounded-md hover:bg-slate-200 text-slate-500 hover:text-slate-800 transition-colors cursor-pointer"
+                    title="Sao chép số tài khoản"
+                  >
+                    {copiedField === 'accountNumber' ? (
+                      <Check className="w-3.5 h-3.5 text-emerald-600" />
+                    ) : (
+                      <Copy className="w-3.5 h-3.5" />
+                    )}
+                  </button>
                 </div>
               </div>
-            )}
+
+              <div className="flex items-center justify-between pb-1.5 border-b border-slate-200">
+                <span className="text-slate-500 font-medium">Số tiền:</span>
+                <div className="inline-flex items-center gap-1.5">
+                  <span className="font-mono font-bold text-emerald-700 text-sm">
+                    {Number(checkoutData.amount).toLocaleString('vi-VN')}₫
+                  </span>
+                  <button
+                    type="button"
+                    onClick={() => handleCopy('amount', String(checkoutData.amount))}
+                    className="p-1 rounded-md hover:bg-slate-200 text-slate-500 hover:text-slate-800 transition-colors cursor-pointer"
+                    title="Sao chép số tiền"
+                  >
+                    {copiedField === 'amount' ? (
+                      <Check className="w-3.5 h-3.5 text-emerald-600" />
+                    ) : (
+                      <Copy className="w-3.5 h-3.5" />
+                    )}
+                  </button>
+                </div>
+              </div>
+
+              <div className="flex items-center justify-between">
+                <span className="text-slate-500 font-medium">Nội dung chuyển khoản:</span>
+                <div className="inline-flex items-center gap-1.5">
+                  <span className="font-mono font-bold text-blue-700 bg-blue-50 px-2 py-0.5 rounded border border-blue-200 text-xs">
+                    {checkoutData.transferMemo || `DORMI ${checkoutData.transactionRef}`}
+                  </span>
+                  <button
+                    type="button"
+                    onClick={() => handleCopy('transferMemo', checkoutData.transferMemo || `DORMI ${checkoutData.transactionRef}`)}
+                    className="p-1 rounded-md hover:bg-slate-200 text-slate-500 hover:text-slate-800 transition-colors cursor-pointer"
+                    title="Sao chép nội dung chuyển khoản"
+                  >
+                    {copiedField === 'transferMemo' ? (
+                      <Check className="w-3.5 h-3.5 text-emerald-600" />
+                    ) : (
+                      <Copy className="w-3.5 h-3.5" />
+                    )}
+                  </button>
+                </div>
+              </div>
+            </div>
 
             {checkoutData.paymentUrl && (
               <a
                 href={checkoutData.paymentUrl}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="inline-flex items-center justify-center gap-1.5 w-full py-2 px-3 text-xs font-bold text-blue-600 bg-blue-50 hover:bg-blue-100 rounded-xl transition-colors border border-blue-200"
+                className="inline-flex items-center justify-center gap-1.5 w-full py-2 px-3 text-xs font-bold text-blue-600 bg-blue-50 hover:bg-blue-100 rounded-xl transition-colors border border-blue-200 cursor-pointer"
               >
                 <ExternalLink className="w-4 h-4" />
                 <span>Mở cổng thanh toán PayOS (VietQR / Chuyển khoản)</span>
@@ -562,22 +641,10 @@ export default function PricingCheckout() {
                 fullWidth
                 disabled={verifying}
                 onClick={handleVerifyPayment}
-                className="bg-emerald-600 hover:bg-emerald-700 text-white font-bold py-2.5"
+                className="bg-emerald-600 hover:bg-emerald-700 text-white font-bold py-2.5 cursor-pointer"
               >
                 {verifying ? 'Đang kiểm tra...' : 'Xác nhận đã chuyển khoản thành công'}
               </Button>
-
-              {import.meta.env.DEV && (
-                <button
-                  type="button"
-                  onClick={handleSimulatePayment}
-                  disabled={verifying}
-                  className="w-full py-1 text-[11px] text-slate-500 hover:text-slate-800 underline transition-colors cursor-pointer"
-                >
-                  <Zap className="w-3 h-3 inline mr-1 text-amber-500" />
-                  <span>Mô phỏng thanh toán thành công (Dành cho Dev test)</span>
-                </button>
-              )}
 
               <p className="text-[11px] text-[#94A3B8]">
                 Hệ thống tự động kích hoạt ngay sau khi tiền vào tài khoản ngân hàng.

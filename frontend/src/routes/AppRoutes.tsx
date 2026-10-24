@@ -138,14 +138,9 @@ export default function AppRoutes() {
           <Route path="verify" element={<VerificationModeration />} />
           <Route path="rooms" element={<ContentModeration />} />
           <Route path="content" element={<ContentModeration />} />
-          <Route path="all-rooms" element={<RoomManagement />} />
-          <Route path="leases" element={<LandlordLeases />} />
-          <Route path="applications" element={<LandlordApplications />} />
-          <Route path="viewings" element={<LandlordViewings />} />
           <Route path="users" element={<AdminUsers />} />
           <Route path="reports" element={<AdminReports />} />
           <Route path="transactions" element={<AdminTransactions />} />
-          <Route path="match" element={<RoommateMatcher />} />
         </Route>
       </Route>
 

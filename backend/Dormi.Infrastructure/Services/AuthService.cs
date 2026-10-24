@@ -360,9 +360,7 @@ public class AuthService : IAuthService
             {
                 RequiresMfa = true,
                 MfaSessionToken = mfaSessionToken,
-                Message = isDev
-                    ? "Mã xác thực OTP đã được gửi đến kênh bảo mật của bạn. [DEV: Nhập mã test 123456]"
-                    : "Mã xác thực OTP đã được gửi đến kênh bảo mật của bạn. (Mã thử nghiệm: 123456)"
+                Message = "Mã xác thực OTP đã được gửi đến kênh bảo mật của bạn (hiệu lực trong 5 phút)."
             });
         }
 

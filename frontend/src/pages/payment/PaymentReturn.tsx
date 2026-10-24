@@ -11,6 +11,7 @@ import {
   CreditCard,
   RotateCcw
 } from 'lucide-react';
+import { postRentalApi, landlordApi } from '../../services/api';
 
 export default function PaymentReturn() {
   const [searchParams] = useSearchParams();
@@ -31,10 +32,19 @@ export default function PaymentReturn() {
       setPaymentState('cancelled');
     } else if (statusParam?.toUpperCase() === 'PAID' || codeParam === '00' || (orderCode && cancelParam !== 'true')) {
       setPaymentState('success');
+
+      // ponytail: Auto-settle payment immediately upon successful return to ensure instant DB consistency
+      if (orderCode) {
+        if (type === 'deposit') {
+          postRentalApi.settleDeposit(orderCode).catch(() => {});
+        } else if (type === 'package' || type === 'subscription' || type === 'service') {
+          landlordApi.checkPaymentStatus(orderCode).catch(() => {});
+        }
+      }
     } else {
       setPaymentState('pending');
     }
-  }, [statusParam, cancelParam, codeParam, orderCode]);
+  }, [statusParam, cancelParam, codeParam, orderCode, type]);
 
   return (
     <div className="min-h-[80vh] flex items-center justify-center py-12 px-4 sm:px-6 lg:px-8 bg-[#F8FAFC]">

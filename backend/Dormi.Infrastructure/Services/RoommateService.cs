@@ -189,9 +189,50 @@ public class RoommateService : IRoommateService
         post.GenderPreference = dto.GenderPreference;
         post.LifestyleTraits = dto.LifestyleTraits;
         post.RoomId = dto.RoomId;
+        if (dto.IsActive.HasValue)
+        {
+            post.IsActive = dto.IsActive.Value;
+        }
 
         await _db.SaveChangesAsync();
         return ServiceResult<object>.Ok(new { message = "Cập nhật bài ở ghép thành công." });
+    }
+
+    public async Task<ServiceResult<List<RoommatePostResponseDto>>> GetMyRoommatePostsAsync(Guid userId)
+    {
+        var rawPosts = await _db.RoommatePosts
+            .AsNoTracking()
+            .Include(r => r.Customer)
+            .Include(r => r.Room)
+                .ThenInclude(rm => rm!.Images)
+            .Where(r => r.CustomerId == userId)
+            .OrderByDescending(r => r.CreatedAt)
+            .ToListAsync();
+
+        var posts = rawPosts.Select(r => new RoommatePostResponseDto
+        {
+            Id = r.Id,
+            CustomerId = r.CustomerId,
+            CustomerName = r.Customer?.FullName ?? "Khách thuê",
+            CustomerAvatar = r.Customer?.AvatarUrl,
+            Title = r.Title,
+            Description = r.Description,
+            Budget = r.Budget,
+            Location = r.Location,
+            MoveInDate = r.MoveInDate,
+            GenderPreference = r.GenderPreference,
+            LifestyleTraits = r.LifestyleTraits,
+            IsActive = r.IsActive,
+            MatchScore = null,
+            CreatedAt = r.CreatedAt,
+            RoomId = r.RoomId,
+            RoomTitle = r.Room?.Title,
+            RoomAddress = r.Room?.Address,
+            RoomPrice = r.Room?.Price,
+            RoomImageUrl = r.Room?.Images.OrderByDescending(i => i.IsPrimary).Select(i => i.ImageUrl).FirstOrDefault()
+        }).ToList();
+
+        return ServiceResult<List<RoommatePostResponseDto>>.Ok(posts);
     }
 
     public async Task<ServiceResult<object>> DeleteRoommatePostAsync(Guid id, Guid userId, bool isAdmin = false)

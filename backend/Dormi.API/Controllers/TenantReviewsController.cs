@@ -9,6 +9,7 @@ namespace Dormi.API.Controllers;
 
 [ApiController]
 [Route("api/[controller]")]
+[Route("api/tenant-reviews")]
 [Authorize]
 public class TenantReviewsController : BaseApiController
 {

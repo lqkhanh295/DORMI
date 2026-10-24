@@ -3,7 +3,7 @@ import { Link } from 'react-router-dom';
 import { Card } from '../../components/ui/Card';
 import { Button } from '../../components/ui/Button';
 import { adminApi, RoomStatus } from '../../services/api';
-import { Users, UserCheck, Home, AlertTriangle, ArrowRight, DollarSign, Building2, FileText, FileCheck, Calendar, Search, Compass, ShieldCheck } from 'lucide-react';
+import { Users, UserCheck, Home, AlertTriangle, ArrowRight, DollarSign, ShieldCheck, RefreshCw } from 'lucide-react';
 import { toast } from 'sonner';
 import { PageMotion } from '../../components/common/Motion';
 
@@ -24,7 +24,7 @@ export default function AdminDashboard() {
     try {
       setLoading(true);
       const [sRes, vRes, rRes, repRes] = await Promise.all([
-        adminApi.getStats().catch(() => ({ totalUsers: 0, totalRevenue: 0 })),
+        adminApi.getStats().catch(() => ({ totalUsers: 0, totalRevenue: 0, pendingRooms: 0, openReports: 0, pendingVerifications: 0 })),
         adminApi.getPendingVerifications().catch(() => []),
         adminApi.getRoomsForModeration().catch(() => []),
         adminApi.getReports().catch(() => [])
@@ -36,11 +36,11 @@ export default function AdminDashboard() {
       const openReportsList = Array.isArray(repRes) ? repRes.filter((r: any) => r.status === 'Pending') : [];
 
       setStats({
-        totalUsers: sRes?.totalUsers || 0,
-        pendingVerifications: Array.isArray(vRes) ? vRes.length : 0,
-        pendingRooms: pendingRoomsList.length,
-        openReports: openReportsList.length,
-        totalRevenue: sRes?.totalRevenue || 0
+        totalUsers: sRes?.totalUsers ?? 0,
+        pendingVerifications: sRes?.pendingVerifications ?? (Array.isArray(vRes) ? vRes.length : 0),
+        pendingRooms: sRes?.pendingRooms ?? pendingRoomsList.length,
+        openReports: sRes?.openReports ?? openReportsList.length,
+        totalRevenue: sRes?.totalRevenue ?? 0
       });
 
       setVerifications(Array.isArray(vRes) ? vRes : []);
@@ -60,11 +60,15 @@ export default function AdminDashboard() {
     window.addEventListener('new-room-pending', handleRealtimeUpdate);
     window.addEventListener('room-moderated', handleRealtimeUpdate);
     window.addEventListener('room-status-changed', handleRealtimeUpdate);
+    window.addEventListener('transaction-completed', handleRealtimeUpdate);
+    window.addEventListener('verification-updated', handleRealtimeUpdate);
 
     return () => {
       window.removeEventListener('new-room-pending', handleRealtimeUpdate);
       window.removeEventListener('room-moderated', handleRealtimeUpdate);
       window.removeEventListener('room-status-changed', handleRealtimeUpdate);
+      window.removeEventListener('transaction-completed', handleRealtimeUpdate);
+      window.removeEventListener('verification-updated', handleRealtimeUpdate);
     };
   }, []);
 
@@ -96,6 +100,15 @@ export default function AdminDashboard() {
           <h1 className="text-2xl font-bold text-slate-900">Quản trị Hệ thống DORMI</h1>
           <p className="text-sm text-slate-500 mt-1">Theo dõi hoạt động kiểm duyệt và số liệu thời gian thực của hệ thống.</p>
         </div>
+        <button
+          type="button"
+          onClick={loadData}
+          disabled={loading}
+          className="px-3.5 py-2 text-xs font-semibold rounded-xl border border-slate-200 bg-white hover:bg-slate-50 text-slate-700 hover:text-slate-900 transition-colors flex items-center gap-2 shadow-2xs cursor-pointer disabled:opacity-50"
+        >
+          <RefreshCw className={`w-3.5 h-3.5 ${loading ? 'animate-spin text-blue-600' : 'text-slate-500'}`} />
+          <span>Làm mới dữ liệu</span>
+        </button>
       </div>
 
       {/* 5 Real KPI Cards */}
@@ -285,78 +298,62 @@ export default function AdminDashboard() {
           </div>
         </Card>
       </div>
-      {/* Full Platform Management Hub for Admin */}
+      {/* Core Admin Task Hub */}
       <div className="bg-white p-6 rounded-2xl border border-slate-200 shadow-sm space-y-4">
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 pb-3 border-b border-slate-100">
           <div>
             <h2 className="text-base font-bold text-slate-900 flex items-center gap-2">
-              <ShieldCheck className="w-5 h-5 text-amber-600" />
-              <span>Trung tâm điều phối & Quản lý toàn bộ chức năng</span>
+              <ShieldCheck className="w-5 h-5 text-[#00153D]" />
+              <span>Trung tâm điều phối & Quản trị hệ thống</span>
             </h2>
             <p className="text-xs text-slate-500 mt-0.5">
-              Quyền quản trị viên cấp cao: Xem, kiểm tra và quản lý trực tiếp tất cả phân hệ trên nền tảng DORMI.
+              Truy cập nhanh các nghiệp vụ kiểm duyệt, xác minh và vận hành sàn giao dịch DORMI.
             </p>
           </div>
-          <span className="text-xs font-bold text-amber-700 bg-amber-50 border border-amber-200 px-2.5 py-1 rounded-lg w-fit">
-            Toàn quyền Quản trị viên
+          <span className="text-xs font-bold text-[#00153D] bg-slate-100 border border-slate-200 px-2.5 py-1 rounded-lg w-fit">
+            Quyền Quản trị viên
           </span>
         </div>
 
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3.5 pt-1">
-          <Link to="/admin/all-rooms" className="p-4 rounded-xl border border-slate-200 hover:border-[#00153D] hover:shadow-sm bg-slate-50/50 hover:bg-white transition-all group">
+          <Link to="/admin/rooms" className="p-4 rounded-xl border border-slate-200 hover:border-[#00153D] hover:shadow-sm bg-slate-50/50 hover:bg-white transition-all group">
             <div className="flex items-center gap-3 mb-2">
-              <div className="w-8 h-8 rounded-lg bg-blue-100 text-blue-700 flex items-center justify-center"><Building2 className="w-4 h-4" /></div>
-              <h3 className="text-sm font-bold text-slate-900 group-hover:text-[#00153D]">Quản lý phòng trọ</h3>
+              <div className="w-8 h-8 rounded-lg bg-blue-100 text-blue-700 flex items-center justify-center"><Home className="w-4 h-4" /></div>
+              <h3 className="text-sm font-bold text-slate-900 group-hover:text-[#00153D]">Duyệt tin đăng phòng</h3>
             </div>
-            <p className="text-xs text-slate-500 leading-relaxed">Xem và chỉnh sửa toàn bộ bài đăng phòng, ẩn/hiện, cập nhật tiện ích và định vị GPS.</p>
-          </Link>
-
-          <Link to="/admin/leases" className="p-4 rounded-xl border border-slate-200 hover:border-[#00153D] hover:shadow-sm bg-slate-50/50 hover:bg-white transition-all group">
-            <div className="flex items-center gap-3 mb-2">
-              <div className="w-8 h-8 rounded-lg bg-emerald-100 text-emerald-700 flex items-center justify-center"><FileCheck className="w-4 h-4" /></div>
-              <h3 className="text-sm font-bold text-slate-900 group-hover:text-[#00153D]">Hợp đồng & Ký số</h3>
-            </div>
-            <p className="text-xs text-slate-500 leading-relaxed">Quản lý tất cả hợp đồng thuê giữa chủ trọ và khách, tiền cọc, lịch đóng tiền.</p>
-          </Link>
-
-          <Link to="/admin/applications" className="p-4 rounded-xl border border-slate-200 hover:border-[#00153D] hover:shadow-sm bg-slate-50/50 hover:bg-white transition-all group">
-            <div className="flex items-center gap-3 mb-2">
-              <div className="w-8 h-8 rounded-lg bg-indigo-100 text-indigo-700 flex items-center justify-center"><FileText className="w-4 h-4" /></div>
-              <h3 className="text-sm font-bold text-slate-900 group-hover:text-[#00153D]">Hồ sơ xin thuê</h3>
-            </div>
-            <p className="text-xs text-slate-500 leading-relaxed">Theo dõi và can thiệp duyệt/từ chối các đơn xin thuê phòng trọ từ khách.</p>
-          </Link>
-
-          <Link to="/admin/viewings" className="p-4 rounded-xl border border-slate-200 hover:border-[#00153D] hover:shadow-sm bg-slate-50/50 hover:bg-white transition-all group">
-            <div className="flex items-center gap-3 mb-2">
-              <div className="w-8 h-8 rounded-lg bg-teal-100 text-teal-700 flex items-center justify-center"><Calendar className="w-4 h-4" /></div>
-              <h3 className="text-sm font-bold text-slate-900 group-hover:text-[#00153D]">Lịch xem phòng</h3>
-            </div>
-            <p className="text-xs text-slate-500 leading-relaxed">Giám sát và điều phối toàn bộ các lịch hẹn trực tiếp giữa khách và chủ nhà.</p>
-          </Link>
-
-          <Link to="/admin/match" className="p-4 rounded-xl border border-slate-200 hover:border-[#00153D] hover:shadow-sm bg-slate-50/50 hover:bg-white transition-all group">
-            <div className="flex items-center gap-3 mb-2">
-              <div className="w-8 h-8 rounded-lg bg-purple-100 text-purple-700 flex items-center justify-center"><Compass className="w-4 h-4" /></div>
-              <h3 className="text-sm font-bold text-slate-900 group-hover:text-[#00153D]">Ghép bạn ở ghép</h3>
-            </div>
-            <p className="text-xs text-slate-500 leading-relaxed">Trải nghiệm thuật toán Jaccard tính độ tương thích lối sống, tìm bạn cùng phòng.</p>
-          </Link>
-
-          <Link to="/search" className="p-4 rounded-xl border border-slate-200 hover:border-[#00153D] hover:shadow-sm bg-slate-50/50 hover:bg-white transition-all group">
-            <div className="flex items-center gap-3 mb-2">
-              <div className="w-8 h-8 rounded-lg bg-amber-100 text-amber-700 flex items-center justify-center"><Search className="w-4 h-4" /></div>
-              <h3 className="text-sm font-bold text-slate-900 group-hover:text-[#00153D]">Bản đồ số tìm phòng</h3>
-            </div>
-            <p className="text-xs text-slate-500 leading-relaxed">Tra cứu không gian PostGIS, bộ lọc giá, quận huyện và trải nghiệm của khách thuê.</p>
+            <p className="text-xs text-slate-500 leading-relaxed">Kiểm duyệt nội dung, hình ảnh, thông tin giá và tiện ích phòng trọ mới trước khi công khai.</p>
           </Link>
 
           <Link to="/admin/verify" className="p-4 rounded-xl border border-slate-200 hover:border-[#00153D] hover:shadow-sm bg-slate-50/50 hover:bg-white transition-all group">
             <div className="flex items-center gap-3 mb-2">
-              <div className="w-8 h-8 rounded-lg bg-rose-100 text-rose-700 flex items-center justify-center"><Users className="w-4 h-4" /></div>
+              <div className="w-8 h-8 rounded-lg bg-emerald-100 text-emerald-700 flex items-center justify-center"><UserCheck className="w-4 h-4" /></div>
               <h3 className="text-sm font-bold text-slate-900 group-hover:text-[#00153D]">Xác minh chủ trọ & KYC</h3>
             </div>
-            <p className="text-xs text-slate-500 leading-relaxed">Kiểm tra hồ sơ giấy tờ, CCCD và phê duyệt xác thực danh tính chủ nhà trọ.</p>
+            <p className="text-xs text-slate-500 leading-relaxed">Kiểm tra hồ sơ giấy tờ, CCCD và phê duyệt cấp huy hiệu xác thực danh tính cho chủ nhà trọ.</p>
+          </Link>
+
+          <Link to="/admin/users" className="p-4 rounded-xl border border-slate-200 hover:border-[#00153D] hover:shadow-sm bg-slate-50/50 hover:bg-white transition-all group">
+            <div className="flex items-center gap-3 mb-2">
+              <div className="w-8 h-8 rounded-lg bg-indigo-100 text-indigo-700 flex items-center justify-center"><Users className="w-4 h-4" /></div>
+              <h3 className="text-sm font-bold text-slate-900 group-hover:text-[#00153D]">Quản lý người dùng</h3>
+            </div>
+            <p className="text-xs text-slate-500 leading-relaxed">Giám sát danh sách tài khoản khách thuê và chủ trọ, phân quyền hoặc khóa tài khoản vi phạm.</p>
+          </Link>
+
+          <Link to="/admin/reports" className="p-4 rounded-xl border border-slate-200 hover:border-[#00153D] hover:shadow-sm bg-slate-50/50 hover:bg-white transition-all group">
+            <div className="flex items-center gap-3 mb-2">
+              <div className="w-8 h-8 rounded-lg bg-rose-100 text-rose-700 flex items-center justify-center"><AlertTriangle className="w-4 h-4" /></div>
+              <h3 className="text-sm font-bold text-slate-900 group-hover:text-[#00153D]">Báo cáo vi phạm</h3>
+            </div>
+            <p className="text-xs text-slate-500 leading-relaxed">Tiếp nhận và xử lý khiếu nại, tố cáo tin ảo hoặc vi phạm quy định sàn từ khách thuê.</p>
+          </Link>
+
+          <Link to="/admin/transactions" className="p-4 rounded-xl border border-slate-200 hover:border-[#00153D] hover:shadow-sm bg-slate-50/50 hover:bg-white transition-all group">
+            <div className="flex items-center gap-3 mb-2">
+              <div className="w-8 h-8 rounded-lg bg-teal-100 text-teal-700 flex items-center justify-center"><DollarSign className="w-4 h-4" /></div>
+              <h3 className="text-sm font-bold text-slate-900 group-hover:text-[#00153D]">Lịch sử giao dịch</h3>
+            </div>
+            <p className="text-xs text-slate-500 leading-relaxed">Theo dõi toàn bộ dòng tiền, giao dịch PayOS và doanh thu mua gói dịch vụ của chủ trọ.</p>
           </Link>
         </div>
       </div>
