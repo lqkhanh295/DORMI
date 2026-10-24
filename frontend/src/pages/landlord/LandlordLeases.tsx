@@ -2,7 +2,7 @@ import { TenantRatingModal } from '../../components/landlord/TenantRatingModal';
 import { useState, useEffect } from 'react';
 import { createPortal } from 'react-dom';
 import { useLocation, useNavigate } from 'react-router-dom';
-import { leasesApi, type LeaseContractResponse, type CreateLeasePayload } from '../../services/api';
+import { leasesApi, getLeaseDurationText, type LeaseContractResponse, type CreateLeasePayload } from '../../services/api';
 import { toast } from 'sonner';
 import { 
   FileText, 
@@ -453,8 +453,11 @@ export default function LandlordLeases() {
                   </div>
                   <div>
                     <span className="text-[#64748B] block">Thời hạn hợp đồng:</span>
-                    <span className="font-medium text-[#0F172A]">
-                      {formatDate(lease.startDate)} - {formatDate(lease.endDate)}
+                    <span className="font-bold text-[#0F172A] block">
+                      {lease.durationText || getLeaseDurationText(lease.startDate, lease.endDate)}
+                    </span>
+                    <span className="text-xs text-[#64748B] block mt-0.5">
+                      ({formatDate(lease.startDate)} - {formatDate(lease.endDate)})
                     </span>
                   </div>
                   <div>
@@ -629,6 +632,41 @@ export default function LandlordLeases() {
                   {createForm.tenantName && (
                     <p className="text-[11px] text-blue-600 font-medium">Khách thuê: {createForm.tenantName}</p>
                   )}
+                </div>
+              </div>
+
+              {/* Quick Duration Preset & Dates */}
+              <div className="space-y-2 p-3 bg-slate-50 rounded-xl border border-slate-200">
+                <div className="flex items-center justify-between">
+                  <span className="text-xs font-bold text-[#64748B] uppercase">Thời hạn hợp đồng:</span>
+                  <span className="text-xs font-bold text-blue-700 bg-blue-100 px-2.5 py-0.5 rounded-full">
+                    {getLeaseDurationText(createForm.startDate, createForm.endDate)}
+                  </span>
+                </div>
+                <div className="flex items-center gap-2">
+                  {[
+                    { label: '6 tháng', months: 6 },
+                    { label: '1 năm (Chuẩn)', months: 12 },
+                    { label: '2 năm', months: 24 }
+                  ].map(term => (
+                    <button
+                      type="button"
+                      key={term.months}
+                      onClick={() => {
+                        const start = createForm.startDate ? new Date(createForm.startDate) : new Date();
+                        const end = new Date(start);
+                        end.setMonth(end.getMonth() + term.months);
+                        setCreateForm(prev => ({
+                          ...prev,
+                          startDate: start.toISOString().split('T')[0],
+                          endDate: end.toISOString().split('T')[0]
+                        }));
+                      }}
+                      className="px-3 py-1 text-xs font-bold rounded-lg border border-[#CBD5E1] bg-white hover:bg-slate-100 text-[#0F172A] transition-colors"
+                    >
+                      {term.label}
+                    </button>
+                  ))}
                 </div>
               </div>
 
@@ -929,7 +967,11 @@ export default function LandlordLeases() {
                 <p><span className="text-[#64748B]">Tiền thuê:</span> <span className="font-bold text-emerald-700">{viewingLease.monthlyRent.toLocaleString('vi-VN')} đ/tháng</span></p>
                 <p><span className="text-[#64748B]">Tiền cọc:</span> {viewingLease.deposit.toLocaleString('vi-VN')} đ</p>
                 <p><span className="text-[#64748B]">Chu kỳ thanh toán:</span> {viewingLease.paymentCycleMonths} tháng / lần</p>
-                <p><span className="text-[#64748B]">Thời gian thuê:</span> {formatDate(viewingLease.startDate)} - {formatDate(viewingLease.endDate)}</p>
+                <p>
+                  <span className="text-[#64748B]">Thời hạn hợp đồng:</span>{' '}
+                  <span className="font-bold text-[#00153D]">{viewingLease.durationText || getLeaseDurationText(viewingLease.startDate, viewingLease.endDate)}</span>{' '}
+                  <span className="text-xs text-[#64748B]">({formatDate(viewingLease.startDate)} - {formatDate(viewingLease.endDate)})</span>
+                </p>
                 {viewingLease.utilitiesDescription && (
                   <p><span className="text-[#64748B]">Chi phí dịch vụ:</span> {viewingLease.utilitiesDescription}</p>
                 )}

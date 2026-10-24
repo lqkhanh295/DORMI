@@ -1,7 +1,7 @@
 import { useState, useEffect, useRef } from 'react';
 import { createPortal } from 'react-dom';
 import { useNavigate } from 'react-router-dom';
-import { leasesApi, type LeaseContractResponse } from '../../services/api';
+import { leasesApi, getLeaseDurationText, type LeaseContractResponse } from '../../services/api';
 import { toast } from 'sonner';
 import { 
   FileText, 
@@ -401,8 +401,11 @@ export default function TenantLeases() {
                   </div>
                   <div>
                     <span className="text-[#64748B] block">Thời hạn hợp đồng:</span>
-                    <span className="font-medium text-[#0F172A]">
-                      {formatDate(lease.startDate)} - {formatDate(lease.endDate)}
+                    <span className="font-bold text-[#0F172A] block">
+                      {lease.durationText || getLeaseDurationText(lease.startDate, lease.endDate)}
+                    </span>
+                    <span className="text-xs text-[#64748B] block mt-0.5">
+                      ({formatDate(lease.startDate)} - {formatDate(lease.endDate)})
                     </span>
                   </div>
                   <div>
@@ -546,7 +549,11 @@ export default function TenantLeases() {
                       <p><span className="font-semibold text-[#00153D]">Bên cho thuê (Chủ trọ):</span> {signingLease.landlordName}</p>
                       <p><span className="font-semibold text-[#00153D]">Giá thuê hàng tháng:</span> <span className="font-bold text-emerald-700">{signingLease.monthlyRent.toLocaleString('vi-VN')} đ/tháng</span></p>
                       <p><span className="font-semibold text-[#00153D]">Tiền đặt cọc:</span> {signingLease.deposit.toLocaleString('vi-VN')} đ</p>
-                      <p><span className="font-semibold text-[#00153D]">Thời hạn thuê:</span> {formatDate(signingLease.startDate)} đến {formatDate(signingLease.endDate)}</p>
+                      <p>
+                        <span className="font-semibold text-[#00153D]">Thời hạn thuê:</span>{' '}
+                        <span className="font-bold text-[#00153D]">{signingLease.durationText || getLeaseDurationText(signingLease.startDate, signingLease.endDate)}</span>{' '}
+                        <span className="text-xs text-[#64748B]">(từ {formatDate(signingLease.startDate)} đến {formatDate(signingLease.endDate)})</span>
+                      </p>
                     </div>
 
                     {signingLease.termsAndConditions && (
@@ -768,7 +775,11 @@ export default function TenantLeases() {
                     <p><span className="text-[#64748B]">Tiền thuê:</span> <span className="font-bold text-emerald-700">{viewingLease.monthlyRent.toLocaleString('vi-VN')} đ/tháng</span></p>
                     <p><span className="text-[#64748B]">Tiền cọc:</span> {viewingLease.deposit.toLocaleString('vi-VN')} đ</p>
                     <p><span className="text-[#64748B]">Chu kỳ thanh toán:</span> {viewingLease.paymentCycleMonths} tháng / lần</p>
-                    <p><span className="text-[#64748B]">Thời gian thuê:</span> {formatDate(viewingLease.startDate)} - {formatDate(viewingLease.endDate)}</p>
+                    <p>
+                      <span className="text-[#64748B]">Thời hạn hợp đồng:</span>{' '}
+                      <span className="font-bold text-[#00153D]">{viewingLease.durationText || getLeaseDurationText(viewingLease.startDate, viewingLease.endDate)}</span>{' '}
+                      <span className="text-xs text-[#64748B]">({formatDate(viewingLease.startDate)} - {formatDate(viewingLease.endDate)})</span>
+                    </p>
                     {viewingLease.utilitiesDescription && (
                       <p><span className="text-[#64748B]">Chi phí dịch vụ (Điện, nước, internet):</span> {viewingLease.utilitiesDescription}</p>
                     )}

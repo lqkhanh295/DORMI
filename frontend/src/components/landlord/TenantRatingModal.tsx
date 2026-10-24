@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { createPortal } from 'react-dom';
 import { Button } from '../ui/Button';
-import { tenantReviewsApi } from '../../services/api';
+import { tenantReviewsApi, getLeaseDurationText } from '../../services/api';
 import { toast } from 'sonner';
 import { Star, X, UserCheck, AlertCircle } from 'lucide-react';
 
@@ -170,7 +170,7 @@ export function TenantRatingModal({
                     >
                       {leases.map(l => (
                         <option key={l.id} value={l.id}>
-                          {l.tenantName} - {l.roomTitle} ({new Date(l.startDate).toLocaleDateString('vi-VN')} - {new Date(l.endDate).toLocaleDateString('vi-VN')})
+                          {l.tenantName} - {l.roomTitle} ({getLeaseDurationText(l.startDate, l.endDate)}: {new Date(l.startDate).toLocaleDateString('vi-VN')} - {new Date(l.endDate).toLocaleDateString('vi-VN')})
                         </option>
                       ))}
                     </select>

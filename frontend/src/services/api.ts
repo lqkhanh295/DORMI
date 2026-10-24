@@ -889,6 +889,8 @@ export interface LeaseContractResponse {
   tenantEmail: string;
   startDate: string;
   endDate: string;
+  durationMonths?: number;
+  durationText?: string;
   monthlyRent: number;
   deposit: number;
   utilitiesDescription?: string;
@@ -972,6 +974,25 @@ export const leasesApi = {
       body: JSON.stringify(data)
     });
   }
+};
+
+export const getLeaseDurationText = (startDate?: string, endDate?: string, serverText?: string): string => {
+  if (serverText && serverText.trim().length > 0) return serverText;
+  if (!startDate || !endDate) return '1 năm';
+  const start = new Date(startDate);
+  const end = new Date(endDate);
+  if (isNaN(start.getTime()) || isNaN(end.getTime())) return '1 năm';
+
+  const yearDiff = end.getFullYear() - start.getFullYear();
+  const monthDiff = end.getMonth() - start.getMonth();
+  const dayDiff = end.getDate() - start.getDate();
+  let totalMonths = yearDiff * 12 + monthDiff;
+  if (dayDiff >= 15) totalMonths += 1;
+  if (totalMonths <= 0) totalMonths = 1;
+
+  if (totalMonths >= 12 && totalMonths % 12 === 0) return `${totalMonths / 12} năm`;
+  if (totalMonths >= 12) return `${Math.floor(totalMonths / 12)} năm ${totalMonths % 12} tháng`;
+  return `${totalMonths} tháng`;
 };
 
 // 12. POST-RENTAL LIFECYCLE (RAIL A PAYMENTS, MAINTENANCE, RENEWAL, MOVE-OUT)

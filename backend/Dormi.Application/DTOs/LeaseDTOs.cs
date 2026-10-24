@@ -89,6 +89,10 @@ public class LeaseContractResponseDto
 
     public DateTime StartDate { get; set; }
     public DateTime EndDate { get; set; }
+    public int DurationMonths => Math.Max(1, ((EndDate.Year - StartDate.Year) * 12) + EndDate.Month - StartDate.Month);
+    public string DurationText => DurationMonths >= 12 && DurationMonths % 12 == 0 
+        ? $"{DurationMonths / 12} năm" 
+        : (DurationMonths >= 12 ? $"{DurationMonths / 12} năm {DurationMonths % 12} tháng" : $"{DurationMonths} tháng");
     public decimal MonthlyRent { get; set; }
     public decimal Deposit { get; set; }
     public string? UtilitiesDescription { get; set; }

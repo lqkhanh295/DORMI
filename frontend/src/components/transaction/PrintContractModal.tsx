@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { createPortal } from 'react-dom';
-import { type LeaseContractResponse, roomsApi } from '../../services/api';
+import { type LeaseContractResponse, getLeaseDurationText, roomsApi } from '../../services/api';
 import { 
   Printer, 
   X, 
@@ -435,7 +435,7 @@ export default function PrintContractModal({ lease, onClose, initialLeaveBlank }
             <div>
               <p className="font-bold">ĐIỀU 2: THỜI HẠN THUÊ CĂN HỘ / PHÒNG TRỌ</p>
               <p className="mt-1">
-                Thời hạn thuê tính từ ngày <strong>{formatVnDate(lease.startDate)}</strong> đến hết ngày <strong>{formatVnDate(lease.endDate)}</strong>.
+                Thời hạn thuê là <strong>{lease.durationText || getLeaseDurationText(lease.startDate, lease.endDate)}</strong> (tính từ ngày <strong>{formatVnDate(lease.startDate)}</strong> đến hết ngày <strong>{formatVnDate(lease.endDate)}</strong>).
               </p>
             </div>
 

@@ -1111,18 +1111,18 @@ public static class DbSeeder
             LandlordId = ll2,
             TenantId = c1,
             RoomId = rooms[5].Id,
-            StartDate = now.AddMonths(-3),
-            EndDate = now.AddDays(-10),
+            StartDate = now.AddMonths(-15),
+            EndDate = now.AddMonths(-3),
             MonthlyRent = 3800000,
             Deposit = 3800000,
             Status = "Completed",
             LandlordSigned = true,
-            LandlordSignedAt = now.AddMonths(-3),
+            LandlordSignedAt = now.AddMonths(-15),
             TenantSigned = true,
-            TenantSignedAt = now.AddMonths(-3),
-            ActivatedAt = now.AddMonths(-3),
+            TenantSignedAt = now.AddMonths(-15),
+            ActivatedAt = now.AddMonths(-15),
             TenantSignatureData = "Nguyễn Văn An",
-            CreatedAt = now.AddMonths(-3)
+            CreatedAt = now.AddMonths(-15)
         };
 
         var lease3 = new LeaseContract
@@ -1132,7 +1132,7 @@ public static class DbSeeder
             TenantId = c5,
             RoomId = rooms[8].Id,
             StartDate = now.AddMonths(-1),
-            EndDate = now.AddMonths(5),
+            EndDate = now.AddMonths(11),
             MonthlyRent = 3200000,
             Deposit = 3200000,
             Status = "Active",
