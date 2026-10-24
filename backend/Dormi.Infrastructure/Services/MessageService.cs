@@ -1,3 +1,4 @@
+using System.Text.RegularExpressions;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -17,6 +18,9 @@ namespace Dormi.Infrastructure.Services;
 
 public class MessageService : IMessageService
 {
+    // ponytail: regex filter for vulgar/profane words
+    private static readonly Regex ProfanityRegex = new(@"\b(cc|cl|đm|dm|dcm|vcl|vlon|địt|dit|lồn|lon|buồi|buoi|cặc|cac)\b", RegexOptions.IgnoreCase | RegexOptions.Compiled);
+
     private readonly DormiDbContext _db;
     private readonly IHubContext<ChatHub> _hubContext;
     private readonly IDistributedCache? _cache;
@@ -75,7 +79,7 @@ public class MessageService : IMessageService
             Id = Guid.NewGuid(),
             SenderId = senderId,
             ReceiverId = dto.ReceiverId,
-            Content = dto.Content,
+            Content = ProfanityRegex.Replace(dto.Content.Trim(), "***"),
             IsRead = false,
             SentAt = DateTime.UtcNow
         };
