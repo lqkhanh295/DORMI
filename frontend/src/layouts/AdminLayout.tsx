@@ -8,6 +8,13 @@ import {
   Users, 
   AlertTriangle, 
   Receipt,
+  FileText,
+  FileCheck,
+  Calendar,
+  BarChart3,
+  Search,
+  Building2,
+  Compass,
   Menu,
   X
 } from 'lucide-react';
@@ -41,6 +48,16 @@ export default function AdminLayout() {
     { name: 'Báo cáo vi phạm', path: '/admin/reports', icon: AlertTriangle },
   ];
 
+  const fullPlatformItems = [
+    { name: 'Tất cả phòng trọ (Chủ trọ)', path: '/landlord/rooms', icon: Building2 },
+    { name: 'Quản lý hợp đồng thuê', path: '/landlord/leases', icon: FileCheck },
+    { name: 'Đơn đề nghị thuê phòng', path: '/landlord/applications', icon: FileText },
+    { name: 'Lịch hẹn xem phòng', path: '/landlord/viewings', icon: Calendar },
+    { name: 'Thống kê & Phễu khách', path: '/landlord/analytics', icon: BarChart3 },
+    { name: 'Bản đồ số tìm trọ (PostGIS)', path: '/search', icon: Search },
+    { name: 'Cộng đồng tìm bạn ở ghép', path: '/tenant/match', icon: Compass },
+  ];
+
   return (
     <div className="min-h-screen bg-[#F8FAFC] flex text-[#0F172A]">
       {/* Sidebar */}
@@ -64,6 +81,32 @@ export default function AdminLayout() {
               const isActive = item.path === '/admin' 
                 ? location.pathname === '/admin' 
                 : location.pathname.startsWith(item.path);
+              const Icon = item.icon;
+              return (
+                <Link 
+                  key={item.name}
+                  to={item.path} 
+                  className={`px-3 py-2 rounded-xl text-xs font-semibold transition-all duration-150 ease-out active:scale-[0.98] min-h-[38px] flex items-center gap-2.5 ${
+                    isActive 
+                      ? 'text-white bg-white/15 font-bold border border-white/20 shadow-xs' 
+                      : 'text-slate-300 hover:text-white hover:bg-white/10'
+                  }`}
+                >
+                  <Icon className={`w-4 h-4 shrink-0 ${isActive ? 'text-[#F2A900]' : 'text-slate-400'}`} />
+                  <span className="truncate">{item.name}</span>
+                </Link>
+              );
+            })}
+          </div>
+
+          {/* Full Platform Access Group */}
+          <div className="space-y-1 pt-3 border-t border-white/10">
+            <p className="px-3 text-[10px] font-bold uppercase tracking-wider text-amber-400/90 mb-1.5 flex items-center justify-between">
+              <span>Toàn bộ phân hệ</span>
+              <span className="text-[9px] bg-amber-500/20 text-amber-300 px-1.5 py-0.2 rounded font-mono">Full Access</span>
+            </p>
+            {fullPlatformItems.map(item => {
+              const isActive = location.pathname.startsWith(item.path);
               const Icon = item.icon;
               return (
                 <Link 
@@ -147,6 +190,33 @@ export default function AdminLayout() {
                     const isActive = item.path === '/admin' 
                       ? location.pathname === '/admin' 
                       : location.pathname.startsWith(item.path);
+                    const Icon = item.icon;
+                    return (
+                      <Link 
+                        key={item.name}
+                        to={item.path} 
+                        onClick={() => setMobileOpen(false)}
+                        className={`px-3 py-2 rounded-xl text-xs font-semibold flex items-center gap-2.5 ${
+                          isActive 
+                            ? 'text-white bg-white/15 font-bold border border-white/20 shadow-xs' 
+                            : 'text-slate-300 hover:text-white hover:bg-white/10'
+                        }`}
+                      >
+                        <Icon className={`w-4 h-4 shrink-0 ${isActive ? 'text-[#F2A900]' : 'text-slate-400'}`} />
+                        <span className="truncate">{item.name}</span>
+                      </Link>
+                    );
+                  })}
+                </div>
+
+                {/* Full Platform Access Group (Mobile) */}
+                <div className="space-y-1 pt-3 border-t border-white/10">
+                  <p className="px-3 text-[10px] font-bold uppercase tracking-wider text-amber-400/90 mb-1 flex items-center justify-between">
+                    <span>Toàn bộ phân hệ</span>
+                    <span className="text-[9px] bg-amber-500/20 text-amber-300 px-1 py-0.2 rounded font-mono">Full Access</span>
+                  </p>
+                  {fullPlatformItems.map(item => {
+                    const isActive = location.pathname.startsWith(item.path);
                     const Icon = item.icon;
                     return (
                       <Link 
