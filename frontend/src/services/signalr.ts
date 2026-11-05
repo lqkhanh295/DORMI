@@ -108,6 +108,17 @@ class SignalRService {
         window.dispatchEvent(new CustomEvent('appointment-created', { detail: payload }));
       });
 
+      // 8. Real-time Favorite toggled across multiple sessions / tabs / devices of user
+      this.connection.on('FavoriteToggled', (payload: any) => {
+        if (!payload) return;
+        window.dispatchEvent(new CustomEvent('favorite-toggled', { 
+          detail: { 
+            roomId: payload.roomId || payload.RoomId, 
+            isSaved: !!(payload.isSaved ?? payload.IsSaved) 
+          } 
+        }));
+      });
+
       await this.connection.start();
 
       if (userId) {

@@ -8,6 +8,8 @@ using Dormi.Application.Interfaces;
 using Dormi.Domain.Entities;
 using Dormi.Domain.Enums;
 using Dormi.Infrastructure.Data;
+using Dormi.Infrastructure.Hubs;
+using Microsoft.AspNetCore.SignalR;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Caching.Memory;
 
@@ -17,11 +19,13 @@ public class FavoriteService : IFavoriteService
 {
     private readonly DormiDbContext _db;
     private readonly IMemoryCache? _memCache;
+    private readonly IHubContext<ChatHub>? _hubContext;
 
-    public FavoriteService(DormiDbContext db, IMemoryCache? memCache = null)
+    public FavoriteService(DormiDbContext db, IMemoryCache? memCache = null, IHubContext<ChatHub>? hubContext = null)
     {
         _db = db;
         _memCache = memCache;
+        _hubContext = hubContext;
     }
 
     public async Task<ServiceResult<List<RoomResponseDto>>> GetFavoritesAsync(Guid userId)
@@ -93,6 +97,19 @@ public class FavoriteService : IFavoriteService
         await _db.SaveChangesAsync();
 
         _memCache?.Remove($"favorites:{userId}");
+
+        // Real-time synchronization via SignalR across all devices / tabs of the user
+        if (_hubContext != null)
+        {
+            var userGroup = userId.ToString().ToLower();
+            await _hubContext.Clients.Group(userGroup).SendAsync("FavoriteToggled", new
+            {
+                userId = userId,
+                roomId = roomId,
+                isSaved = true
+            });
+        }
+
         return ServiceResult<object>.Ok(new { message = "Đã thêm phòng trọ vào danh sách yêu thích." });
     }
 
@@ -105,6 +122,19 @@ public class FavoriteService : IFavoriteService
         await _db.SaveChangesAsync();
 
         _memCache?.Remove($"favorites:{userId}");
+
+        // Real-time synchronization via SignalR across all devices / tabs of the user
+        if (_hubContext != null)
+        {
+            var userGroup = userId.ToString().ToLower();
+            await _hubContext.Clients.Group(userGroup).SendAsync("FavoriteToggled", new
+            {
+                userId = userId,
+                roomId = roomId,
+                isSaved = false
+            });
+        }
+
         return ServiceResult<object>.Ok(new { message = "Đã bỏ lưu phòng trọ yêu thích." });
     }
 }
