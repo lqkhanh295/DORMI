@@ -109,6 +109,9 @@ export default function RoomDetail() {
       setIsPulsing(true);
       setTimeout(() => setIsPulsing(false), 240);
     }
+    window.dispatchEvent(new CustomEvent('favorite-toggled', {
+      detail: { roomId: id, isSaved: newState, room: roomData }
+    }));
     try {
       if (newState) {
         await favoritesApi.addFavorite(id);
@@ -119,6 +122,9 @@ export default function RoomDetail() {
       }
     } catch (err: any) {
       setIsSaved(!newState);
+      window.dispatchEvent(new CustomEvent('favorite-toggled', {
+        detail: { roomId: id, isSaved: !newState, room: roomData }
+      }));
       toast.error(err?.message || 'Không thể cập nhật danh sách yêu thích.');
     }
   };

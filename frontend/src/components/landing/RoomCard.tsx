@@ -52,6 +52,11 @@ export function RoomCard({
     }
     if (onToggleSaved) onToggleSaved(nextState);
 
+    // Dispatch global event for instant UI synchronization (e.g. Wishlist counter) without reloading page
+    window.dispatchEvent(new CustomEvent('favorite-toggled', {
+      detail: { roomId: room.id, isSaved: nextState, room }
+    }));
+
     try {
       if (nextState) {
         await favoritesApi.addFavorite(room.id);
@@ -63,6 +68,9 @@ export function RoomCard({
     } catch (err: any) {
       setIsSaved(!nextState);
       if (onToggleSaved) onToggleSaved(!nextState);
+      window.dispatchEvent(new CustomEvent('favorite-toggled', {
+        detail: { roomId: room.id, isSaved: !nextState, room }
+      }));
       toast.error(err?.message || 'Không thể cập nhật danh sách yêu thích.');
     }
   };

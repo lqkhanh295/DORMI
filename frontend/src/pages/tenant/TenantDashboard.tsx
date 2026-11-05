@@ -80,13 +80,31 @@ export default function TenantDashboard() {
       loadData();
     };
 
+    const handleFavoriteToggled = (e: any) => {
+      const { roomId, isSaved, room } = e.detail || {};
+      if (!roomId) return;
+
+      setFavorites(prev => {
+        if (isSaved) {
+          if (prev.some(f => f.id === roomId)) return prev;
+          const foundInListings = listings.find(r => r.id === roomId);
+          const newFav = foundInListings || room || { id: roomId };
+          return [newFav, ...prev];
+        } else {
+          return prev.filter(f => f.id !== roomId);
+        }
+      });
+    };
+
     window.addEventListener('appointment-status-updated', handleRealtimeAppointment);
     window.addEventListener('appointment-created', handleRealtimeAppointment);
+    window.addEventListener('favorite-toggled', handleFavoriteToggled);
     return () => {
       window.removeEventListener('appointment-status-updated', handleRealtimeAppointment);
       window.removeEventListener('appointment-created', handleRealtimeAppointment);
+      window.removeEventListener('favorite-toggled', handleFavoriteToggled);
     };
-  }, [fetchListings, listings.length]);
+  }, [fetchListings, listings]);
 
   const handleCancelAppointment = async (id: string) => {
     if (!window.confirm('Bạn có chắc chắn muốn hủy lịch hẹn xem phòng này?')) return;
@@ -467,6 +485,7 @@ export default function TenantDashboard() {
                   {(showAllRooms ? availableListings : availableListings.slice(0, 6)).map(room => (
                     <div key={room.id} className="cursor-pointer">
                       <RoomCard
+                        initialSaved={favorites.some(f => f.id === room.id)}
                         room={{
                           id: room.id,
                           title: room.title,
@@ -707,6 +726,7 @@ export default function TenantDashboard() {
                 {favorites.map(room => (
                   <div key={room.id} className="cursor-pointer">
                     <RoomCard
+                      initialSaved={true}
                       room={{
                         id: room.id,
                         title: room.title,
