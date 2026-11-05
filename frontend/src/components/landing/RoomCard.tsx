@@ -59,7 +59,7 @@ export function RoomCard({
     }));
 
     try {
-      await toggleFavoriteWithApi(room.id);
+      await toggleFavoriteWithApi(room.id, nextState);
       if (nextState) {
         toast.success('Đã lưu phòng vào danh sách yêu thích!');
       } else {

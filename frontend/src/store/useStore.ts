@@ -76,7 +76,7 @@ interface AppState {
   verifyMfaWithApi: (email: string, mfaSessionToken: string, otpCode: string) => Promise<any>;
   logout: () => void;
   fetchFavorites: () => Promise<void>;
-  toggleFavoriteWithApi: (roomId: string) => Promise<boolean>;
+  toggleFavoriteWithApi: (roomId: string, forceNextState?: boolean) => Promise<boolean>;
   fetchListings: (params?: Parameters<typeof roomsApi.getRooms>[0]) => Promise<void>;
   addListing: (listing: Omit<Listing, 'id' | 'landlordId'>) => void;
   createListingWithApi: (data: any) => Promise<{ success: boolean; message?: string }>;
@@ -113,6 +113,7 @@ export const useStore = create<AppState>()(
             token: token
           }
         });
+        get().fetchFavorites();
       },
 
       loginWithApi: async (email, password, captchaToken, captchaAnswer) => {
@@ -163,26 +164,28 @@ export const useStore = create<AppState>()(
         }
       },
 
-      toggleFavoriteWithApi: async (roomId: string) => {
+      toggleFavoriteWithApi: async (roomId: string, forceNextState?: boolean) => {
         const currentUser = get().currentUser;
         if (!currentUser) return false;
 
         const currentIds = get().favoriteRoomIds;
         const isCurrentlySaved = currentIds.includes(roomId);
-        const nextIds = isCurrentlySaved 
-          ? currentIds.filter(id => id !== roomId) 
-          : [...currentIds, roomId];
+        const shouldSave = forceNextState !== undefined ? forceNextState : !isCurrentlySaved;
+
+        const nextIds = shouldSave 
+          ? (currentIds.includes(roomId) ? currentIds : [...currentIds, roomId])
+          : currentIds.filter(id => id !== roomId);
 
         // Optimistic store update
         set({ favoriteRoomIds: nextIds });
 
         try {
-          if (!isCurrentlySaved) {
+          if (shouldSave) {
             await favoritesApi.addFavorite(roomId);
           } else {
             await favoritesApi.removeFavorite(roomId);
           }
-          return !isCurrentlySaved;
+          return shouldSave;
         } catch (err) {
           // Revert store state on failure
           set({ favoriteRoomIds: currentIds });
