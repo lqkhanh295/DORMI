@@ -117,11 +117,11 @@ export function RoomCard({
             isPulsing ? 'favorite-heart-pulse' : ''
           } ${
             isSaved 
-              ? 'bg-rose-50 text-rose-600 shadow-xs' 
+              ? 'bg-rose-50 text-rose-600 shadow-sm border border-rose-200' 
               : 'bg-white/90 text-slate-500 hover:text-rose-600 hover:bg-white shadow-xs'
           }`}
         >
-          <Heart className={`w-4 h-4 transition-colors duration-150 ${isSaved ? 'fill-current' : ''}`} />
+          <Heart className={`w-4 h-4 transition-colors duration-150 ${isSaved ? 'fill-rose-500 text-rose-500' : ''}`} />
         </button>
       </div>
 

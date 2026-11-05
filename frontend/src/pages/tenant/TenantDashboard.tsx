@@ -94,6 +94,16 @@ export default function TenantDashboard() {
           return prev.filter(f => f.id !== roomId);
         }
       });
+
+      // Synchronize Zustand persistent store favoriteRoomIds immediately
+      const storeFavs = useStore.getState().favoriteRoomIds;
+      if (isSaved) {
+        if (!storeFavs.includes(roomId)) {
+          useStore.setState({ favoriteRoomIds: [...storeFavs, roomId] });
+        }
+      } else {
+        useStore.setState({ favoriteRoomIds: storeFavs.filter(id => id !== roomId) });
+      }
     };
 
     window.addEventListener('appointment-status-updated', handleRealtimeAppointment);
