@@ -27,7 +27,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { RoomCard } from '../../components/landing/RoomCard';
 
 export default function TenantDashboard() {
-  const { listings, fetchListings, currentUser } = useStore();
+  const { listings, fetchListings, currentUser, favoriteRoomIds } = useStore();
   const navigate = useNavigate();
 
   // Tab control
@@ -485,7 +485,7 @@ export default function TenantDashboard() {
                   {(showAllRooms ? availableListings : availableListings.slice(0, 6)).map(room => (
                     <div key={room.id} className="cursor-pointer">
                       <RoomCard
-                        initialSaved={favorites.some(f => f.id === room.id)}
+                        initialSaved={favorites.some(f => f.id === room.id) || favoriteRoomIds.includes(room.id)}
                         room={{
                           id: room.id,
                           title: room.title,

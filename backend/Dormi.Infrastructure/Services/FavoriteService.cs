@@ -72,9 +72,9 @@ public class FavoriteService : IFavoriteService
     public async Task<ServiceResult<object>> AddFavoriteAsync(Guid userId, Guid roomId)
     {
         var user = await _db.Users.AsNoTracking().FirstOrDefaultAsync(u => u.Id == userId);
-        if (user == null || user.Role != UserRole.Customer)
+        if (user == null)
         {
-            return ServiceResult<object>.Fail("Chỉ tài khoản người thuê mới có thể lưu phòng yêu thích.", 400);
+            return ServiceResult<object>.Unauthorized("Vui lòng đăng nhập để lưu phòng yêu thích.");
         }
 
         var roomExists = await _db.Rooms.AnyAsync(r => r.Id == roomId);
