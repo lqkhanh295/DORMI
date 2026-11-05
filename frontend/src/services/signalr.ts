@@ -111,10 +111,19 @@ class SignalRService {
       // 8. Real-time Favorite toggled across multiple sessions / tabs / devices of user
       this.connection.on('FavoriteToggled', (payload: any) => {
         if (!payload) return;
+        const targetRoomId = (payload.roomId || payload.RoomId || '').toString();
+        const isSaved = !!(payload.isSaved ?? payload.IsSaved);
+        if (targetRoomId) {
+          const currentFavs = useStore.getState().favoriteRoomIds;
+          const nextFavs = isSaved 
+            ? (currentFavs.includes(targetRoomId) ? currentFavs : [...currentFavs, targetRoomId])
+            : currentFavs.filter(id => id !== targetRoomId);
+          useStore.setState({ favoriteRoomIds: nextFavs });
+        }
         window.dispatchEvent(new CustomEvent('favorite-toggled', { 
           detail: { 
-            roomId: payload.roomId || payload.RoomId, 
-            isSaved: !!(payload.isSaved ?? payload.IsSaved) 
+            roomId: targetRoomId, 
+            isSaved 
           } 
         }));
       });

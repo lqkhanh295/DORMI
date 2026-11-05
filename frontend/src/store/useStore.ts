@@ -1,6 +1,6 @@
 import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
-import { authApi, roomsApi, messagesApi, imagesApi } from '../services/api';
+import { authApi, roomsApi, messagesApi, imagesApi, favoritesApi } from '../services/api';
 
 export type Role = 'Guest' | 'Tenant' | 'Landlord' | 'Admin';
 
@@ -69,11 +69,14 @@ interface AppState {
   listings: Listing[];
   messages: Message[];
   likedRoommates: RoommateProfile[];
+  favoriteRoomIds: string[];
   isLoadingApi: boolean;
   setCurrentUserFromApi: (user: any, token: string) => void;
   loginWithApi: (email: string, pass: string, captchaToken?: string, captchaAnswer?: string) => Promise<any>;
   verifyMfaWithApi: (email: string, mfaSessionToken: string, otpCode: string) => Promise<any>;
   logout: () => void;
+  fetchFavorites: () => Promise<void>;
+  toggleFavoriteWithApi: (roomId: string) => Promise<boolean>;
   fetchListings: (params?: Parameters<typeof roomsApi.getRooms>[0]) => Promise<void>;
   addListing: (listing: Omit<Listing, 'id' | 'landlordId'>) => void;
   createListingWithApi: (data: any) => Promise<{ success: boolean; message?: string }>;
@@ -95,6 +98,7 @@ export const useStore = create<AppState>()(
       listings: [],
       messages: [],
       likedRoommates: [],
+      favoriteRoomIds: [],
       isLoadingApi: false,
 
       setCurrentUserFromApi: (user: any, token: string) => {
@@ -143,7 +147,47 @@ export const useStore = create<AppState>()(
 
       logout: () => {
         authApi.logout();
-        set({ currentUser: null, likedRoommates: [] });
+        set({ currentUser: null, likedRoommates: [], favoriteRoomIds: [] });
+      },
+
+      fetchFavorites: async () => {
+        if (!get().currentUser) return;
+        try {
+          const favs = await favoritesApi.getFavorites();
+          if (Array.isArray(favs)) {
+            const ids = favs.map((f: any) => (f.id || f.roomId || f.Id || '').toString()).filter(Boolean);
+            set({ favoriteRoomIds: ids });
+          }
+        } catch (err) {
+          console.warn('Failed to fetch user favorites:', err);
+        }
+      },
+
+      toggleFavoriteWithApi: async (roomId: string) => {
+        const currentUser = get().currentUser;
+        if (!currentUser) return false;
+
+        const currentIds = get().favoriteRoomIds;
+        const isCurrentlySaved = currentIds.includes(roomId);
+        const nextIds = isCurrentlySaved 
+          ? currentIds.filter(id => id !== roomId) 
+          : [...currentIds, roomId];
+
+        // Optimistic store update
+        set({ favoriteRoomIds: nextIds });
+
+        try {
+          if (!isCurrentlySaved) {
+            await favoritesApi.addFavorite(roomId);
+          } else {
+            await favoritesApi.removeFavorite(roomId);
+          }
+          return !isCurrentlySaved;
+        } catch (err) {
+          // Revert store state on failure
+          set({ favoriteRoomIds: currentIds });
+          throw err;
+        }
       },
 
       fetchListings: async (params) => {
@@ -301,6 +345,7 @@ export const useStore = create<AppState>()(
       name: 'dormi-storage-v5',
       partialize: (state) => ({
         currentUser: state.currentUser,
+        favoriteRoomIds: state.favoriteRoomIds,
         likedRoommates: (state.likedRoommates || []).filter(
           r => r && r.customerId && !['Alex', 'Sarah', 'Minh'].includes(r.name)
         )

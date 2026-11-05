@@ -19,14 +19,16 @@ function ScrollToTop() {
 
 function App() {
   const currentUser = useStore(state => state.currentUser);
+  const fetchFavorites = useStore(state => state.fetchFavorites);
 
   useEffect(() => {
     if (currentUser?.id) {
       signalRService.startConnection(currentUser.id, currentUser.token, currentUser.role);
+      fetchFavorites();
     } else {
       signalRService.stopConnection();
     }
-  }, [currentUser?.id, currentUser?.token, currentUser?.role]);
+  }, [currentUser?.id, currentUser?.token, currentUser?.role, fetchFavorites]);
 
   return (
     <BrowserRouter>

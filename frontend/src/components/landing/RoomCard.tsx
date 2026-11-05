@@ -2,7 +2,6 @@ import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { CheckCircle, Heart } from 'lucide-react';
 import { toast } from 'sonner';
-import { favoritesApi } from '../../services/api';
 import { useStore } from '../../store/useStore';
 import { getOptimizedImageUrl } from '../../utils/imageUtils';
 
@@ -20,20 +19,22 @@ export interface RoomItem {
 
 export function RoomCard({ 
   room, 
-  initialSaved = false, 
+  initialSaved, 
   onToggleSaved 
 }: { 
   room: RoomItem; 
   initialSaved?: boolean; 
   onToggleSaved?: (isSaved: boolean) => void;
 }) {
-  const [isSaved, setIsSaved] = useState(initialSaved);
+  const { currentUser, favoriteRoomIds, toggleFavoriteWithApi } = useStore();
+  const isRoomSavedInStore = favoriteRoomIds.includes(room.id);
+  const effectiveSaved = initialSaved !== undefined ? initialSaved : isRoomSavedInStore;
+  const [isSaved, setIsSaved] = useState(effectiveSaved);
   const [isPulsing, setIsPulsing] = useState(false);
-  const { currentUser } = useStore();
 
   useEffect(() => {
-    setIsSaved(initialSaved);
-  }, [initialSaved]);
+    setIsSaved(effectiveSaved);
+  }, [effectiveSaved]);
 
   const toggleFavorite = async (e: React.MouseEvent) => {
     e.preventDefault();
@@ -58,11 +59,10 @@ export function RoomCard({
     }));
 
     try {
+      await toggleFavoriteWithApi(room.id);
       if (nextState) {
-        await favoritesApi.addFavorite(room.id);
         toast.success('Đã lưu phòng vào danh sách yêu thích!');
       } else {
-        await favoritesApi.removeFavorite(room.id);
         toast('Đã bỏ lưu phòng.');
       }
     } catch (err: any) {
