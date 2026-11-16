@@ -236,7 +236,7 @@ export default function PricingCheckout() {
       {/* Tab 1: Subscription Plans */}
       {activeTab === 'plans' && (
         <div className="space-y-6">
-          {/* Banner Gói Trải Nghiệm 2.000đ */}
+          {/* Banner Gói Trải Nghiệm Khởi Động 29.000đ */}
           <div className="p-4 bg-gradient-to-r from-blue-50 to-indigo-50 border border-blue-200 rounded-2xl flex flex-col sm:flex-row items-center justify-between gap-4">
             <div className="flex items-center gap-3">
               <div className="p-2.5 bg-blue-600 text-white rounded-xl shadow-xs">
@@ -244,11 +244,11 @@ export default function PricingCheckout() {
               </div>
               <div>
                 <h4 className="text-sm font-bold text-[#00153D] flex items-center gap-2">
-                  Gói Trải Nghiệm Khởi Động (Trial Pro)
-                  <span className="bg-emerald-600 text-white text-[10px] px-2 py-0.5 rounded-full font-bold">2.000₫ / 7 ngày</span>
+                  Gói Trải Nghiệm Khởi Động (Trial Starter)
+                  <span className="bg-emerald-600 text-white text-[10px] px-2 py-0.5 rounded-full font-bold">29.000₫ / 7 ngày</span>
                 </h4>
                 <p className="text-xs text-[#64748B] mt-0.5">
-                  Dành cho chủ trọ mới và sinh viên: Trải nghiệm toàn bộ tính năng Pro với mức phí chuyển khoản chỉ 2.000 VNĐ.
+                  Dành cho chủ trọ mới: Trải nghiệm đăng tối đa 3 tin phòng và toàn bộ tính năng Pro trong 7 ngày.
                 </p>
               </div>
             </div>
@@ -257,7 +257,7 @@ export default function PricingCheckout() {
               disabled={initiating}
               className="shrink-0 text-xs font-bold bg-[#00153D] hover:bg-blue-900 text-white px-5 py-2.5 rounded-xl shadow-xs cursor-pointer"
             >
-              {initiating ? <Loader2 className="w-4 h-4 animate-spin" /> : 'Kích hoạt chỉ 2.000₫'}
+              {initiating ? <Loader2 className="w-4 h-4 animate-spin" /> : 'Kích hoạt chỉ 29.000₫'}
             </Button>
           </div>
 
@@ -442,11 +442,11 @@ export default function PricingCheckout() {
                     <div className="flex justify-between items-center">
                       <span className="font-bold text-xs text-[#0F172A] flex items-center gap-1.5">
                         Gói Trải Nghiệm Sinh Viên (Trial)
-                        <span className="bg-emerald-600 text-white text-[10px] px-1.5 py-0.5 rounded font-bold">Siêu Tiết Kiệm</span>
+                        <span className="bg-emerald-600 text-white text-[10px] px-1.5 py-0.5 rounded font-bold">Ưu Đãi Sinh Viên</span>
                       </span>
-                      <span className="font-black text-sm text-emerald-700">2.000₫</span>
+                      <span className="font-black text-sm text-emerald-700">10.000₫</span>
                     </div>
-                    <p className="text-[11px] text-[#64748B] mt-0.5">Trải nghiệm tính năng đẩy tin trong 24 giờ với chi phí tượng trưng chỉ 2.000 VNĐ.</p>
+                    <p className="text-[11px] text-[#64748B] mt-0.5">Trải nghiệm tính năng đẩy tin trong 24 giờ với chi phí ưu đãi chỉ 10.000 VNĐ.</p>
                   </div>
                 </label>
 

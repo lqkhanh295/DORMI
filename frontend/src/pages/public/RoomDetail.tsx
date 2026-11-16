@@ -570,7 +570,7 @@ export default function RoomDetail() {
                         Giữ Chỗ Ưu Tiên 24h
                       </span>
                       <span className="px-2 py-0.5 bg-amber-600 text-white font-black text-[11px] rounded-full shadow-xs">
-                        2.000đ
+                        20.000đ
                       </span>
                     </div>
                     <p className="text-[11px] text-amber-800 leading-snug">
@@ -585,7 +585,7 @@ export default function RoomDetail() {
                       className="bg-amber-600 hover:bg-amber-700 text-white font-bold text-xs flex items-center justify-center gap-1.5 shadow-xs transition-colors"
                     >
                       <ShieldCheck className="w-4 h-4 text-white" />
-                      {isCreatingHoldingCheckout ? 'Đang tạo VietQR...' : 'Đặt Giữ Chỗ Ngay (2.000đ)'}
+                      {isCreatingHoldingCheckout ? 'Đang tạo VietQR...' : 'Đặt Giữ Chỗ Ngay (20.000đ)'}
                     </Button>
                   </div>
 
@@ -1121,7 +1121,7 @@ export default function RoomDetail() {
                   <div className="text-center">
                     <p className="text-xs text-slate-500">Số tiền thanh toán</p>
                     <p className="text-xl font-black text-[#00153D]">
-                      {Number(holdingCheckout.amount || 2000).toLocaleString('vi-VN')} đ
+                      {Number(holdingCheckout.amount || 20000).toLocaleString('vi-VN')} đ
                     </p>
                   </div>
                 </div>

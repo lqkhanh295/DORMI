@@ -357,8 +357,8 @@ public class PostRentalService : IPostRentalService
             return ServiceResult<DepositCheckoutResponseDto>.NotFound("Không tìm thấy thông tin phòng trọ.");
         }
 
-        // Fixed holding deposit fee: 2,000 VND (Micro-pricing for capstone proof of paying customers)
-        decimal amount = 2000m;
+        // Fixed holding deposit fee: 20,000 VND (Priority 24h reservation commitment fee)
+        decimal amount = 20000m;
         long orderCode = long.Parse(DateTime.UtcNow.ToString("yyMMddHHmmss") + Random.Shared.Next(10, 99));
 
         var transaction = new PaymentTransaction
@@ -385,7 +385,7 @@ public class PostRentalService : IPostRentalService
         string? bin = null;
 
         var frontendUrl = _configuration?["App:FrontendUrl"] ?? "https://www.dormi.space";
-        var returnUrl = $"{frontendUrl}/payment/return?type=deposit&orderCode={orderCode}&roomId={roomId}&amount=2000";
+        var returnUrl = $"{frontendUrl}/payment/return?type=deposit&orderCode={orderCode}&roomId={roomId}&amount=20000";
         var cancelUrl = $"{frontendUrl}/payment/return?type=deposit&orderCode={orderCode}&roomId={roomId}&cancel=true";
 
         if (_payOS != null)

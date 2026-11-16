@@ -451,7 +451,7 @@ public class LandlordDashboardService : ILandlordDashboardService
         }
 
         decimal price = dto.PlanName.Equals("Trial", StringComparison.OrdinalIgnoreCase) || dto.PlanName.Equals("Test", StringComparison.OrdinalIgnoreCase)
-            ? 2000m
+            ? 29000m
             : (dto.PlanName.Equals("Enterprise", StringComparison.OrdinalIgnoreCase) || dto.PlanName.Equals("Business", StringComparison.OrdinalIgnoreCase)
                 ? 799000m 
                 : 299000m);
@@ -1102,8 +1102,8 @@ public class LandlordDashboardService : ILandlordDashboardService
 
         decimal price = dto.BoostType switch
         {
-            "trial" => 2000m,
-            "student" => 2000m,
+            "trial" => 10000m,
+            "student" => 10000m,
             "24h" => 50000m,
             "3days" => 120000m,
             "7days" => 250000m,
