@@ -33,7 +33,7 @@ export default function PricingCheckout() {
   // Boost tab state
   const [rooms, setRooms] = useState<any[]>([]);
   const [selectedRoomId, setSelectedRoomId] = useState<string>('');
-  const [selectedBoostType, setSelectedBoostType] = useState<'24h' | '3days' | '7days'>('3days');
+  const [selectedBoostType, setSelectedBoostType] = useState<'trial' | '24h' | '3days' | '7days'>('trial');
   const [loadingRooms, setLoadingRooms] = useState(false);
 
   const fetchPlanAnalytics = async () => {
@@ -235,7 +235,33 @@ export default function PricingCheckout() {
 
       {/* Tab 1: Subscription Plans */}
       {activeTab === 'plans' && (
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 items-stretch">
+        <div className="space-y-6">
+          {/* Banner Gói Trải Nghiệm 2.000đ */}
+          <div className="p-4 bg-gradient-to-r from-blue-50 to-indigo-50 border border-blue-200 rounded-2xl flex flex-col sm:flex-row items-center justify-between gap-4">
+            <div className="flex items-center gap-3">
+              <div className="p-2.5 bg-blue-600 text-white rounded-xl shadow-xs">
+                <Zap className="w-5 h-5" />
+              </div>
+              <div>
+                <h4 className="text-sm font-bold text-[#00153D] flex items-center gap-2">
+                  Gói Trải Nghiệm Khởi Động (Trial Pro)
+                  <span className="bg-emerald-600 text-white text-[10px] px-2 py-0.5 rounded-full font-bold">2.000₫ / 7 ngày</span>
+                </h4>
+                <p className="text-xs text-[#64748B] mt-0.5">
+                  Dành cho chủ trọ mới và sinh viên: Trải nghiệm toàn bộ tính năng Pro với mức phí chuyển khoản chỉ 2.000 VNĐ.
+                </p>
+              </div>
+            </div>
+            <Button 
+              onClick={() => handleUpgrade('Trial')}
+              disabled={initiating}
+              className="shrink-0 text-xs font-bold bg-[#00153D] hover:bg-blue-900 text-white px-5 py-2.5 rounded-xl shadow-xs cursor-pointer"
+            >
+              {initiating ? <Loader2 className="w-4 h-4 animate-spin" /> : 'Kích hoạt chỉ 2.000₫'}
+            </Button>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6 items-stretch">
           {/* Free Tier */}
           <Card className={`bg-white rounded-2xl shadow-xs p-7 flex flex-col justify-between space-y-6 border ${
             currentPlan === 'Free' ? 'border-2 border-emerald-600 relative' : 'border-slate-200'
@@ -333,6 +359,7 @@ export default function PricingCheckout() {
             </Button>
           </Card>
         </div>
+        </div>
       )}
 
       {/* Tab 2: Listing Boosts */}
@@ -400,6 +427,29 @@ export default function PricingCheckout() {
               </label>
 
               <div className="space-y-2.5">
+                <label className={`flex items-start gap-3 p-3.5 rounded-xl border cursor-pointer transition-[border-color,background-color,box-shadow,transform] duration-150 ease-out active:scale-[0.99] ${
+                  selectedBoostType === 'trial' ? 'border-emerald-500 bg-emerald-50/50 shadow-sm ring-1 ring-emerald-500' : 'border-[#E2E8F0] hover:bg-[#F8FAFC]'
+                }`}>
+                  <input 
+                    type="radio" 
+                    name="boostPlan" 
+                    value="trial" 
+                    checked={selectedBoostType === 'trial'}
+                    onChange={() => setSelectedBoostType('trial')}
+                    className="mt-1 text-emerald-600"
+                  />
+                  <div className="flex-1">
+                    <div className="flex justify-between items-center">
+                      <span className="font-bold text-xs text-[#0F172A] flex items-center gap-1.5">
+                        Gói Trải Nghiệm Sinh Viên (Trial)
+                        <span className="bg-emerald-600 text-white text-[10px] px-1.5 py-0.5 rounded font-bold">Siêu Tiết Kiệm</span>
+                      </span>
+                      <span className="font-black text-sm text-emerald-700">2.000₫</span>
+                    </div>
+                    <p className="text-[11px] text-[#64748B] mt-0.5">Trải nghiệm tính năng đẩy tin trong 24 giờ với chi phí tượng trưng chỉ 2.000 VNĐ.</p>
+                  </div>
+                </label>
+
                 <label className={`flex items-start gap-3 p-3.5 rounded-xl border cursor-pointer transition-[border-color,background-color,box-shadow,transform] duration-150 ease-out active:scale-[0.99] ${
                   selectedBoostType === '24h' ? 'border-amber-500 bg-amber-50/50 shadow-sm' : 'border-[#E2E8F0] hover:bg-[#F8FAFC]'
                 }`}>

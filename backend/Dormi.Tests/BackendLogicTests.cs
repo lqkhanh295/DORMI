@@ -394,6 +394,17 @@ public class BackendLogicTests
         Assert.Equal("Pro", doc.RootElement.GetProperty("planName").GetString());
         Assert.Equal("PayOS", doc.RootElement.GetProperty("paymentMethod").GetString());
         Assert.Equal(299000m, doc.RootElement.GetProperty("amount").GetDecimal());
+
+        // ponytail: test micro-pricing trial package (2.000đ)
+        var trialRes = await service.CheckoutSubscriptionAsync(landlordId, new CheckoutDto
+        {
+            PlanName = "Trial",
+            PaymentMethod = "PayOS"
+        }, "127.0.0.1");
+        Assert.True(trialRes.Success);
+        var trialJson = System.Text.Json.JsonSerializer.Serialize(trialRes.Data);
+        using var trialDoc = System.Text.Json.JsonDocument.Parse(trialJson);
+        Assert.Equal(2000m, trialDoc.RootElement.GetProperty("amount").GetDecimal());
     }
 
     [Fact]
@@ -1700,6 +1711,13 @@ public class BackendLogicTests
         Assert.NotNull(txn);
         Assert.Equal(120000m, txn.Amount);
         Assert.Equal("Pending", txn.Status);
+
+        // ponytail: test micro-pricing trial room boost (2.000đ)
+        var trialBoostRes = await service.BoostRoomAsync(landlordId, room.Id, new BoostRoomDto { BoostType = "trial", PaymentMethod = "PayOS" }, "127.0.0.1");
+        Assert.True(trialBoostRes.Success);
+        var trialTxn = await db.PaymentTransactions.OrderByDescending(t => t.CreatedAt).FirstOrDefaultAsync(t => t.RoomId == room.Id && t.Description.Contains("trial"));
+        Assert.NotNull(trialTxn);
+        Assert.Equal(2000m, trialTxn.Amount);
 
         // Simulate payment completion
         var simRes = await service.SimulateGatewayPaymentAsync(landlordId, new PaymentVerifyDto { TransactionRef = txn.TransactionRef });

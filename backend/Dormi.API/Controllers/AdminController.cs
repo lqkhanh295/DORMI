@@ -97,4 +97,56 @@ public class AdminController : BaseApiController
         var result = await _adminService.GetTransactionsAsync();
         return HandleResult(result);
     }
+
+    [HttpGet("transactions/export")]
+    public async Task<IActionResult> ExportTransactionsCsv()
+    {
+        var result = await _adminService.GetTransactionsAsync();
+        if (!result.Success || result.Data == null) return BadRequest("Không thể lấy dữ liệu giao dịch.");
+
+        var sb = new System.Text.StringBuilder();
+        sb.AppendLine("STT,MaGiaoDich,HoTen,Email,SoTien,PhuongThuc,TrangThai,MoTa,NgayTao,NgayHoanTat");
+        int index = 1;
+        foreach (var t in result.Data)
+        {
+            var fullName = (t.UserFullName ?? "").Replace(",", " ");
+            var desc = (t.Description ?? "").Replace(",", " ");
+            var created = t.CreatedAt.ToString("yyyy-MM-dd HH:mm:ss");
+            var completed = t.CompletedAt?.ToString("yyyy-MM-dd HH:mm:ss") ?? "";
+            sb.AppendLine($"{index++},{t.TransactionRef},{fullName},{t.UserEmail},{t.Amount},{t.PaymentMethod},{t.Status},{desc},{created},{completed}");
+        }
+
+        var preamble = System.Text.Encoding.UTF8.GetPreamble();
+        var bytes = System.Text.Encoding.UTF8.GetBytes(sb.ToString());
+        var fileBytes = new byte[preamble.Length + bytes.Length];
+        Buffer.BlockCopy(preamble, 0, fileBytes, 0, preamble.Length);
+        Buffer.BlockCopy(bytes, 0, fileBytes, preamble.Length, bytes.Length);
+
+        return File(fileBytes, "text/csv; charset=utf-8", $"dormi_transactions_{DateTime.UtcNow:yyyyMMddHHmmss}.csv");
+    }
+
+    [HttpGet("users/export")]
+    public async Task<IActionResult> ExportUsersCsv()
+    {
+        var result = await _adminService.GetUsersAsync(null);
+        if (!result.Success || result.Data == null) return BadRequest("Không thể lấy dữ liệu người dùng.");
+
+        var sb = new System.Text.StringBuilder();
+        sb.AppendLine("STT,UserId,HoTen,Email,VaiTro,XacMinh,NgayDangKy");
+        int index = 1;
+        foreach (var u in result.Data)
+        {
+            var fullName = (u.FullName ?? "").Replace(",", " ");
+            var created = u.CreatedAt.ToString("yyyy-MM-dd HH:mm:ss");
+            sb.AppendLine($"{index++},{u.Id},{fullName},{u.Email},{u.Role},{u.IsVerifiedLandlord},{created}");
+        }
+
+        var preamble = System.Text.Encoding.UTF8.GetPreamble();
+        var bytes = System.Text.Encoding.UTF8.GetBytes(sb.ToString());
+        var fileBytes = new byte[preamble.Length + bytes.Length];
+        Buffer.BlockCopy(preamble, 0, fileBytes, 0, preamble.Length);
+        Buffer.BlockCopy(bytes, 0, fileBytes, preamble.Length, bytes.Length);
+
+        return File(fileBytes, "text/csv; charset=utf-8", $"dormi_users_{DateTime.UtcNow:yyyyMMddHHmmss}.csv");
+    }
 }

@@ -15,7 +15,10 @@ import {
   Wallet,
   Zap,
   Flame,
-  User
+  User,
+  Download,
+  FileSpreadsheet,
+  CheckCheck
 } from 'lucide-react';
 import { PageMotion } from '../../components/common/Motion';
 import { toast } from 'sonner';
@@ -64,12 +67,14 @@ export default function AdminTransactions() {
     const pending = transactions.filter(t => t.status === 'Pending');
     const totalRev = completed.reduce((sum, t) => sum + Number(t.amount || 0), 0);
     const avgAmount = completed.length > 0 ? Math.round(totalRev / completed.length) : 0;
+    const uniquePayingUsers = new Set(completed.map(t => t.userEmail || t.userId).filter(Boolean)).size;
 
     return {
       totalRevenue: totalRev,
       completedCount: completed.length,
       pendingCount: pending.length,
-      avgAmount
+      avgAmount,
+      uniquePayingUsers
     };
   }, [transactions]);
 
@@ -177,15 +182,82 @@ export default function AdminTransactions() {
           </p>
         </div>
         
-        <Button 
-          variant="secondary" 
-          onClick={fetchTransactions} 
-          disabled={loading}
-          className="flex items-center gap-2"
-        >
-          <RefreshCw className={`w-4 h-4 ${loading ? 'animate-spin' : ''}`} />
-          <span>Làm mới</span>
-        </Button>
+        <div className="flex flex-wrap items-center gap-2.5">
+          <Button 
+            variant="secondary" 
+            onClick={fetchTransactions} 
+            disabled={loading}
+            className="flex items-center gap-2 text-xs font-bold cursor-pointer"
+          >
+            <RefreshCw className={`w-3.5 h-3.5 ${loading ? 'animate-spin' : ''}`} />
+            <span>Làm mới</span>
+          </Button>
+
+          <Button 
+            variant="secondary"
+            onClick={async () => {
+              try {
+                toast.info('Đang chuẩn bị file CSV người dùng...');
+                await adminApi.downloadUsersCsv();
+                toast.success('Đã tải xuống file CSV người dùng!');
+              } catch {
+                toast.error('Không thể xuất file người dùng.');
+              }
+            }}
+            className="flex items-center gap-2 text-xs font-bold cursor-pointer"
+          >
+            <Download className="w-3.5 h-3.5 text-blue-600" />
+            <span>Xuất 100+ Users (CSV)</span>
+          </Button>
+
+          <Button 
+            onClick={async () => {
+              try {
+                toast.info('Đang chuẩn bị file CSV giao dịch...');
+                await adminApi.downloadTransactionsCsv();
+                toast.success('Đã tải xuống file CSV 100 giao dịch!');
+              } catch {
+                toast.error('Không thể xuất file giao dịch.');
+              }
+            }}
+            className="flex items-center gap-2 text-xs font-bold bg-[#00153D] hover:bg-blue-900 text-white cursor-pointer"
+          >
+            <FileSpreadsheet className="w-3.5 h-3.5 text-emerald-400" />
+            <span>Xuất 100 Giao Dịch (CSV)</span>
+          </Button>
+        </div>
+      </div>
+
+      {/* Capstone Target Banner */}
+      <div className="p-4 bg-gradient-to-r from-emerald-50 via-teal-50 to-blue-50 border border-emerald-200 rounded-2xl flex flex-col md:flex-row items-center justify-between gap-4">
+        <div className="flex items-center gap-3">
+          <div className="p-2.5 bg-emerald-600 text-white rounded-xl shadow-xs">
+            <CheckCheck className="w-5 h-5" />
+          </div>
+          <div>
+            <h4 className="text-sm font-bold text-slate-900 flex items-center gap-2">
+              Tiến Độ Chỉ Tiêu Báo Cáo (Two-Sided Platform)
+              <span className="bg-emerald-600 text-white text-[10px] px-2 py-0.5 rounded-full font-bold">EXE Capstone Target</span>
+            </h4>
+            <p className="text-xs text-slate-600 mt-0.5">
+              Yêu cầu đồ án: Tối thiểu 20 khách hàng trả tiền và 100 giao dịch hoàn tất.
+            </p>
+          </div>
+        </div>
+        <div className="flex items-center gap-3">
+          <div className="px-3.5 py-1.5 bg-white border border-emerald-200 rounded-xl text-center shadow-xs">
+            <span className="text-[10px] font-bold text-slate-400 block uppercase">Paying Customers</span>
+            <span className={`text-base font-black ${metrics.uniquePayingUsers >= 20 ? 'text-emerald-600' : 'text-blue-600'}`}>
+              {metrics.uniquePayingUsers} / 20
+            </span>
+          </div>
+          <div className="px-3.5 py-1.5 bg-white border border-emerald-200 rounded-xl text-center shadow-xs">
+            <span className="text-[10px] font-bold text-slate-400 block uppercase">Paid Transactions</span>
+            <span className={`text-base font-black ${metrics.completedCount >= 100 ? 'text-emerald-600' : 'text-blue-600'}`}>
+              {metrics.completedCount} / 100
+            </span>
+          </div>
+        </div>
       </div>
 
       {/* Metrics Row */}

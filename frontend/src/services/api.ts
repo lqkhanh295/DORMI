@@ -692,6 +692,36 @@ export const adminApi = {
 
   getTransactions: async () => {
     return request<PaymentTransactionResponse[]>('/admin/transactions');
+  },
+
+  downloadTransactionsCsv: async () => {
+    const token = getAuthToken();
+    const res = await fetch(`${API_BASE_URL}/admin/transactions/export`, {
+      headers: token ? { Authorization: `Bearer ${token}` } : {}
+    });
+    if (!res.ok) throw new Error('Không thể tải file CSV giao dịch');
+    const blob = await res.blob();
+    const url = window.URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `dormi_transactions_${Date.now()}.csv`;
+    a.click();
+    window.URL.revokeObjectURL(url);
+  },
+
+  downloadUsersCsv: async () => {
+    const token = getAuthToken();
+    const res = await fetch(`${API_BASE_URL}/admin/users/export`, {
+      headers: token ? { Authorization: `Bearer ${token}` } : {}
+    });
+    if (!res.ok) throw new Error('Không thể tải file CSV người dùng');
+    const blob = await res.blob();
+    const url = window.URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `dormi_users_${Date.now()}.csv`;
+    a.click();
+    window.URL.revokeObjectURL(url);
   }
 };
 

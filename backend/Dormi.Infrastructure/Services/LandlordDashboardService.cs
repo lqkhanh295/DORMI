@@ -450,9 +450,11 @@ public class LandlordDashboardService : ILandlordDashboardService
             return ServiceResult<object>.Fail("Bạn cần là Chủ trọ để đăng ký gói dịch vụ.", 400);
         }
 
-        decimal price = dto.PlanName.Equals("Enterprise", StringComparison.OrdinalIgnoreCase) || dto.PlanName.Equals("Business", StringComparison.OrdinalIgnoreCase)
-            ? 799000m 
-            : 299000m;
+        decimal price = dto.PlanName.Equals("Trial", StringComparison.OrdinalIgnoreCase) || dto.PlanName.Equals("Test", StringComparison.OrdinalIgnoreCase)
+            ? 2000m
+            : (dto.PlanName.Equals("Enterprise", StringComparison.OrdinalIgnoreCase) || dto.PlanName.Equals("Business", StringComparison.OrdinalIgnoreCase)
+                ? 799000m 
+                : 299000m);
 
         var newSubscription = new LandlordSubscription
         {
@@ -847,7 +849,11 @@ public class LandlordDashboardService : ILandlordDashboardService
             if (room != null)
             {
                 var durationDays = transaction.Description.Contains("7days") ? 7 : (transaction.Description.Contains("3days") ? 3 : 1);
-                var boostType = transaction.Description.Contains("7days") ? "7days" : (transaction.Description.Contains("3days") ? "3days" : "24h");
+                var boostType = transaction.Description.Contains("7days") 
+                    ? "7days" 
+                    : (transaction.Description.Contains("3days") 
+                        ? "3days" 
+                        : (transaction.Description.Contains("trial") || transaction.Description.Contains("student") ? "trial" : "24h"));
                 room.IsBoosted = true;
                 room.BoostType = boostType;
                 room.BoostExpiresAt = DateTime.UtcNow.AddDays(durationDays);
@@ -1064,6 +1070,8 @@ public class LandlordDashboardService : ILandlordDashboardService
 
         decimal price = dto.BoostType switch
         {
+            "trial" => 2000m,
+            "student" => 2000m,
             "24h" => 50000m,
             "3days" => 120000m,
             "7days" => 250000m,
