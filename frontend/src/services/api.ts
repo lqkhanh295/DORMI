@@ -167,6 +167,21 @@ export const authApi = {
     return res;
   },
 
+  loginWithGoogle: async (idToken: string, role?: number) => {
+    const res = await request<{
+      token?: string;
+      user?: any;
+      message?: string;
+    }>('/auth/google', {
+      method: 'POST',
+      body: JSON.stringify({ idToken, role })
+    });
+    if (res.token) {
+      setAuthToken(res.token);
+    }
+    return res;
+  },
+
   verifyMfa: async (data: { email: string; mfaSessionToken: string; otpCode: string }) => {
     const res = await request<{ token: string; user: any }>('/auth/verify-mfa', {
       method: 'POST',

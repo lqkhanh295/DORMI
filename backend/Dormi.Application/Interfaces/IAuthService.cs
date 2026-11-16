@@ -9,6 +9,7 @@ public interface IAuthService
 {
     Task<ServiceResult<AuthResponseDto>> RegisterAsync(RegisterDto dto);
     Task<ServiceResult<AuthResponseDto>> LoginAsync(LoginDto dto, string clientIp = "127.0.0.1");
+    Task<ServiceResult<AuthResponseDto>> LoginWithGoogleAsync(GoogleLoginDto dto, string clientIp = "127.0.0.1");
     Task<ServiceResult<AuthResponseDto>> VerifyMfaAsync(VerifyMfaDto dto, string clientIp = "127.0.0.1");
     Task<ServiceResult<CaptchaChallengeDto>> GenerateCaptchaChallengeAsync();
     Task<ServiceResult<UserDto>> GetMeAsync(Guid userId);

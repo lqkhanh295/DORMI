@@ -66,6 +66,7 @@ export default function AuthPage() {
   const currentUser = useStore(state => state.currentUser);
   const logout = useStore(state => state.logout);
   const loginWithApi = useStore(state => state.loginWithApi);
+  const loginWithGoogleApi = useStore(state => state.loginWithGoogleApi);
   const verifyMfaWithApi = useStore(state => state.verifyMfaWithApi);
 
   // Sync tab with URL search parameter
@@ -137,6 +138,69 @@ export default function AuthPage() {
     else if (resolvedRole === 'Admin') navigate('/admin', { replace: true });
     else navigate('/tenant', { replace: true });
   };
+
+  const handleGoogleCredentialResponse = async (response: { credential?: string }) => {
+    if (!response?.credential) return;
+    try {
+      setLoading(true);
+      setErrorMsg('');
+      const roleNum = intention === 'Landlord' ? 1 : 0;
+      const res = await loginWithGoogleApi(response.credential, roleNum);
+      if (res?.user) {
+        routeAfterAuth(res.user.role);
+      }
+    } catch (err: any) {
+      setErrorMsg(err.message || 'Đăng nhập bằng tài khoản Google thất bại.');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    const googleClientId = import.meta.env.VITE_GOOGLE_CLIENT_ID;
+    const scriptId = 'google-gsi-client';
+
+    const initGsi = () => {
+      const g = (window as any).google;
+      if (!g?.accounts?.id || !googleClientId) return;
+      try {
+        g.accounts.id.initialize({
+          client_id: googleClientId,
+          callback: handleGoogleCredentialResponse,
+          auto_select: false,
+          cancel_on_tap_outside: true,
+        });
+
+        const btnContainer = document.getElementById('googleSignInBtnContainer');
+        if (btnContainer) {
+          btnContainer.innerHTML = '';
+          g.accounts.id.renderButton(btnContainer, {
+            type: 'standard',
+            theme: 'outline',
+            size: 'large',
+            text: isRegister ? 'signup_with' : 'signin_with',
+            shape: 'rectangular',
+            logo_alignment: 'center',
+            width: btnContainer.offsetWidth ? Math.min(btnContainer.offsetWidth, 400) : 320,
+          });
+        }
+      } catch (err) {
+        console.error('Google Sign-In initialization failed:', err);
+      }
+    };
+
+    if (!document.getElementById(scriptId)) {
+      const script = document.createElement('script');
+      script.id = scriptId;
+      script.src = 'https://accounts.google.com/gsi/client';
+      script.async = true;
+      script.defer = true;
+      script.onload = initGsi;
+      document.body.appendChild(script);
+    } else {
+      initGsi();
+    }
+  }, [isRegister, intention]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -576,6 +640,21 @@ export default function AuthPage() {
                     : 'Đăng nhập'}
               </Button>
             </form>
+
+            {/* Divider */}
+            <div className="relative my-4">
+              <div className="absolute inset-0 flex items-center">
+                <div className="w-full border-t border-slate-200" />
+              </div>
+              <div className="relative flex justify-center text-xs uppercase">
+                <span className="bg-white px-2 text-slate-500 font-medium">Hoặc tiếp tục với</span>
+              </div>
+            </div>
+
+            {/* Google Sign In Area */}
+            <div className="flex justify-center my-2">
+              <div id="googleSignInBtnContainer" className="flex justify-center min-h-[44px]" />
+            </div>
 
             {/* Bottom Toggle Note */}
             <div className="mt-5 text-center">

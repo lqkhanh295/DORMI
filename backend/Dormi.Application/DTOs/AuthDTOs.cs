@@ -20,6 +20,12 @@ public class LoginDto
     public string? CaptchaAnswer { get; set; }
 }
 
+public class GoogleLoginDto
+{
+    public string IdToken { get; set; } = string.Empty;
+    public UserRole Role { get; set; } = UserRole.Customer;
+}
+
 public class VerifyMfaDto
 {
     public string Email { get; set; } = string.Empty;

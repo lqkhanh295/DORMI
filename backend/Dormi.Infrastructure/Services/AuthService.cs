@@ -10,6 +10,8 @@ using Dormi.Infrastructure.Data;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using System.Text.Json;
+using System.Net.Http;
+using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Caching.Distributed;
 using Microsoft.Extensions.Logging;
 
@@ -23,6 +25,8 @@ public class AuthService : IAuthService
     private readonly ILogger<AuthService> _logger;
     private readonly IEmailService? _emailService;
     private readonly IKafkaProducer? _kafkaProducer;
+    private readonly IHttpClientFactory? _httpClientFactory;
+    private readonly IConfiguration? _configuration;
     private readonly PasswordHasher<User> _passwordHasher = new();
 
     private class MfaSessionData
@@ -102,7 +106,9 @@ public class AuthService : IAuthService
         IDistributedCache cache,
         ILogger<AuthService> logger,
         IEmailService? emailService = null,
-        IKafkaProducer? kafkaProducer = null)
+        IKafkaProducer? kafkaProducer = null,
+        IHttpClientFactory? httpClientFactory = null,
+        IConfiguration? configuration = null)
     {
         _db = db;
         _tokenGenerator = tokenGenerator;
@@ -110,6 +116,8 @@ public class AuthService : IAuthService
         _logger = logger;
         _emailService = emailService;
         _kafkaProducer = kafkaProducer;
+        _httpClientFactory = httpClientFactory;
+        _configuration = configuration;
     }
 
     private async Task<string?> SafeGetCacheStringAsync(string key)
@@ -368,6 +376,154 @@ public class AuthService : IAuthService
         var token = _tokenGenerator.GenerateToken(user);
         _logger.LogInformation("[AUTH AUDIT] LOGIN_SUCCESS: IP={IP}, Email={Email}, UserId={UserId}, Role={Role}", clientIp, user.Email, user.Id, user.Role);
         await LogSecurityEventAsync("UserLogin", user.Email, user.Id, $"Đăng nhập thành công vào hệ thống (Vai trò: {user.Role})", clientIp);
+
+        return ServiceResult<AuthResponseDto>.Ok(new AuthResponseDto
+        {
+            Token = token,
+            User = new UserDto
+            {
+                Id = user.Id,
+                Email = user.Email,
+                FullName = user.FullName,
+                AvatarUrl = user.AvatarUrl,
+                Role = user.Role,
+                CreatedAt = user.CreatedAt
+            }
+        });
+    }
+
+    public async Task<ServiceResult<AuthResponseDto>> LoginWithGoogleAsync(GoogleLoginDto dto, string clientIp = "127.0.0.1")
+    {
+        if (string.IsNullOrWhiteSpace(dto.IdToken))
+        {
+            return ServiceResult<AuthResponseDto>.Fail("Google Token không hợp lệ.", 400);
+        }
+
+        // 1. IP Rate Limiting (max 20 requests per 60 seconds per IP)
+        var ipRateKey = $"rate_limit_google_{clientIp}";
+        var currentReqStr = await SafeGetCacheStringAsync(ipRateKey);
+        var requestCount = int.TryParse(currentReqStr, out var c) ? c + 1 : 1;
+        await SafeSetCacheStringAsync(ipRateKey, requestCount.ToString(), new DistributedCacheEntryOptions
+        {
+            AbsoluteExpirationRelativeToNow = TimeSpan.FromSeconds(60)
+        });
+
+        if (requestCount > 20)
+        {
+            _logger.LogWarning("[AUTH AUDIT] RATE_LIMIT_EXCEEDED: Google Login IP={IP}", clientIp);
+            return ServiceResult<AuthResponseDto>.Fail("Bạn đã gửi quá nhiều yêu cầu đăng nhập. Vui lòng chờ 1 phút rồi thử lại.", 429);
+        }
+
+        string email;
+        string? name = null;
+        string? picture = null;
+
+        var idToken = dto.IdToken.Trim();
+
+        // Support mock test tokens in development or testing
+        if (IsDevelopment() && idToken.StartsWith("dev_google_token:"))
+        {
+            // Format: dev_google_token:email:fullName:avatarUrl
+            var parts = idToken.Split(':', 4);
+            email = parts.Length > 1 ? parts[1].Trim().ToLower() : "test.google@dormi.vn";
+            name = parts.Length > 2 ? parts[2].Trim() : "Google Test User";
+            picture = parts.Length > 3 ? parts[3].Trim() : null;
+        }
+        else
+        {
+            // ponytail: verify Google ID token via oauth2.googleapis.com/tokeninfo using HttpClient; upgrade path: local JWKS caching via GoogleJsonWebSignature if high-throughput RPS is needed
+            try
+            {
+                var client = _httpClientFactory?.CreateClient() ?? new HttpClient();
+                var googleUrl = $"https://oauth2.googleapis.com/tokeninfo?id_token={Uri.EscapeDataString(idToken)}";
+                using var response = await client.GetAsync(googleUrl);
+                if (!response.IsSuccessStatusCode)
+                {
+                    _logger.LogWarning("[AUTH AUDIT] GOOGLE_AUTH_FAILED: IP={IP}, StatusCode={Code}", clientIp, response.StatusCode);
+                    return ServiceResult<AuthResponseDto>.Fail("Xác thực tài khoản Google không thành công hoặc phiên đăng nhập đã hết hạn.", 400);
+                }
+
+                var json = await response.Content.ReadAsStringAsync();
+                using var doc = JsonDocument.Parse(json);
+                var root = doc.RootElement;
+
+                var emailVal = root.TryGetProperty("email", out var emailProp) ? emailProp.GetString() : null;
+                var emailVerifiedStr = root.TryGetProperty("email_verified", out var evProp) ? (evProp.ValueKind == JsonValueKind.String ? evProp.GetString() : evProp.GetRawText()) : "false";
+                var emailVerified = string.Equals(emailVerifiedStr, "true", StringComparison.OrdinalIgnoreCase) || (evProp.ValueKind == JsonValueKind.True);
+
+                if (string.IsNullOrWhiteSpace(emailVal) || !emailVerified)
+                {
+                    return ServiceResult<AuthResponseDto>.Fail("Tài khoản Google chưa xác thực email hoặc không cung cấp email.", 400);
+                }
+
+                var aud = root.TryGetProperty("aud", out var audProp) ? audProp.GetString() : null;
+                var expectedClientId = _configuration?["Authentication:Google:ClientId"]
+                    ?? _configuration?["Google:ClientId"]
+                    ?? Environment.GetEnvironmentVariable("GOOGLE_CLIENT_ID");
+
+                if (!string.IsNullOrWhiteSpace(expectedClientId) && !string.Equals(aud, expectedClientId, StringComparison.Ordinal))
+                {
+                    _logger.LogWarning("[AUTH AUDIT] GOOGLE_AUD_MISMATCH: Expected={Expected}, Received={Aud}", expectedClientId, aud);
+                    return ServiceResult<AuthResponseDto>.Fail("Mã xác thực Google không khớp với hệ thống DORMI.", 400);
+                }
+
+                email = emailVal.Trim().ToLower();
+                name = root.TryGetProperty("name", out var nameProp) ? nameProp.GetString() : null;
+                picture = root.TryGetProperty("picture", out var picProp) ? picProp.GetString() : null;
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "[AUTH AUDIT] GOOGLE_VERIFY_EXCEPTION: IP={IP}", clientIp);
+                return ServiceResult<AuthResponseDto>.Fail("Có lỗi xảy ra khi xác thực với máy chủ Google.", 500);
+            }
+        }
+
+        var normalizedEmail = email.Trim().ToLower();
+        var user = await _db.Users.FirstOrDefaultAsync(u => u.Email.ToLower() == normalizedEmail);
+
+        if (user == null)
+        {
+            var role = (dto.Role == UserRole.Landlord) ? UserRole.Landlord : UserRole.Customer;
+            var fullName = !string.IsNullOrWhiteSpace(name) ? name.Trim() : normalizedEmail.Split('@')[0];
+
+            user = new User
+            {
+                Id = Guid.NewGuid(),
+                Email = normalizedEmail,
+                FullName = fullName,
+                AvatarUrl = picture,
+                Role = role,
+                IsVerified = true,
+                CreatedAt = DateTime.UtcNow,
+                PasswordHash = _passwordHasher.HashPassword(null!, Guid.NewGuid().ToString("N"))
+            };
+
+            _db.Users.Add(user);
+            await _db.SaveChangesAsync();
+            _logger.LogInformation("[AUTH AUDIT] GOOGLE_USER_REGISTERED: Email={Email}, Role={Role}", user.Email, user.Role);
+        }
+        else
+        {
+            var needsUpdate = false;
+            if (string.IsNullOrEmpty(user.AvatarUrl) && !string.IsNullOrEmpty(picture))
+            {
+                user.AvatarUrl = picture;
+                needsUpdate = true;
+            }
+            if (!user.IsVerified)
+            {
+                user.IsVerified = true;
+                needsUpdate = true;
+            }
+            if (needsUpdate)
+            {
+                await _db.SaveChangesAsync();
+            }
+        }
+
+        var token = _tokenGenerator.GenerateToken(user);
+        _logger.LogInformation("[AUTH AUDIT] GOOGLE_LOGIN_SUCCESS: IP={IP}, Email={Email}, UserId={UserId}", clientIp, user.Email, user.Id);
+        await LogSecurityEventAsync("GoogleLogin", user.Email, user.Id, $"Đăng nhập Google thành công (Vai trò: {user.Role})", clientIp);
 
         return ServiceResult<AuthResponseDto>.Ok(new AuthResponseDto
         {

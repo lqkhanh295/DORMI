@@ -603,6 +603,11 @@ public class RoomService : IRoomService
                 .Include(r => r.Images)
                 .FirstOrDefaultAsync(r => r.Id == id);
 
+            if (room == null)
+            {
+                return ServiceResult<RoomResponseDto>.Fail("Không tìm thấy thông tin phòng trọ.", 404);
+            }
+
             var hasActiveLease = await _db.LeaseContracts.AnyAsync(l => l.RoomId == room.Id && 
                 (l.Status == "Active" || l.Status == "Signed" || l.Status == "PendingSignature" || 
                  (l.StartDate <= DateTime.UtcNow && l.EndDate >= DateTime.UtcNow && l.Status != "Terminated" && l.Status != "Expired" && l.Status != "Cancelled")));
@@ -808,21 +813,24 @@ public class RoomService : IRoomService
             });
         }
 
-        try
+        if (_hubContext != null)
         {
-            var adminPayload = new
+            try
             {
-                roomId = room.Id,
-                title = room.Title,
-                landlordId = room.LandlordId,
-                createdAt = room.CreatedAt
-            };
-            await _hubContext.Clients.Group("admins").SendAsync("NewRoomPending", adminPayload);
-            await _hubContext.Clients.Group("admins").SendAsync("NewRoomPendingApproval", adminPayload);
-        }
-        catch
-        {
-            // Suppress real-time notify failure
+                var adminPayload = new
+                {
+                    roomId = room.Id,
+                    title = room.Title,
+                    landlordId = room.LandlordId,
+                    createdAt = room.CreatedAt
+                };
+                await _hubContext.Clients.Group("admins").SendAsync("NewRoomPending", adminPayload);
+                await _hubContext.Clients.Group("admins").SendAsync("NewRoomPendingApproval", adminPayload);
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"[SignalR Room Notification Error]: {ex.Message}");
+            }
         }
 
         var responseDto = new RoomResponseDto
@@ -1007,7 +1015,10 @@ public class RoomService : IRoomService
                         createdAt = notif.CreatedAt
                     });
                 }
-                catch { }
+                catch (Exception ex)
+                {
+                    Console.WriteLine($"[SignalR Room Notification Error]: {ex.Message}");
+                }
             }
 
             if (_kafkaProducer != null)
@@ -1033,11 +1044,14 @@ public class RoomService : IRoomService
                         }
                     });
                 }
-                catch { }
+                catch (Exception ex)
+                {
+                    Console.WriteLine($"[Kafka Room Notification Error]: {ex.Message}");
+                }
             }
         }
 
-        if (room.Status == RoomStatus.PendingApproval)
+        if (room.Status == RoomStatus.PendingApproval && _hubContext != null)
         {
             try
             {
@@ -1156,7 +1170,10 @@ public class RoomService : IRoomService
                         createdAt = notif.CreatedAt
                     });
                 }
-                catch { }
+                catch (Exception ex)
+                {
+                    Console.WriteLine($"[SignalR Room Notification Error]: {ex.Message}");
+                }
             }
 
             if (_kafkaProducer != null)
@@ -1175,7 +1192,10 @@ public class RoomService : IRoomService
                         CreatedAt = notif.CreatedAt
                     });
                 }
-                catch { }
+                catch (Exception ex)
+                {
+                    Console.WriteLine($"[Kafka Room Notification Error]: {ex.Message}");
+                }
             }
         }
 
@@ -1230,7 +1250,10 @@ public class RoomService : IRoomService
                         createdAt = notif.CreatedAt
                     });
                 }
-                catch { }
+                catch (Exception ex)
+                {
+                    Console.WriteLine($"[SignalR Room Notification Error]: {ex.Message}");
+                }
             }
 
             if (_kafkaProducer != null)
@@ -1254,7 +1277,10 @@ public class RoomService : IRoomService
                         }
                     });
                 }
-                catch { }
+                catch (Exception ex)
+                {
+                    Console.WriteLine($"[Kafka Room Notification Error]: {ex.Message}");
+                }
             }
         }
 

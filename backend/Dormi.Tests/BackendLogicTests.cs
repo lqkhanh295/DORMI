@@ -3240,4 +3240,58 @@ public class BackendLogicTests
         var updatedTxn = await db.PaymentTransactions.FindAsync(txn.Id);
         Assert.Equal("Completed", updatedTxn?.Status);
     }
+
+    [Fact]
+    public async Task AuthService_LoginWithGoogle_ShouldRegisterAndAuthenticateUser()
+    {
+        var options = new DbContextOptionsBuilder<DormiDbContext>()
+            .UseInMemoryDatabase(databaseName: Guid.NewGuid().ToString())
+            .Options;
+        using var db = new DormiDbContext(options);
+
+        var config = new ConfigurationBuilder().AddInMemoryCollection(new Dictionary<string, string?>
+        {
+            { "JwtSettings:SecretKey", "DormiSuperSecretKeyForJWTAuthentication2026!#$" },
+            { "JwtSettings:Issuer", "DormiAPI" },
+            { "JwtSettings:Audience", "DormiUsers" }
+        }).Build();
+
+        var tokenGen = new JwtTokenGenerator(config);
+        var cache = new ServiceCollection().AddDistributedMemoryCache().BuildServiceProvider().GetRequiredService<IDistributedCache>();
+        var logger = Microsoft.Extensions.Logging.Abstractions.NullLogger<AuthService>.Instance;
+
+        var authService = new AuthService(db, tokenGen, cache, logger);
+
+        // 1. Empty token should fail
+        var emptyRes = await authService.LoginWithGoogleAsync(new GoogleLoginDto { IdToken = "" });
+        Assert.False(emptyRes.Success);
+        Assert.Equal(400, emptyRes.StatusCode);
+
+        // 2. New user Google login with dev token should register and return token
+        var googleDto = new GoogleLoginDto
+        {
+            IdToken = "dev_google_token:google.student@dormi.vn:Google Student:https://example.com/avatar.jpg",
+            Role = UserRole.Customer
+        };
+        var loginRes = await authService.LoginWithGoogleAsync(googleDto);
+        Assert.True(loginRes.Success);
+        Assert.NotNull(loginRes.Data?.Token);
+        Assert.Equal("google.student@dormi.vn", loginRes.Data?.User?.Email);
+        Assert.Equal("Google Student", loginRes.Data?.User?.FullName);
+        Assert.Equal(UserRole.Customer, loginRes.Data?.User?.Role);
+
+        // 3. User should exist in DB
+        var userInDb = await db.Users.FirstOrDefaultAsync(u => u.Email == "google.student@dormi.vn");
+        Assert.NotNull(userInDb);
+        Assert.True(userInDb.IsVerified);
+        Assert.Equal("https://example.com/avatar.jpg", userInDb.AvatarUrl);
+
+        // 4. Repeated login with same Google account should succeed and not create duplicate
+        var repeatRes = await authService.LoginWithGoogleAsync(googleDto);
+        Assert.True(repeatRes.Success);
+        Assert.Equal(userInDb.Id, repeatRes.Data?.User?.Id);
+
+        var count = await db.Users.CountAsync(u => u.Email == "google.student@dormi.vn");
+        Assert.Equal(1, count);
+    }
 }

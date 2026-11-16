@@ -73,6 +73,7 @@ interface AppState {
   isLoadingApi: boolean;
   setCurrentUserFromApi: (user: any, token: string) => void;
   loginWithApi: (email: string, pass: string, captchaToken?: string, captchaAnswer?: string) => Promise<any>;
+  loginWithGoogleApi: (idToken: string, role?: number) => Promise<any>;
   verifyMfaWithApi: (email: string, mfaSessionToken: string, otpCode: string) => Promise<any>;
   logout: () => void;
   fetchFavorites: () => Promise<void>;
@@ -120,6 +121,21 @@ export const useStore = create<AppState>()(
         try {
           set({ isLoadingApi: true });
           const res = await authApi.login(email, password, captchaToken, captchaAnswer);
+          if (res?.user && res?.token) {
+            get().setCurrentUserFromApi(res.user, res.token);
+          }
+          set({ isLoadingApi: false });
+          return res;
+        } catch (err) {
+          set({ isLoadingApi: false });
+          throw err;
+        }
+      },
+
+      loginWithGoogleApi: async (idToken, role) => {
+        try {
+          set({ isLoadingApi: true });
+          const res = await authApi.loginWithGoogle(idToken, role);
           if (res?.user && res?.token) {
             get().setCurrentUserFromApi(res.user, res.token);
           }

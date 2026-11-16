@@ -40,6 +40,14 @@ public class AuthController : BaseApiController
         return HandleResult(result);
     }
 
+    [HttpPost("google")]
+    public async Task<IActionResult> GoogleLogin([FromBody] GoogleLoginDto dto)
+    {
+        var clientIp = HttpContext.Connection.RemoteIpAddress?.ToString() ?? "127.0.0.1";
+        var result = await _authService.LoginWithGoogleAsync(dto, clientIp);
+        return HandleResult(result);
+    }
+
     [HttpPost("verify-mfa")]
     public async Task<IActionResult> VerifyMfa([FromBody] VerifyMfaDto dto)
     {
