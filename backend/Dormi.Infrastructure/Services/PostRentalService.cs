@@ -349,6 +349,103 @@ public class PostRentalService : IPostRentalService
         });
     }
 
+    public async Task<ServiceResult<DepositCheckoutResponseDto>> CreateRoomHoldingDepositCheckoutAsync(Guid roomId, Guid userId)
+    {
+        var room = await _db.Rooms.Include(r => r.Landlord).FirstOrDefaultAsync(r => r.Id == roomId);
+        if (room == null)
+        {
+            return ServiceResult<DepositCheckoutResponseDto>.NotFound("Không tìm thấy thông tin phòng trọ.");
+        }
+
+        // Fixed holding deposit fee: 2,000 VND (Micro-pricing for capstone proof of paying customers)
+        decimal amount = 2000m;
+        long orderCode = long.Parse(DateTime.UtcNow.ToString("yyMMddHHmmss") + Random.Shared.Next(10, 99));
+
+        var transaction = new PaymentTransaction
+        {
+            Id = Guid.NewGuid(),
+            UserId = userId,
+            RoomId = roomId,
+            Amount = amount,
+            PaymentMethod = "PayOS",
+            TransactionRef = orderCode.ToString(),
+            Description = $"DORMI GIUPHONG #{orderCode % 1000000} - {room.Title}",
+            Status = "Pending",
+            CreatedAt = DateTime.UtcNow
+        };
+        _db.PaymentTransactions.Add(transaction);
+        await _db.SaveChangesAsync();
+
+        string checkoutUrl = "";
+        string paymentLinkId = "";
+        string qrCode = "";
+        string qrUrl = "";
+        string? accountNumber = null;
+        string? accountName = null;
+        string? bin = null;
+
+        var frontendUrl = _configuration?["App:FrontendUrl"] ?? "https://www.dormi.space";
+        var returnUrl = $"{frontendUrl}/payment/return?type=deposit&orderCode={orderCode}&roomId={roomId}&amount=2000";
+        var cancelUrl = $"{frontendUrl}/payment/return?type=deposit&orderCode={orderCode}&roomId={roomId}&cancel=true";
+
+        if (_payOS != null)
+        {
+            string desc = $"DORMI GIUPHONG {orderCode % 1000000}";
+            if (desc.Length > 25) desc = desc[..25];
+
+            var request = new CreatePaymentLinkRequest
+            {
+                OrderCode = orderCode,
+                Amount = (long)amount,
+                Description = desc,
+                ReturnUrl = returnUrl,
+                CancelUrl = cancelUrl
+            };
+
+            var payOsRes = await _payOS.PaymentRequests.CreateAsync(request);
+            checkoutUrl = payOsRes.CheckoutUrl;
+            paymentLinkId = payOsRes.PaymentLinkId ?? orderCode.ToString();
+            qrCode = payOsRes.QrCode ?? checkoutUrl;
+            accountNumber = payOsRes.AccountNumber;
+            accountName = payOsRes.AccountName;
+            bin = payOsRes.Bin;
+            qrUrl = !string.IsNullOrWhiteSpace(payOsRes.QrCode)
+                ? $"https://api.qrserver.com/v1/create-qr-code/?size=300x300&data={Uri.EscapeDataString(payOsRes.QrCode)}"
+                : $"https://api.qrserver.com/v1/create-qr-code/?size=300x300&data={Uri.EscapeDataString(checkoutUrl)}";
+        }
+        else
+        {
+            var bankBin = _configuration?["Payment:BankBin"] ?? "970422";
+            var accNumber = _configuration?["Payment:AccountNumber"] ?? "0901111001";
+            var accName = _configuration?["Payment:AccountName"] ?? "CONG TY CO PHAN DORMI";
+            string transferMemo = $"DORMI GIUPHONG {orderCode % 1000000}";
+
+            checkoutUrl = $"https://pay.payos.vn/web/demo/{orderCode}";
+            paymentLinkId = $"demo_{orderCode}";
+            accountNumber = accNumber;
+            accountName = accName;
+            bin = bankBin;
+            qrUrl = $"https://img.vietqr.io/image/{bin}-{accountNumber}-compact2.png?amount={(long)amount}&addInfo={Uri.EscapeDataString(transferMemo)}&accountName={Uri.EscapeDataString(accName)}";
+            qrCode = qrUrl;
+        }
+
+        return ServiceResult<DepositCheckoutResponseDto>.Ok(new DepositCheckoutResponseDto
+        {
+            CheckoutUrl = checkoutUrl,
+            PaymentLinkId = paymentLinkId,
+            QrCode = qrCode,
+            QrUrl = qrUrl,
+            OrderCode = orderCode,
+            Amount = amount,
+            LeaseId = Guid.Empty,
+            ScheduleId = transaction.Id,
+            AccountNumber = accountNumber,
+            AccountName = accountName,
+            Bin = bin,
+            Message = "Khởi tạo thanh toán phí giữ phòng 24h PayOS thành công."
+        });
+    }
+
     public async Task<ServiceResult<RentalPaymentScheduleDto>> SettleDepositPaymentByOrderCodeAsync(long orderCode)
     {
         var refStr = orderCode.ToString();
@@ -381,6 +478,56 @@ public class PostRentalService : IPostRentalService
 
         if (schedule == null)
         {
+            if (transaction != null)
+            {
+                // Standalone tenant holding deposit settlement
+                if (transaction.Status != "Completed")
+                {
+                    transaction.Status = "Completed";
+                    transaction.CompletedAt = DateTime.UtcNow;
+                    await _db.SaveChangesAsync();
+
+                    var room = transaction.RoomId.HasValue ? await _db.Rooms.Include(r => r.Landlord).FirstOrDefaultAsync(r => r.Id == transaction.RoomId.Value) : null;
+                    var roomTitle = room?.Title ?? "phòng";
+
+                    await SendNotificationAsync(
+                        transaction.UserId,
+                        "Giữ phòng ưu tiên 24h thành công",
+                        $"Bạn đã thanh toán thành công {transaction.Amount:N0}đ phí giữ chỗ ưu tiên 24h cho phòng '{roomTitle}'. Chủ trọ đã được thông báo để ưu tiên duyệt phòng cho bạn!",
+                        "Payment",
+                        $"/rooms/{transaction.RoomId}",
+                        "HoldingDepositPaid",
+                        new Dictionary<string, object?> { ["orderCode"] = orderCode, ["amount"] = transaction.Amount }
+                    );
+
+                    if (room != null)
+                    {
+                        await SendNotificationAsync(
+                            room.LandlordId,
+                            "Khách thuê đã giữ chỗ ưu tiên",
+                            $"Khách thuê vừa thanh toán phí giữ phòng 24h ({transaction.Amount:N0}đ) cho phòng '{roomTitle}'.",
+                            "Payment",
+                            $"/rooms/{room.Id}",
+                            "HoldingDepositReceived",
+                            new Dictionary<string, object?> { ["orderCode"] = orderCode, ["amount"] = transaction.Amount }
+                        );
+                    }
+                }
+
+                return ServiceResult<RentalPaymentScheduleDto>.Ok(new RentalPaymentScheduleDto
+                {
+                    Id = transaction.Id,
+                    Type = "HoldingDeposit",
+                    Title = transaction.Description,
+                    Amount = transaction.Amount,
+                    DueDate = DateTime.UtcNow,
+                    Status = "Paid",
+                    PaidAt = transaction.CompletedAt ?? DateTime.UtcNow,
+                    PaymentReference = transaction.TransactionRef,
+                    PaymentMethod = transaction.PaymentMethod
+                });
+            }
+
             return ServiceResult<RentalPaymentScheduleDto>.NotFound($"Không tìm thấy đợt thanh toán cọc cho mã đơn {orderCode}.");
         }
 

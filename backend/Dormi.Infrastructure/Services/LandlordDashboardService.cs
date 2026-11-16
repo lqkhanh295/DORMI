@@ -845,8 +845,40 @@ public class LandlordDashboardService : ILandlordDashboardService
 
         if (transaction.RoomId.HasValue)
         {
+            var isHoldingDeposit = transaction.Description.Contains("GIUPHONG", StringComparison.OrdinalIgnoreCase) ||
+                                  transaction.Description.Contains("giu phong", StringComparison.OrdinalIgnoreCase) ||
+                                  transaction.Description.Contains("giữ phòng", StringComparison.OrdinalIgnoreCase);
+
             var room = await _db.Rooms.FindAsync(transaction.RoomId.Value);
-            if (room != null)
+            if (isHoldingDeposit)
+            {
+                var roomTitle = room?.Title ?? "phòng";
+                _db.Notifications.Add(new Notification
+                {
+                    Id = Guid.NewGuid(),
+                    UserId = transaction.UserId,
+                    Title = "Giữ phòng ưu tiên 24h thành công",
+                    Message = $"Giao dịch #{transaction.TransactionRef} ({transaction.Amount:N0}đ) đã hoàn tất. Bạn đã giữ chỗ ưu tiên 24h cho phòng '{roomTitle}'.",
+                    Type = "System",
+                    LinkUrl = $"/rooms/{transaction.RoomId.Value}",
+                    CreatedAt = DateTime.UtcNow
+                });
+
+                if (room != null)
+                {
+                    _db.Notifications.Add(new Notification
+                    {
+                        Id = Guid.NewGuid(),
+                        UserId = room.LandlordId,
+                        Title = "Khách thuê đã giữ chỗ ưu tiên",
+                        Message = $"Một khách thuê đã thanh toán giữ chỗ 24h ({transaction.Amount:N0}đ) cho phòng '{roomTitle}'. Hãy ưu tiên phản hồi!",
+                        Type = "System",
+                        LinkUrl = $"/rooms/{room.Id}",
+                        CreatedAt = DateTime.UtcNow
+                    });
+                }
+            }
+            else if (room != null)
             {
                 var durationDays = transaction.Description.Contains("7days") ? 7 : (transaction.Description.Contains("3days") ? 3 : 1);
                 var boostType = transaction.Description.Contains("7days") 

@@ -408,6 +408,53 @@ public class BackendLogicTests
     }
 
     [Fact]
+    public async Task PostRentalService_HoldingDeposit_ShouldCreateAndSettle2kTransaction()
+    {
+        var options = new DbContextOptionsBuilder<DormiDbContext>()
+            .UseInMemoryDatabase(databaseName: Guid.NewGuid().ToString())
+            .Options;
+
+        using var db = new DormiDbContext(options);
+        var tenantId = Guid.NewGuid();
+        var landlordId = Guid.NewGuid();
+        var roomId = Guid.NewGuid();
+
+        db.Users.Add(new User { Id = tenantId, Email = "tenant@dormi.vn", FullName = "Tenant Test", Role = UserRole.Tenant });
+        db.Users.Add(new User { Id = landlordId, Email = "landlord@dormi.vn", FullName = "Landlord Test", Role = UserRole.Landlord });
+        db.Rooms.Add(new Room { Id = roomId, Title = "Phòng trọ cao cấp gần ĐH FPT", Price = 3000000, LandlordId = landlordId, Address = "Khu CNC Q9" });
+        await db.SaveChangesAsync();
+
+        var service = new PostRentalService(db);
+
+        // 1. Create holding deposit checkout (2.000đ micro-pricing)
+        var createRes = await service.CreateRoomHoldingDepositCheckoutAsync(roomId, tenantId);
+        Assert.True(createRes.Success);
+        Assert.NotNull(createRes.Data);
+        Assert.Equal(2000m, createRes.Data.Amount);
+        Assert.True(createRes.Data.OrderCode > 0);
+
+        var tx = await db.PaymentTransactions.FirstOrDefaultAsync(t => t.TransactionRef == createRes.Data.OrderCode.ToString());
+        Assert.NotNull(tx);
+        Assert.Equal("Pending", tx.Status);
+        Assert.Equal(2000m, tx.Amount);
+        Assert.Equal(tenantId, tx.UserId);
+        Assert.Equal(roomId, tx.RoomId);
+
+        // 2. Settle holding deposit checkout
+        var settleRes = await service.SettleDepositPaymentByOrderCodeAsync(createRes.Data.OrderCode);
+        Assert.True(settleRes.Success);
+        Assert.NotNull(settleRes.Data);
+        Assert.Equal("Paid", settleRes.Data.Status);
+        Assert.Equal(2000m, settleRes.Data.Amount);
+
+        // Check transaction status is Completed
+        var settledTx = await db.PaymentTransactions.FirstOrDefaultAsync(t => t.TransactionRef == createRes.Data.OrderCode.ToString());
+        Assert.NotNull(settledTx);
+        Assert.Equal("Completed", settledTx.Status);
+        Assert.NotNull(settledTx.CompletedAt);
+    }
+
+    [Fact]
     public async Task Notification_MarkAsReadShouldUpdateStatus()
     {
         var options = new DbContextOptionsBuilder<DormiDbContext>()

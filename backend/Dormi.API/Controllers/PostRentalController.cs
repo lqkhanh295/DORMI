@@ -74,6 +74,16 @@ public class PostRentalController : BaseApiController
         return HandleResult(result);
     }
 
+    [HttpPost("rooms/{roomId:guid}/holding-deposit")]
+    public async Task<IActionResult> CreateRoomHoldingDeposit(Guid roomId)
+    {
+        var userId = GetCurrentUserId();
+        if (!userId.HasValue) return Unauthorized();
+
+        var result = await _service.CreateRoomHoldingDepositCheckoutAsync(roomId, userId.Value);
+        return HandleResult(result);
+    }
+
     [HttpPost("deposit/settle/{orderCode:long}")]
     [AllowAnonymous]
     public async Task<IActionResult> SettleDeposit(long orderCode)

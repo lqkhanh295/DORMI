@@ -1113,6 +1113,12 @@ export const postRentalApi = {
     });
   },
 
+  createRoomHoldingDeposit: async (roomId: string) => {
+    return request<DepositCheckoutResponse>(`/postrental/rooms/${roomId}/holding-deposit`, {
+      method: 'POST'
+    });
+  },
+
   settleDeposit: async (orderCode: string | number) => {
     return request<RentalPaymentScheduleResponse>(`/postrental/deposit/settle/${orderCode}`, {
       method: 'POST'
