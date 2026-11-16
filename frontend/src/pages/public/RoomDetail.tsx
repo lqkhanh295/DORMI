@@ -745,6 +745,17 @@ export default function RoomDetail() {
               <>
                 <button
                   type="button"
+                  onClick={handleInitiateHoldingDeposit}
+                  disabled={isCreatingHoldingCheckout}
+                  className="px-2.5 py-2.5 bg-amber-600 hover:bg-amber-700 text-white text-xs font-bold rounded-xl transition-colors flex items-center gap-1.5 shadow-xs touch-target shrink-0"
+                  title="Giữ chỗ ưu tiên 24h (20.000đ)"
+                >
+                  <Lock className="w-3.5 h-3.5 text-white" />
+                  <span>Giữ chỗ (20k)</span>
+                </button>
+
+                <button
+                  type="button"
                   onClick={() => {
                     if (!currentUser) navigate('/auth');
                     else {
@@ -764,10 +775,10 @@ export default function RoomDetail() {
                     if (!currentUser) navigate('/auth');
                     else setShowApplicationModal(true);
                   }}
-                  className="px-3.5 py-2.5 bg-[#00153D] hover:bg-[#073372] text-white text-xs font-bold rounded-xl transition-colors flex items-center gap-1.5 shadow-xs touch-target"
+                  className="px-3 py-2.5 bg-[#00153D] hover:bg-[#073372] text-white text-xs font-bold rounded-xl transition-colors flex items-center gap-1.5 shadow-xs touch-target"
                 >
                   <FileText className="w-4 h-4 text-white" />
-                  <span>Nộp hồ sơ ngay</span>
+                  <span>Nộp hồ sơ</span>
                 </button>
               </>
             )}

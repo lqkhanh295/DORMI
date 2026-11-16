@@ -18,7 +18,8 @@ import {
   User,
   Download,
   FileSpreadsheet,
-  CheckCheck
+  CheckCheck,
+  Lock
 } from 'lucide-react';
 import { PageMotion } from '../../components/common/Motion';
 import { toast } from 'sonner';
@@ -127,6 +128,22 @@ export default function AdminTransactions() {
 
   const renderServiceBadge = (desc?: string) => {
     const text = desc || '';
+    if (text.includes('GIUPHONG') || text.includes('giữ phòng') || text.includes('Giữ chỗ') || text.includes('giu phong')) {
+      return (
+        <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-[11px] font-bold bg-amber-50 text-amber-800 border border-amber-200">
+          <Lock className="w-3 h-3 text-amber-600" />
+          <span>Giữ Chỗ Ưu Tiên</span>
+        </span>
+      );
+    }
+    if (text.includes('Trial') || text.includes('Trải nghiệm') || text.includes('Khởi Động')) {
+      return (
+        <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-[11px] font-bold bg-emerald-50 text-emerald-800 border border-emerald-200">
+          <Zap className="w-3 h-3 text-emerald-600" />
+          <span>Gói Trải Nghiệm</span>
+        </span>
+      );
+    }
     if (text.includes('Gói Pro') || text.includes('Pro')) {
       return (
         <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-[11px] font-bold bg-blue-50 text-blue-700 border border-blue-200">
