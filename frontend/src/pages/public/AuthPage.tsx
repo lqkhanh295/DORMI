@@ -157,7 +157,7 @@ export default function AuthPage() {
   };
 
   useEffect(() => {
-    const googleClientId = import.meta.env.VITE_GOOGLE_CLIENT_ID;
+    const googleClientId = import.meta.env.VITE_GOOGLE_CLIENT_ID || '646888361080-15av2m0r4mr1smsbs4ccm6sjf9lsrjad.apps.googleusercontent.com';
     const scriptId = 'google-gsi-client';
 
     const initGsi = () => {
@@ -180,8 +180,8 @@ export default function AuthPage() {
             size: 'large',
             text: isRegister ? 'signup_with' : 'signin_with',
             shape: 'rectangular',
-            logo_alignment: 'center',
-            width: btnContainer.offsetWidth ? Math.min(btnContainer.offsetWidth, 400) : 320,
+            logo_alignment: 'left',
+            width: 360,
           });
         }
       } catch (err) {
